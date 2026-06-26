@@ -1,0 +1,40 @@
+/*
+ * LanternUI default theme — OPTIONAL.
+ *
+ * Import this only when you are NOT using a host design system (e.g. Fluxon) that
+ * already defines the underlying tokens. LanternUI components read their colors
+ * from this chain, lightest-binding first:
+ *
+ *     var(--lantern-accent, var(--color-primary-500, #3b82f6))
+ *     var(--lantern-fg,     var(--foreground,        #111827))
+ *     var(--lantern-fg-muted,var(--foreground-softer,#6b7280))
+ *     var(--lantern-surface, var(--background-base,   #ffffff))
+ *
+ * - In a Fluxon app: DON'T import this. The `--color-primary-*`, `--foreground`,
+ *   `--foreground-softer` and `--background-base` tokens Fluxon defines flow in
+ *   via the fallbacks, so charts match your theme automatically.
+ * - Standalone / public demo: import this for a sensible light + dark theme.
+ * - Override any `--lantern-*` variable yourself to recolor.
+ */
+:root {
+  --lantern-fg: #111827;
+  --lantern-fg-muted: #6b7280;
+  --lantern-surface: #ffffff;
+  --lantern-accent: #3b82f6;
+}
+
+.dark {
+  --lantern-fg: #e5e7eb;
+  --lantern-fg-muted: #9ca3af;
+  --lantern-surface: #1f2937;
+  --lantern-accent: #60a5fa;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --lantern-fg: #e5e7eb;
+    --lantern-fg-muted: #9ca3af;
+    --lantern-surface: #1f2937;
+    --lantern-accent: #60a5fa;
+  }
+}
