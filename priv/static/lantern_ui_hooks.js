@@ -187,8 +187,12 @@ const LineHover = {
       out += `<circle cx="${r.x}" cy="${r.y}" r="3" fill="${r.color}" stroke="${surface}" stroke-width="1.5"/>`
     }
 
-    const boxW = 168
     const rowH = 15
+    // Size the box to the longest label + value so long names (e.g. pod names)
+    // don't collide with the right-aligned value. Clamp to the chart width.
+    const labelW = Math.max(...rows.map((r) => String(r.label).length)) * 6.2
+    const valueW = Math.max(...rows.map((r) => String(r.v).length)) * 6.5
+    const boxW = Math.min(Math.max(120, 22 + labelW + 16 + valueW + 10), this.vbWidth - 8)
     const boxH = 20 + rows.length * rowH
     const bx = Math.min(Math.max(crossX + 10, 4), this.vbWidth - boxW - 4)
     const by = Math.max(this.top, Math.min(this.bottom - boxH, rows[0].y - boxH / 2))

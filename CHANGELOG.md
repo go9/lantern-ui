@@ -6,6 +6,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- `line_chart` crosshair tooltip: size the box to the longest label + value so
+  long series names (e.g. Kubernetes pod names) no longer collide with the
+  right-aligned value.
+
 ### Added
 - `LanternUI.Charts.line_chart/1` — multi-series time-series line chart with a
   legend and a shared crosshair tooltip (`LineHover` hook). Accepts
