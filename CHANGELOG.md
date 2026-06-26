@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- `LanternUI.Charts.line_chart/1` — multi-series time-series line chart with a
+  legend and a shared crosshair tooltip (`LineHover` hook). Accepts
+  `%{label, color, points: [{datetime, number}]}` series; 0-based y axis; built
+  for resource/monitoring metrics.
 - Initial chart set as native Phoenix LiveView function components under
   `LanternUI.Charts`: `area_chart/1`, `sparkline/1`, `bar_chart/1`.
 - `LanternUI.Charts.Geometry` — pure scaling, "nice" tick, and SVG path helpers.

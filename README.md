@@ -12,6 +12,8 @@ embeddable Postgres table viewer; `lantern_ui` is the UI component set.
   crosshair/tooltip.
 - `LanternUI.Charts.sparkline/1` — compact trend, no axes.
 - `LanternUI.Charts.bar_chart/1` — categorical bars.
+- `LanternUI.Charts.line_chart/1` — multi-series time-series lines with a legend
+  and a shared crosshair tooltip (built for resource/monitoring metrics).
 - `LanternUI.Charts.Geometry` — pure scaling / "nice" ticks / SVG path helpers.
 
 Geometry is computed in Elixir, so charts re-render through normal LiveView
@@ -50,14 +52,29 @@ Or from git while iterating:
   id="sales"
   series={[%{label: "Q1", value: 42}, %{label: "Q2", value: 31}]}
 />
+
+<LanternUI.Charts.line_chart
+  id="pod-cpu"
+  series={[
+    %{label: "web-1", color: "var(--color-primary)",
+      points: [{~U[2024-11-20 14:00:00Z], 0.25}, {~U[2024-11-20 14:05:00Z], 0.31}]},
+    %{label: "web-2", points: [{~U[2024-11-20 14:00:00Z], 0.18}, {~U[2024-11-20 14:05:00Z], 0.22}]}
+  ]}
+  value_format={&"#{&1} cores"}
+/>
 ```
+
+`line_chart` `series`: a list of `%{label, color, points: [{datetime, number}]}`
+(`color` optional; `points` accept `{datetime, value}` tuples or `%{time, value}`
+maps; datetime = `DateTime`/`NaiveDateTime`/`Date`/ISO-8601 string).
 
 `area_chart` `series`: a list of `%{date: iso8601 | Date, value: number}`.
 
 ## JS hook (required for area_chart hover)
 
-`area_chart` uses the `ChartHover` hook for its crosshair/tooltip. In
-`assets/js/app.js`:
+`area_chart` uses `ChartHover` and `line_chart` uses `LineHover` for their
+crosshair/tooltips — both ship in `LanternHooks`, so the single import below
+registers them. In `assets/js/app.js`:
 
 ```js
 import LanternHooks from "../../deps/lantern_ui/priv/static/lantern_ui_hooks.js"

@@ -86,4 +86,50 @@ defmodule LanternUI.ChartsTest do
       assert html =~ "No data"
     end
   end
+
+  describe "line_chart/1" do
+    test "renders multi-series lines, legend, and the embedded point list" do
+      series = [
+        %{
+          label: "web-1",
+          color: "var(--color-primary)",
+          points: [{~U[2024-01-01 00:00:00Z], 0.2}, {~U[2024-01-01 00:05:00Z], 0.4}]
+        },
+        %{
+          label: "web-2",
+          points: [{~U[2024-01-01 00:00:00Z], 0.1}, {~U[2024-01-01 00:05:00Z], 0.3}]
+        }
+      ]
+
+      html = render_component(&LanternUI.Charts.line_chart/1, id: "l", series: series)
+      assert html =~ "<svg"
+      assert html =~ "phx-hook=\"LineHover\""
+      assert html =~ "data-series"
+      assert html =~ "web-1"
+      assert html =~ "web-2"
+      assert html =~ "var(--color-primary)"
+    end
+
+    test "accepts %{time, value} maps and ISO-8601 strings" do
+      series = [
+        %{
+          label: "a",
+          points: [
+            %{time: "2024-01-01T00:00:00Z", value: 1},
+            %{time: "2024-01-01T01:00:00Z", value: 2}
+          ]
+        }
+      ]
+
+      html = render_component(&LanternUI.Charts.line_chart/1, id: "l", series: series)
+      assert html =~ "<path"
+      assert html =~ "data-series"
+    end
+
+    test "empty series renders the empty state, no svg" do
+      html = render_component(&LanternUI.Charts.line_chart/1, id: "l", series: [])
+      assert html =~ "No data"
+      refute html =~ "<svg"
+    end
+  end
 end
