@@ -428,4 +428,242 @@ defmodule LanternUI.Charts do
   defp month(d), do: Calendar.strftime(d, "%b")
   defp pad2(n) when n < 10, do: "0#{n}"
   defp pad2(n), do: "#{n}"
+
+  # ── line chart (multi-series) ───────────────────────────────────────────────
+
+  @line_palette ~w(#3b82f6 #16a34a #f59e0b #dc2626 #8b5cf6 #0891b2 #db2777 #65a30d)
+
+  @doc """
+  A multi-series time-series line chart with a legend and a shared crosshair tooltip.
+
+  `series` is a list of maps:
+
+      %{label: "web-1", color: "var(--color-primary)", points: [{~U[..], 0.25}, ...]}
+
+  Each `points` entry is `{datetime, number}` or `%{time: datetime, value: number}`
+  (datetime = `DateTime`, `NaiveDateTime`, `Date`, or ISO-8601 string). `color` is
+  optional (a palette is used when absent). All series share a 0-based y axis.
+
+  Requires the `LineHover` JS hook for the crosshair/tooltip.
+  """
+  attr(:id, :string, required: true)
+  attr(:series, :list, default: [])
+  attr(:height, :integer, default: 200)
+  attr(:class, :string, default: nil)
+
+  attr(:value_format, :any,
+    default: :number,
+    doc: "`:number` | `:currency` | a 1-arity function `(number -> String.t())`"
+  )
+
+  attr(:legend, :boolean, default: true)
+  attr(:empty_message, :string, default: "No data")
+  attr(:aria_label, :string, default: "Line chart")
+
+  def line_chart(assigns) do
+    assigns = assign(assigns, line_geometry(assigns.series, assigns.height, assigns.value_format))
+
+    ~H"""
+    <div id={@id} class={@class}>
+      <div
+        :if={@has_data}
+        id={"#{@id}-hover"}
+        phx-hook="LineHover"
+        data-series={@series_json}
+        data-top={@plot_top}
+        data-bottom={@plot_bottom}
+      >
+        <svg
+          viewBox={"0 0 #{@vb_w} #{@height}"}
+          role="img"
+          aria-label={@aria_label}
+          style={"display:block;width:100%;height:auto;font-family:inherit;color:#{@fg}"}
+        >
+          <g stroke="currentColor" stroke-opacity="0.08">
+            <line :for={{_l, y} <- @y_ticks} x1={@plot_left} x2={@plot_right} y1={y} y2={y} />
+          </g>
+          <g fill="currentColor" fill-opacity="0.5" font-size="11">
+            <text :for={{l, y} <- @y_ticks} x={@plot_left - 8} y={y + 3} text-anchor="end">{l}</text>
+            <text :for={{l, x} <- @x_ticks} x={x} y={@height - 8} text-anchor="middle">{l}</text>
+          </g>
+          <g :for={s <- @lines} style={"color:#{s.color}"}>
+            <path
+              d={s.d}
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linejoin="round"
+              stroke-linecap="round"
+            />
+          </g>
+          <g class="lantern-hover"></g>
+        </svg>
+        <div
+          :if={@legend}
+          style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;padding:0 4px"
+        >
+          <span
+            :for={s <- @lines}
+            style={"display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#{@fg_muted}"}
+          >
+            <span style={"width:10px;height:3px;border-radius:2px;background:#{s.color}"}></span>{s.label}
+          </span>
+        </div>
+      </div>
+      <div
+        :if={!@has_data}
+        style={"display:flex;min-height:140px;align-items:center;justify-content:center;font-size:14px;color:#{@fg_muted}"}
+      >
+        {@empty_message}
+      </div>
+    </div>
+    """
+  end
+
+  defp line_geometry(series, height, fmt) do
+    norm =
+      series
+      |> Enum.map(&normalize_line_series/1)
+      |> Enum.reject(fn s -> s.points == [] end)
+
+    all_points = Enum.flat_map(norm, & &1.points)
+
+    case all_points do
+      [] ->
+        %{has_data: false, fg_muted: @fg_muted}
+
+      _ ->
+        plot_left = @margin.left
+        plot_right = @vb_w - @margin.right
+        plot_top = @margin.top
+        plot_bottom = height - @margin.bottom
+
+        times = Enum.map(all_points, fn {t, _} -> t end)
+        t0 = Enum.min_by(times, &DateTime.to_unix/1)
+        tn = Enum.max_by(times, &DateTime.to_unix/1)
+        span = DateTime.diff(tn, t0)
+        xf = fn t -> Geometry.scale(0, span, plot_left, plot_right, DateTime.diff(t, t0)) end
+
+        vmax = all_points |> Enum.map(fn {_t, v} -> v end) |> Enum.max()
+        ticks = Geometry.nice_ticks(0, vmax, 4)
+        ymax = List.last(ticks)
+        yf = fn v -> Geometry.scale(0, ymax, plot_bottom, plot_top, v) end
+        label_for = time_label_fun(span)
+
+        lines =
+          norm
+          |> Enum.with_index()
+          |> Enum.map(fn {s, i} ->
+            px = Enum.map(s.points, fn {t, v} -> {xf.(t), yf.(v)} end)
+
+            %{
+              label: s.label,
+              color: line_color_at(s.color, i),
+              d: Geometry.line_path(px, length(px) <= @smooth_max)
+            }
+          end)
+
+        y_ticks = Enum.map(ticks, fn t -> {format_value(t, fmt), Geometry.round1(yf.(t))} end)
+
+        x_ticks =
+          0..4
+          |> Enum.map(fn k -> DateTime.add(t0, round(k / 4 * span), :second) end)
+          |> Enum.map(fn t -> {label_for.(t), Geometry.round1(xf.(t))} end)
+          |> Enum.uniq()
+
+        series_json =
+          norm
+          |> Enum.with_index()
+          |> Enum.map(fn {s, i} ->
+            pts =
+              Enum.map(s.points, fn {t, v} ->
+                %{
+                  x: Geometry.round1(xf.(t)),
+                  y: Geometry.round1(yf.(v)),
+                  v: format_value(v, fmt),
+                  t: label_for.(t)
+                }
+              end)
+
+            %{label: s.label, color: line_color_at(s.color, i), pts: pts}
+          end)
+          |> Jason.encode!()
+
+        %{
+          has_data: true,
+          vb_w: @vb_w,
+          plot_left: plot_left,
+          plot_right: plot_right,
+          plot_top: plot_top,
+          plot_bottom: plot_bottom,
+          y_ticks: y_ticks,
+          x_ticks: x_ticks,
+          lines: lines,
+          series_json: series_json,
+          fg: @fg,
+          fg_muted: @fg_muted
+        }
+    end
+  end
+
+  defp line_color_at(color, _i) when is_binary(color), do: color
+  defp line_color_at(_nil, i), do: Enum.at(@line_palette, rem(i, length(@line_palette)))
+
+  defp normalize_line_series(s) do
+    points =
+      s
+      |> line_points()
+      |> Enum.map(&parse_point/1)
+      |> Enum.reject(&is_nil/1)
+      |> Enum.sort_by(fn {t, _} -> DateTime.to_unix(t) end)
+
+    %{label: bar_label(s), color: line_color(s), points: points}
+  end
+
+  defp line_color(%{color: c}) when is_binary(c), do: c
+  defp line_color(%{"color" => c}) when is_binary(c), do: c
+  defp line_color(_), do: nil
+
+  defp line_points(%{points: p}) when is_list(p), do: p
+  defp line_points(%{"points" => p}) when is_list(p), do: p
+  defp line_points(_), do: []
+
+  defp parse_point({t, v}) when is_number(v), do: with_dt(to_datetime(t), v)
+  defp parse_point(%{value: v} = m) when is_number(v), do: with_dt(to_datetime(point_time(m)), v)
+
+  defp parse_point(%{"value" => v} = m) when is_number(v),
+    do: with_dt(to_datetime(point_time(m)), v)
+
+  defp parse_point(_), do: nil
+
+  defp with_dt(nil, _v), do: nil
+  defp with_dt(dt, v), do: {dt, v}
+
+  defp point_time(%{time: t}), do: t
+  defp point_time(%{"time" => t}), do: t
+  defp point_time(%{date: t}), do: t
+  defp point_time(%{"date" => t}), do: t
+  defp point_time(_), do: nil
+
+  defp to_datetime(%DateTime{} = dt), do: dt
+  defp to_datetime(%NaiveDateTime{} = ndt), do: DateTime.from_naive!(ndt, "Etc/UTC")
+  defp to_datetime(%Date{} = d), do: DateTime.new!(d, ~T[00:00:00], "Etc/UTC")
+
+  defp to_datetime(s) when is_binary(s) do
+    case DateTime.from_iso8601(s) do
+      {:ok, dt, _} ->
+        dt
+
+      _ ->
+        case NaiveDateTime.from_iso8601(s) do
+          {:ok, ndt} -> DateTime.from_naive!(ndt, "Etc/UTC")
+          _ -> nil
+        end
+    end
+  end
+
+  defp to_datetime(_), do: nil
+
+  defp time_label_fun(span) when span <= 2 * 86_400, do: fn t -> Calendar.strftime(t, "%H:%M") end
+  defp time_label_fun(_span), do: fn t -> "#{month(t)} #{t.day}" end
 end
