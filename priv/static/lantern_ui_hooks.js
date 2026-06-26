@@ -9,6 +9,15 @@
 // `ChartHover` draws a crosshair + tooltip over a server-rendered LanternUI chart.
 // All geometry is computed in Elixir; the hook only reads the embedded point list
 // (viewBox coordinates) and paints the hover layer. No chart library, no React.
+
+// Escape dynamic text before it enters the SVG via innerHTML. `value_format`
+// output is consumer-controlled and may carry user data, so never trust it raw.
+const esc = (s) =>
+  String(s).replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]
+  )
+
 const ChartHover = {
   mounted() {
     this.setup()
@@ -82,8 +91,8 @@ const ChartHover = {
       `<circle cx="${pt.x}" cy="${pt.y}" r="3.5" fill="currentColor" stroke="${surface}" stroke-width="2"/>` +
       `<rect x="${bx}" y="${by}" width="${boxW}" height="${boxH}" rx="6" ` +
       `fill="${surface}" stroke="currentColor" stroke-opacity="0.25" stroke-width="0.5"/>` +
-      `<text x="${bx + 10}" y="${by + 15}" font-size="12.5" font-weight="500" fill="${fg}">${pt.p}</text>` +
-      `<text x="${bx + 10}" y="${by + 28}" font-size="10.5" fill="${fgMuted}">${label2}</text>`
+      `<text x="${bx + 10}" y="${by + 15}" font-size="12.5" font-weight="500" fill="${fg}">${esc(pt.p)}</text>` +
+      `<text x="${bx + 10}" y="${by + 28}" font-size="10.5" fill="${fgMuted}">${esc(label2)}</text>`
     this.hover.style.opacity = 1
   },
 

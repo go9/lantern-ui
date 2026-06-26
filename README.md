@@ -94,7 +94,9 @@ Components read colors from CSS variables with chained fallbacks:
 ## Value formatting
 
 `area_chart` and `bar_chart` accept `value_format`: `:number` (default),
-`:currency`, or a 1-arity function `(number -> String.t())`.
+`:currency` (USD-style `$` prefix), or a 1-arity function `(number -> String.t())`.
+Any other value is treated as `:number`. Custom-function output is rendered as
+plain text — it is HTML-escaped before it reaches the tooltip.
 
 ## License
 

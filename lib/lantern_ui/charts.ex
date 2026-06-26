@@ -163,7 +163,12 @@ defmodule LanternUI.Charts do
   attr(:series, :list, default: [])
   attr(:height, :integer, default: 180)
   attr(:class, :string, default: nil)
-  attr(:value_format, :any, default: :number)
+
+  attr(:value_format, :any,
+    default: :number,
+    doc: "`:number` | `:currency` | a 1-arity function `(number -> String.t())`"
+  )
+
   attr(:empty_message, :string, default: "No data")
   attr(:aria_label, :string, default: "Bar chart")
 
