@@ -210,10 +210,134 @@ defmodule LanternUI.ComponentsTest do
     end
   end
 
+  describe "datetime_field/1" do
+    test "date mode renders m/d/y segments and the hidden canonical input" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.DatetimeField.datetime_field
+            id="f"
+            name="due"
+            mode={:date}
+            value="2026-02-03"
+          />
+          """
+        end)
+
+      assert html =~ ~s(phx-hook="LanternDatetimeField")
+      assert html =~ ~s(type="hidden")
+      assert html =~ ~s(name="due")
+      assert html =~ ~s(value="2026-02-03")
+      assert html =~ ~s(data-seg="month")
+      assert html =~ ~s(data-seg="day")
+      assert html =~ ~s(data-seg="year")
+      refute html =~ ~s(data-seg="hour")
+      # segments show the parsed value, zero-padded
+      assert html =~ ">02<"
+      assert html =~ ">03<"
+      assert html =~ ">2026<"
+    end
+
+    test "nil value renders placeholders and an empty hidden input" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.DatetimeField.datetime_field id="f" name="due" mode={:date} value={nil} />
+          """
+        end)
+
+      assert html =~ ~s(value="")
+      assert html =~ "mm"
+      assert html =~ "dd"
+      assert html =~ "yyyy"
+      refute html =~ ~s(data-set="true")
+      # nullable default shows the clear affordance
+      assert html =~ "lui-dtf-clear"
+    end
+
+    test "datetime mode at ms precision renders all segments 12h" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.DatetimeField.datetime_field
+            id="f"
+            name="at"
+            mode={:datetime}
+            precision={:millisecond}
+            value="2026-02-03T14:30:05.123"
+          />
+          """
+        end)
+
+      for seg <- ~w(month day year hour minute second millisecond meridiem) do
+        assert html =~ ~s(data-seg="#{seg}"), "missing segment #{seg}"
+      end
+
+      # 14:30 displays as 02:30 PM; ms padded to 123
+      assert html =~ ">02<"
+      assert html =~ ">30<"
+      assert html =~ ">123<"
+      assert html =~ ">PM<"
+    end
+
+    test "time mode default precision hides seconds/ms" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.DatetimeField.datetime_field
+            id="f"
+            name="t"
+            mode={:time}
+            value="08:45:00.000"
+          />
+          """
+        end)
+
+      assert html =~ ~s(data-seg="hour")
+      refute html =~ ~s(data-seg="second")
+      refute html =~ ~s(data-seg="millisecond")
+      assert html =~ ">08<"
+      assert html =~ ">45<"
+      assert html =~ ">AM<"
+    end
+
+    test "midnight and noon map to 12 AM / 12 PM" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.DatetimeField.datetime_field
+            id="f"
+            name="t"
+            mode={:time}
+            value="00:15:00.000"
+          />
+          """
+        end)
+
+      assert html =~ ">12<"
+      assert html =~ ">AM<"
+
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.DatetimeField.datetime_field
+            id="g"
+            name="t"
+            mode={:time}
+            value="12:15:00.000"
+          />
+          """
+        end)
+
+      assert html =~ ">12<"
+      assert html =~ ">PM<"
+    end
+  end
+
   describe "use LanternUI registry" do
     test "exposes the new component groups" do
       keys = LanternUI.__components__() |> Map.keys() |> Enum.sort()
-      assert keys == [:button, :calendar, :charts, :form, :icon]
+      assert keys == [:button, :calendar, :charts, :datetime_field, :form, :icon]
     end
   end
 end

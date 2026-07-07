@@ -465,3 +465,70 @@
   opacity: 0.35;
   pointer-events: none;
 }
+
+/* ── Segmented date/time field ── */
+.lui-dtf {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: var(--lantern-control-h);
+  padding: 0 0.625rem;
+  background: var(--lantern-surface);
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius);
+  box-shadow: var(--lantern-shadow);
+  font-family: var(--lantern-font);
+  font-size: var(--lantern-text);
+  font-variant-numeric: tabular-nums;
+  color: var(--lantern-fg);
+  transition:
+    border-color var(--lantern-duration) var(--lantern-ease),
+    box-shadow var(--lantern-duration) var(--lantern-ease);
+}
+.lui-dtf:focus-within {
+  border-color: var(--lantern-ring);
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft);
+}
+.lui-dtf[data-disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.lui-dtf-segs {
+  display: inline-flex;
+  align-items: baseline;
+  flex: 1;
+  min-width: 0;
+}
+.lui-dtf-seg {
+  padding: 0.0625rem 0.1875rem;
+  border-radius: 0.25rem;
+  outline: none;
+  cursor: text;
+}
+.lui-dtf-seg:hover { background: var(--lantern-surface-sunken); }
+.lui-dtf-seg:focus {
+  background: var(--lantern-primary);
+  color: var(--lantern-primary-fg);
+}
+.lui-dtf-seg:not([data-set]) { color: var(--lantern-fg-subtle); }
+.lui-dtf-seg:not([data-set]):focus { color: var(--lantern-primary-fg); }
+.lui-dtf-sep {
+  color: var(--lantern-fg-subtle);
+  padding: 0 0.0625rem;
+}
+.lui-dtf-clear {
+  border: none;
+  background: none;
+  color: var(--lantern-fg-subtle);
+  font-size: var(--lantern-text);
+  line-height: 1;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+.lui-dtf-clear:hover { color: var(--lantern-danger); background: var(--lantern-surface-sunken); }
+.lui-dtf-suffix {
+  display: inline-flex;
+  align-items: center;
+  color: var(--lantern-fg-muted);
+}
