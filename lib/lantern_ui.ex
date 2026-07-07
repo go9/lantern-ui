@@ -34,7 +34,11 @@ defmodule LanternUI do
   # (Phase 1: :button, :icon, :calendar, :date_picker, …). Keys are what
   # `use LanternUI, only:/except:` filters on.
   @components %{
-    charts: LanternUI.Charts
+    charts: LanternUI.Charts,
+    button: LanternUI.Components.Button,
+    icon: LanternUI.Components.Icon,
+    form: LanternUI.Components.Form,
+    calendar: LanternUI.Components.Calendar
   }
 
   @doc false

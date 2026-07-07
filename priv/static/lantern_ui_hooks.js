@@ -358,7 +358,155 @@ const LanternOverlay = {
   },
 }
 
+// ── Calendar ──────────────────────────────────────────────────────────────
+//
+// Client-side driver for `LanternUI.Components.Calendar`. The server renders
+// the initial grid; this hook re-renders month grids on navigation and runs
+// the WAI-ARIA grid keyboard model — all DOM-local, no LiveView round-trips
+// (works in dead views and embedded hosts).
+//
+// Selecting a day sets `data-value` (ISO date) on the root and dispatches a
+// bubbling `lantern:change` CustomEvent {detail: {value}} — pickers listen.
+
+const CAL_KEYS = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }
+
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July",
+  "August", "September", "October", "November", "December"]
+
+const LanternCalendar = {
+  mounted() {
+    this.month = this.el.dataset.month // ISO first-of-month
+    this.weekStart = parseInt(this.el.dataset.weekStart || "0", 10)
+    this.grid = this.el.querySelector('[data-part="grid"]')
+    this.title = this.el.querySelector('[data-part="title"]')
+
+    this.el.querySelector('[data-part="prev"]').addEventListener("click", () => this.nav(-1))
+    this.el.querySelector('[data-part="next"]').addEventListener("click", () => this.nav(1))
+
+    this.grid.addEventListener("click", (e) => {
+      const day = e.target.closest(".lui-cal-day")
+      if (day && !day.disabled) this.select(day.dataset.date)
+    })
+
+    this.grid.addEventListener("keydown", (e) => this.onKey(e))
+  },
+
+  nav(delta) {
+    const [y, m] = this.month.split("-").map(Number)
+    const d = new Date(Date.UTC(y, m - 1 + delta, 1))
+    this.month = d.toISOString().slice(0, 10)
+    this.render()
+  },
+
+  select(iso) {
+    this.el.dataset.value = iso
+    this.render()
+    this.el.dispatchEvent(
+      new CustomEvent("lantern:change", { bubbles: true, detail: { value: iso } })
+    )
+  },
+
+  onKey(e) {
+    const day = e.target.closest(".lui-cal-day")
+    if (!day) return
+
+    let target = null
+    if (e.key in CAL_KEYS) {
+      target = this.addDays(day.dataset.date, CAL_KEYS[e.key])
+    } else if (e.key === "PageUp" || e.key === "PageDown") {
+      const sign = e.key === "PageUp" ? -1 : 1
+      target = this.addMonths(day.dataset.date, e.shiftKey ? sign * 12 : sign)
+    } else if (e.key === "Home" || e.key === "End") {
+      const dow = this.dayOffset(day.dataset.date)
+      target = this.addDays(day.dataset.date, e.key === "Home" ? -dow : 6 - dow)
+    } else if (e.key === "t") {
+      target = new Date().toISOString().slice(0, 10)
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      if (!day.disabled) this.select(day.dataset.date)
+      return
+    } else {
+      return
+    }
+    e.preventDefault()
+    this.focusDate(target)
+  },
+
+  focusDate(iso) {
+    if (iso.slice(0, 7) !== this.month.slice(0, 7)) {
+      this.month = iso.slice(0, 8) + "01"
+      this.render()
+    }
+    const btn = this.grid.querySelector(`[data-date="${iso}"]`)
+    if (btn) {
+      this.grid.querySelectorAll(".lui-cal-day").forEach((b) => (b.tabIndex = -1))
+      btn.tabIndex = 0
+      btn.focus()
+    }
+  },
+
+  addDays(iso, n) {
+    const d = new Date(iso + "T00:00:00Z")
+    d.setUTCDate(d.getUTCDate() + n)
+    return d.toISOString().slice(0, 10)
+  },
+
+  addMonths(iso, n) {
+    const d = new Date(iso + "T00:00:00Z")
+    const day = d.getUTCDate()
+    d.setUTCDate(1)
+    d.setUTCMonth(d.getUTCMonth() + n)
+    const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate()
+    d.setUTCDate(Math.min(day, last))
+    return d.toISOString().slice(0, 10)
+  },
+
+  dayOffset(iso) {
+    // 0..6 offset of `iso` from the calendar's configured week start.
+    const dow = new Date(iso + "T00:00:00Z").getUTCDay()
+    return (dow - this.weekStart + 7) % 7
+  },
+
+  render() {
+    const [y, m] = this.month.split("-").map(Number)
+    const first = new Date(Date.UTC(y, m - 1, 1))
+    const back = (first.getUTCDay() - this.weekStart + 7) % 7
+    const start = new Date(first)
+    start.setUTCDate(start.getUTCDate() - back)
+
+    const today = new Date().toISOString().slice(0, 10)
+    const selected = this.el.dataset.value
+    const min = this.el.dataset.min
+    const max = this.el.dataset.max
+
+    this.title.textContent = `${MONTHS[m - 1]} ${y}`
+
+    let focusTarget = null
+    const rows = [...this.grid.querySelectorAll('[role="row"]')].slice(1)
+    rows.forEach((row, w) => {
+      ;[...row.children].forEach((btn, i) => {
+        const d = new Date(start)
+        d.setUTCDate(d.getUTCDate() + w * 7 + i)
+        const iso = d.toISOString().slice(0, 10)
+        btn.dataset.date = iso
+        btn.textContent = d.getUTCDate()
+        btn.toggleAttribute("data-outside", d.getUTCMonth() !== m - 1)
+        btn.toggleAttribute("data-today", iso === today)
+        if (iso === selected) btn.setAttribute("aria-selected", "true")
+        else btn.removeAttribute("aria-selected")
+        btn.disabled = !!((min && iso < min) || (max && iso > max))
+        btn.setAttribute("aria-label", `${MONTHS[m - 1]} ${d.getUTCDate()}, ${y}`)
+        btn.tabIndex = -1
+        const inMonth = !btn.hasAttribute("data-outside")
+        if ((iso === selected && inMonth) || (!focusTarget && d.getUTCDate() === 1 && inMonth))
+          focusTarget = btn
+      })
+    })
+    if (focusTarget) focusTarget.tabIndex = 0
+  },
+}
+
 export const runtime = { position, trapFocus, onDismiss }
-export const Hooks = { ChartHover, LineHover, LanternOverlay }
-export { ChartHover, LineHover, LanternOverlay }
+export const Hooks = { ChartHover, LineHover, LanternOverlay, LanternCalendar }
+export { ChartHover, LineHover, LanternOverlay, LanternCalendar }
 export default Hooks

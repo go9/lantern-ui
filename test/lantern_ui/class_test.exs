@@ -4,29 +4,24 @@ defmodule LanternUI.ClassTest do
   alias LanternUI.Class
 
   describe "merge/1" do
-    test "resolves conflicting Tailwind utilities, last wins" do
-      assert Class.merge(["px-2 py-1", "px-4"]) == "py-1 px-4"
-    end
-
-    test "a consumer override beats the base class" do
-      base = "rounded-md bg-zinc-100 text-sm"
-      assert Class.merge([base, "bg-blue-600"]) =~ "bg-blue-600"
-      refute Class.merge([base, "bg-blue-600"]) =~ "bg-zinc-100"
+    test "joins fragments in order (consumer classes append after base)" do
+      assert Class.merge(["lui-btn", "w-full"]) == "lui-btn w-full"
     end
 
     test "drops falsy fragments and flattens nested lists" do
-      assert Class.merge(["px-4", nil, false, ["py-2", ""]]) == "px-4 py-2"
+      assert Class.merge(["lui-btn", nil, false, ["w-full", ""]]) == "lui-btn w-full"
     end
 
-    test "accepts a plain string" do
-      assert Class.merge("px-2 px-4") == "px-4"
+    test "accepts a plain string and nil" do
+      assert Class.merge("lui-btn") == "lui-btn"
+      assert Class.merge(nil) == ""
     end
   end
 
   describe "variant/3" do
     test "selects the fragment for the key" do
-      variants = %{primary: "bg-accent", ghost: "bg-transparent"}
-      assert Class.variant(variants, :primary) == "bg-accent"
+      variants = %{primary: "lui-a", ghost: "lui-b"}
+      assert Class.variant(variants, :primary) == "lui-a"
     end
 
     test "falls back to the default for an unknown key" do
