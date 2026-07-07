@@ -218,6 +218,147 @@ const LineHover = {
   },
 }
 
-export const Hooks = { ChartHover, LineHover }
-export { ChartHover, LineHover }
+// ── Runtime core ──────────────────────────────────────────────────────────
+//
+// Shared, dependency-free substrate for LanternUI's interactive components
+// (popover, dropdown, select, date picker). Three pieces:
+//
+//   position(anchor, floating, opts) — anchor/flip/shift placement
+//   trapFocus(container)             — dialog-style focus containment
+//   onDismiss(el, cb)                — Escape / outside-click dismissal
+//
+// Component hooks compose these; nothing here touches LiveView state. All
+// motion respects prefers-reduced-motion via the --lantern-duration token.
+
+// Position `floating` relative to `anchor`. Placement is "bottom-start" |
+// "bottom-end" | "top-start" | "top-end"; flips on viewport overflow and
+// shifts horizontally to stay on screen. Returns the chosen placement.
+function position(anchor, floating, { placement = "bottom-start", gap = 4 } = {}) {
+  const a = anchor.getBoundingClientRect()
+  const f = floating.getBoundingClientRect()
+  const vw = document.documentElement.clientWidth
+  const vh = document.documentElement.clientHeight
+
+  let [side, align] = placement.split("-")
+
+  // Flip vertically when the preferred side overflows and the other fits.
+  const fitsBelow = a.bottom + gap + f.height <= vh
+  const fitsAbove = a.top - gap - f.height >= 0
+  if (side === "bottom" && !fitsBelow && fitsAbove) side = "top"
+  if (side === "top" && !fitsAbove && fitsBelow) side = "bottom"
+
+  let top = side === "bottom" ? a.bottom + gap : a.top - gap - f.height
+  let left = align === "end" ? a.right - f.width : a.left
+
+  // Shift into the viewport (8px margin) rather than clipping.
+  left = Math.min(Math.max(left, 8), vw - f.width - 8)
+  top = Math.min(Math.max(top, 8), vh - f.height - 8)
+
+  floating.style.position = "fixed"
+  floating.style.top = `${top}px`
+  floating.style.left = `${left}px`
+  return `${side}-${align}`
+}
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), ' +
+  'textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+// Contain Tab focus inside `container`. Returns a release function that
+// restores focus to the previously focused element.
+function trapFocus(container) {
+  const prev = document.activeElement
+
+  const onKeydown = (e) => {
+    if (e.key !== "Tab") return
+    const items = [...container.querySelectorAll(FOCUSABLE)].filter(
+      (el) => el.offsetParent !== null
+    )
+    if (items.length === 0) return
+    const first = items[0]
+    const last = items[items.length - 1]
+    if (e.shiftKey && document.activeElement === first) {
+      last.focus()
+      e.preventDefault()
+    } else if (!e.shiftKey && document.activeElement === last) {
+      first.focus()
+      e.preventDefault()
+    }
+  }
+
+  container.addEventListener("keydown", onKeydown)
+  const target = container.querySelector(FOCUSABLE)
+  if (target) target.focus()
+
+  return () => {
+    container.removeEventListener("keydown", onKeydown)
+    if (prev && prev.focus) prev.focus()
+  }
+}
+
+// Call `cb` on Escape or on a pointerdown outside `el` (and outside the
+// optional `anchor`). Returns a release function.
+function onDismiss(el, cb, { anchor = null } = {}) {
+  const onKey = (e) => {
+    if (e.key === "Escape") cb("escape")
+  }
+  const onPointer = (e) => {
+    if (el.contains(e.target)) return
+    if (anchor && anchor.contains(e.target)) return
+    cb("outside")
+  }
+  document.addEventListener("keydown", onKey)
+  document.addEventListener("pointerdown", onPointer)
+  return () => {
+    document.removeEventListener("keydown", onKey)
+    document.removeEventListener("pointerdown", onPointer)
+  }
+}
+
+// Generic overlay hook: a trigger (`data-part="trigger"`) toggles a floating
+// panel (`data-part="panel"`), positioned via `position/3`, focus-trapped,
+// dismissed by Escape/outside-click. Component hooks (popover, dropdown,
+// date picker) extend this shape or use the primitives directly.
+const LanternOverlay = {
+  mounted() {
+    this.trigger = this.el.querySelector('[data-part="trigger"]')
+    this.panel = this.el.querySelector('[data-part="panel"]')
+    if (!this.trigger || !this.panel) return
+    this.open = false
+    this.cleanup = []
+
+    this.trigger.addEventListener("click", () => (this.open ? this.hide() : this.show()))
+    this.trigger.addEventListener("keydown", (e) => {
+      if ((e.key === "ArrowDown" || e.key === "Enter") && !this.open) {
+        e.preventDefault()
+        this.show()
+      }
+    })
+  },
+
+  show() {
+    this.open = true
+    this.panel.hidden = false
+    position(this.trigger, this.panel, { placement: this.el.dataset.placement })
+    this.trigger.setAttribute("aria-expanded", "true")
+    this.cleanup.push(trapFocus(this.panel))
+    this.cleanup.push(onDismiss(this.panel, () => this.hide(), { anchor: this.trigger }))
+  },
+
+  hide() {
+    this.open = false
+    this.cleanup.forEach((fn) => fn())
+    this.cleanup = []
+    this.panel.hidden = true
+    this.trigger.setAttribute("aria-expanded", "false")
+  },
+
+  destroyed() {
+    this.cleanup.forEach((fn) => fn())
+  },
+}
+
+export const runtime = { position, trapFocus, onDismiss }
+export const Hooks = { ChartHover, LineHover, LanternOverlay }
+export { ChartHover, LineHover, LanternOverlay }
 export default Hooks
