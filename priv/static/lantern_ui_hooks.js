@@ -358,7 +358,346 @@ const LanternOverlay = {
   },
 }
 
+// ── Calendar ──────────────────────────────────────────────────────────────
+//
+// Client-side driver for `LanternUI.Components.Calendar`. The server renders
+// the initial grid; this hook re-renders month grids on navigation and runs
+// the WAI-ARIA grid keyboard model — all DOM-local, no LiveView round-trips
+// (works in dead views and embedded hosts).
+//
+// Selecting a day sets `data-value` (ISO date) on the root and dispatches a
+// bubbling `lantern:change` CustomEvent {detail: {value}} — pickers listen.
+
+const CAL_KEYS = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }
+
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July",
+  "August", "September", "October", "November", "December"]
+
+const LanternCalendar = {
+  mounted() {
+    this.month = this.el.dataset.month // ISO first-of-month
+    this.weekStart = parseInt(this.el.dataset.weekStart || "0", 10)
+    this.grid = this.el.querySelector('[data-part="grid"]')
+    this.title = this.el.querySelector('[data-part="title"]')
+
+    this.el.querySelector('[data-part="prev"]').addEventListener("click", () => this.nav(-1))
+    this.el.querySelector('[data-part="next"]').addEventListener("click", () => this.nav(1))
+
+    this.grid.addEventListener("click", (e) => {
+      const day = e.target.closest(".lui-cal-day")
+      if (day && !day.disabled) this.select(day.dataset.date)
+    })
+
+    this.grid.addEventListener("keydown", (e) => this.onKey(e))
+  },
+
+  nav(delta) {
+    const [y, m] = this.month.split("-").map(Number)
+    const d = new Date(Date.UTC(y, m - 1 + delta, 1))
+    this.month = d.toISOString().slice(0, 10)
+    this.render()
+  },
+
+  select(iso) {
+    this.el.dataset.value = iso
+    this.render()
+    this.el.dispatchEvent(
+      new CustomEvent("lantern:change", { bubbles: true, detail: { value: iso } })
+    )
+  },
+
+  onKey(e) {
+    const day = e.target.closest(".lui-cal-day")
+    if (!day) return
+
+    let target = null
+    if (e.key in CAL_KEYS) {
+      target = this.addDays(day.dataset.date, CAL_KEYS[e.key])
+    } else if (e.key === "PageUp" || e.key === "PageDown") {
+      const sign = e.key === "PageUp" ? -1 : 1
+      target = this.addMonths(day.dataset.date, e.shiftKey ? sign * 12 : sign)
+    } else if (e.key === "Home" || e.key === "End") {
+      const dow = this.dayOffset(day.dataset.date)
+      target = this.addDays(day.dataset.date, e.key === "Home" ? -dow : 6 - dow)
+    } else if (e.key === "t") {
+      target = new Date().toISOString().slice(0, 10)
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      if (!day.disabled) this.select(day.dataset.date)
+      return
+    } else {
+      return
+    }
+    e.preventDefault()
+    this.focusDate(target)
+  },
+
+  focusDate(iso) {
+    if (iso.slice(0, 7) !== this.month.slice(0, 7)) {
+      this.month = iso.slice(0, 8) + "01"
+      this.render()
+    }
+    const btn = this.grid.querySelector(`[data-date="${iso}"]`)
+    if (btn) {
+      this.grid.querySelectorAll(".lui-cal-day").forEach((b) => (b.tabIndex = -1))
+      btn.tabIndex = 0
+      btn.focus()
+    }
+  },
+
+  addDays(iso, n) {
+    const d = new Date(iso + "T00:00:00Z")
+    d.setUTCDate(d.getUTCDate() + n)
+    return d.toISOString().slice(0, 10)
+  },
+
+  addMonths(iso, n) {
+    const d = new Date(iso + "T00:00:00Z")
+    const day = d.getUTCDate()
+    d.setUTCDate(1)
+    d.setUTCMonth(d.getUTCMonth() + n)
+    const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate()
+    d.setUTCDate(Math.min(day, last))
+    return d.toISOString().slice(0, 10)
+  },
+
+  dayOffset(iso) {
+    // 0..6 offset of `iso` from the calendar's configured week start.
+    const dow = new Date(iso + "T00:00:00Z").getUTCDay()
+    return (dow - this.weekStart + 7) % 7
+  },
+
+  render() {
+    const [y, m] = this.month.split("-").map(Number)
+    const first = new Date(Date.UTC(y, m - 1, 1))
+    const back = (first.getUTCDay() - this.weekStart + 7) % 7
+    const start = new Date(first)
+    start.setUTCDate(start.getUTCDate() - back)
+
+    const today = new Date().toISOString().slice(0, 10)
+    const selected = this.el.dataset.value
+    const min = this.el.dataset.min
+    const max = this.el.dataset.max
+
+    this.title.textContent = `${MONTHS[m - 1]} ${y}`
+
+    let focusTarget = null
+    const rows = [...this.grid.querySelectorAll('[role="row"]')].slice(1)
+    rows.forEach((row, w) => {
+      ;[...row.children].forEach((btn, i) => {
+        const d = new Date(start)
+        d.setUTCDate(d.getUTCDate() + w * 7 + i)
+        const iso = d.toISOString().slice(0, 10)
+        btn.dataset.date = iso
+        btn.textContent = d.getUTCDate()
+        btn.toggleAttribute("data-outside", d.getUTCMonth() !== m - 1)
+        btn.toggleAttribute("data-today", iso === today)
+        if (iso === selected) btn.setAttribute("aria-selected", "true")
+        else btn.removeAttribute("aria-selected")
+        btn.disabled = !!((min && iso < min) || (max && iso > max))
+        btn.setAttribute("aria-label", `${MONTHS[m - 1]} ${d.getUTCDate()}, ${y}`)
+        btn.tabIndex = -1
+        const inMonth = !btn.hasAttribute("data-outside")
+        if ((iso === selected && inMonth) || (!focusTarget && d.getUTCDate() === 1 && inMonth))
+          focusTarget = btn
+      })
+    })
+    if (focusTarget) focusTarget.tabIndex = 0
+  },
+}
+
+// ── Segmented date/time field ─────────────────────────────────────────────
+//
+// Driver for `LanternUI.Components.DatetimeField`. Each segment is directly
+// editable: type digits (auto-advances when unambiguous), ↑/↓ steps with
+// wrap, ←/→ moves, Backspace clears, a/p sets the meridiem, Cmd/Ctrl+
+// Backspace (or the ∅ button) clears the whole value to null.
+//
+// The hidden input carries the canonical value (date YYYY-MM-DD, time
+// HH:MM:SS.mmm 24h, datetime YYYY-MM-DDTHH:MM:SS.mmm); segments are display
+// sugar. Every commit dispatches a bubbling `lantern:change` CustomEvent.
+
+const SEG_MAX = { month: 12, day: 31, year: 9999, hour: 12, minute: 59, second: 59, millisecond: 999 }
+const SEG_MIN = { month: 1, day: 1, year: 1, hour: 1, minute: 0, second: 0, millisecond: 0 }
+const SEG_PAD = { month: 2, day: 2, year: 4, hour: 2, minute: 2, second: 2, millisecond: 3 }
+
+const LanternDatetimeField = {
+  mounted() {
+    this.mode = this.el.dataset.mode
+    this.hidden = this.el.querySelector('[data-part="value"]')
+    this.segs = [...this.el.querySelectorAll(".lui-dtf-seg")]
+    this.buf = "" // typed-digit buffer for the focused segment
+
+    // Initial segment state from the server-rendered text.
+    this.values = {}
+    for (const seg of this.segs) {
+      const key = seg.dataset.seg
+      if (seg.dataset.set) {
+        this.values[key] = key === "meridiem" ? seg.textContent.trim() : parseInt(seg.textContent, 10)
+      }
+    }
+
+    if (this.el.dataset.disabled) return
+
+    this.el.addEventListener("keydown", (e) => this.onKey(e))
+    this.el.addEventListener("focusin", () => (this.buf = ""))
+    this.el.querySelector('[data-part="clear"]')?.addEventListener("click", () => this.clearAll())
+    this.segs.forEach((s) => s.addEventListener("mousedown", () => (this.buf = "")))
+  },
+
+  onKey(e) {
+    const seg = e.target.closest(".lui-dtf-seg")
+    if (!seg) {
+      if (e.key === "Backspace" && (e.metaKey || e.ctrlKey)) this.clearAll()
+      return
+    }
+    const key = seg.dataset.seg
+
+    if (e.key === "Backspace" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      return this.clearAll()
+    }
+
+    if (/^[0-9]$/.test(e.key) && key !== "meridiem") {
+      e.preventDefault()
+      return this.type(seg, key, e.key)
+    }
+
+    switch (e.key) {
+      case "ArrowUp":
+      case "ArrowDown": {
+        e.preventDefault()
+        this.buf = ""
+        this.step(key, e.key === "ArrowUp" ? 1 : -1)
+        return this.renderAndCommit()
+      }
+      case "ArrowLeft":
+      case "ArrowRight":
+        e.preventDefault()
+        return this.move(seg, e.key === "ArrowRight" ? 1 : -1)
+      case "Backspace":
+      case "Delete":
+        e.preventDefault()
+        this.buf = ""
+        delete this.values[key]
+        return this.renderAndCommit()
+      case "a":
+      case "A":
+      case "p":
+      case "P":
+        if (key === "meridiem" || this.mode !== "date") {
+          e.preventDefault()
+          this.values.meridiem = /a/i.test(e.key) ? "AM" : "PM"
+          return this.renderAndCommit()
+        }
+        return
+      default:
+        return
+    }
+  },
+
+  type(seg, key, digit) {
+    this.buf += digit
+    let n = parseInt(this.buf, 10)
+    const max = SEG_MAX[key]
+
+    if (n > max) {
+      // Restart the buffer with this digit (e.g. month "13" -> "3").
+      this.buf = digit
+      n = parseInt(digit, 10)
+    }
+    this.values[key] = key === "year" ? n : Math.max(n, 0)
+    this.renderAndCommit()
+
+    // Auto-advance when another digit could no longer fit.
+    const full = this.buf.length >= SEG_PAD[key]
+    const ambiguous = parseInt(this.buf + "0", 10) <= max
+    if (full || !ambiguous) {
+      this.buf = ""
+      if (SEG_MIN[key] === 1 && this.values[key] === 0) this.values[key] = SEG_MIN[key]
+      this.move(seg, 1)
+    }
+  },
+
+  step(key, dir) {
+    if (key === "meridiem") {
+      this.values.meridiem = this.values.meridiem === "AM" ? "PM" : "AM"
+      return
+    }
+    const min = SEG_MIN[key]
+    const max = SEG_MAX[key]
+    const cur = this.values[key]
+    if (cur == null) {
+      this.values[key] = dir > 0 ? min : max
+    } else if (key === "year") {
+      this.values.year = Math.min(Math.max(cur + dir, 1), 9999)
+    } else {
+      const span = max - min + 1
+      this.values[key] = ((cur - min + dir + span) % span) + min
+    }
+  },
+
+  move(fromSeg, dir) {
+    const i = this.segs.indexOf(fromSeg)
+    const next = this.segs[i + dir]
+    if (next) {
+      this.buf = ""
+      next.focus()
+    }
+  },
+
+  clearAll() {
+    this.values = {}
+    this.buf = ""
+    this.renderAndCommit()
+    this.segs[0]?.focus()
+  },
+
+  renderAndCommit() {
+    for (const seg of this.segs) {
+      const key = seg.dataset.seg
+      const v = this.values[key]
+      if (v == null) {
+        seg.textContent = seg.dataset.placeholder
+        seg.removeAttribute("data-set")
+      } else {
+        seg.textContent = key === "meridiem" ? v : String(v).padStart(SEG_PAD[key], "0")
+        seg.setAttribute("data-set", "true")
+      }
+      if (key !== "meridiem") seg.setAttribute("aria-valuenow", v == null ? "" : v)
+    }
+
+    const prev = this.hidden.value
+    this.hidden.value = this.canonical()
+    if (this.hidden.value !== prev) {
+      this.el.dispatchEvent(
+        new CustomEvent("lantern:change", { bubbles: true, detail: { value: this.hidden.value || null } })
+      )
+    }
+  },
+
+  canonical() {
+    const v = this.values
+    const pad = (n, w = 2) => String(n).padStart(w, "0")
+
+    const dateOk = v.year != null && v.month != null && v.day != null
+    const timeOk = v.hour != null && v.minute != null && v.meridiem != null
+    const date = dateOk ? `${pad(v.year, 4)}-${pad(v.month)}-${pad(v.day)}` : null
+
+    let time = null
+    if (timeOk) {
+      let h = v.hour % 12
+      if (v.meridiem === "PM") h += 12
+      time = `${pad(h)}:${pad(v.minute)}:${pad(v.second ?? 0)}.${pad(v.millisecond ?? 0, 3)}`
+    }
+
+    if (this.mode === "date") return date || ""
+    if (this.mode === "time") return time || ""
+    return date && time ? `${date}T${time}` : ""
+  },
+}
+
 export const runtime = { position, trapFocus, onDismiss }
-export const Hooks = { ChartHover, LineHover, LanternOverlay }
-export { ChartHover, LineHover, LanternOverlay }
+export const Hooks = { ChartHover, LineHover, LanternOverlay, LanternCalendar, LanternDatetimeField }
+export { ChartHover, LineHover, LanternOverlay, LanternCalendar, LanternDatetimeField }
 export default Hooks

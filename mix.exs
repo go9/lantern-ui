@@ -29,9 +29,6 @@ defmodule LanternUI.MixProject do
     [
       {:phoenix_live_view, "~> 1.0"},
       {:jason, "~> 1.0"},
-      # Tailwind-aware class merging for `class=` overrides (evaluated tails /
-      # turboprop / tailwind_merge; twix is the focused, well-adopted merge lib).
-      {:twix, "~> 0.3"},
       {:floki, ">= 0.30.0", only: :test},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false}
     ]
