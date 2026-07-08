@@ -10,26 +10,35 @@ defmodule LanternUI.LayoutTest do
     fun.(Map.put(assigns, :__changed__, nil)) |> rendered_to_string()
   end
 
-  describe "sidebar_layout/1" do
-    test "renders sidebar + topbar + main with the persistence hook" do
+  describe "app_shell/1" do
+    test "renders the top bar (brand/header/actions), sidebar, main, collapse control + hook" do
       html =
         render(fn assigns ->
           ~H"""
-          <Layout.sidebar_layout id="app">
-            <:sidebar>SIDE</:sidebar>
-            <:topbar>TOP</:topbar>
+          <Layout.app_shell id="app">
+            <:brand>BRAND</:brand>
+            <:header>CTX</:header>
+            <:actions>MENU</:actions>
+            <:sidebar>NAV</:sidebar>
             BODY
-          </Layout.sidebar_layout>
+          </Layout.app_shell>
           """
         end)
 
       assert html =~ ~s(id="app")
       assert html =~ ~s(phx-hook="LanternSidebar")
-      assert html =~ ~s(class="lui-sidebar")
-      assert html =~ "SIDE"
-      assert html =~ ~s(class="lui-topbar")
-      assert html =~ "TOP"
-      assert html =~ ~s(class="lui-shell-content")
+      assert html =~ ~s(class="lui-appbar")
+      assert html =~ ~s(class="lui-appbar-brand")
+      assert html =~ "BRAND"
+      assert html =~ ~s(class="lui-appbar-header")
+      assert html =~ "CTX"
+      assert html =~ ~s(class="lui-appbar-actions")
+      assert html =~ "MENU"
+      assert html =~ ~s(class="lui-app-sidebar")
+      assert html =~ "NAV"
+      assert html =~ ~s(class="lui-app-sidebar-foot")
+      assert html =~ ~s(data-part="toggle")
+      assert html =~ ~s(class="lui-app-main")
       assert html =~ "BODY"
     end
 
@@ -37,9 +46,9 @@ defmodule LanternUI.LayoutTest do
       collapsed =
         render(fn assigns ->
           ~H"""
-          <Layout.sidebar_layout id="a" collapsed>
-            <:sidebar>x</:sidebar>y
-          </Layout.sidebar_layout>
+          <Layout.app_shell id="a" collapsed>
+            <:brand>b</:brand><:sidebar>n</:sidebar>x
+          </Layout.app_shell>
           """
         end)
 
@@ -48,22 +57,27 @@ defmodule LanternUI.LayoutTest do
       open =
         render(fn assigns ->
           ~H"""
-          <Layout.sidebar_layout id="b"><:sidebar>x</:sidebar>y</Layout.sidebar_layout>
+          <Layout.app_shell id="b">
+            <:brand>b</:brand><:sidebar>n</:sidebar>x
+          </Layout.app_shell>
           """
         end)
 
       refute open =~ ~s(data-collapsed)
     end
 
-    test "topbar section is omitted when not given" do
+    test "header and actions bars are omitted when their slots are empty" do
       html =
         render(fn assigns ->
           ~H"""
-          <Layout.sidebar_layout id="c"><:sidebar>x</:sidebar>y</Layout.sidebar_layout>
+          <Layout.app_shell id="c">
+            <:brand>b</:brand><:sidebar>n</:sidebar>x
+          </Layout.app_shell>
           """
         end)
 
-      refute html =~ "lui-topbar"
+      refute html =~ "lui-appbar-header"
+      refute html =~ "lui-appbar-actions"
     end
   end
 
@@ -82,7 +96,6 @@ defmodule LanternUI.LayoutTest do
       assert html =~ ~s(title="Dashboard")
       assert html =~ ~s(class="lui-nav-item-label")
       assert html =~ "Dashboard"
-      # icon svg present
       assert html =~ "<svg"
     end
 
@@ -97,20 +110,6 @@ defmodule LanternUI.LayoutTest do
       assert html =~ ~s(<button)
       assert html =~ ~s(phx-click="go")
       refute html =~ ~s(href=)
-    end
-  end
-
-  describe "sidebar_toggle/1" do
-    test "renders the toggle button the hook keys on" do
-      html =
-        render(fn assigns ->
-          ~H"""
-          <Layout.sidebar_toggle />
-          """
-        end)
-
-      assert html =~ ~s(data-part="toggle")
-      assert html =~ ~s(aria-label="Toggle sidebar")
     end
   end
 

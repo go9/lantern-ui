@@ -563,22 +563,45 @@
   .lui-modal-backdrop, .lui-modal-panel, .lui-dropdown-menu { animation: none; }
 }
 
-/* ── App-shell layout (sidebar + main + topbar) ── */
-.lui-shell { --lui-sidebar-w: 15rem; display: grid;
-  grid-template-columns: var(--lui-sidebar-w) minmax(0, 1fr); min-height: 100vh;
-  transition: grid-template-columns var(--lantern-duration) var(--lantern-ease); }
-.lui-shell[data-collapsed] { --lui-sidebar-w: 3.5rem; }
+/* ── App shell (top bar + fixed sidebar + main) ── */
+.lui-app { --lui-sidebar-w: 15rem; --lui-appbar-h: 3.25rem;
+  min-height: 100vh; background: var(--lantern-surface); color: var(--lantern-fg);
+  font-family: var(--lantern-font); }
+.lui-app[data-collapsed] { --lui-sidebar-w: 3.5rem; }
 
-.lui-sidebar { position: sticky; top: 0; height: 100vh; overflow-x: hidden; overflow-y: auto;
-  display: flex; flex-direction: column; background: var(--lantern-surface);
-  border-right: 1px solid var(--lantern-border); }
-.lui-sidebar-header { display: flex; align-items: center; gap: 0.5rem; height: 3.25rem;
-  padding: 0 0.9rem; font-weight: 700; font-size: 0.95rem; letter-spacing: -0.02em;
-  color: var(--lantern-fg); white-space: nowrap; flex-shrink: 0;
-  border-bottom: 1px solid var(--lantern-border); }
-.lui-sidebar-header .lui-icon { color: var(--lantern-accent); flex-shrink: 0; font-size: 1.15rem; }
+/* Top bar */
+.lui-appbar { position: fixed; top: 0; left: 0; right: 0; height: var(--lui-appbar-h); z-index: 30;
+  display: flex; align-items: center; gap: 0.75rem; padding: 0 1rem;
+  background: var(--lantern-surface); border-bottom: 1px solid var(--lantern-border); }
+.lui-appbar-brand { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;
+  font-family: var(--lantern-font-brand, var(--lantern-font)); font-weight: 600;
+  font-size: 0.9375rem; letter-spacing: -0.01em; color: var(--lantern-fg); white-space: nowrap; }
+.lui-appbar-brand .lui-icon { color: var(--lantern-accent); font-size: 1.15rem; }
+.lui-appbar-header { display: flex; align-items: center; gap: 0.4rem; min-width: 0;
+  color: var(--lantern-fg-muted); font-size: 0.8125rem; }
+.lui-appbar-actions { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
 
-.lui-sidebar-nav { flex: 1; min-height: 0; overflow-y: auto; padding: 0.75rem 0.6rem; }
+/* Sidebar (below the bar, fixed) */
+.lui-app-body { padding-top: var(--lui-appbar-h); }
+.lui-app-sidebar { position: fixed; top: var(--lui-appbar-h); bottom: 0; left: 0;
+  width: var(--lui-sidebar-w); z-index: 20; display: flex; flex-direction: column;
+  background: var(--lantern-surface); border-right: 1px solid var(--lantern-border);
+  overflow-x: hidden; transition: width var(--lantern-duration) var(--lantern-ease); }
+.lui-app-nav { flex: 1; min-height: 0; overflow-y: auto; padding: 0.75rem 0.6rem; }
+.lui-app-sidebar-foot { border-top: 1px solid var(--lantern-border); padding: 0.5rem 0.6rem; }
+.lui-collapse-btn { display: flex; align-items: center; gap: 0.6rem; width: 100%;
+  padding: 0.4rem 0.5rem; border: none; background: none; color: var(--lantern-fg-muted);
+  font-size: 0.8125rem; font-weight: 500; border-radius: var(--lantern-radius-sm); cursor: pointer;
+  font-family: inherit; }
+.lui-collapse-btn:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
+.lui-collapse-icon { font-size: 1.05rem; flex-shrink: 0;
+  transition: transform var(--lantern-duration) var(--lantern-ease); }
+
+/* Main (cleared past the fixed sidebar) */
+.lui-app-main { margin-left: var(--lui-sidebar-w); padding: 1.5rem 1.5rem 4rem; min-width: 0;
+  transition: margin-left var(--lantern-duration) var(--lantern-ease); }
+
+/* Nav */
 .lui-nav-group { margin-bottom: 1rem; }
 .lui-nav-group-label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
   letter-spacing: 0.05em; color: var(--lantern-fg-subtle); padding: 0 0.5rem; margin-bottom: 0.25rem;
@@ -594,36 +617,25 @@
 .lui-nav-item-icon { font-size: 1.05rem; flex-shrink: 0; }
 .lui-nav-item-label { overflow: hidden; text-overflow: ellipsis; }
 
-/* Collapsed rail: hide text, center the icons. */
-.lui-shell[data-collapsed] .lui-nav-item-label,
-.lui-shell[data-collapsed] .lui-nav-group-label,
-.lui-shell[data-collapsed] .lui-brand-name { display: none; }
-.lui-shell[data-collapsed] .lui-nav-item { justify-content: center; padding-inline: 0; }
-.lui-shell[data-collapsed] .lui-sidebar-header { justify-content: center; padding-inline: 0; }
-.lui-shell[data-collapsed] .lui-nav-group { margin-bottom: 0.5rem; }
+/* Collapsed rail: hide text, center icons, flip the collapse chevron. */
+.lui-app[data-collapsed] .lui-nav-item-label,
+.lui-app[data-collapsed] .lui-nav-group-label,
+.lui-app[data-collapsed] .lui-brand-name,
+.lui-app[data-collapsed] .lui-collapse-label { display: none; }
+.lui-app[data-collapsed] .lui-nav-item { justify-content: center; padding-inline: 0; }
+.lui-app[data-collapsed] .lui-collapse-btn { justify-content: center; }
+.lui-app[data-collapsed] .lui-collapse-icon { transform: rotate(180deg); }
+.lui-app[data-collapsed] .lui-nav-group { margin-bottom: 0.5rem; }
 
-.lui-shell-main { display: flex; flex-direction: column; min-width: 0; }
-.lui-topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 0.75rem;
-  height: 3.25rem; padding: 0 1.25rem; background: var(--lantern-surface);
-  border-bottom: 1px solid var(--lantern-border); }
-.lui-shell-content { flex: 1; min-width: 0; padding: 1.5rem 1.25rem 4rem; }
-
-.lui-sidebar-toggle { display: inline-flex; align-items: center; justify-content: center;
-  width: 2rem; height: 2rem; border: none; background: none; color: var(--lantern-fg-muted);
-  border-radius: var(--lantern-radius-sm); cursor: pointer; flex-shrink: 0; }
-.lui-sidebar-toggle:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
-.lui-sidebar-toggle-icon { font-size: 1.15rem; }
-
-/* Narrow viewports: sidebar drops to a horizontal strip above the content. */
+/* Narrow viewports: sidebar drops to a horizontal strip under the bar. */
 @media (max-width: 768px) {
-  .lui-shell, .lui-shell[data-collapsed] { grid-template-columns: 1fr; }
-  .lui-sidebar { position: static; height: auto; flex-direction: row; align-items: center;
-    overflow-x: auto; overflow-y: hidden; border-right: none;
-    border-bottom: 1px solid var(--lantern-border); }
-  .lui-sidebar-header { border-bottom: none; border-right: 1px solid var(--lantern-border); height: auto;
-    padding: 0.75rem 0.9rem; }
-  .lui-sidebar-nav { display: flex; gap: 0.5rem; padding: 0.5rem 0.6rem; }
+  .lui-app-body { display: flex; flex-direction: column; }
+  .lui-app-sidebar, .lui-app[data-collapsed] .lui-app-sidebar { position: static; top: 0;
+    width: 100%; height: auto; flex-direction: row; align-items: center; overflow-x: auto;
+    overflow-y: hidden; border-right: none; border-bottom: 1px solid var(--lantern-border); }
+  .lui-app-nav { display: flex; gap: 0.5rem; padding: 0.5rem 0.6rem; }
   .lui-nav-group { display: flex; gap: 0.15rem; margin-bottom: 0; flex-shrink: 0; }
   .lui-nav-group-label { display: none; }
-  .lui-sidebar-toggle { display: none; }
+  .lui-app-sidebar-foot { display: none; }
+  .lui-app-main, .lui-app[data-collapsed] .lui-app-main { margin-left: 0; padding: 1.25rem 1.25rem 4rem; }
 }

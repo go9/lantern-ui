@@ -6,6 +6,22 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-07-08
+
+### Changed
+- **`Layout` reshaped into an app shell** (breaking): `sidebar_layout` →
+  `app_shell` — a full-width top bar (`:brand` corner + `:header` inline
+  context + `:actions` right) over a fixed collapsible left sidebar, with the
+  collapse control at the sidebar foot. Mirrors a typical product app layout so
+  a Fluxon layout can migrate onto it. `nav_group`/`nav_item` unchanged.
+
+### Added
+- `--lantern-font-brand` token (brand/heading face; defaults to the body font,
+  override to e.g. Space Grotesk).
+- Icons: cursor-arrow-rays, sparkles, pencil-square, calendar, check-circle,
+  window, chevron-up-down, inbox, presentation-chart-line, arrow-trending-up,
+  view-columns.
+
 ## [0.5.0] - 2026-07-08
 
 ### Added
