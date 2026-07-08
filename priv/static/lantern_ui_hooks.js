@@ -389,6 +389,19 @@ const LanternCalendar = {
     })
 
     this.grid.addEventListener("keydown", (e) => this.onKey(e))
+
+    // Composition surface: sync selection (and shown month) from outside —
+    // the picker dispatches this when its field value changes.
+    this.el.addEventListener("lantern:set-value", (e) => {
+      const iso = e.detail.value
+      if (iso) {
+        this.el.dataset.value = iso
+        this.month = iso.slice(0, 8) + "01"
+      } else {
+        delete this.el.dataset.value
+      }
+      this.render()
+    })
   },
 
   nav(delta) {
@@ -543,6 +556,36 @@ const LanternDatetimeField = {
     this.el.addEventListener("focusin", () => (this.buf = ""))
     this.el.querySelector('[data-part="clear"]')?.addEventListener("click", () => this.clearAll())
     this.segs.forEach((s) => s.addEventListener("mousedown", () => (this.buf = "")))
+
+    // Composition surface for the picker hook (and any host): set the date
+    // part from an ISO date, set the whole value to now, or clear to null.
+    this.el.addEventListener("lantern:set-date", (e) => {
+      const [y, m, d] = e.detail.value.split("-").map(Number)
+      Object.assign(this.values, { year: y, month: m, day: d })
+      // A date chosen with no time yet: default the time so the value commits.
+      if (this.mode === "datetime" && this.values.hour == null) {
+        Object.assign(this.values, { hour: 12, minute: 0, meridiem: "AM" })
+      }
+      this.renderAndCommit()
+    })
+
+    this.el.addEventListener("lantern:set-now", () => {
+      const now = new Date()
+      const h = now.getHours()
+      Object.assign(this.values, {
+        year: now.getFullYear(),
+        month: now.getMonth() + 1,
+        day: now.getDate(),
+        hour: h % 12 === 0 ? 12 : h % 12,
+        minute: now.getMinutes(),
+        second: now.getSeconds(),
+        millisecond: now.getMilliseconds(),
+        meridiem: h < 12 ? "AM" : "PM",
+      })
+      this.renderAndCommit()
+    })
+
+    this.el.addEventListener("lantern:clear", () => this.clearAll())
   },
 
   onKey(e) {
@@ -697,7 +740,91 @@ const LanternDatetimeField = {
   },
 }
 
+// ── Picker ────────────────────────────────────────────────────────────────
+//
+// Composes the segmented field, the calendar, and the overlay runtime into
+// the date / datetime pickers. Everything is event-wired (lantern:change /
+// lantern:set-*) — no direct hook-to-hook coupling.
+
+const LanternPicker = {
+  mounted() {
+    this.trigger = this.el.querySelector('[data-part="trigger"]')
+    this.toggle = this.el.querySelector('[data-part="toggle"]')
+    this.panel = this.el.querySelector('[data-part="panel"]')
+    this.calendar = this.panel?.querySelector(".lui-cal")
+    this.open = false
+    this.cleanup = []
+
+    // Calendar day chosen → push the date into the field's segments.
+    this.panel?.addEventListener("lantern:change", (e) => {
+      if (!e.target.closest(".lui-cal")) return
+      e.stopPropagation()
+      this.trigger.dispatchEvent(
+        new CustomEvent("lantern:set-date", { detail: { value: e.detail.value } })
+      )
+    })
+
+    // Field value changed (typed or via set-*) → keep the calendar in sync.
+    this.trigger.addEventListener("lantern:change", (e) => {
+      if (!this.calendar) return
+      const v = e.detail.value
+      this.calendar.dispatchEvent(
+        new CustomEvent("lantern:set-value", { detail: { value: v ? v.slice(0, 10) : null } })
+      )
+    })
+
+    this.toggle?.addEventListener("click", () => (this.open ? this.hide() : this.show()))
+
+    this.panel?.querySelector('[data-part="today"]')?.addEventListener("click", () => {
+      const now = new Date()
+      const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
+      if (this.el.dataset.mode === "datetime") {
+        this.trigger.dispatchEvent(new CustomEvent("lantern:set-now"))
+      } else {
+        this.trigger.dispatchEvent(new CustomEvent("lantern:set-date", { detail: { value: iso } }))
+      }
+    })
+
+    this.panel?.querySelector('[data-part="clear-panel"]')?.addEventListener("click", () => {
+      this.trigger.dispatchEvent(new CustomEvent("lantern:clear"))
+    })
+
+    this.panel?.querySelector('[data-part="done"]')?.addEventListener("click", () => this.hide())
+  },
+
+  show() {
+    this.open = true
+    this.panel.hidden = false
+    position(this.toggle, this.panel, { placement: "bottom-end", gap: 6 })
+    this.toggle.setAttribute("aria-expanded", "true")
+    this.cleanup.push(onDismiss(this.panel, () => this.hide(), { anchor: this.el }))
+    // Focus the calendar's roving-tabindex day for immediate keyboard nav.
+    this.panel.querySelector('.lui-cal-day[tabindex="0"]')?.focus()
+  },
+
+  hide() {
+    if (!this.open) return
+    this.open = false
+    this.cleanup.forEach((fn) => fn())
+    this.cleanup = []
+    this.panel.hidden = true
+    this.toggle.setAttribute("aria-expanded", "false")
+    this.toggle.focus()
+  },
+
+  destroyed() {
+    this.cleanup.forEach((fn) => fn())
+  },
+}
+
 export const runtime = { position, trapFocus, onDismiss }
-export const Hooks = { ChartHover, LineHover, LanternOverlay, LanternCalendar, LanternDatetimeField }
-export { ChartHover, LineHover, LanternOverlay, LanternCalendar, LanternDatetimeField }
+export const Hooks = {
+  ChartHover,
+  LineHover,
+  LanternOverlay,
+  LanternCalendar,
+  LanternDatetimeField,
+  LanternPicker,
+}
+export { ChartHover, LineHover, LanternOverlay, LanternCalendar, LanternDatetimeField, LanternPicker }
 export default Hooks

@@ -337,7 +337,7 @@ defmodule LanternUI.ComponentsTest do
   describe "use LanternUI registry" do
     test "exposes the new component groups" do
       keys = LanternUI.__components__() |> Map.keys() |> Enum.sort()
-      assert keys == [:button, :calendar, :charts, :datetime_field, :form, :icon]
+      assert keys == [:button, :calendar, :charts, :date_picker, :datetime_field, :form, :icon]
     end
   end
 end
