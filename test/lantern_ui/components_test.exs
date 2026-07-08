@@ -350,6 +350,7 @@ defmodule LanternUI.ComponentsTest do
                :empty_state,
                :form,
                :icon,
+               :layout,
                :modal
              ]
     end
