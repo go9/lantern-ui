@@ -39,7 +39,8 @@ defmodule LanternUI do
     icon: LanternUI.Components.Icon,
     form: LanternUI.Components.Form,
     calendar: LanternUI.Components.Calendar,
-    datetime_field: LanternUI.Components.DatetimeField
+    datetime_field: LanternUI.Components.DatetimeField,
+    date_picker: LanternUI.Components.DatePicker
   }
 
   @doc false
