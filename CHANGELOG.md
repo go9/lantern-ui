@@ -6,6 +6,21 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-07-08
+
+### Fixed
+- Picker panel now carries the popover chrome itself (background, border,
+  shadow) — the time pane and footer no longer float transparent below the
+  calendar's box.
+- Open panels follow their anchor during scroll/resize instead of staying
+  pinned to the viewport.
+- The panel time pane no longer shows its own `∅` clear glyph (the footer's
+  Clear covers it).
+
+### Added
+- Explicit `.light` token block, so a subtree can force light mode under a
+  dark OS (mirror of `.dark`).
+
 ## [0.3.2] - 2026-07-08
 
 ### Added
