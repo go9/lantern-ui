@@ -647,3 +647,95 @@
   box-shadow: var(--lantern-shadow-md);
 }
 .lui-picker-foot-space { flex: 1; }
+
+/* ── Checkbox ── */
+.lui-checkbox-field { display: flex; flex-direction: column; gap: 0.25rem; }
+.lui-checkbox-row { display: flex; align-items: flex-start; gap: 0.5rem; cursor: pointer;
+  font-size: var(--lantern-text); }
+.lui-checkbox-row[data-disabled] { opacity: 0.55; cursor: not-allowed; }
+.lui-checkbox { appearance: none; -webkit-appearance: none; margin: 0.15rem 0 0;
+  width: 1rem; height: 1rem; flex-shrink: 0; border-radius: 0.25rem;
+  border: 1px solid var(--lantern-border-strong, var(--lantern-border));
+  background: var(--lantern-surface); cursor: inherit;
+  transition: background var(--lantern-duration) var(--lantern-ease),
+    border-color var(--lantern-duration) var(--lantern-ease); }
+.lui-checkbox:checked { background: var(--lantern-primary); border-color: var(--lantern-primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.5l3 3 6-7' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size: 0.75rem; background-position: center; background-repeat: no-repeat; }
+.dark .lui-checkbox:checked { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.5l3 3 6-7' stroke='%2318181b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+.lui-checkbox:focus-visible { outline: none;
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft, rgba(37, 99, 235, 0.25)); }
+.lui-checkbox-label { display: flex; flex-direction: column; gap: 0.1rem; color: var(--lantern-fg); }
+.lui-checkbox-desc { font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); }
+
+/* ── Modal ── */
+.lui-modal { position: fixed; inset: 0; z-index: 60; display: flex;
+  align-items: center; justify-content: center; padding: 1.5rem; }
+.lui-modal[data-placement="top"] { align-items: flex-start; padding-top: 4.5rem; }
+.lui-modal-backdrop { position: absolute; inset: 0;
+  background: color-mix(in oklab, #000 45%, transparent);
+  animation: lui-fade var(--lantern-duration) var(--lantern-ease); }
+.lui-modal-panel { position: relative; background: var(--lantern-surface-raised);
+  color: var(--lantern-fg); border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-lg); box-shadow: var(--lantern-shadow-md);
+  padding: 1.25rem 1.5rem; max-width: 28rem; width: 100%; max-height: calc(100vh - 4rem);
+  overflow-y: auto; animation: lui-pop var(--lantern-duration) var(--lantern-ease); }
+.lui-modal-close { position: absolute; top: 0.75rem; right: 0.75rem; border: none;
+  background: none; color: var(--lantern-fg-subtle); cursor: pointer; padding: 0.25rem;
+  border-radius: var(--lantern-radius-sm); line-height: 0; }
+.lui-modal-close:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
+@keyframes lui-fade { from { opacity: 0; } }
+@keyframes lui-pop { from { opacity: 0; transform: scale(0.97); } }
+
+/* ── Dropdown menu ── */
+.lui-dropdown { display: inline-block; position: relative; }
+.lui-dropdown-menu { z-index: 50; min-width: 11rem; padding: 0.25rem;
+  background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md);
+  animation: lui-pop var(--lantern-duration) var(--lantern-ease); }
+.lui-dropdown-header { padding: 0.375rem 0.625rem; font-size: var(--lantern-text-sm);
+  font-weight: 600; color: var(--lantern-fg-muted); white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; }
+.lui-dropdown-separator { height: 1px; margin: 0.25rem -0.25rem;
+  background: var(--lantern-border); }
+.lui-dropdown-item { display: flex; align-items: center; gap: 0.5rem; width: 100%;
+  box-sizing: border-box; padding: 0.375rem 0.625rem; border: none; background: none;
+  text-align: left; text-decoration: none; font-size: var(--lantern-text);
+  font-family: inherit; color: var(--lantern-fg); border-radius: var(--lantern-radius-sm);
+  cursor: pointer; }
+.lui-dropdown-item:hover, .lui-dropdown-item:focus-visible { outline: none;
+  background: var(--lantern-surface-sunken); }
+.lui-dropdown-item[disabled], .lui-dropdown-item[data-disabled] { opacity: 0.5;
+  cursor: not-allowed; }
+.lui-dropdown-item[data-danger] { color: var(--lantern-danger); }
+.lui-dropdown-custom { padding: 0.375rem 0.625rem; }
+
+/* ── Breadcrumb ── */
+.lui-breadcrumb-list { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem;
+  list-style: none; margin: 0; padding: 0; font-size: var(--lantern-text); }
+.lui-breadcrumb-item { display: inline-flex; align-items: center; gap: 0.25rem;
+  min-width: 0; }
+.lui-breadcrumb-sep { color: var(--lantern-fg-subtle); user-select: none; }
+.lui-breadcrumb-link { border: none; background: none; padding: 0.125rem 0.25rem;
+  font: inherit; color: var(--lantern-fg-muted); text-decoration: none; cursor: pointer;
+  border-radius: var(--lantern-radius-sm); max-width: 16rem; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; }
+.lui-breadcrumb-link:hover { color: var(--lantern-accent);
+  background: var(--lantern-surface-sunken); }
+.lui-breadcrumb-current { color: var(--lantern-fg); font-weight: 550;
+  padding: 0.125rem 0.25rem; max-width: 16rem; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; }
+
+/* ── Empty state ── */
+.lui-empty { display: flex; flex-direction: column; align-items: center; gap: 0.375rem;
+  padding: 2.5rem 1.5rem; text-align: center; }
+.lui-empty-icon { width: 1.75rem; height: 1.75rem; color: var(--lantern-fg-subtle); }
+.lui-empty-title { margin: 0; font-size: var(--lantern-text); font-weight: 600;
+  color: var(--lantern-fg); }
+.lui-empty-desc { margin: 0; font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted); max-width: 26rem; }
+.lui-empty-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lui-modal-backdrop, .lui-modal-panel, .lui-dropdown-menu { animation: none; }
+}
