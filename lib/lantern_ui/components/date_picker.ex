@@ -205,7 +205,7 @@ defmodule LanternUI.Components.DatePicker do
             data-part="panel"
             hidden
             role="dialog"
-            aria-label="Choose date"
+            aria-label={if @mode == :datetime, do: "Choose date and time", else: "Choose date"}
             class="lui-picker-panel"
           >
             <Calendar.calendar
@@ -216,6 +216,20 @@ defmodule LanternUI.Components.DatePicker do
               max={@max}
               class="lui-picker-cal"
             />
+            <%!-- Time pane: an unnamed (non-submitting) time field the picker
+                 hook keeps in two-way sync with the trigger's time segments. --%>
+            <div :if={@mode == :datetime} class="lui-picker-time">
+              <span class="lui-picker-time-label">Time</span>
+              <DatetimeField.datetime_field
+                id={"#{@id}-panel-time"}
+                mode={:time}
+                precision={@precision}
+                value={panel_time(@canonical)}
+                aria-label="Time"
+                data-part="panel-time"
+                class="lui-picker-time-field"
+              />
+            </div>
             <div class="lui-picker-foot">
               <button
                 type="button"
@@ -259,6 +273,16 @@ defmodule LanternUI.Components.DatePicker do
       <Form.error :for={msg <- @errors} id={@id && "#{@id}-error"}>{msg}</Form.error>
     </div>
     """
+  end
+
+  # The time slice of a canonical datetime, for seeding the panel's time pane.
+  defp panel_time(nil), do: nil
+
+  defp panel_time(canonical) do
+    case String.split(canonical, "T") do
+      [_date, time] -> time
+      _ -> nil
+    end
   end
 
   # ── Value normalization ───────────────────────────────────────────────────

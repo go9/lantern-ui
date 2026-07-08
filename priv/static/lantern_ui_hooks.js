@@ -585,6 +585,33 @@ const LanternDatetimeField = {
       this.renderAndCommit()
     })
 
+    // Set the time part from a canonical `HH:MM:SS.mmm` (24h) string — the
+    // picker's panel time pane speaks this. renderAndCommit's no-change guard
+    // makes the two-way trigger<->panel sync converge instead of looping.
+    this.el.addEventListener("lantern:set-time", (e) => {
+      const m = /^(\d{2}):(\d{2}):(\d{2})\.(\d{3})$/.exec(e.detail.value || "")
+      if (!m) return
+      const h24 = parseInt(m[1], 10)
+      Object.assign(this.values, {
+        hour: h24 % 12 === 0 ? 12 : h24 % 12,
+        minute: parseInt(m[2], 10),
+        second: parseInt(m[3], 10),
+        millisecond: parseInt(m[4], 10),
+        meridiem: h24 < 12 ? "AM" : "PM",
+      })
+      // A time chosen with no date yet: default the date to today so the
+      // value commits (mirror of set-date defaulting the time).
+      if (this.mode === "datetime" && this.values.year == null) {
+        const now = new Date()
+        Object.assign(this.values, {
+          year: now.getFullYear(),
+          month: now.getMonth() + 1,
+          day: now.getDate(),
+        })
+      }
+      this.renderAndCommit()
+    })
+
     this.el.addEventListener("lantern:clear", () => this.clearAll())
   },
 
@@ -752,25 +779,38 @@ const LanternPicker = {
     this.toggle = this.el.querySelector('[data-part="toggle"]')
     this.panel = this.el.querySelector('[data-part="panel"]')
     this.calendar = this.panel?.querySelector(".lui-cal")
+    this.panelTime = this.panel?.querySelector('[data-part="panel-time"]')
     this.open = false
     this.cleanup = []
 
-    // Calendar day chosen → push the date into the field's segments.
+    // Panel interaction → push into the trigger field's segments: a calendar
+    // day sets the date part; the time pane sets the time part.
     this.panel?.addEventListener("lantern:change", (e) => {
-      if (!e.target.closest(".lui-cal")) return
-      e.stopPropagation()
-      this.trigger.dispatchEvent(
-        new CustomEvent("lantern:set-date", { detail: { value: e.detail.value } })
-      )
+      if (e.target.closest(".lui-cal")) {
+        e.stopPropagation()
+        this.trigger.dispatchEvent(
+          new CustomEvent("lantern:set-date", { detail: { value: e.detail.value } })
+        )
+      } else if (this.panelTime && e.target.closest('[data-part="panel-time"]')) {
+        e.stopPropagation()
+        this.trigger.dispatchEvent(
+          new CustomEvent("lantern:set-time", { detail: { value: e.detail.value } })
+        )
+      }
     })
 
-    // Field value changed (typed or via set-*) → keep the calendar in sync.
+    // Field value changed (typed or via set-*) → keep the calendar and the
+    // panel's time pane in sync. Both converge (no-change guards), no loops.
     this.trigger.addEventListener("lantern:change", (e) => {
-      if (!this.calendar) return
       const v = e.detail.value
-      this.calendar.dispatchEvent(
+      this.calendar?.dispatchEvent(
         new CustomEvent("lantern:set-value", { detail: { value: v ? v.slice(0, 10) : null } })
       )
+      if (this.panelTime && v && v.length >= 23) {
+        this.panelTime.dispatchEvent(
+          new CustomEvent("lantern:set-time", { detail: { value: v.slice(11) } })
+        )
+      }
     })
 
     this.toggle?.addEventListener("click", () => (this.open ? this.hide() : this.show()))

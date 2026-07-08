@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-07-08
+
+### Added
+- `date_time_picker` panel now includes a **time pane** — a non-submitting
+  segmented time field under the calendar, kept in two-way sync with the
+  trigger (new `lantern:set-time` event on the field hook). Picking a time
+  with no date yet defaults the date to today.
+
+### Fixed
+- Segmented field no longer wraps onto multiple lines in narrow hosts
+  (explicit `flex-wrap: nowrap` + overflow guards on `.lui-dtf`).
+
 ## [0.3.1] - 2026-07-07
 
 ### Fixed
