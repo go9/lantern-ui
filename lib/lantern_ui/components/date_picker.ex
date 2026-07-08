@@ -222,7 +222,6 @@ defmodule LanternUI.Components.DatePicker do
               <span class="lui-picker-time-label">Time</span>
               <DatetimeField.datetime_field
                 id={"#{@id}-panel-time"}
-                name={nil}
                 mode={:time}
                 precision={@precision}
                 value={panel_time(@canonical)}
