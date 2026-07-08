@@ -32,7 +32,12 @@ defmodule LanternUI.Components.DatetimeField do
   alias LanternUI.Class
 
   attr(:id, :string, required: true)
-  attr(:name, :string, default: nil, doc: "omit for a non-submitting field (no name on the hidden input)")
+
+  attr(:name, :string,
+    default: nil,
+    doc: "omit for a non-submitting field (no name on the hidden input)"
+  )
+
   attr(:mode, :atom, default: :date, values: [:date, :time, :datetime])
   attr(:precision, :atom, default: :minute, values: [:minute, :second, :millisecond])
   attr(:value, :any, default: nil, doc: "canonical string (see value contract) or nil")
