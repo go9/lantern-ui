@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-07-07
+
+### Fixed
+- `date_picker` / `date_time_picker` / `time_picker` now accept a `form`
+  attribute and forward it to the hidden value input, so the pickers work as
+  editors rendered outside their `<form>` element (e.g. lantern's table cell
+  editors, which submit via `form="..."`).
+
 ## [0.3.0] - 2026-07-07
 
 ### Added

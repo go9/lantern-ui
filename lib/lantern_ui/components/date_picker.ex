@@ -51,6 +51,13 @@ defmodule LanternUI.Components.DatePicker do
   attr(:max, :string, default: nil)
   attr(:week_start, :integer, default: 0, values: 0..6)
   attr(:display_format, :string, default: nil, doc: "accepted for Fluxon compat; not yet honored")
+
+  attr(:form, :string,
+    default: nil,
+    doc:
+      "HTML form attribute forwarded to the hidden value input (for editors outside the form element)"
+  )
+
   attr(:rest, :global)
   slot(:inner_prefix)
   slot(:outer_prefix)
@@ -78,6 +85,13 @@ defmodule LanternUI.Components.DatePicker do
   attr(:precision, :atom, default: :minute, values: [:minute, :second, :millisecond])
   attr(:display_format, :string, default: nil, doc: "accepted for Fluxon compat; not yet honored")
   attr(:time_format, :string, default: nil, doc: "accepted for Fluxon compat; not yet honored")
+
+  attr(:form, :string,
+    default: nil,
+    doc:
+      "HTML form attribute forwarded to the hidden value input (for editors outside the form element)"
+  )
+
   attr(:rest, :global)
   slot(:inner_prefix)
   slot(:outer_prefix)
@@ -100,6 +114,13 @@ defmodule LanternUI.Components.DatePicker do
   attr(:name, :any, default: nil)
   attr(:errors, :list, default: [])
   attr(:precision, :atom, default: :minute, values: [:minute, :second, :millisecond])
+
+  attr(:form, :string,
+    default: nil,
+    doc:
+      "HTML form attribute forwarded to the hidden value input (for editors outside the form element)"
+  )
+
   attr(:rest, :global)
   slot(:inner_prefix)
   slot(:outer_prefix)
@@ -127,6 +148,7 @@ defmodule LanternUI.Components.DatePicker do
       assigns
       |> assign(:canonical, canonical(assigns.value, assigns.mode))
       |> assign(:precision, Map.get(assigns, :precision, :minute))
+      |> assign_new(:form, fn -> nil end)
       |> assign_new(:min, fn -> nil end)
       |> assign_new(:max, fn -> nil end)
       |> assign_new(:week_start, fn -> 0 end)
@@ -150,6 +172,7 @@ defmodule LanternUI.Components.DatePicker do
           <DatetimeField.datetime_field
             id={"#{@id}-fieldset"}
             name={@name}
+            form={@form}
             mode={@mode}
             precision={@precision}
             value={@canonical}

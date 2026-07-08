@@ -35,6 +35,17 @@ defmodule LanternUI.DatePickerTest do
       assert html =~ ~s(data-month="2026-02-01")
     end
 
+    test "form attribute is forwarded to the hidden value input" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <DatePicker.date_picker id="d" name="row[d]" value="2026-02-03" form="edit-row-7" />
+          """
+        end)
+
+      assert html =~ ~s(type="hidden" name="row[d]" value="2026-02-03" form="edit-row-7")
+    end
+
     test "FormField clause extracts id/name/value and errors" do
       form = Phoenix.Component.to_form(%{"due" => "2026-05-10"}, as: :thing)
 
