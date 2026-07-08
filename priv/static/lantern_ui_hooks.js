@@ -339,7 +339,14 @@ const LanternOverlay = {
   show() {
     this.open = true
     this.panel.hidden = false
-    position(this.trigger, this.panel, { placement: this.el.dataset.placement })
+    const reposition = () => position(this.trigger, this.panel, { placement: this.el.dataset.placement })
+    reposition()
+    window.addEventListener("scroll", reposition, true)
+    window.addEventListener("resize", reposition)
+    this.cleanup.push(() => {
+      window.removeEventListener("scroll", reposition, true)
+      window.removeEventListener("resize", reposition)
+    })
     this.trigger.setAttribute("aria-expanded", "true")
     this.cleanup.push(trapFocus(this.panel))
     this.cleanup.push(onDismiss(this.panel, () => this.hide(), { anchor: this.trigger }))
@@ -835,7 +842,16 @@ const LanternPicker = {
   show() {
     this.open = true
     this.panel.hidden = false
-    position(this.toggle, this.panel, { placement: "bottom-end", gap: 6 })
+    const reposition = () => position(this.toggle, this.panel, { placement: "bottom-end", gap: 6 })
+    reposition()
+    // position() pins the panel to the viewport (fixed); follow the anchor
+    // while any ancestor scrolls or the window resizes.
+    window.addEventListener("scroll", reposition, true)
+    window.addEventListener("resize", reposition)
+    this.cleanup.push(() => {
+      window.removeEventListener("scroll", reposition, true)
+      window.removeEventListener("resize", reposition)
+    })
     this.toggle.setAttribute("aria-expanded", "true")
     this.cleanup.push(onDismiss(this.panel, () => this.hide(), { anchor: this.el }))
     // Focus the calendar's roving-tabindex day for immediate keyboard nav.
