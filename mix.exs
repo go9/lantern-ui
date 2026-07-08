@@ -1,7 +1,7 @@
 defmodule LanternUI.MixProject do
   use Mix.Project
 
-  @version "0.2.1"
+  @version "0.3.0"
   @source_url "https://github.com/go9/lantern-ui"
 
   def project do

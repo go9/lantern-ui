@@ -6,6 +6,27 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-07
+
+### Added
+- **Component system foundation**: full design-token set in
+  `priv/static/lantern_ui.css` (semantic colors, shadcn-density scale — 32px
+  controls / 13px text — monochrome primary + coral accent, light/dark,
+  `data-lantern-density` modes), the `use LanternUI` importer with
+  Fluxon-compatible `:only`/`:except`, `LanternUI.Class` helpers, and a
+  dependency-free JS runtime core (`position`, `trapFocus`, `onDismiss`,
+  `LanternOverlay`).
+- **Primitives** (Fluxon-compatible API, `lui-*` namespaced CSS, zero build
+  step): `button`/`button_group`, `icon` (curated inline Heroicons-outline
+  set), `form.input`/`label`/`error`, `calendar` (WAI-ARIA month grid +
+  `LanternCalendar` hook with the full APG keyboard model), and the segmented
+  `datetime_field` (typeable/steppable segments to millisecond precision,
+  hidden canonical input, clear-to-null) with the `LanternDatetimeField` hook.
+- **Pickers**: `date_picker`, `date_time_picker` (calendar popover with
+  Today/Now · Clear · Done), and `time_picker` (segments-only). Canonical
+  values `YYYY-MM-DD` / `HH:MM:SS.mmm` / `YYYY-MM-DDTHH:MM:SS.mmm`; empty =
+  null. Accepts Date/Time/NaiveDateTime/DateTime structs or strings.
+
 ### Fixed
 - `line_chart` crosshair tooltip: size the box to the longest label + value so
   long series names (e.g. Kubernetes pod names) no longer collide with the
@@ -25,3 +46,4 @@ All notable changes to this project are documented here. The format follows
   inherit host CSS variables (Fluxon-compatible).
 
 [Unreleased]: https://github.com/go9/lantern-ui
+[0.3.0]: https://github.com/go9/lantern-ui/releases/tag/v0.3.0

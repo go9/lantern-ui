@@ -33,7 +33,9 @@ end
 Or from git while iterating:
 
 ```elixir
-{:lantern_ui, github: "go9/lantern-ui"}
+{:lantern_ui, "~> 0.3"}
+# or track main:
+# {:lantern_ui, github: "go9/lantern-ui"}
 ```
 
 ## Usage
