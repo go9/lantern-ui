@@ -98,16 +98,27 @@ Components read colors from CSS variables with chained fallbacks:
 | muted text | `--lantern-fg-muted` → `--foreground-softer` → `#6b7280` |
 | surface (tooltip) | `--lantern-surface` → `--background-base` → `#ffffff` |
 
-- **Using Fluxon** (or any system defining those tokens)? Do nothing — charts
-  inherit your tokens through the fallbacks and match automatically. Don't import
-  the bundled theme (it would override with its own `--lantern-*`).
-- **Standalone / public?** Import the optional light + dark theme:
+Two stylesheets ship in `priv/static`:
+
+- **`lantern_ui.css` — component styles, always import it** when using any
+  `lui-*` component (button, pickers, modal, dropdown, …). Charts don't need it.
+- **`lantern_ui_theme.css` — the optional default theme** (tokens, light/dark,
+  density modes).
+
+Pick per host:
+
+- **Standalone / public?** Import both:
 
   ```css
   /* assets/css/app.css */
   @import "../../deps/lantern_ui/priv/static/lantern_ui.css";
+  @import "../../deps/lantern_ui/priv/static/lantern_ui_theme.css";
   ```
 
+- **Using Fluxon** (or any system defining design tokens)? Import only the
+  component styles and bridge `--lantern-*` onto your tokens (full example in
+  the `lantern_ui.css` header). Charts need neither — they inherit through
+  their built-in fallbacks.
 - **Recolor** by setting any `--lantern-*` variable yourself.
 
 ## Value formatting

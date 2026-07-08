@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-07-08
+
+### Changed
+- **CSS split into two artifacts** (per the embeddable-core architecture):
+  `lantern_ui.css` is now the always-required component styles, and the
+  optional default theme (tokens, light/dark, density) moved to
+  `lantern_ui_theme.css`. Standalone hosts import both; Fluxon/token-bearing
+  hosts import only the component styles and bridge `--lantern-*` onto their
+  own tokens (example in the file header). Migration: add
+  `lantern_ui_theme.css` next to your existing `lantern_ui.css` import.
+
 ## [0.4.0] - 2026-07-08
 
 ### Added
