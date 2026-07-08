@@ -874,6 +874,133 @@ const LanternPicker = {
 }
 
 export const runtime = { position, trapFocus, onDismiss }
+
+// ── Modal ────────────────────────────────────────────────────────────────────
+//
+// Dialog on the shared runtime. Opens/closes via DOM events dispatched by
+// LanternUI.open_dialog/close_dialog (JS commands target the element; server
+// pushes arrive as LiveView events carrying the id).
+const LanternModal = {
+  mounted() {
+    this.panel = this.el.querySelector('[data-part="panel"]')
+    this.cleanup = []
+
+    this.el.addEventListener("lantern:dialog:open", () => this.show())
+    this.el.addEventListener("lantern:dialog:close", () => this.hide())
+    this.handleEvent("lantern:dialog:open", ({ id }) => id === this.el.id && this.show())
+    this.handleEvent("lantern:dialog:close", ({ id }) => id === this.el.id && this.hide())
+
+    this.el.querySelectorAll('[data-part="close"]').forEach((btn) =>
+      btn.addEventListener("click", () => this.hide())
+    )
+
+    if (this.el.dataset.open != null) this.show()
+  },
+
+  show() {
+    if (this.open) return
+    this.open = true
+    this.el.hidden = false
+    document.body.style.overflow = "hidden"
+    this.cleanup.push(trapFocus(this.panel))
+    const esc = this.el.dataset.closeOnEsc === "true"
+    const outside = this.el.dataset.closeOnOutside === "true"
+    this.cleanup.push(
+      onDismiss(this.panel, (reason) => {
+        if (reason === "escape" && !esc) return
+        if (reason === "outside" && !outside) return
+        this.hide()
+      })
+    )
+  },
+
+  hide() {
+    if (!this.open) return
+    this.open = false
+    this.cleanup.forEach((fn) => fn())
+    this.cleanup = []
+    this.el.hidden = true
+    document.body.style.overflow = ""
+  },
+
+  destroyed() {
+    this.cleanup.forEach((fn) => fn())
+    document.body.style.overflow = ""
+  },
+}
+
+// ── Dropdown menu ────────────────────────────────────────────────────────────
+//
+// LanternOverlay behavior + WAI-ARIA menu keyboard interaction: ArrowUp/Down
+// move through [role=menuitem]s, Home/End jump, any item click closes.
+const LanternDropdown = {
+  mounted() {
+    this.trigger = this.el.querySelector('[data-part="trigger"]')
+    this.panel = this.el.querySelector('[data-part="panel"]')
+    if (!this.trigger || !this.panel) return
+    this.open = false
+    this.cleanup = []
+
+    this.trigger.addEventListener("click", () => (this.open ? this.hide() : this.show()))
+    this.trigger.addEventListener("keydown", (e) => {
+      if ((e.key === "ArrowDown" || e.key === "Enter") && !this.open) {
+        e.preventDefault()
+        this.show()
+      }
+    })
+
+    this.panel.addEventListener("click", (e) => {
+      if (e.target.closest('[role="menuitem"]')) this.hide()
+    })
+
+    this.panel.addEventListener("keydown", (e) => {
+      const items = this.items()
+      if (items.length === 0) return
+      const idx = items.indexOf(document.activeElement)
+      if (e.key === "ArrowDown") {
+        e.preventDefault()
+        items[Math.min(idx + 1, items.length - 1)].focus()
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault()
+        items[Math.max(idx - 1, 0)].focus()
+      } else if (e.key === "Home") {
+        e.preventDefault()
+        items[0].focus()
+      } else if (e.key === "End") {
+        e.preventDefault()
+        items[items.length - 1].focus()
+      }
+    })
+  },
+
+  items() {
+    return [...this.panel.querySelectorAll('[role="menuitem"]:not([disabled]):not([data-disabled])')]
+  },
+
+  show() {
+    this.open = true
+    this.panel.hidden = false
+    position(this.trigger, this.panel, { placement: this.el.dataset.placement })
+    this.trigger.querySelector("[aria-haspopup]")?.setAttribute("aria-expanded", "true")
+    const first = this.items()[0]
+    if (first) first.focus()
+    this.cleanup.push(onDismiss(this.panel, () => this.hide(), { anchor: this.trigger }))
+  },
+
+  hide() {
+    if (!this.open) return
+    this.open = false
+    this.cleanup.forEach((fn) => fn())
+    this.cleanup = []
+    this.panel.hidden = true
+    this.trigger.querySelector("[aria-haspopup]")?.setAttribute("aria-expanded", "false")
+  },
+
+  destroyed() {
+    this.cleanup.forEach((fn) => fn())
+  },
+}
+
 export const Hooks = {
   ChartHover,
   LineHover,
@@ -881,6 +1008,17 @@ export const Hooks = {
   LanternCalendar,
   LanternDatetimeField,
   LanternPicker,
+  LanternModal,
+  LanternDropdown,
 }
-export { ChartHover, LineHover, LanternOverlay, LanternCalendar, LanternDatetimeField, LanternPicker }
+export {
+  ChartHover,
+  LineHover,
+  LanternOverlay,
+  LanternCalendar,
+  LanternDatetimeField,
+  LanternPicker,
+  LanternModal,
+  LanternDropdown,
+}
 export default Hooks

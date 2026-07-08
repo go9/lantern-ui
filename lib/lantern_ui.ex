@@ -40,11 +40,44 @@ defmodule LanternUI do
     form: LanternUI.Components.Form,
     calendar: LanternUI.Components.Calendar,
     datetime_field: LanternUI.Components.DatetimeField,
-    date_picker: LanternUI.Components.DatePicker
+    date_picker: LanternUI.Components.DatePicker,
+    checkbox: LanternUI.Components.Checkbox,
+    modal: LanternUI.Components.Modal,
+    dropdown: LanternUI.Components.Dropdown,
+    breadcrumb: LanternUI.Components.Breadcrumb,
+    empty_state: LanternUI.Components.EmptyState
   }
 
   @doc false
   def __components__, do: @components
+
+  @doc """
+  Open a `LanternUI.Components.Modal` by id — client command or server push.
+
+      <.button phx-click={LanternUI.open_dialog("confirm")}>Open</.button>
+      {:noreply, LanternUI.open_dialog(socket, "confirm")}
+
+  Mirrors `Fluxon.open_dialog/1,2`.
+  """
+  def open_dialog(id) when is_binary(id), do: open_dialog(%Phoenix.LiveView.JS{}, id)
+
+  def open_dialog(%Phoenix.LiveView.Socket{} = socket, id),
+    do: Phoenix.LiveView.push_event(socket, "lantern:dialog:open", %{id: id})
+
+  def open_dialog(%Phoenix.LiveView.JS{} = js, id),
+    do: Phoenix.LiveView.JS.dispatch(js, "lantern:dialog:open", to: "##{id}")
+
+  @doc """
+  Close a `LanternUI.Components.Modal` by id — client command or server push.
+  Mirrors `Fluxon.close_dialog/1,2`.
+  """
+  def close_dialog(id) when is_binary(id), do: close_dialog(%Phoenix.LiveView.JS{}, id)
+
+  def close_dialog(%Phoenix.LiveView.Socket{} = socket, id),
+    do: Phoenix.LiveView.push_event(socket, "lantern:dialog:close", %{id: id})
+
+  def close_dialog(%Phoenix.LiveView.JS{} = js, id),
+    do: Phoenix.LiveView.JS.dispatch(js, "lantern:dialog:close", to: "##{id}")
 
   defmacro __using__(opts) do
     only = Keyword.get(opts, :only, [])

@@ -6,6 +6,24 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-08
+
+### Added
+- **Modal** (`modal/1` + `LanternUI.open_dialog/1,2` / `close_dialog/1,2`) —
+  Fluxon-compatible dialog on the shared overlay runtime: focus trap,
+  Escape/outside dismissal, `prevent_closing`, placement, token-driven fade.
+- **Dropdown menu** (`dropdown/1` + `dropdown_header/separator/link/button/custom`) —
+  Fluxon-compatible family with WAI-ARIA menu keyboard navigation.
+- **Checkbox** (`checkbox/1`) — Fluxon-compatible, `FormField`-aware, hidden
+  unchecked-value input, label/description/error states.
+- **Breadcrumb** (`breadcrumb/1`) — path navigation for file/tree UIs
+  (lantern-ui extension).
+- **Empty state** (`empty_state/1`) — quiet zero states with icon, title,
+  description, and action slot (lantern-ui extension).
+- Icons: `folder`, `folder-open`, `document`, `arrow-up-tray`,
+  `arrow-down-tray`, `arrow-path`, `trash`.
+- Hooks: `LanternModal`, `LanternDropdown`.
+
 ## [0.3.3] - 2026-07-08
 
 ### Fixed
