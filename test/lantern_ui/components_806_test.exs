@@ -113,6 +113,14 @@ defmodule LanternUI.Components806Test do
       assert %Phoenix.LiveView.JS{ops: ops2} = LanternUI.close_dialog("m1")
       assert inspect(ops2) =~ "lantern:dialog:close"
     end
+
+    test "component CSS respects the hidden attribute (regression: modal must hide when closed)" do
+      # `.lui-modal { display: flex }` overrides the UA `[hidden]{display:none}`,
+      # so without an explicit `.lui-modal[hidden]{display:none}` the modal is
+      # always visible ("auto-opens", can't be closed).
+      css = File.read!(Path.join(:code.priv_dir(:lantern_ui), "static/lantern_ui.css"))
+      assert css =~ ".lui-modal[hidden]"
+    end
   end
 
   describe "dropdown/1" do

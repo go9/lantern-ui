@@ -494,6 +494,10 @@
 /* ── Modal ── */
 .lui-modal { position: fixed; inset: 0; z-index: 60; display: flex;
   align-items: center; justify-content: center; padding: 1.5rem; }
+/* Respect the `hidden` attribute — an author `display` beats the UA
+   `[hidden]{display:none}`, so without this the modal is always visible
+   ("auto-opens" and can't be closed). Higher specificity than `.lui-modal`. */
+.lui-modal[hidden] { display: none; }
 .lui-modal[data-placement="top"] { align-items: flex-start; padding-top: 4.5rem; }
 .lui-modal-backdrop { position: absolute; inset: 0;
   background: color-mix(in oklab, #000 45%, transparent);
