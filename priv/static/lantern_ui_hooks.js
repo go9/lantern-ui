@@ -873,6 +873,34 @@ const LanternPicker = {
   },
 }
 
+// App-shell sidebar: collapse/expand to an icon rail, persisted per element id
+// in localStorage. The toggle button ([data-part="toggle"]) may live anywhere
+// inside the shell (typically the topbar).
+const LanternSidebar = {
+  key() {
+    return `lui-sidebar:${this.el.id}`
+  },
+
+  mounted() {
+    const stored = localStorage.getItem(this.key())
+    if (stored === "true") this.el.setAttribute("data-collapsed", "")
+    if (stored === "false") this.el.removeAttribute("data-collapsed")
+
+    this.onToggle = (e) => {
+      if (!e.target.closest('[data-part="toggle"]')) return
+      const collapsed = this.el.toggleAttribute("data-collapsed")
+      try {
+        localStorage.setItem(this.key(), String(collapsed))
+      } catch (_) {}
+    }
+    this.el.addEventListener("click", this.onToggle)
+  },
+
+  destroyed() {
+    this.el.removeEventListener("click", this.onToggle)
+  },
+}
+
 export const runtime = { position, trapFocus, onDismiss }
 
 // ── Modal ────────────────────────────────────────────────────────────────────
@@ -1010,6 +1038,7 @@ export const Hooks = {
   LanternPicker,
   LanternModal,
   LanternDropdown,
+  LanternSidebar,
 }
 export {
   ChartHover,
@@ -1020,5 +1049,6 @@ export {
   LanternPicker,
   LanternModal,
   LanternDropdown,
+  LanternSidebar,
 }
 export default Hooks

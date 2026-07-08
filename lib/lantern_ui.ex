@@ -45,7 +45,8 @@ defmodule LanternUI do
     modal: LanternUI.Components.Modal,
     dropdown: LanternUI.Components.Dropdown,
     breadcrumb: LanternUI.Components.Breadcrumb,
-    empty_state: LanternUI.Components.EmptyState
+    empty_state: LanternUI.Components.EmptyState,
+    layout: LanternUI.Components.Layout
   }
 
   @doc false

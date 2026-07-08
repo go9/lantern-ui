@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-08
+
+### Added
+- **App-shell layout** (`LanternUI.Components.Layout`) — the core Fluxon-style
+  navigation chrome: `sidebar_layout` (fixed sidebar + main + optional topbar),
+  `sidebar_header` (logo corner), `sidebar_nav` / `nav_group` / `nav_item`
+  (grouped nav with icons + active state), and `sidebar_toggle` (collapse to an
+  icon rail, persisted per-id in localStorage via the new `LanternSidebar`
+  hook). Collapses to a horizontal strip on narrow viewports.
+- Icons: `bars-3`, `squares-2x2`, `chart-bar`, `circle-stack`, `cloud`.
+
 ## [0.4.1] - 2026-07-08
 
 ### Changed
