@@ -30,6 +30,7 @@ defmodule LanternUI.Components.DatetimeField do
   use Phoenix.Component
 
   alias LanternUI.Class
+  alias LanternUI.Components.Icon
 
   attr(:id, :string, required: true)
 
@@ -93,7 +94,7 @@ defmodule LanternUI.Components.DatetimeField do
         data-part="clear"
         aria-label="Clear value"
         tabindex="-1"
-      >∅</button>
+      ><Icon.icon name="x-mark" /></button>
       <span :for={suffix <- @suffix} class="lui-dtf-suffix">{render_slot(suffix)}</span>
     </div>
     """

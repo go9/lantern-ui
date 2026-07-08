@@ -874,8 +874,10 @@ const LanternPicker = {
 }
 
 // App-shell sidebar: collapse/expand to an icon rail, persisted per element id
-// in localStorage. The toggle button ([data-part="toggle"]) may live anywhere
-// inside the shell (typically the topbar).
+// in localStorage. Triggered by the sidebar's own collapse control
+// ([data-part="sidebar-collapse"]) — deliberately NOT the generic
+// [data-part="toggle"], which other components (date picker, dropdown) use
+// inside the shell.
 const LanternSidebar = {
   key() {
     return `lui-sidebar:${this.el.id}`
@@ -887,7 +889,7 @@ const LanternSidebar = {
     if (stored === "false") this.el.removeAttribute("data-collapsed")
 
     this.onToggle = (e) => {
-      if (!e.target.closest('[data-part="toggle"]')) return
+      if (!e.target.closest('[data-part="sidebar-collapse"]')) return
       const collapsed = this.el.toggleAttribute("data-collapsed")
       try {
         localStorage.setItem(this.key(), String(collapsed))

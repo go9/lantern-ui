@@ -386,6 +386,7 @@
   cursor: pointer;
 }
 .lui-dtf-clear:hover { color: var(--lantern-danger); background: var(--lantern-surface-sunken); }
+.lui-dtf-clear svg { width: 0.9em; height: 0.9em; display: block; }
 .lui-dtf-suffix {
   display: inline-flex;
   align-items: center;

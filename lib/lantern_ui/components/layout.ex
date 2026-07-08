@@ -62,7 +62,7 @@ defmodule LanternUI.Components.Layout do
             <button
               type="button"
               class="lui-collapse-btn"
-              data-part="toggle"
+              data-part="sidebar-collapse"
               aria-label="Collapse sidebar"
             >
               <Icon.icon name="chevron-left" class="lui-collapse-icon" />

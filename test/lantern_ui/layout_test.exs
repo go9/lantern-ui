@@ -37,7 +37,7 @@ defmodule LanternUI.LayoutTest do
       assert html =~ ~s(class="lui-app-sidebar")
       assert html =~ "NAV"
       assert html =~ ~s(class="lui-app-sidebar-foot")
-      assert html =~ ~s(data-part="toggle")
+      assert html =~ ~s(data-part="sidebar-collapse")
       assert html =~ ~s(class="lui-app-main")
       assert html =~ "BODY"
     end
