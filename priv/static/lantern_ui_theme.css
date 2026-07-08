@@ -1,0 +1,205 @@
+/*
+ * LanternUI design tokens + default theme.
+ *
+ * Components read every value from `--lantern-*` custom properties, each chained
+ * to a host (Fluxon) token then a hard fallback, e.g.:
+ *
+ *     color: var(--lantern-fg, var(--foreground, #09090b));
+ *     background: var(--lantern-surface, var(--background-base, #fff));
+ *     border-color: var(--lantern-border, var(--border, #e4e4e7));
+ *     accent: var(--lantern-accent, var(--color-primary-600, oklch(0.637 0.192 38)));
+ *
+ * COLOR MODEL (shadcn-style):
+ * - `primary` is MONOCHROME (near-black in light, white in dark) — the color of
+ *   buttons, checked controls, and default badges. Restrained, premium.
+ * - `accent` is the flicker coral/ember orange — focus rings, selection,
+ *   highlights, links, live-status. The brand shows up sparingly, not on every
+ *   button.
+ *
+ * WHEN TO IMPORT THIS FILE
+ * - Fluxon (or any host that defines the fallback tokens): DON'T import — the
+ *   host's tokens flow in through the fallbacks and LanternUI matches it.
+ * - Standalone / embedded tools (lantern, livecode, s3) / the demo: import this
+ *   for a complete light+dark theme with zero host CSS required.
+ * - Recolor by overriding any `--lantern-*` variable on `:root` or a subtree.
+ *
+ * THEMING SURFACES
+ * - Light is the `:root` default; `.dark` (or system dark, unless `.light`) flips colors.
+ * - Density: the default is shadcn-compact (32px controls / 13px text). Set
+ *   `data-lantern-density="comfortable"` on an ancestor for a roomier scale.
+ */
+
+:root {
+  /* ── Color · foreground ── */
+  --lantern-fg: #09090b;
+  --lantern-fg-muted: #71717a;
+  --lantern-fg-subtle: #a1a1aa;
+
+  /* ── Color · surfaces ── */
+  --lantern-surface: #ffffff;
+  --lantern-surface-raised: #ffffff;
+  --lantern-surface-sunken: #f4f4f5;
+  --lantern-surface-hover: #f4f4f5;
+
+  /* ── Color · lines ── */
+  --lantern-border: #e4e4e7;
+  --lantern-border-strong: #d4d4d8;
+
+  /* ── Color · primary (monochrome — buttons, checked controls, default badges) ── */
+  --lantern-primary: #18181b;
+  --lantern-primary-fg: #fafafa;
+
+  /* ── Color · secondary (subtle filled controls) ── */
+  --lantern-secondary: #f4f4f5;
+  --lantern-secondary-fg: #18181b;
+
+  /* ── Color · accent + status ── */
+  /* Flicker brand accent — coral/ember orange (OKLCH warm hue ~38), shared
+     across the lantern ecosystem. Used sparingly: focus rings, selection,
+     links, highlights, live-status. In a flicker/Fluxon host the
+     component-level fallback to --color-primary-600 already yields this. */
+  --lantern-accent: oklch(0.637 0.192 38);
+  --lantern-accent-fg: #ffffff;
+  --lantern-accent-soft: color-mix(in oklab, var(--lantern-accent) 12%, transparent);
+  --lantern-danger: #dc2626;
+  --lantern-danger-fg: #ffffff;
+  --lantern-success: #16a34a;
+  --lantern-warning: #d97706;
+
+  /* ── Focus ring (coral, shadcn-style 3px soft ring via color-mix) ── */
+  --lantern-ring: var(--lantern-accent);
+  --lantern-ring-soft: color-mix(in oklab, var(--lantern-ring) 25%, transparent);
+
+  /* ── Radius ── */
+  --lantern-radius-sm: 0.375rem;
+  --lantern-radius-md: 0.5rem;
+  --lantern-radius-lg: 0.625rem;
+
+  /* ── Shadows (shadcn shadow-xs / shadow-sm) ── */
+  --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+
+  /* ── Typography ── */
+  --lantern-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --lantern-font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, monospace;
+
+  /* ── Motion ── */
+  --lantern-duration: 150ms;
+  --lantern-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Density (default = shadcn-compact: 32px controls, 13px text) ── */
+  --lantern-control-h: 2rem;
+  --lantern-control-px: 0.75rem;
+  --lantern-text: 0.8125rem;
+  --lantern-text-sm: 0.75rem;
+  --lantern-gap: 0.4375rem;
+  --lantern-radius: var(--lantern-radius-md);
+}
+
+/* Roomier scale for content-first hosts (marketing pages, forms-heavy apps). */
+[data-lantern-density="comfortable"] {
+  --lantern-control-h: 2.25rem;
+  --lantern-control-px: 1rem;
+  --lantern-text: 0.875rem;
+  --lantern-text-sm: 0.8125rem;
+  --lantern-gap: 0.5rem;
+}
+
+/* Light theme — explicit opt-in via `.light`, re-asserting the :root values
+   so a subtree can force light even when system dark applied them. */
+.light {
+  --lantern-fg: #09090b;
+  --lantern-fg-muted: #71717a;
+  --lantern-fg-subtle: #a1a1aa;
+
+  --lantern-surface: #ffffff;
+  --lantern-surface-raised: #ffffff;
+  --lantern-surface-sunken: #f4f4f5;
+  --lantern-surface-hover: #f4f4f5;
+
+  --lantern-border: #e4e4e7;
+  --lantern-border-strong: #d4d4d8;
+
+  --lantern-primary: #18181b;
+  --lantern-primary-fg: #fafafa;
+
+  --lantern-secondary: #f4f4f5;
+  --lantern-secondary-fg: #18181b;
+
+  --lantern-accent: oklch(0.637 0.192 38);
+  --lantern-accent-fg: #ffffff;
+  --lantern-danger: #dc2626;
+  --lantern-success: #16a34a;
+  --lantern-warning: #d97706;
+
+  --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Dark theme — explicit opt-in via `.dark`. */
+.dark {
+  --lantern-fg: #fafafa;
+  --lantern-fg-muted: #a1a1aa;
+  --lantern-fg-subtle: #71717a;
+
+  --lantern-surface: #09090b;
+  --lantern-surface-raised: #0c0c0e;
+  --lantern-surface-sunken: #18181b;
+  --lantern-surface-hover: #26262a;
+
+  --lantern-border: #26262a;
+  --lantern-border-strong: #3f3f46;
+
+  --lantern-primary: #fafafa;
+  --lantern-primary-fg: #18181b;
+
+  --lantern-secondary: #27272a;
+  --lantern-secondary-fg: #fafafa;
+
+  --lantern-accent: oklch(0.685 0.182 39);
+  --lantern-accent-fg: #ffffff;
+  --lantern-danger: #ef4444;
+  --lantern-success: #22c55e;
+  --lantern-warning: #f59e0b;
+
+  --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
+}
+
+/* System dark — applies unless the host explicitly opts into `.light`. */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --lantern-fg: #fafafa;
+    --lantern-fg-muted: #a1a1aa;
+    --lantern-fg-subtle: #71717a;
+
+    --lantern-surface: #09090b;
+    --lantern-surface-raised: #0c0c0e;
+    --lantern-surface-sunken: #18181b;
+    --lantern-surface-hover: #26262a;
+
+    --lantern-border: #26262a;
+    --lantern-border-strong: #3f3f46;
+
+    --lantern-primary: #fafafa;
+    --lantern-primary-fg: #18181b;
+
+    --lantern-secondary: #27272a;
+    --lantern-secondary-fg: #fafafa;
+
+    --lantern-accent: oklch(0.685 0.182 39);
+    --lantern-accent-fg: #ffffff;
+    --lantern-danger: #ef4444;
+    --lantern-success: #22c55e;
+    --lantern-warning: #f59e0b;
+
+    --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+    --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --lantern-duration: 0ms;
+  }
+}
