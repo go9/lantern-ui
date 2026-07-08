@@ -469,6 +469,8 @@
 /* ── Segmented date/time field ── */
 .lui-dtf {
   display: inline-flex;
+  flex-wrap: nowrap; /* hosts must never wrap the segments (defensive) */
+  min-width: 0;
   align-items: center;
   gap: 0.25rem;
   height: var(--lantern-control-h);
@@ -495,9 +497,12 @@
 }
 .lui-dtf-segs {
   display: inline-flex;
+  flex-wrap: nowrap;
   align-items: baseline;
   flex: 1;
   min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
 }
 .lui-dtf-seg {
   padding: 0.0625rem 0.1875rem;
@@ -563,6 +568,25 @@
   /* position:fixed + top/left set by the runtime's position() */
 }
 .lui-picker-panel .lui-picker-cal { display: block; }
+.lui-picker-time {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--lantern-border);
+}
+.lui-picker-time-label {
+  font-size: var(--lantern-text);
+  color: var(--lantern-fg);
+}
+.lui-picker-time-field {
+  background: var(--lantern-surface-sunken);
+  border-color: transparent;
+  box-shadow: none;
+}
+
 .lui-picker-foot {
   display: flex;
   align-items: center;

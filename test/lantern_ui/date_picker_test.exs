@@ -84,6 +84,37 @@ defmodule LanternUI.DatePickerTest do
     end
   end
 
+  describe "date_time_picker/1 panel time pane" do
+    test "datetime panel includes the time pane, wired but non-submitting" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <DatePicker.date_time_picker id="ts" name="ts" value="2026-02-03T14:30:00.500" />
+          """
+        end)
+
+      assert html =~ ~s(data-part="panel-time")
+      assert html =~ "Time"
+      assert html =~ ~s(aria-label="Choose date and time")
+      # panel time field is seeded from the value's time slice...
+      assert html =~ "14:30:00.500"
+      # ...but its hidden input has NO name, so it never submits
+      refute html =~ ~r/<input type="hidden" name="[^"]+" value="14:30:00\.500"/
+    end
+
+    test "date mode has no time pane" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <DatePicker.date_picker id="d" name="d" value="2026-02-03" />
+          """
+        end)
+
+      refute html =~ ~s(data-part="panel-time")
+      assert html =~ ~s(aria-label="Choose date")
+    end
+  end
+
   describe "date_time_picker/1" do
     test "renders datetime segments and Now in the footer" do
       html =
