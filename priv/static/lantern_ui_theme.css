@@ -81,6 +81,9 @@
 
   /* ── Typography ── */
   --lantern-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Brand/heading face (logo, app-shell brand). Defaults to the body font;
+     override to a display face (e.g. Space Grotesk) to match a host's brand. */
+  --lantern-font-brand: var(--lantern-font);
   --lantern-font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, monospace;
 
   /* ── Motion ── */
