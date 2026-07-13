@@ -24,6 +24,13 @@ All notable changes to this project are documented here. The format follows
     flop_phoenix's pager). Duck-typed against `Flop.Meta`'s shape, so no flop
     dependency; all navigation is patch-based
 - `Form.translate_error/1` is now public.
+- **`data_table`** (flicker #867) — the admin table that replaces the per-app
+  `admin_table` copies. API mirrors the enventory/skusync baseline (col/
+  bulk_action/row_action/toolbar/header_action/empty slots, selected_ids,
+  toggle_select / select_all_page / clear_selection events). Flop.Meta
+  duck-typed (no flop dep); sorting + pagination are patch navigation that
+  preserves existing query params (filters); bulk bar, selected-row styling,
+  EmptyState fallback, composed on the new primitives.
 
 ## [0.6.0] - 2026-07-08
 
