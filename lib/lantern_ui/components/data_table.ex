@@ -115,9 +115,11 @@ defmodule LanternUI.Components.DataTable do
   slot :filter do
     attr(:field, :atom)
     attr(:label, :string)
+    attr(:type, :atom, doc: ":select (default) | :text | :range")
     attr(:op, :string)
     attr(:options, :list)
     attr(:prompt, :string)
+    attr(:placeholder, :string)
   end
 
   slot(:card, doc: "per-row card rendering for the cards view; enables the view toggle")
@@ -181,7 +183,14 @@ defmodule LanternUI.Components.DataTable do
         <div class="lui-dt-header-actions">{render_slot(@header_action)}</div>
       </div>
 
-      <div :if={@tab != [] || (@card != [] && @view)} class="lui-dt-tabsrow">
+      <div
+        :if={@tab != [] || @toolbar != [] || @search_field || @filter != [] || @card != []}
+        id={"#{@id}-chrome"}
+        class="lui-dt-chromerow"
+        phx-hook="LanternTableChrome"
+        data-path={@path}
+        data-params={Jason.encode!(chrome_base_params(@meta))}
+      >
         <Tabs.tabs_list :if={@tab != []} active_tab={active_tab(@tab, @meta)} size="sm">
           <:tab
             :for={{tab, i} <- Enum.with_index(@tab)}
@@ -192,6 +201,24 @@ defmodule LanternUI.Components.DataTable do
             <Badge.badge :if={tab[:count]} size="sm" color="neutral">{tab[:count]}</Badge.badge>
           </:tab>
         </Tabs.tabs_list>
+
+        <div class="lui-dt-spacer"></div>
+
+        {render_slot(@toolbar)}
+
+        <div :if={@search_field} class="lui-dt-search">
+          <Icon.icon name="magnifying-glass" />
+          <input
+            type="text"
+            placeholder={@search_placeholder}
+            value={filter_value(@meta, @search_field)}
+            data-part="search"
+            data-field={@search_field}
+            data-op={@search_op}
+            aria-label={@search_placeholder}
+          />
+        </div>
+
         <div :if={@card != []} class="lui-dt-viewtoggle">
           <.link
             patch={view_path(@path, @meta, "table")}
@@ -204,76 +231,89 @@ defmodule LanternUI.Components.DataTable do
             aria-label="Card view"
           >▦</.link>
         </div>
-      </div>
 
-      <div :if={@toolbar != [] || @search_field || @filter != []} class="lui-dt-toolbar">
-        <div
-          :if={@search_field || @filter != []}
-          id={"#{@id}-chrome"}
-          class="lui-dt-chrome"
-          phx-hook="LanternTableChrome"
-          data-path={@path}
-          data-params={Jason.encode!(chrome_base_params(@meta))}
-        >
-          <Dropdown.dropdown :if={@filter != []} id={"#{@id}-filters"} placement="bottom-end">
-            <:toggle>
-              <Button.button size="sm" variant="outline" type="button">
-                <Icon.icon name="funnel" /> Filters
-                <Badge.badge :if={active_filter_count(@meta, @filter) > 0} size="sm" color="accent">
-                  {active_filter_count(@meta, @filter)}
-                </Badge.badge>
-              </Button.button>
-            </:toggle>
-            <Dropdown.dropdown_custom>
-              <div class="lui-dt-filterpanel">
-                <div :for={filter <- @filter} class="lui-dt-filterrow">
-                  <label class="lui-dt-filterlabel">{filter[:label] || to_string(filter[:field])}</label>
-                  <div class="lui-select-native-wrap">
-                    <select
-                      class="lui-select-native"
+        <Dropdown.dropdown :if={@filter != []} id={"#{@id}-filters"} placement="bottom-end">
+          <:toggle>
+            <Button.button size="sm" variant="outline" type="button" aria-label="Table settings">
+              <Icon.icon name="adjustments-horizontal" />
+              <Badge.badge :if={active_filter_count(@meta, @filter) > 0} size="sm" color="accent">
+                {active_filter_count(@meta, @filter)}
+              </Badge.badge>
+            </Button.button>
+          </:toggle>
+          <Dropdown.dropdown_custom>
+            <div class="lui-dt-filterpanel">
+              <div :for={filter <- @filter} class="lui-dt-filterrow">
+                <label class="lui-dt-filterlabel">{filter[:label] || to_string(filter[:field])}</label>
+                <%= case filter[:type] || :select do %>
+                  <% :text -> %>
+                    <input
+                      type="text"
+                      class="lui-dt-filtertext"
                       data-part="filter"
                       data-field={filter[:field]}
-                      data-op={filter[:op] || "=="}
+                      data-op={filter[:op] || "ilike"}
+                      value={filter_value(@meta, filter[:field])}
+                      placeholder={filter[:placeholder] || "Any"}
                       aria-label={filter[:label] || to_string(filter[:field])}
-                    >
-                      <option value="">{filter[:prompt] || "Any"}</option>
-                      <option
-                        :for={opt <- filter[:options] || []}
-                        value={opt_value(opt)}
-                        selected={to_string(opt_value(opt)) == filter_value(@meta, filter[:field])}
+                    />
+                  <% :range -> %>
+                    <div class="lui-dt-filterrange">
+                      <input
+                        type="number"
+                        class="lui-dt-filtertext"
+                        data-part="filter"
+                        data-field={filter[:field]}
+                        data-op=">="
+                        value={filter_value(@meta, filter[:field], ">=")}
+                        placeholder="Min"
+                        aria-label={"#{filter[:label]} min"}
+                      />
+                      <span class="lui-dt-rangesep">–</span>
+                      <input
+                        type="number"
+                        class="lui-dt-filtertext"
+                        data-part="filter"
+                        data-field={filter[:field]}
+                        data-op="<="
+                        value={filter_value(@meta, filter[:field], "<=")}
+                        placeholder="Max"
+                        aria-label={"#{filter[:label]} max"}
+                      />
+                    </div>
+                  <% _ -> %>
+                    <div class="lui-select-native-wrap">
+                      <select
+                        class="lui-select-native"
+                        data-part="filter"
+                        data-field={filter[:field]}
+                        data-op={filter[:op] || "=="}
+                        aria-label={filter[:label] || to_string(filter[:field])}
                       >
-                        {opt_label(opt)}
-                      </option>
-                    </select>
-                    <Icon.icon name="chevron-up-down" class="lui-select-caret" />
-                  </div>
-                </div>
-                <button
-                  :if={active_filter_count(@meta, @filter) > 0}
-                  type="button"
-                  class="lui-dt-clearfilters"
-                  data-part="clear-filters"
-                >
-                  <Icon.icon name="x-mark" /> Clear filters
-                </button>
+                        <option value="">{filter[:prompt] || "Any"}</option>
+                        <option
+                          :for={opt <- filter[:options] || []}
+                          value={opt_value(opt)}
+                          selected={to_string(opt_value(opt)) == filter_value(@meta, filter[:field])}
+                        >
+                          {opt_label(opt)}
+                        </option>
+                      </select>
+                      <Icon.icon name="chevron-up-down" class="lui-select-caret" />
+                    </div>
+                <% end %>
               </div>
-            </Dropdown.dropdown_custom>
-          </Dropdown.dropdown>
-
-          <div :if={@search_field} class="lui-dt-search">
-            <Icon.icon name="magnifying-glass" />
-            <input
-              type="text"
-              placeholder={@search_placeholder}
-              value={filter_value(@meta, @search_field)}
-              data-part="search"
-              data-field={@search_field}
-              data-op={@search_op}
-              aria-label={@search_placeholder}
-            />
-          </div>
-        </div>
-        {render_slot(@toolbar)}
+              <button
+                :if={active_filter_count(@meta, @filter) > 0}
+                type="button"
+                class="lui-dt-clearfilters"
+                data-part="clear-filters"
+              >
+                <Icon.icon name="x-mark" /> Clear filters
+              </button>
+            </div>
+          </Dropdown.dropdown_custom>
+        </Dropdown.dropdown>
       </div>
 
       <div :if={@selection_count > 0} class="lui-dt-bulkbar">
@@ -477,13 +517,15 @@ defmodule LanternUI.Components.DataTable do
     base_params(meta) |> Map.drop(["filters", "page"])
   end
 
-  defp filter_value(meta, field) do
+  defp filter_value(meta, field, op \\ nil) do
     field_s = to_string(field)
 
     base_params(meta)
     |> Map.get("filters", %{})
     |> normalize_filters()
-    |> Enum.find_value("", fn f -> f["field"] == field_s && to_string(f["value"] || "") end)
+    |> Enum.find_value("", fn f ->
+      f["field"] == field_s and (is_nil(op) or f["op"] == op) and to_string(f["value"] || "")
+    end)
   end
 
   defp normalize_filters(filters) when is_map(filters), do: Map.values(filters)

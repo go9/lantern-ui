@@ -48,6 +48,13 @@ All notable changes to this project are documented here. The format follows
 - **`data_table` title section**: `subtitle` attr and `info_modal_id` — an ⓘ
   button beside the title that opens the given modal via
   `LanternUI.open_dialog` (baseline `admin_table` parity).
+- **`data_table` card shell + chrome row** (design review): the table renders
+  as a contained card (header with title/info, hairline sections, footer
+  pagination); tabs ("quick filters") share one chrome row with everything
+  else — left-to-right: tabs · quick actions (`toolbar` slot) · search · view
+  toggle · settings popover (rightmost). `:filter` slots gain `type`:
+  `:select` (default), `:text`, and `:range` (min/max → `>=`/`<=` Flop
+  filters).
 
 ## [0.6.0] - 2026-07-08
 

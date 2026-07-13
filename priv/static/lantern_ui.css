@@ -848,3 +848,28 @@
   font-size: 1rem; line-height: 0; }
 .lui-dt-info:hover { color: var(--lantern-accent); }
 .lui-dt-subtitle { margin: 0; font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); }
+
+/* ── Data table card shell ── */
+.lui-datatable { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
+  background: var(--lantern-surface-raised); overflow: hidden; box-shadow: var(--lantern-shadow); }
+.lui-datatable .lui-dt-header { margin-bottom: 0; padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--lantern-border); }
+.lui-datatable .lui-dt-overview { border: none; border-radius: 0; margin-bottom: 0;
+  border-bottom: 1px solid var(--lantern-border); }
+.lui-dt-chromerow { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+  padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--lantern-border); }
+.lui-dt-spacer { flex: 1; }
+.lui-datatable .lui-dt-bulkbar { margin-bottom: 0; border: none; border-radius: 0;
+  border-bottom: 1px solid color-mix(in oklab, var(--lantern-accent) 25%, transparent); }
+.lui-datatable .lui-table-wrap { border: none; border-radius: 0; }
+.lui-datatable .lui-dt-cards { padding: 0.9rem; }
+.lui-datatable .lui-dt-pagination { margin-top: 0; padding: 0.55rem 0.9rem;
+  border-top: 1px solid var(--lantern-border); }
+.lui-dt-filtertext { height: 1.9rem; padding: 0 0.55rem; font-size: var(--lantern-text-sm);
+  font-family: inherit; background: var(--lantern-surface); color: var(--lantern-fg);
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm);
+  width: 100%; box-sizing: border-box; }
+.lui-dt-filtertext:focus-visible { outline: none; border-color: var(--lantern-ring);
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft); }
+.lui-dt-filterrange { display: flex; align-items: center; gap: 0.35rem; }
+.lui-dt-rangesep { color: var(--lantern-fg-subtle); }
