@@ -100,12 +100,12 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ "lui-vt-active"
   end
 
-  test "filters live in a popover with active-count badge and clear button" do
+  test "filters live in the settings popover with active-count badge and clear button" do
     html = render(&table/1, base())
 
-    # popover dropdown wraps the filter selects
+    # settings popover wraps the filter controls
     assert html =~ ~s(id="t-filters")
-    assert html =~ "Filters"
+    assert html =~ ~s(aria-label="Table settings")
     assert html =~ "lui-dt-filterpanel"
     # status filter is active in @meta but channel (the declared filter) is not,
     # so no badge and no clear button
@@ -117,9 +117,42 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ ~s(data-part="clear-filters")
   end
 
-  test "toolbar chrome orders popover before search" do
+  test "chrome row orders: tabs, search, then settings popover (rightmost)" do
     html = render(&table/1, base())
-    assert :binary.match(html, "t-filters") < :binary.match(html, ~s(data-part="search"))
+    {tabs, _} = :binary.match(html, "lui-tabs-list")
+    {search, _} = :binary.match(html, ~s(data-part="search"))
+    {settings, _} = :binary.match(html, ~s(id="t-filters"))
+    assert tabs < search
+    assert search < settings
+  end
+
+  test "card shell wraps everything; typed filters render text and range controls" do
+    assigns = %{__changed__: nil}
+
+    html =
+      (fn a ->
+         ~H"""
+         <DataTable.data_table
+           id="t"
+           rows={[]}
+           meta={%{current_page: 1, total_pages: 1, params: %{}}}
+           path="/x"
+         >
+           <:filter field={:buyer} type={:text} label="Buyer" />
+           <:filter field={:total} type={:range} label="Total" />
+           <:col :let={r} label="Name">{r}</:col>
+         </DataTable.data_table>
+         """
+       end).(assigns)
+      |> rendered_to_string()
+
+    assert html =~ ~s(class="lui-datatable")
+    assert html =~ ~s(data-field="buyer")
+    assert html =~ ~s(data-op="ilike")
+    assert html =~ ~s(placeholder="Min")
+    assert html =~ ~s(placeholder="Max")
+    assert html =~ ~s(data-op=">=")
+    assert html =~ ~s(data-op="<=")
   end
 
   test "bulk bar offers select-all-matching when not everything is selected" do
