@@ -48,6 +48,13 @@ defmodule LanternUI.Components.DataTable do
   attr(:show_checkboxes, :boolean, default: true)
   attr(:target, :any, default: nil)
   attr(:title, :string, default: nil)
+  attr(:subtitle, :string, default: nil)
+
+  attr(:info_modal_id, :string,
+    default: nil,
+    doc: "modal id the title's info button opens (LanternUI.open_dialog)"
+  )
+
   attr(:page_size_options, :list, default: [10, 25, 50, 100])
 
   attr(:search_field, :atom,
@@ -156,7 +163,21 @@ defmodule LanternUI.Components.DataTable do
       </section>
 
       <div :if={@title || @header_action != []} class="lui-dt-header">
-        <h2 :if={@title} class="lui-dt-title">{@title}</h2>
+        <div :if={@title} class="lui-dt-titles">
+          <div class="lui-dt-titlerow">
+            <h2 class="lui-dt-title">{@title}</h2>
+            <button
+              :if={@info_modal_id}
+              type="button"
+              class="lui-dt-info"
+              phx-click={LanternUI.open_dialog(@info_modal_id)}
+              aria-label="About this table"
+            >
+              <Icon.icon name="information-circle" />
+            </button>
+          </div>
+          <p :if={@subtitle} class="lui-dt-subtitle">{@subtitle}</p>
+        </div>
         <div class="lui-dt-header-actions">{render_slot(@header_action)}</div>
       </div>
 

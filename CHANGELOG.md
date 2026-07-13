@@ -45,6 +45,9 @@ All notable changes to this project are documented here. The format follows
   "Select all N" (emits `select_all_matching` for whole-result-set selection),
   and collapse hooks re-apply their state after LiveView patches (the
   overview/sidebar collapse no longer resets on re-render).
+- **`data_table` title section**: `subtitle` attr and `info_modal_id` — an ⓘ
+  button beside the title that opens the given modal via
+  `LanternUI.open_dialog` (baseline `admin_table` parity).
 
 ## [0.6.0] - 2026-07-08
 

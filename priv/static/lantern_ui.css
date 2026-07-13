@@ -839,3 +839,12 @@
 .lui-dt-selectall { border: none; background: none; padding: 0; font-family: inherit;
   font-size: var(--lantern-text-sm); font-weight: 550; color: var(--lantern-accent);
   cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+
+/* ── Data table title section ── */
+.lui-dt-titles { display: flex; flex-direction: column; gap: 0.1rem; }
+.lui-dt-titlerow { display: flex; align-items: center; gap: 0.35rem; }
+.lui-dt-info { display: inline-flex; border: none; background: none; padding: 0.1rem;
+  color: var(--lantern-fg-subtle); cursor: pointer; border-radius: var(--lantern-radius-sm);
+  font-size: 1rem; line-height: 0; }
+.lui-dt-info:hover { color: var(--lantern-accent); }
+.lui-dt-subtitle { margin: 0; font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); }

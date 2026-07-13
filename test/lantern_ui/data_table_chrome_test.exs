@@ -152,6 +152,34 @@ defmodule LanternUI.DataTableChromeTest do
     |> rendered_to_string()
   end
 
+  test "title section renders subtitle and info button opening the modal" do
+    assigns = %{__changed__: nil}
+
+    html =
+      (fn a ->
+         ~H"""
+         <DataTable.data_table
+           id="t"
+           rows={[]}
+           meta={%{current_page: 1, total_pages: 1}}
+           path="/x"
+           title="Orders"
+           subtitle="All channels, last 90 days"
+           info_modal_id="orders-info"
+         >
+           <:col :let={r} label="Name">{r}</:col>
+         </DataTable.data_table>
+         """
+       end).(assigns)
+      |> rendered_to_string()
+
+    assert html =~ "Orders"
+    assert html =~ "All channels, last 90 days"
+    assert html =~ ~s(aria-label="About this table")
+    assert html =~ "lantern:dialog:open"
+    assert html =~ "orders-info"
+  end
+
   test "table view renders the table and the toggle" do
     html = render(&table/1, base())
     assert html =~ "lui-table-wrap"
