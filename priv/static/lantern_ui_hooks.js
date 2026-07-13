@@ -909,15 +909,21 @@ const LanternSidebar = {
   },
 }
 
-// Select listbox: toggle opens a positioned listbox; ↑/↓/Home/End move the
-// active option, Enter/click selects (updates the hidden input + label and
-// fires change), Esc/outside closes, printable keys type-ahead.
+// Select listbox: toggle opens a positioned listbox; ↑/↓/Home/End move,
+// Enter/click selects, Esc/outside closes, printable keys type-ahead. With
+// data-multiple, options toggle without closing and one hidden name[] input
+// is maintained per selection; with a search input, options filter as you
+// type and navigation skips hidden options.
 const LanternSelect = {
   mounted() {
     this.toggle = this.el.querySelector('[data-part="toggle"]')
     this.panel = this.el.querySelector('[data-part="panel"]')
-    this.hidden = this.el.querySelector('[data-part="value"]')
+    this.valuesWrap = this.el.querySelector('[data-part="values"]')
     this.label = this.el.querySelector('[data-part="label"]')
+    this.search = this.el.querySelector('[data-part="search-input"]')
+    this.noResults = this.el.querySelector('[data-part="no-results"]')
+    this.multiple = this.el.hasAttribute("data-multiple")
+    this.max = parseInt(this.el.dataset.max || "0", 10) || null
     this.cleanup = []
     this.open = false
 
@@ -928,10 +934,20 @@ const LanternSelect = {
     })
 
     this.el.addEventListener("keydown", (e) => this.onKey(e))
+    if (this.search) {
+      this.search.addEventListener("input", () => this.filter())
+    }
   },
 
-  options() {
-    return [...this.el.querySelectorAll('[data-part="option"]')]
+  options(visibleOnly = false) {
+    const all = [...this.el.querySelectorAll('[data-part="option"]')]
+    return visibleOnly ? all.filter((o) => !o.hidden) : all
+  },
+
+  values() {
+    return this.valuesWrap
+      ? [...this.valuesWrap.querySelectorAll('[data-part="value"]')].map((i) => i.value)
+      : []
   },
 
   show() {
@@ -940,9 +956,16 @@ const LanternSelect = {
     position(this.toggle, this.panel, { placement: "bottom-start" })
     this.panel.style.minWidth = `${this.toggle.offsetWidth}px`
     this.toggle.setAttribute("aria-expanded", "true")
-    const current =
-      this.options().find((o) => o.getAttribute("aria-selected") === "true") || this.options()[0]
-    current?.focus()
+    if (this.search) {
+      this.search.value = ""
+      this.filter()
+      this.search.focus()
+    } else {
+      const current =
+        this.options().find((o) => o.getAttribute("aria-selected") === "true") ||
+        this.options()[0]
+      current?.focus()
+    }
     this.cleanup.push(onDismiss(this.panel, () => this.hide(), { anchor: this.toggle }))
   },
 
@@ -956,22 +979,75 @@ const LanternSelect = {
     if (refocus) this.toggle.focus()
   },
 
+  filter() {
+    const q = (this.search?.value || "").trim().toLowerCase()
+    let any = false
+    this.options().forEach((o) => {
+      const hit = q === "" || o.textContent.trim().toLowerCase().includes(q)
+      o.hidden = !hit
+      any = any || hit
+    })
+    if (this.noResults) this.noResults.hidden = any
+  },
+
   select(opt) {
     const value = opt.dataset.value
-    if (this.hidden && this.hidden.value !== value) {
-      this.hidden.value = value
-      this.hidden.dispatchEvent(new Event("input", { bubbles: true }))
-      this.hidden.dispatchEvent(new Event("change", { bubbles: true }))
+    if (this.multiple) {
+      const selected = opt.getAttribute("aria-selected") === "true"
+      if (!selected && this.max && this.values().length >= this.max) return
+      opt.setAttribute("aria-selected", String(!selected))
+      this.syncMultiple()
+      // multi-select stays open for further picks
+    } else {
+      const hidden = this.valuesWrap?.querySelector('[data-part="value"]')
+      if (hidden && hidden.value !== value) {
+        hidden.value = value
+        hidden.dispatchEvent(new Event("input", { bubbles: true }))
+        hidden.dispatchEvent(new Event("change", { bubbles: true }))
+      }
+      this.options().forEach((o) => o.setAttribute("aria-selected", String(o === opt)))
+      this.setLabel(opt.querySelector(".lui-select-option-label")?.textContent.trim())
+      this.hide()
     }
-    if (this.label) {
-      this.label.textContent = opt.querySelector(".lui-select-option-label")?.textContent || value
+  },
+
+  syncMultiple() {
+    const name = `${this.el.dataset.name}[]`
+    const picked = this.options().filter((o) => o.getAttribute("aria-selected") === "true")
+    this.valuesWrap.innerHTML = ""
+    picked.forEach((o) => {
+      const input = document.createElement("input")
+      input.type = "hidden"
+      input.name = name
+      input.value = o.dataset.value
+      input.setAttribute("data-part", "value")
+      this.valuesWrap.appendChild(input)
+    })
+    const labels = picked.map((o) =>
+      o.querySelector(".lui-select-option-label")?.textContent.trim()
+    )
+    this.setLabel(
+      labels.length === 0 ? null : labels.length === 1 ? labels[0] : `${labels.length} selected`
+    )
+    const first = this.valuesWrap.firstElementChild
+    const target = first || this.valuesWrap
+    target.dispatchEvent(new Event("input", { bubbles: true }))
+    target.dispatchEvent(new Event("change", { bubbles: true }))
+  },
+
+  setLabel(text) {
+    if (!this.label) return
+    if (text) {
+      this.label.textContent = text
+      this.label.removeAttribute("data-empty")
+    } else {
+      this.label.textContent = this.label.dataset.placeholder || ""
+      this.label.setAttribute("data-empty", "")
     }
-    this.options().forEach((o) => o.setAttribute("aria-selected", String(o === opt)))
-    this.hide()
   },
 
   onKey(e) {
-    const opts = this.options()
+    const opts = this.options(true)
     if (!this.open) {
       if (["ArrowDown", "Enter", " "].includes(e.key) && e.target === this.toggle) {
         e.preventDefault()
@@ -985,17 +1061,19 @@ const LanternSelect = {
       opts[Math.min(idx + 1, opts.length - 1)]?.focus()
     } else if (e.key === "ArrowUp") {
       e.preventDefault()
-      opts[Math.max(idx - 1, 0)]?.focus()
+      if (idx <= 0 && this.search) this.search.focus()
+      else opts[Math.max(idx - 1, 0)]?.focus()
     } else if (e.key === "Home") {
       e.preventDefault()
       opts[0]?.focus()
     } else if (e.key === "End") {
       e.preventDefault()
       opts[opts.length - 1]?.focus()
-    } else if (e.key === "Enter" || e.key === " ") {
+    } else if (e.key === "Enter" || (e.key === " " && e.target !== this.search)) {
       e.preventDefault()
       if (idx >= 0) this.select(opts[idx])
-    } else if (e.key.length === 1 && /\S/.test(e.key)) {
+      else if (this.search && e.key === "Enter" && opts[0]) this.select(opts[0])
+    } else if (e.key.length === 1 && /\S/.test(e.key) && e.target !== this.search) {
       const q = e.key.toLowerCase()
       const start = idx + 1
       const hit =
@@ -1062,11 +1140,15 @@ const LanternTableChrome = {
       }
     }
     this.onChange = (e) => {
-      if (e.target.matches('[data-part="filter"]')) this.apply()
+      if (e.target.matches('[data-part="filter"]') || e.target.closest('[data-part="filter-rich"]'))
+        this.apply()
     }
     this.onClick = (e) => {
       if (!e.target.closest('[data-part="clear-filters"]')) return
       this.el.querySelectorAll('[data-part="filter"]').forEach((sel) => (sel.value = ""))
+      this.el
+        .querySelectorAll('[data-part="filter-rich"] input[data-part="value"]')
+        .forEach((i) => i.remove())
       this.apply()
     }
     this.el.addEventListener("input", this.onInput)
@@ -1085,13 +1167,25 @@ const LanternTableChrome = {
         filters.push({ field: sel.dataset.field, op: sel.dataset.op, value: sel.value })
       }
     })
+    this.el.querySelectorAll('[data-part="filter-rich"]').forEach((wrap) => {
+      const values = [...wrap.querySelectorAll('input[data-part="value"]')]
+        .map((i) => i.value)
+        .filter((v) => v !== "")
+      if (values.length === 0) return
+      if (wrap.dataset.op === "in") {
+        filters.push({ field: wrap.dataset.field, op: "in", values })
+      } else {
+        filters.push({ field: wrap.dataset.field, op: wrap.dataset.op, value: values[0] })
+      }
+    })
 
     const params = { ...this.base }
     delete params.page
     filters.forEach((f, i) => {
       params[`filters[${i}][field]`] = f.field
       if (f.op && f.op !== "==") params[`filters[${i}][op]`] = f.op
-      params[`filters[${i}][value]`] = f.value
+      if (f.values) params[`filters[${i}][value][]`] = f.values
+      else params[`filters[${i}][value]`] = f.value
     })
 
     const query = Object.entries(params)

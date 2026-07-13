@@ -37,6 +37,7 @@ defmodule LanternUI.Components.DataTable do
   alias LanternUI.Components.Icon
   alias LanternUI.Components.Badge
   alias LanternUI.Components.Pagination
+  alias LanternUI.Components.Select
   alias LanternUI.Components.Tabs
 
   attr(:id, :string, required: true)
@@ -120,6 +121,8 @@ defmodule LanternUI.Components.DataTable do
     attr(:options, :list)
     attr(:prompt, :string)
     attr(:placeholder, :string)
+    attr(:multiple, :boolean, doc: "multi-select filter (Flop op: in)")
+    attr(:searchable, :boolean, doc: "search box in the filter's listbox")
   end
 
   slot(:card, doc: "per-row card rendering for the cards view; enables the view toggle")
@@ -282,25 +285,50 @@ defmodule LanternUI.Components.DataTable do
                       />
                     </div>
                   <% _ -> %>
-                    <div class="lui-select-native-wrap">
-                      <select
-                        class="lui-select-native"
-                        data-part="filter"
+                    <%= if filter[:multiple] || filter[:searchable] do %>
+                      <div
+                        data-part="filter-rich"
                         data-field={filter[:field]}
-                        data-op={filter[:op] || "=="}
-                        aria-label={filter[:label] || to_string(filter[:field])}
+                        data-op={if filter[:multiple], do: "in", else: filter[:op] || "=="}
                       >
-                        <option value="">{filter[:prompt] || "Any"}</option>
-                        <option
-                          :for={opt <- filter[:options] || []}
-                          value={opt_value(opt)}
-                          selected={to_string(opt_value(opt)) == filter_value(@meta, filter[:field])}
+                        <Select.select
+                          id={"#{@id}-filter-#{filter[:field]}"}
+                          name={"_dt_filter_#{filter[:field]}"}
+                          value={
+                            if filter[:multiple],
+                              do: filter_values(@meta, filter[:field]),
+                              else: filter_value(@meta, filter[:field])
+                          }
+                          options={filter[:options] || []}
+                          placeholder={filter[:prompt] || "Any"}
+                          multiple={filter[:multiple] || false}
+                          searchable={filter[:searchable] || false}
+                          size="sm"
+                        />
+                      </div>
+                    <% else %>
+                      <div class="lui-select-native-wrap">
+                        <select
+                          class="lui-select-native"
+                          data-part="filter"
+                          data-field={filter[:field]}
+                          data-op={filter[:op] || "=="}
+                          aria-label={filter[:label] || to_string(filter[:field])}
                         >
-                          {opt_label(opt)}
-                        </option>
-                      </select>
-                      <Icon.icon name="chevron-up-down" class="lui-select-caret" />
-                    </div>
+                          <option value="">{filter[:prompt] || "Any"}</option>
+                          <option
+                            :for={opt <- filter[:options] || []}
+                            value={opt_value(opt)}
+                            selected={
+                              to_string(opt_value(opt)) == filter_value(@meta, filter[:field])
+                            }
+                          >
+                            {opt_label(opt)}
+                          </option>
+                        </select>
+                        <Icon.icon name="chevron-up-down" class="lui-select-caret" />
+                      </div>
+                    <% end %>
                 <% end %>
               </div>
               <button
@@ -586,6 +614,15 @@ defmodule LanternUI.Components.DataTable do
   defp view_path(path, meta, view) do
     params = base_params(meta) |> Map.put("view", view)
     path <> "?" <> Plug.Conn.Query.encode(params)
+  end
+
+  defp filter_values(meta, field) do
+    field_s = to_string(field)
+
+    base_params(meta)
+    |> Map.get("filters", %{})
+    |> normalize_filters()
+    |> Enum.find_value([], fn f -> f["field"] == field_s && List.wrap(f["value"] || []) end)
   end
 
   defp active_filter_count(meta, filter_slots) do

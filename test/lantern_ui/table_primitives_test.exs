@@ -150,6 +150,50 @@ defmodule LanternUI.TablePrimitivesTest do
       refute html =~ "LanternSelect"
     end
 
+    test "multiple renders name[] hidden inputs and count label" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Select.select
+            id="ms"
+            name="channels"
+            multiple
+            value={["ebay", "shopify"]}
+            options={[{"eBay", "ebay"}, {"Shopify", "shopify"}, {"Direct", "direct"}]}
+          />
+          """
+        end)
+
+      assert html =~ ~s(data-multiple)
+      assert html =~ ~s(name="channels[]" value="ebay")
+      assert html =~ ~s(name="channels[]" value="shopify")
+      assert html =~ "2 selected"
+      assert html =~ ~s(aria-multiselectable="true")
+    end
+
+    test "searchable renders the listbox search input" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Select.select id="ss" name="s" searchable options={["a", "b"]} />
+          """
+        end)
+
+      assert html =~ ~s(data-part="search-input")
+      assert html =~ ~s(data-part="no-results")
+    end
+
+    test "search_threshold auto-enables search" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Select.select id="st" name="s" search_threshold={2} options={["a", "b", "c"]} />
+          """
+        end)
+
+      assert html =~ ~s(data-part="search-input")
+    end
+
     test "FormField clause extracts id/name/value" do
       form = Phoenix.Component.to_form(%{"status" => "active"}, as: :thing)
 

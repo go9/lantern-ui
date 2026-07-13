@@ -12,9 +12,11 @@ defmodule LanternUI.Components.Select do
   focus, ↑/↓/Home/End/Enter/Esc, type-ahead) over a hidden input carrying the
   value — form semantics identical to the native path.
 
-  v1 scope: single-select. Fluxon's `searchable`/`multiple`/`max` attrs are
-  accepted for API compatibility but not yet implemented (compile-time
-  warning-free swaps; those call sites keep Fluxon until v2).
+  `searchable` adds a search box to the listbox (client-side filtering; or set
+  `search_threshold` to auto-enable at N options). `multiple` turns the picker
+  into a multi-select: options toggle, the panel stays open, the toggle shows
+  a count, and one hidden `name[]` input is submitted per selected value.
+  Fluxon's `on_search` (server-driven options) is not yet implemented.
   """
   use Phoenix.Component
 
@@ -38,9 +40,12 @@ defmodule LanternUI.Components.Select do
   attr(:native, :boolean, default: false)
   attr(:include_hidden, :boolean, default: true)
   attr(:prompt, :string, default: nil, doc: "blank first option (native path)")
-  # Accepted for Fluxon API compatibility; not implemented in v1.
-  attr(:searchable, :boolean, default: false)
-  attr(:multiple, :boolean, default: false)
+  attr(:searchable, :boolean, default: false, doc: "search box inside the listbox")
+  attr(:search_threshold, :integer, default: nil, doc: "auto-enable search at N+ options")
+  attr(:search_input_placeholder, :string, default: "Search…")
+  attr(:search_no_results_text, :string, default: "No results")
+  attr(:multiple, :boolean, default: false, doc: "multi-select; submits name[] hidden inputs")
+  attr(:max, :integer, default: nil, doc: "max selections when multiple")
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: ~w(form phx-change phx-target))
 
@@ -87,6 +92,15 @@ defmodule LanternUI.Components.Select do
   def select(assigns) do
     assigns = normalize(assigns)
 
+    assigns =
+      assign(
+        assigns,
+        :search?,
+        (assigns.searchable or
+           (assigns.search_threshold && length(assigns.opts) >= assigns.search_threshold)) ||
+          false
+      )
+
     ~H"""
     <div class={Class.merge(["lui-field", @class])} data-size={@size}>
       <Form.label :if={@label} for={@id} sublabel={@sublabel}>{@label}</Form.label>
@@ -97,15 +111,31 @@ defmodule LanternUI.Components.Select do
         class="lui-select"
         phx-hook="LanternSelect"
         data-invalid={@errors != [] || nil}
+        data-multiple={@multiple || nil}
+        data-max={@max}
+        data-name={@name}
+        data-no-results={@search_no_results_text}
       >
-        <input
-          :if={@include_hidden}
-          type="hidden"
-          name={@name}
-          value={@value_s}
-          data-part="value"
-          {hidden_rest(@rest)}
-        />
+        <span :if={@include_hidden} data-part="values">
+          <%= if @multiple do %>
+            <input
+              :for={v <- @values_s}
+              type="hidden"
+              name={"#{@name}[]"}
+              value={v}
+              data-part="value"
+              {hidden_rest(@rest)}
+            />
+          <% else %>
+            <input
+              type="hidden"
+              name={@name}
+              value={@value_s}
+              data-part="value"
+              {hidden_rest(@rest)}
+            />
+          <% end %>
+        </span>
         <button
           type="button"
           id={@id}
@@ -120,27 +150,47 @@ defmodule LanternUI.Components.Select do
             class="lui-select-value"
             data-part="label"
             data-placeholder={@placeholder}
-            data-empty={is_nil(selected_label(@opts, @value_s)) || nil}
+            data-empty={toggle_label(@opts, @values_s, @multiple) == nil || nil}
           >
-            {selected_label(@opts, @value_s) || @placeholder}
+            {toggle_label(@opts, @values_s, @multiple) || @placeholder}
           </span>
           <Icon.icon name="chevron-up-down" class="lui-select-caret" />
         </button>
 
-        <div class="lui-select-listbox" data-part="panel" role="listbox" hidden tabindex="-1">
-          <button
-            :for={{label, value} <- @opts}
-            type="button"
-            class="lui-select-option"
-            role="option"
-            data-part="option"
-            data-value={value}
-            aria-selected={to_string(to_string(value) == @value_s)}
-            tabindex="-1"
-          >
-            <span class="lui-select-option-label">{label}</span>
-            <Icon.icon name="check" class="lui-select-check" />
-          </button>
+        <div
+          class="lui-select-listbox"
+          data-part="panel"
+          role="listbox"
+          aria-multiselectable={@multiple && "true"}
+          hidden
+          tabindex="-1"
+        >
+          <div :if={@search?} class="lui-select-search">
+            <Icon.icon name="magnifying-glass" />
+            <input
+              type="text"
+              data-part="search-input"
+              placeholder={@search_input_placeholder}
+              aria-label={@search_input_placeholder}
+              autocomplete="off"
+            />
+          </div>
+          <div class="lui-select-options" data-part="options">
+            <button
+              :for={{label, value} <- @opts}
+              type="button"
+              class="lui-select-option"
+              role="option"
+              data-part="option"
+              data-value={value}
+              aria-selected={to_string(to_string(value) in @values_s)}
+              tabindex="-1"
+            >
+              <span class="lui-select-option-label">{label}</span>
+              <Icon.icon name="check" class="lui-select-check" />
+            </button>
+          </div>
+          <p class="lui-select-noresults" data-part="no-results" hidden>{@search_no_results_text}</p>
         </div>
       </div>
 
@@ -151,10 +201,26 @@ defmodule LanternUI.Components.Select do
   end
 
   defp normalize(assigns) do
+    values_s =
+      assigns.value
+      |> List.wrap()
+      |> Enum.reject(&(&1 in [nil, ""]))
+      |> Enum.map(&to_string/1)
+
     assigns
     |> assign(:opts, Enum.map(assigns.options, &option_pair/1))
-    |> assign(:value_s, assigns.value && to_string(assigns.value))
+    |> assign(:value_s, List.first(values_s))
+    |> assign(:values_s, values_s)
     |> assign_new(:id, fn -> assigns.name end)
+  end
+
+  defp toggle_label(opts, values_s, multiple) do
+    case {multiple, values_s} do
+      {_, []} -> nil
+      {false, [v | _]} -> selected_label(opts, v)
+      {true, [v]} -> selected_label(opts, v)
+      {true, vs} -> "#{length(vs)} selected"
+    end
   end
 
   defp option_pair({label, value}), do: {label, value}
