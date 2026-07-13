@@ -34,7 +34,9 @@ defmodule LanternUI.Components.DataTable do
   alias LanternUI.Components.Button
   alias LanternUI.Components.EmptyState
   alias LanternUI.Components.Icon
+  alias LanternUI.Components.Badge
   alias LanternUI.Components.Pagination
+  alias LanternUI.Components.Tabs
 
   attr(:id, :string, required: true)
   attr(:rows, :list, required: true)
@@ -46,6 +48,21 @@ defmodule LanternUI.Components.DataTable do
   attr(:target, :any, default: nil)
   attr(:title, :string, default: nil)
   attr(:page_size_options, :list, default: [10, 25, 50, 100])
+
+  attr(:search_field, :atom,
+    default: nil,
+    doc: "Flop filter field the built-in search box binds to"
+  )
+
+  attr(:search_op, :string, default: "ilike", doc: "Flop op for the search filter")
+  attr(:search_placeholder, :string, default: "Search…")
+
+  attr(:view, :string,
+    default: "table",
+    values: ~w(table cards),
+    doc: "active view when a :card slot is given"
+  )
+
   attr(:class, :any, default: nil)
   attr(:rest, :global)
 
@@ -70,6 +87,33 @@ defmodule LanternUI.Components.DataTable do
   slot(:row_action)
   slot(:empty)
 
+  slot :stat do
+    attr(:label, :string)
+    attr(:value, :any)
+    attr(:href, :string)
+    attr(:class, :any)
+  end
+
+  slot :tab do
+    attr(:label, :string)
+    attr(:count, :integer)
+
+    attr(:filters, :list,
+      doc:
+        ~S|Flop filter preset, e.g. [%{field: "status", value: "pending"}]; omit for the unfiltered tab|
+    )
+  end
+
+  slot :filter do
+    attr(:field, :atom)
+    attr(:label, :string)
+    attr(:op, :string)
+    attr(:options, :list)
+    attr(:prompt, :string)
+  end
+
+  slot(:card, doc: "per-row card rendering for the cards view; enables the view toggle")
+
   def data_table(assigns) do
     assigns =
       assigns
@@ -86,12 +130,103 @@ defmodule LanternUI.Components.DataTable do
 
     ~H"""
     <div id={@id} class={Class.merge(["lui-datatable", @class])} {@rest}>
+      <section
+        :if={@stat != []}
+        id={"#{@id}-overview"}
+        class="lui-dt-overview"
+        phx-hook="LanternCollapse"
+      >
+        <button type="button" class="lui-dt-overview-head" data-part="collapse-toggle">
+          <span>Overview</span>
+          <Icon.icon name="chevron-down" class="lui-dt-overview-chev" />
+        </button>
+        <div class="lui-dt-stats" data-part="collapse-body">
+          <.link
+            :for={stat <- @stat}
+            navigate={stat[:href]}
+            class={Class.merge(["lui-dt-stat", !stat[:href] && "lui-dt-stat-static", stat[:class]])}
+          >
+            <span class="lui-dt-stat-label">{stat[:label]}</span>
+            <span class="lui-dt-stat-value">
+              {if stat[:inner_block], do: render_slot(stat), else: stat[:value]}
+            </span>
+          </.link>
+        </div>
+      </section>
+
       <div :if={@title || @header_action != []} class="lui-dt-header">
         <h2 :if={@title} class="lui-dt-title">{@title}</h2>
         <div class="lui-dt-header-actions">{render_slot(@header_action)}</div>
       </div>
 
-      <div :if={@toolbar != []} class="lui-dt-toolbar">{render_slot(@toolbar)}</div>
+      <div :if={@tab != [] || (@card != [] && @view)} class="lui-dt-tabsrow">
+        <Tabs.tabs_list :if={@tab != []} active_tab={active_tab(@tab, @meta)} size="sm">
+          <:tab
+            :for={{tab, i} <- Enum.with_index(@tab)}
+            name={"tab-#{i}"}
+            patch={tab_path(@path, @meta, tab[:filters] || [])}
+          >
+            {tab[:label]}
+            <Badge.badge :if={tab[:count]} size="sm" color="neutral">{tab[:count]}</Badge.badge>
+          </:tab>
+        </Tabs.tabs_list>
+        <div :if={@card != []} class="lui-dt-viewtoggle">
+          <.link
+            patch={view_path(@path, @meta, "table")}
+            class={["lui-vt", @view == "table" && "lui-vt-active"]}
+            aria-label="Table view"
+          >☰</.link>
+          <.link
+            patch={view_path(@path, @meta, "cards")}
+            class={["lui-vt", @view == "cards" && "lui-vt-active"]}
+            aria-label="Card view"
+          >▦</.link>
+        </div>
+      </div>
+
+      <div :if={@toolbar != [] || @search_field || @filter != []} class="lui-dt-toolbar">
+        <div
+          :if={@search_field || @filter != []}
+          id={"#{@id}-chrome"}
+          class="lui-dt-chrome"
+          phx-hook="LanternTableChrome"
+          data-path={@path}
+          data-params={Jason.encode!(chrome_base_params(@meta))}
+        >
+          <div :if={@search_field} class="lui-dt-search">
+            <Icon.icon name="magnifying-glass" />
+            <input
+              type="text"
+              placeholder={@search_placeholder}
+              value={filter_value(@meta, @search_field)}
+              data-part="search"
+              data-field={@search_field}
+              data-op={@search_op}
+              aria-label={@search_placeholder}
+            />
+          </div>
+          <div :for={filter <- @filter} class="lui-select-native-wrap lui-dt-filter">
+            <select
+              class="lui-select-native"
+              data-part="filter"
+              data-field={filter[:field]}
+              data-op={filter[:op] || "=="}
+              aria-label={filter[:label] || to_string(filter[:field])}
+            >
+              <option value="">{filter[:prompt] || filter[:label] || "Any"}</option>
+              <option
+                :for={opt <- filter[:options] || []}
+                value={opt_value(opt)}
+                selected={to_string(opt_value(opt)) == filter_value(@meta, filter[:field])}
+              >
+                {opt_label(opt)}
+              </option>
+            </select>
+            <Icon.icon name="chevron-up-down" class="lui-select-caret" />
+          </div>
+        </div>
+        {render_slot(@toolbar)}
+      </div>
 
       <div :if={@selection_count > 0} class="lui-dt-bulkbar">
         <span class="lui-dt-bulkcount">{@selection_count} selected</span>
@@ -110,7 +245,15 @@ defmodule LanternUI.Components.DataTable do
         </Button.button>
       </div>
 
-      <div class="lui-table-wrap">
+      <div :if={@card != [] && @view == "cards"} class="lui-dt-cards">
+        <%= if @rows == [] do %>
+          <EmptyState.empty_state icon="inbox" title="Nothing here yet" />
+        <% else %>
+          <div :for={row <- @rows} class="lui-dt-card">{render_slot(@card, row)}</div>
+        <% end %>
+      </div>
+
+      <div :if={@card == [] || @view == "table"} class="lui-table-wrap">
         <table class="lui-table">
           <thead class="lui-thead">
             <tr>
@@ -268,4 +411,86 @@ defmodule LanternUI.Components.DataTable do
 
   defp maybe_put(map, _key, nil), do: map
   defp maybe_put(map, key, value), do: Map.put(map, key, value)
+
+  # ── Chrome helpers ────────────────────────────────────────────────────────
+
+  # Params the client-side chrome hook layers filters onto: everything except
+  # filters and page (a filter change resets to page 1).
+  defp chrome_base_params(meta) do
+    base_params(meta) |> Map.drop(["filters", "page"])
+  end
+
+  defp filter_value(meta, field) do
+    field_s = to_string(field)
+
+    base_params(meta)
+    |> Map.get("filters", %{})
+    |> normalize_filters()
+    |> Enum.find_value("", fn f -> f["field"] == field_s && to_string(f["value"] || "") end)
+  end
+
+  defp normalize_filters(filters) when is_map(filters), do: Map.values(filters)
+  defp normalize_filters(filters) when is_list(filters), do: filters
+  defp normalize_filters(_), do: []
+
+  # A tab is active when its filter preset matches the current filters exactly
+  # (both normalized to field=>value); the presetless tab is active otherwise
+  # when no filters are applied.
+  defp active_tab(tabs, meta) do
+    current =
+      base_params(meta)
+      |> Map.get("filters", %{})
+      |> normalize_filters()
+      |> Map.new(fn f -> {to_string(f["field"]), to_string(f["value"] || "")} end)
+
+    idx =
+      Enum.find_index(tabs, fn tab ->
+        preset =
+          (tab[:filters] || [])
+          |> Enum.map(&normalize_preset/1)
+          |> Map.new(fn f -> {f.field, f.value} end)
+
+        preset == current
+      end)
+
+    if idx, do: "tab-#{idx}"
+  end
+
+  defp normalize_preset(%{} = f) do
+    %{
+      field: to_string(f[:field] || f["field"]),
+      value: to_string(f[:value] || f["value"] || ""),
+      op: f[:op] || f["op"]
+    }
+  end
+
+  defp tab_path(path, meta, preset) do
+    filters =
+      preset
+      |> Enum.map(&normalize_preset/1)
+      |> Enum.with_index()
+      |> Map.new(fn {f, i} ->
+        base = %{"field" => f.field, "value" => f.value}
+        {to_string(i), if(f.op, do: Map.put(base, "op", f.op), else: base)}
+      end)
+
+    params =
+      base_params(meta)
+      |> Map.delete("page")
+      |> then(fn p ->
+        if filters == %{}, do: Map.delete(p, "filters"), else: Map.put(p, "filters", filters)
+      end)
+
+    path <> "?" <> Plug.Conn.Query.encode(params)
+  end
+
+  defp view_path(path, meta, view) do
+    params = base_params(meta) |> Map.put("view", view)
+    path <> "?" <> Plug.Conn.Query.encode(params)
+  end
+
+  defp opt_value({_label, value}), do: value
+  defp opt_value(value), do: value
+  defp opt_label({label, _value}), do: label
+  defp opt_label(value), do: to_string(value)
 end

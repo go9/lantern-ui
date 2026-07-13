@@ -1004,6 +1004,105 @@ const LanternSelect = {
   },
 }
 
+// Generic collapsible section (data-part="collapse-toggle" flips
+// data-collapsed on the hook root; persisted per element id).
+const LanternCollapse = {
+  key() {
+    return `lui-collapse:${this.el.id}`
+  },
+
+  mounted() {
+    const stored = localStorage.getItem(this.key())
+    if (stored === "true") this.el.setAttribute("data-collapsed", "")
+    if (stored === "false") this.el.removeAttribute("data-collapsed")
+
+    this.onClick = (e) => {
+      if (!e.target.closest('[data-part="collapse-toggle"]')) return
+      const collapsed = this.el.toggleAttribute("data-collapsed")
+      try {
+        localStorage.setItem(this.key(), String(collapsed))
+      } catch (_) {}
+    }
+    this.el.addEventListener("click", this.onClick)
+  },
+
+  destroyed() {
+    this.el.removeEventListener("click", this.onClick)
+  },
+}
+
+// data_table chrome: the built-in search box (debounced) and filter selects
+// build Flop filter params client-side and patch the URL — zero page-level
+// handlers. Patching goes through a synthetic data-phx-link anchor so we ride
+// LiveView's own patch navigation (version-safe).
+const LanternTableChrome = {
+  mounted() {
+    this.path = this.el.dataset.path
+    this.base = JSON.parse(this.el.dataset.params || "{}")
+
+    this.onInput = (e) => {
+      const t = e.target
+      if (t.matches('[data-part="search"]')) {
+        clearTimeout(this.debounce)
+        this.debounce = setTimeout(() => this.apply(), 300)
+      }
+    }
+    this.onChange = (e) => {
+      if (e.target.matches('[data-part="filter"]')) this.apply()
+    }
+    this.el.addEventListener("input", this.onInput)
+    this.el.addEventListener("change", this.onChange)
+  },
+
+  apply() {
+    const filters = []
+    const search = this.el.querySelector('[data-part="search"]')
+    if (search && search.value.trim() !== "") {
+      filters.push({ field: search.dataset.field, op: search.dataset.op, value: search.value.trim() })
+    }
+    this.el.querySelectorAll('[data-part="filter"]').forEach((sel) => {
+      if (sel.value !== "") {
+        filters.push({ field: sel.dataset.field, op: sel.dataset.op, value: sel.value })
+      }
+    })
+
+    const params = { ...this.base }
+    delete params.page
+    filters.forEach((f, i) => {
+      params[`filters[${i}][field]`] = f.field
+      if (f.op && f.op !== "==") params[`filters[${i}][op]`] = f.op
+      params[`filters[${i}][value]`] = f.value
+    })
+
+    const query = Object.entries(params)
+      .flatMap(([k, v]) =>
+        Array.isArray(v)
+          ? v.map((item) => `${encodeURIComponent(k)}[]=${encodeURIComponent(item)}`)
+          : [`${encodeURIComponent(k)}=${encodeURIComponent(v)}`]
+      )
+      .join("&")
+
+    this.patch(`${this.path}?${query}`)
+  },
+
+  patch(url) {
+    const a = document.createElement("a")
+    a.href = url
+    a.setAttribute("data-phx-link", "patch")
+    a.setAttribute("data-phx-link-state", "push")
+    a.style.display = "none"
+    this.el.appendChild(a)
+    a.click()
+    a.remove()
+  },
+
+  destroyed() {
+    clearTimeout(this.debounce)
+    this.el.removeEventListener("input", this.onInput)
+    this.el.removeEventListener("change", this.onChange)
+  },
+}
+
 export const runtime = { position, trapFocus, onDismiss }
 
 // ── Modal ────────────────────────────────────────────────────────────────────
@@ -1143,6 +1242,8 @@ export const Hooks = {
   LanternDropdown,
   LanternSidebar,
   LanternSelect,
+  LanternCollapse,
+  LanternTableChrome,
 }
 export {
   ChartHover,
@@ -1155,5 +1256,7 @@ export {
   LanternDropdown,
   LanternSidebar,
   LanternSelect,
+  LanternCollapse,
+  LanternTableChrome,
 }
 export default Hooks
