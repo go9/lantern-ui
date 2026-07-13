@@ -32,6 +32,7 @@ defmodule LanternUI.Components.DataTable do
 
   alias LanternUI.Class
   alias LanternUI.Components.Button
+  alias LanternUI.Components.Dropdown
   alias LanternUI.Components.EmptyState
   alias LanternUI.Components.Icon
   alias LanternUI.Components.Badge
@@ -193,6 +194,51 @@ defmodule LanternUI.Components.DataTable do
           data-path={@path}
           data-params={Jason.encode!(chrome_base_params(@meta))}
         >
+          <Dropdown.dropdown :if={@filter != []} id={"#{@id}-filters"} placement="bottom-end">
+            <:toggle>
+              <Button.button size="sm" variant="outline" type="button">
+                <Icon.icon name="funnel" /> Filters
+                <Badge.badge :if={active_filter_count(@meta, @filter) > 0} size="sm" color="accent">
+                  {active_filter_count(@meta, @filter)}
+                </Badge.badge>
+              </Button.button>
+            </:toggle>
+            <Dropdown.dropdown_custom>
+              <div class="lui-dt-filterpanel">
+                <div :for={filter <- @filter} class="lui-dt-filterrow">
+                  <label class="lui-dt-filterlabel">{filter[:label] || to_string(filter[:field])}</label>
+                  <div class="lui-select-native-wrap">
+                    <select
+                      class="lui-select-native"
+                      data-part="filter"
+                      data-field={filter[:field]}
+                      data-op={filter[:op] || "=="}
+                      aria-label={filter[:label] || to_string(filter[:field])}
+                    >
+                      <option value="">{filter[:prompt] || "Any"}</option>
+                      <option
+                        :for={opt <- filter[:options] || []}
+                        value={opt_value(opt)}
+                        selected={to_string(opt_value(opt)) == filter_value(@meta, filter[:field])}
+                      >
+                        {opt_label(opt)}
+                      </option>
+                    </select>
+                    <Icon.icon name="chevron-up-down" class="lui-select-caret" />
+                  </div>
+                </div>
+                <button
+                  :if={active_filter_count(@meta, @filter) > 0}
+                  type="button"
+                  class="lui-dt-clearfilters"
+                  data-part="clear-filters"
+                >
+                  <Icon.icon name="x-mark" /> Clear filters
+                </button>
+              </div>
+            </Dropdown.dropdown_custom>
+          </Dropdown.dropdown>
+
           <div :if={@search_field} class="lui-dt-search">
             <Icon.icon name="magnifying-glass" />
             <input
@@ -205,31 +251,21 @@ defmodule LanternUI.Components.DataTable do
               aria-label={@search_placeholder}
             />
           </div>
-          <div :for={filter <- @filter} class="lui-select-native-wrap lui-dt-filter">
-            <select
-              class="lui-select-native"
-              data-part="filter"
-              data-field={filter[:field]}
-              data-op={filter[:op] || "=="}
-              aria-label={filter[:label] || to_string(filter[:field])}
-            >
-              <option value="">{filter[:prompt] || filter[:label] || "Any"}</option>
-              <option
-                :for={opt <- filter[:options] || []}
-                value={opt_value(opt)}
-                selected={to_string(opt_value(opt)) == filter_value(@meta, filter[:field])}
-              >
-                {opt_label(opt)}
-              </option>
-            </select>
-            <Icon.icon name="chevron-up-down" class="lui-select-caret" />
-          </div>
         </div>
         {render_slot(@toolbar)}
       </div>
 
       <div :if={@selection_count > 0} class="lui-dt-bulkbar">
         <span class="lui-dt-bulkcount">{@selection_count} selected</span>
+        <button
+          :if={Map.get(@meta, :total_count) && @selection_count < Map.get(@meta, :total_count)}
+          type="button"
+          class="lui-dt-selectall"
+          phx-click="select_all_matching"
+          phx-target={@target}
+        >
+          Select all {Map.get(@meta, :total_count)}
+        </button>
         <Button.button
           :for={action <- @bulk_action}
           size="sm"
@@ -487,6 +523,15 @@ defmodule LanternUI.Components.DataTable do
   defp view_path(path, meta, view) do
     params = base_params(meta) |> Map.put("view", view)
     path <> "?" <> Plug.Conn.Query.encode(params)
+  end
+
+  defp active_filter_count(meta, filter_slots) do
+    fields = MapSet.new(filter_slots, &to_string(&1[:field]))
+
+    base_params(meta)
+    |> Map.get("filters", %{})
+    |> normalize_filters()
+    |> Enum.count(fn f -> to_string(f["field"]) in fields and f["value"] not in [nil, ""] end)
   end
 
   defp opt_value({_label, value}), do: value

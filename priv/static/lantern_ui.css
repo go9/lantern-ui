@@ -822,3 +822,20 @@
   gap: 0.75rem; }
 .lui-dt-card { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
   background: var(--lantern-surface-raised); padding: 0.9rem; box-shadow: var(--lantern-shadow); }
+
+/* ── Data table toolbar rework ── */
+.lui-dt-toolbar { justify-content: flex-end; }
+.lui-dt-chrome { flex: 0 1 auto; justify-content: flex-end; }
+.lui-dt-filterpanel { padding: 0.5rem 0.6rem; min-width: 14rem; display: flex;
+  flex-direction: column; gap: 0.55rem; }
+.lui-dt-filterrow { display: flex; flex-direction: column; gap: 0.2rem; }
+.lui-dt-filterlabel { font-size: var(--lantern-text-sm); font-weight: 550;
+  color: var(--lantern-fg-muted); }
+.lui-dt-clearfilters { display: inline-flex; align-items: center; gap: 0.3rem;
+  align-self: flex-start; border: none; background: none; padding: 0.1rem 0;
+  font-size: var(--lantern-text-sm); font-family: inherit; color: var(--lantern-fg-muted);
+  cursor: pointer; }
+.lui-dt-clearfilters:hover { color: var(--lantern-danger); }
+.lui-dt-selectall { border: none; background: none; padding: 0; font-family: inherit;
+  font-size: var(--lantern-text-sm); font-weight: 550; color: var(--lantern-accent);
+  cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }

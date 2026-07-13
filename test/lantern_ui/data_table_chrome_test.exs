@@ -100,6 +100,58 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ "lui-vt-active"
   end
 
+  test "filters live in a popover with active-count badge and clear button" do
+    html = render(&table/1, base())
+
+    # popover dropdown wraps the filter selects
+    assert html =~ ~s(id="t-filters")
+    assert html =~ "Filters"
+    assert html =~ "lui-dt-filterpanel"
+    # status filter is active in @meta but channel (the declared filter) is not,
+    # so no badge and no clear button
+    refute html =~ "lui-dt-clearfilters"
+
+    meta = put_in(@meta.params["filters"], %{"0" => %{"field" => "channel", "value" => "ebay"}})
+    html = render(&table/1, %{base() | meta: meta})
+    assert html =~ ~r/lui-badge[^>]*>\s*1\s*</
+    assert html =~ ~s(data-part="clear-filters")
+  end
+
+  test "toolbar chrome orders popover before search" do
+    html = render(&table/1, base())
+    assert :binary.match(html, "t-filters") < :binary.match(html, ~s(data-part="search"))
+  end
+
+  test "bulk bar offers select-all-matching when not everything is selected" do
+    html =
+      render(&table/1, %{rows: [%{id: 1, name: "Ada"}], meta: @meta, view: "table"})
+      |> then(fn _ -> render_with_selection() end)
+
+    assert html =~ ~s(phx-click="select_all_matching")
+    assert html =~ "Select all 30"
+  end
+
+  defp render_with_selection do
+    assigns = %{__changed__: nil, rows: [%{id: 1, name: "Ada"}], meta: @meta, view: "table"}
+
+    fn a ->
+      ~H"""
+      <DataTable.data_table
+        id="t"
+        rows={a.rows}
+        meta={a.meta}
+        path="/orders"
+        selected_ids={MapSet.new([1])}
+      >
+        <:col :let={r} label="Name">{r.name}</:col>
+        <:bulk_action label="Archive" event="bulk-archive" />
+      </DataTable.data_table>
+      """
+    end
+    |> then(& &1.(assigns))
+    |> rendered_to_string()
+  end
+
   test "table view renders the table and the toggle" do
     html = render(&table/1, base())
     assert html =~ "lui-table-wrap"
