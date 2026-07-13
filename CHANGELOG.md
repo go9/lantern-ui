@@ -31,6 +31,14 @@ All notable changes to this project are documented here. The format follows
   duck-typed (no flop dep); sorting + pagination are patch navigation that
   preserves existing query params (filters); bulk bar, selected-row styling,
   EmptyState fallback, composed on the new primitives.
+- **`data_table` chrome** (flicker #868): collapsible stat-card overview strip
+  (`:stat` slots, persisted per-id via the new generic `LanternCollapse`
+  hook), patch-link tabs with count badges mapping to Flop filter presets
+  (`:tab` slots, active tab detected from current filters), built-in debounced
+  search (`search_field`) and typed filter selects (`:filter` slots) that
+  build Flop filter params client-side and patch the URL — zero page-level
+  handlers (`LanternTableChrome` hook rides LiveView's own patch navigation) —
+  and a table ⇄ cards view toggle (`:card` slot + `view` attr).
 
 ## [0.6.0] - 2026-07-08
 
