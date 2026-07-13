@@ -873,3 +873,15 @@
   box-shadow: 0 0 0 3px var(--lantern-ring-soft); }
 .lui-dt-filterrange { display: flex; align-items: center; gap: 0.35rem; }
 .lui-dt-rangesep { color: var(--lantern-fg-subtle); }
+
+/* ── Select: search + multi ── */
+.lui-select-search { display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.5rem;
+  margin-bottom: 0.25rem; border-bottom: 1px solid var(--lantern-border);
+  color: var(--lantern-fg-subtle); }
+.lui-select-search input { flex: 1; border: none; background: none; outline: none;
+  font-size: var(--lantern-text-sm); font-family: inherit; color: var(--lantern-fg);
+  padding: 0.15rem 0; }
+.lui-select-search input::placeholder { color: var(--lantern-fg-subtle); }
+.lui-select-options { max-height: 12rem; overflow-y: auto; }
+.lui-select-noresults { margin: 0; padding: 0.5rem 0.6rem; font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-subtle); }

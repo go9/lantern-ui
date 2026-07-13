@@ -117,6 +117,44 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ ~s(data-part="clear-filters")
   end
 
+  test "multiple/searchable filter renders a rich select with in-op wrapper" do
+    assigns = %{__changed__: nil}
+
+    html =
+      (fn a ->
+         ~H"""
+         <DataTable.data_table
+           id="t"
+           rows={[]}
+           meta={
+             %{
+               current_page: 1,
+               total_pages: 1,
+               params: %{
+                 "filters" => %{
+                   "0" => %{"field" => "channel", "op" => "in", "value" => ["ebay", "direct"]}
+                 }
+               }
+             }
+           }
+           path="/x"
+         >
+           <:filter field={:channel} multiple searchable options={["eBay", "Shopify", "Direct"]} />
+           <:col :let={r} label="Name">{r}</:col>
+         </DataTable.data_table>
+         """
+       end).(assigns)
+      |> rendered_to_string()
+
+    assert html =~ ~s(data-part="filter-rich")
+    assert html =~ ~s(data-op="in")
+    assert html =~ ~s(data-part="search-input")
+    # both current values prefilled as hidden inputs
+    assert html =~ ~s(value="ebay")
+    assert html =~ ~s(value="direct")
+    assert html =~ "2 selected"
+  end
+
   test "chrome row orders: tabs, search, then settings popover (rightmost)" do
     html = render(&table/1, base())
     {tabs, _} = :binary.match(html, "lui-tabs-list")

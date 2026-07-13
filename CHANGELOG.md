@@ -55,6 +55,12 @@ All notable changes to this project are documented here. The format follows
   toggle · settings popover (rightmost). `:filter` slots gain `type`:
   `:select` (default), `:text`, and `:range` (min/max → `>=`/`<=` Flop
   filters).
+- **`select`: `multiple` + `searchable` implemented** (Fluxon parity): multi
+  keeps the listbox open, maintains one hidden `name[]` input per pick, shows
+  a count label, honors `max`; search filters options client-side
+  (`search_threshold` auto-enables at N options; `search_input_placeholder` /
+  `search_no_results_text` honored). `data_table` `:filter` slots accept
+  `multiple`/`searchable` and emit Flop `in` filters with `value[]` lists.
 
 ## [0.6.0] - 2026-07-08
 
