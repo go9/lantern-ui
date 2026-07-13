@@ -6,6 +6,25 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-11
+
+### Added
+- **data_table closure primitives** (flicker #874) — five standalone components:
+  - `badge` — status pill (Fluxon-API: color × variant × size)
+  - `table` / `table_head` / `table_body` / `table_row` — presentational table
+    family (Fluxon-API), the substrate the upcoming `data_table` composes
+  - `tabs` / `tabs_list` / `tabs_panel` — segmented or underline tabs
+    (Fluxon-API), server-driven; tabs given `patch`/`navigate` render as links
+    so tab state can live in the URL
+  - `select` — FormField-aware select (Fluxon-API): rich listbox path
+    (`LanternSelect` hook — positioning, keyboard nav, type-ahead) over a
+    hidden input, plus a `native` fallback; `searchable`/`multiple` accepted
+    for compatibility, implemented later
+  - `pagination` — pager + page-size control (lantern extension; replaces
+    flop_phoenix's pager). Duck-typed against `Flop.Meta`'s shape, so no flop
+    dependency; all navigation is patch-based
+- `Form.translate_error/1` is now public.
+
 ## [0.6.0] - 2026-07-08
 
 ### Changed

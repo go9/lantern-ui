@@ -644,3 +644,115 @@
   .lui-app-sidebar-foot { display: none; }
   .lui-app-main, .lui-app[data-collapsed] .lui-app-main { margin-left: 0; padding: 1.25rem 1.25rem 4rem; }
 }
+
+/* ── Badge ── */
+.lui-badge { display: inline-flex; align-items: center; gap: 0.3em; font-weight: 600;
+  border-radius: 999px; border: 1px solid transparent; white-space: nowrap;
+  font-variant-numeric: tabular-nums; }
+.lui-badge[data-size="sm"] { font-size: 0.6875rem; padding: 0 0.5rem; height: 1.125rem; }
+.lui-badge[data-size="md"] { font-size: 0.71875rem; padding: 0 0.5625rem; height: 1.25rem; }
+.lui-badge[data-size="lg"] { font-size: 0.8125rem; padding: 0 0.7rem; height: 1.5rem; }
+.lui-badge[data-variant="soft"] { background: var(--lui-badge-c-soft); color: var(--lui-badge-c); }
+.lui-badge[data-variant="solid"] { background: var(--lui-badge-c); color: var(--lantern-primary-fg); }
+.lui-badge[data-variant="outline"] { border-color: var(--lantern-border); color: var(--lantern-fg); background: transparent; }
+.lui-badge[data-color="neutral"] { --lui-badge-c: var(--lantern-fg-muted); --lui-badge-c-soft: var(--lantern-surface-sunken); }
+.lui-badge[data-color="neutral"][data-variant="soft"] { color: var(--lantern-fg); }
+.lui-badge[data-color="primary"] { --lui-badge-c: var(--lantern-primary); --lui-badge-c-soft: var(--lantern-surface-sunken); }
+.lui-badge[data-color="primary"][data-variant="solid"] { color: var(--lantern-primary-fg); }
+.lui-badge[data-color="accent"] { --lui-badge-c: var(--lantern-accent); --lui-badge-c-soft: var(--lantern-accent-soft); }
+.lui-badge[data-color="accent"][data-variant="solid"] { color: var(--lantern-accent-fg); }
+.lui-badge[data-color="info"] { --lui-badge-c: var(--lantern-accent); --lui-badge-c-soft: var(--lantern-accent-soft); }
+.lui-badge[data-color="success"] { --lui-badge-c: var(--lantern-success); --lui-badge-c-soft: color-mix(in oklab, var(--lantern-success) 13%, transparent); }
+.lui-badge[data-color="warning"] { --lui-badge-c: var(--lantern-warning); --lui-badge-c-soft: color-mix(in oklab, var(--lantern-warning) 14%, transparent); }
+.lui-badge[data-color="danger"] { --lui-badge-c: var(--lantern-danger); --lui-badge-c-soft: color-mix(in oklab, var(--lantern-danger) 12%, transparent); }
+.lui-badge[data-variant="solid"] { color: #fff; }
+
+/* ── Table ── */
+.lui-table-wrap { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius);
+  overflow-x: auto; background: var(--lantern-surface-raised); }
+.lui-table { width: 100%; border-collapse: collapse; font-size: var(--lantern-text); }
+.lui-th { background: var(--lantern-surface-sunken); color: var(--lantern-fg-muted);
+  font-size: var(--lantern-text-sm); font-weight: 550; text-align: left;
+  padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--lantern-border); white-space: nowrap; }
+.lui-td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--lantern-border);
+  color: var(--lantern-fg); }
+.lui-tr:last-child .lui-td { border-bottom: none; }
+.lui-tr:hover { background: var(--lantern-surface-hover); }
+.lui-tr-selected, .lui-tr-selected:hover { background: var(--lantern-accent-soft); }
+.lui-td-num, .lui-th-num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ── Tabs ── */
+.lui-tabs-list { display: inline-flex; align-items: center; }
+.lui-tabs-list[data-variant="segmented"] { background: var(--lantern-surface-sunken);
+  border-radius: calc(var(--lantern-radius) + 1px); padding: 3px; gap: 2px; }
+.lui-tab { display: inline-flex; align-items: center; gap: 0.35rem; border: none; background: none;
+  color: var(--lantern-fg-muted); font-weight: 500; cursor: pointer; text-decoration: none;
+  white-space: nowrap; font-family: inherit; }
+.lui-tabs-list[data-size="md"] .lui-tab { font-size: var(--lantern-text); padding: 0.25rem 0.7rem; }
+.lui-tabs-list[data-size="sm"] .lui-tab { font-size: var(--lantern-text-sm); padding: 0.2rem 0.55rem; }
+.lui-tabs-list[data-variant="segmented"] .lui-tab { border-radius: var(--lantern-radius-sm); }
+.lui-tabs-list[data-variant="segmented"] .lui-tab-active { background: var(--lantern-surface-raised);
+  color: var(--lantern-fg); font-weight: 600; box-shadow: var(--lantern-shadow); }
+.lui-tabs-list[data-variant="underline"] { gap: 1rem; border-bottom: 1px solid var(--lantern-border);
+  width: 100%; }
+.lui-tabs-list[data-variant="underline"] .lui-tab { padding: 0.45rem 0.1rem;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.lui-tabs-list[data-variant="underline"] .lui-tab-active { color: var(--lantern-fg);
+  border-bottom-color: var(--lantern-accent); font-weight: 600; }
+.lui-tab .lui-badge { margin-left: 0.1rem; }
+.lui-tab-active .lui-badge { color: var(--lantern-accent); }
+.lui-tabs-panel { margin-top: 0.9rem; }
+
+/* ── Select ── */
+.lui-select { position: relative; }
+.lui-select-toggle { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  width: 100%; height: var(--lantern-control-h); padding: 0 var(--lantern-control-px);
+  font-size: var(--lantern-text); font-family: inherit; text-align: left;
+  background: var(--lantern-surface); color: var(--lantern-fg);
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius);
+  box-shadow: var(--lantern-shadow); cursor: pointer; }
+.lui-select-toggle:focus-visible { outline: none; border-color: var(--lantern-ring);
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft); }
+.lui-select-toggle:disabled { opacity: 0.5; cursor: not-allowed; }
+.lui-select-value[data-empty] { color: var(--lantern-fg-subtle); }
+.lui-select-caret { color: var(--lantern-fg-subtle); flex-shrink: 0; font-size: 0.9em; }
+.lui-select-listbox { position: fixed; z-index: 70; max-height: 16rem; overflow-y: auto;
+  background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius); box-shadow: var(--lantern-shadow-md); padding: 0.25rem; }
+.lui-select-option { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  width: 100%; padding: 0.35rem 0.6rem; font-size: var(--lantern-text); font-family: inherit;
+  text-align: left; background: none; border: none; border-radius: var(--lantern-radius-sm);
+  color: var(--lantern-fg); cursor: pointer; }
+.lui-select-option:hover, .lui-select-option:focus-visible { outline: none;
+  background: var(--lantern-surface-sunken); }
+.lui-select-check { visibility: hidden; color: var(--lantern-accent); font-size: 0.9em; }
+.lui-select-option[aria-selected="true"] .lui-select-check { visibility: visible; }
+.lui-select-native-wrap { position: relative; display: block; }
+.lui-select-native { appearance: none; width: 100%; height: var(--lantern-control-h);
+  padding: 0 1.9rem 0 var(--lantern-control-px); font-size: var(--lantern-text);
+  font-family: inherit; background: var(--lantern-surface); color: var(--lantern-fg);
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius);
+  box-shadow: var(--lantern-shadow); cursor: pointer; }
+.lui-select-native:focus-visible { outline: none; border-color: var(--lantern-ring);
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft); }
+.lui-select-native-wrap .lui-select-caret { position: absolute; right: 0.6rem; top: 50%;
+  transform: translateY(-50%); pointer-events: none; }
+.lui-invalid { border-color: var(--lantern-danger); }
+
+/* ── Pagination ── */
+.lui-pagination { display: flex; align-items: center; gap: 0.75rem; font-size: var(--lantern-text-sm); }
+.lui-pagination-count { color: var(--lantern-fg-muted); margin-right: auto;
+  font-variant-numeric: tabular-nums; }
+.lui-pager { display: inline-flex; gap: 3px; }
+.lui-pg { display: inline-flex; align-items: center; justify-content: center; min-width: 1.75rem;
+  height: 1.75rem; padding: 0 0.4rem; border: 1px solid var(--lantern-border);
+  background: var(--lantern-surface); color: var(--lantern-fg);
+  border-radius: var(--lantern-radius-sm); font-size: var(--lantern-text-sm);
+  font-variant-numeric: tabular-nums; text-decoration: none; cursor: pointer; font-family: inherit; }
+.lui-pg:hover { background: var(--lantern-surface-sunken); }
+.lui-pg-current, .lui-pg-current:hover { background: var(--lantern-primary);
+  color: var(--lantern-primary-fg); border-color: var(--lantern-primary); font-weight: 600; }
+.lui-pg-disabled { opacity: 0.4; pointer-events: none; }
+.lui-pg-gap { color: var(--lantern-fg-subtle); padding: 0 0.2rem; align-self: center; }
+.lui-pg-size { gap: 0.35rem; padding: 0 0.6rem; white-space: nowrap; }
+.lui-dropdown-item[data-selected] { color: var(--lantern-accent); font-weight: 600; }

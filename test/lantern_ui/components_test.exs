@@ -339,6 +339,7 @@ defmodule LanternUI.ComponentsTest do
       keys = LanternUI.__components__() |> Map.keys() |> Enum.sort()
 
       assert keys == [
+               :badge,
                :breadcrumb,
                :button,
                :calendar,
@@ -351,7 +352,11 @@ defmodule LanternUI.ComponentsTest do
                :form,
                :icon,
                :layout,
-               :modal
+               :modal,
+               :pagination,
+               :select,
+               :table,
+               :tabs
              ]
     end
   end

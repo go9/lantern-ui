@@ -903,6 +903,107 @@ const LanternSidebar = {
   },
 }
 
+// Select listbox: toggle opens a positioned listbox; ↑/↓/Home/End move the
+// active option, Enter/click selects (updates the hidden input + label and
+// fires change), Esc/outside closes, printable keys type-ahead.
+const LanternSelect = {
+  mounted() {
+    this.toggle = this.el.querySelector('[data-part="toggle"]')
+    this.panel = this.el.querySelector('[data-part="panel"]')
+    this.hidden = this.el.querySelector('[data-part="value"]')
+    this.label = this.el.querySelector('[data-part="label"]')
+    this.cleanup = []
+    this.open = false
+
+    this.el.addEventListener("click", (e) => {
+      if (e.target.closest('[data-part="toggle"]')) this.open ? this.hide() : this.show()
+      const opt = e.target.closest('[data-part="option"]')
+      if (opt) this.select(opt)
+    })
+
+    this.el.addEventListener("keydown", (e) => this.onKey(e))
+  },
+
+  options() {
+    return [...this.el.querySelectorAll('[data-part="option"]')]
+  },
+
+  show() {
+    this.open = true
+    this.panel.hidden = false
+    position(this.toggle, this.panel, { placement: "bottom-start" })
+    this.panel.style.minWidth = `${this.toggle.offsetWidth}px`
+    this.toggle.setAttribute("aria-expanded", "true")
+    const current =
+      this.options().find((o) => o.getAttribute("aria-selected") === "true") || this.options()[0]
+    current?.focus()
+    this.cleanup.push(onDismiss(this.panel, () => this.hide(), { anchor: this.toggle }))
+  },
+
+  hide(refocus = true) {
+    if (!this.open) return
+    this.open = false
+    this.cleanup.forEach((fn) => fn())
+    this.cleanup = []
+    this.panel.hidden = true
+    this.toggle.setAttribute("aria-expanded", "false")
+    if (refocus) this.toggle.focus()
+  },
+
+  select(opt) {
+    const value = opt.dataset.value
+    if (this.hidden && this.hidden.value !== value) {
+      this.hidden.value = value
+      this.hidden.dispatchEvent(new Event("input", { bubbles: true }))
+      this.hidden.dispatchEvent(new Event("change", { bubbles: true }))
+    }
+    if (this.label) {
+      this.label.textContent = opt.querySelector(".lui-select-option-label")?.textContent || value
+    }
+    this.options().forEach((o) => o.setAttribute("aria-selected", String(o === opt)))
+    this.hide()
+  },
+
+  onKey(e) {
+    const opts = this.options()
+    if (!this.open) {
+      if (["ArrowDown", "Enter", " "].includes(e.key) && e.target === this.toggle) {
+        e.preventDefault()
+        this.show()
+      }
+      return
+    }
+    const idx = opts.indexOf(document.activeElement)
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      opts[Math.min(idx + 1, opts.length - 1)]?.focus()
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      opts[Math.max(idx - 1, 0)]?.focus()
+    } else if (e.key === "Home") {
+      e.preventDefault()
+      opts[0]?.focus()
+    } else if (e.key === "End") {
+      e.preventDefault()
+      opts[opts.length - 1]?.focus()
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      if (idx >= 0) this.select(opts[idx])
+    } else if (e.key.length === 1 && /\S/.test(e.key)) {
+      const q = e.key.toLowerCase()
+      const start = idx + 1
+      const hit =
+        opts.slice(start).find((o) => o.textContent.trim().toLowerCase().startsWith(q)) ||
+        opts.find((o) => o.textContent.trim().toLowerCase().startsWith(q))
+      hit?.focus()
+    }
+  },
+
+  destroyed() {
+    this.cleanup.forEach((fn) => fn())
+  },
+}
+
 export const runtime = { position, trapFocus, onDismiss }
 
 // ── Modal ────────────────────────────────────────────────────────────────────
@@ -1041,6 +1142,7 @@ export const Hooks = {
   LanternModal,
   LanternDropdown,
   LanternSidebar,
+  LanternSelect,
 }
 export {
   ChartHover,
@@ -1052,5 +1154,6 @@ export {
   LanternModal,
   LanternDropdown,
   LanternSidebar,
+  LanternSelect,
 }
 export default Hooks
