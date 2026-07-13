@@ -756,3 +756,25 @@
 .lui-pg-gap { color: var(--lantern-fg-subtle); padding: 0 0.2rem; align-self: center; }
 .lui-pg-size { gap: 0.35rem; padding: 0 0.6rem; white-space: nowrap; }
 .lui-dropdown-item[data-selected] { color: var(--lantern-accent); font-weight: 600; }
+
+/* ── Data table ── */
+.lui-dt-header { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  margin-bottom: 0.75rem; }
+.lui-dt-title { font-size: 0.95rem; font-weight: 650; letter-spacing: -0.01em; margin: 0;
+  color: var(--lantern-fg); }
+.lui-dt-header-actions { display: flex; align-items: center; gap: 0.5rem; }
+.lui-dt-toolbar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; }
+.lui-dt-bulkbar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem;
+  padding: 0.4rem 0.6rem; background: var(--lantern-accent-soft);
+  border: 1px solid color-mix(in oklab, var(--lantern-accent) 25%, transparent);
+  border-radius: var(--lantern-radius); }
+.lui-dt-bulkcount { font-size: var(--lantern-text-sm); font-weight: 600; color: var(--lantern-accent);
+  margin-right: 0.25rem; font-variant-numeric: tabular-nums; }
+.lui-th-check, .lui-td-check { width: 2rem; text-align: center; }
+.lui-th-actions, .lui-td-actions { width: 2.25rem; text-align: right; }
+.lui-th-sort { display: inline-flex; align-items: center; gap: 0.25rem; color: inherit;
+  text-decoration: none; cursor: pointer; }
+.lui-th-sort:hover { color: var(--lantern-fg); }
+.lui-th-sort-icon { color: var(--lantern-accent); font-size: 0.85em; min-width: 0.7em; }
+.lui-td-empty { padding: 2rem 1rem; }
+.lui-dt-pagination { margin-top: 0.6rem; }

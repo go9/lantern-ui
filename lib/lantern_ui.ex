@@ -51,7 +51,8 @@ defmodule LanternUI do
     table: LanternUI.Components.Table,
     tabs: LanternUI.Components.Tabs,
     select: LanternUI.Components.Select,
-    pagination: LanternUI.Components.Pagination
+    pagination: LanternUI.Components.Pagination,
+    data_table: LanternUI.Components.DataTable
   }
 
   @doc false
