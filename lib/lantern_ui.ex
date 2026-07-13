@@ -46,7 +46,12 @@ defmodule LanternUI do
     dropdown: LanternUI.Components.Dropdown,
     breadcrumb: LanternUI.Components.Breadcrumb,
     empty_state: LanternUI.Components.EmptyState,
-    layout: LanternUI.Components.Layout
+    layout: LanternUI.Components.Layout,
+    badge: LanternUI.Components.Badge,
+    table: LanternUI.Components.Table,
+    tabs: LanternUI.Components.Tabs,
+    select: LanternUI.Components.Select,
+    pagination: LanternUI.Components.Pagination
   }
 
   @doc false

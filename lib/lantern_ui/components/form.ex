@@ -128,11 +128,12 @@ defmodule LanternUI.Components.Form do
 
   # Minimal error translation: apply interpolated bindings. Hosts with gettext
   # can pre-translate and pass `errors` explicitly.
-  defp translate_error({msg, opts}) do
+  @doc "Interpolate a changeset error tuple into a message string."
+  def translate_error({msg, opts}) do
     Enum.reduce(opts, msg, fn {key, value}, acc ->
       String.replace(acc, "%{#{key}}", to_string(value))
     end)
   end
 
-  defp translate_error(msg) when is_binary(msg), do: msg
+  def translate_error(msg) when is_binary(msg), do: msg
 end
