@@ -898,6 +898,12 @@ const LanternSidebar = {
     this.el.addEventListener("click", this.onToggle)
   },
 
+  updated() {
+    const stored = localStorage.getItem(this.key())
+    if (stored === "true") this.el.setAttribute("data-collapsed", "")
+    if (stored === "false") this.el.removeAttribute("data-collapsed")
+  },
+
   destroyed() {
     this.el.removeEventListener("click", this.onToggle)
   },
@@ -1011,11 +1017,14 @@ const LanternCollapse = {
     return `lui-collapse:${this.el.id}`
   },
 
-  mounted() {
+  restore() {
     const stored = localStorage.getItem(this.key())
     if (stored === "true") this.el.setAttribute("data-collapsed", "")
     if (stored === "false") this.el.removeAttribute("data-collapsed")
+  },
 
+  mounted() {
+    this.restore()
     this.onClick = (e) => {
       if (!e.target.closest('[data-part="collapse-toggle"]')) return
       const collapsed = this.el.toggleAttribute("data-collapsed")
@@ -1024,6 +1033,11 @@ const LanternCollapse = {
       } catch (_) {}
     }
     this.el.addEventListener("click", this.onClick)
+  },
+
+  // LiveView patches strip client-set attributes — re-apply after every patch.
+  updated() {
+    this.restore()
   },
 
   destroyed() {
@@ -1050,8 +1064,14 @@ const LanternTableChrome = {
     this.onChange = (e) => {
       if (e.target.matches('[data-part="filter"]')) this.apply()
     }
+    this.onClick = (e) => {
+      if (!e.target.closest('[data-part="clear-filters"]')) return
+      this.el.querySelectorAll('[data-part="filter"]').forEach((sel) => (sel.value = ""))
+      this.apply()
+    }
     this.el.addEventListener("input", this.onInput)
     this.el.addEventListener("change", this.onChange)
+    this.el.addEventListener("click", this.onClick)
   },
 
   apply() {

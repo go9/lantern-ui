@@ -39,6 +39,12 @@ All notable changes to this project are documented here. The format follows
   build Flop filter params client-side and patch the URL — zero page-level
   handlers (`LanternTableChrome` hook rides LiveView's own patch navigation) —
   and a table ⇄ cards view toggle (`:card` slot + `view` attr).
+- **`data_table` toolbar rework** (review): filters moved into a popover
+  ("Filters" button with active-count badge + clear-filters), the toolbar is
+  one right-aligned row (filters → search → actions), the bulk bar gains
+  "Select all N" (emits `select_all_matching` for whole-result-set selection),
+  and collapse hooks re-apply their state after LiveView patches (the
+  overview/sidebar collapse no longer resets on re-render).
 
 ## [0.6.0] - 2026-07-08
 
