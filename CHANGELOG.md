@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- **`toast_group` placement** now supports all six positions — `top-left`,
+  `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right`
+  (was three). Toasts enter from the nearest screen edge (slide down from the
+  top, up from the bottom) and the newest stays closest to the edge.
+
 ## [0.7.0] - 2026-07-11
 
 ### Added
