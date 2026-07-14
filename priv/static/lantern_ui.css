@@ -483,10 +483,9 @@
   background: var(--lantern-surface); cursor: inherit;
   transition: background var(--lantern-duration) var(--lantern-ease),
     border-color var(--lantern-duration) var(--lantern-ease); }
-.lui-checkbox:checked { background: var(--lantern-primary); border-color: var(--lantern-primary);
+.lui-checkbox:checked { background: var(--lantern-accent); border-color: var(--lantern-accent);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.5l3 3 6-7' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-size: 0.75rem; background-position: center; background-repeat: no-repeat; }
-.dark .lui-checkbox:checked { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.5l3 3 6-7' stroke='%2318181b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
 .lui-checkbox:focus-visible { outline: none;
   box-shadow: 0 0 0 3px var(--lantern-ring-soft, rgba(37, 99, 235, 0.25)); }
 .lui-checkbox-label { display: flex; flex-direction: column; gap: 0.1rem; color: var(--lantern-fg); }
