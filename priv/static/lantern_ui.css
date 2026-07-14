@@ -725,6 +725,9 @@
   color: var(--lantern-fg); cursor: pointer; }
 .lui-select-option:hover, .lui-select-option:focus-visible { outline: none;
   background: var(--lantern-surface-sunken); }
+/* The hidden attribute must beat the class's display:flex — same rule the
+   modal needs (search filtering sets option.hidden). */
+.lui-select-option[hidden] { display: none; }
 .lui-select-check { visibility: hidden; color: var(--lantern-accent); font-size: 0.9em; }
 .lui-select-option[aria-selected="true"] .lui-select-check { visibility: visible; }
 .lui-select-native-wrap { position: relative; display: block; }
