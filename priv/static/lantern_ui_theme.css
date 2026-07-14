@@ -1,72 +1,75 @@
 /*
  * LanternUI design tokens + default theme.
  *
- * Components read every value from `--lantern-*` custom properties, each chained
- * to a host (Fluxon) token then a hard fallback, e.g.:
+ * Components read every value from a `--lantern-*` custom property. Here each
+ * `--lantern-*` color chains through the matching FLUXON semantic token (the
+ * same names a flicker theme is defined in) and then a hard fallback:
  *
- *     color: var(--lantern-fg, var(--foreground, #09090b));
- *     background: var(--lantern-surface, var(--background-base, #fff));
- *     border-color: var(--lantern-border, var(--border, #e4e4e7));
- *     accent: var(--lantern-accent, var(--color-primary-600, oklch(0.637 0.192 38)));
+ *     --lantern-fg: var(--foreground, #09090b);
+ *     --lantern-surface: var(--background-base, #ffffff);
+ *     --lantern-accent: var(--primary, oklch(0.637 0.192 38));
  *
- * COLOR MODEL (shadcn-style):
- * - `primary` is MONOCHROME (near-black in light, white in dark) — the color of
- *   buttons, checked controls, and default badges. Restrained, premium.
- * - `accent` is the flicker coral/ember orange — focus rings, selection,
- *   highlights, links, live-status. The brand shows up sparingly, not on every
- *   button.
+ * So a Fluxon/flicker theme — which sets `--primary`, `--foreground`,
+ * `--background-base`, `--border-base`, … — flows straight into LanternUI with
+ * NO bridge and NO component changes. The fallbacks preserve the standalone
+ * look when those host tokens are absent.
  *
- * WHEN TO IMPORT THIS FILE
- * - Fluxon (or any host that defines the fallback tokens): DON'T import — the
- *   host's tokens flow in through the fallbacks and LanternUI matches it.
- * - Standalone / embedded tools (lantern, livecode, s3) / the demo: import this
- *   for a complete light+dark theme with zero host CSS required.
- * - Recolor by overriding any `--lantern-*` variable on `:root` or a subtree.
+ * FLUXON TOKEN MAP (lantern ← fluxon):
+ *   fg ← foreground · fg-muted ← foreground-soft · fg-subtle ← foreground-softer
+ *   surface ← background-base · surface-raised ← surface
+ *   surface-sunken/hover ← background-accent · border ← border-base
+ *   primary/accent ← primary · primary-fg/accent-fg ← foreground-primary
+ *   accent-soft ← primary-soft · danger/success/warning/info ← same
  *
- * THEMING SURFACES
- * - Light is the `:root` default; `.dark` (or system dark, unless `.light`) flips colors.
- * - Density: the default is shadcn-compact (32px controls / 13px text). Set
- *   `data-lantern-density="comfortable"` on an ancestor for a roomier scale.
+ * COLOR MODEL (shadcn-style, standalone): `primary` is monochrome (near-black
+ * light / white dark); `accent` is coral. Under a flicker theme both pick up
+ * the brand `--primary`, matching flicker's single-brand look.
+ *
+ * WHEN TO IMPORT: standalone / embedded tools / the demo — import for a full
+ * light+dark theme. In a Fluxon host you MAY still import it; the host's tokens
+ * win through the chain. Recolor by overriding any `--lantern-*` OR any Fluxon
+ * token on `:root`/`.dark`/a subtree.
+ *
+ * THEMING SURFACES: light = `:root`; `.dark` (or system dark unless `.light`)
+ * flips. Density: default shadcn-compact; `data-lantern-density="comfortable"`
+ * for a roomier scale.
  */
 
 :root {
-  /* ── Color · foreground ── */
-  --lantern-fg: #09090b;
-  --lantern-fg-muted: #71717a;
-  --lantern-fg-subtle: #a1a1aa;
+  /* ── Color · foreground ← fluxon foreground* ── */
+  --lantern-fg: var(--foreground, #09090b);
+  --lantern-fg-muted: var(--foreground-soft, #71717a);
+  --lantern-fg-subtle: var(--foreground-softer, #a1a1aa);
 
-  /* ── Color · surfaces ── */
-  --lantern-surface: #ffffff;
-  --lantern-surface-raised: #ffffff;
-  --lantern-surface-sunken: #f4f4f5;
-  --lantern-surface-hover: #f4f4f5;
+  /* ── Color · surfaces ← fluxon background-base / surface / background-accent ── */
+  --lantern-surface: var(--background-base, #ffffff);
+  --lantern-surface-raised: var(--surface, #ffffff);
+  --lantern-surface-sunken: var(--background-accent, #f4f4f5);
+  --lantern-surface-hover: var(--background-accent, #f4f4f5);
 
-  /* ── Color · lines ── */
-  --lantern-border: #e4e4e7;
-  --lantern-border-strong: #d4d4d8;
+  /* ── Color · lines ← fluxon border-base ── */
+  --lantern-border: var(--border-base, #e4e4e7);
+  --lantern-border-strong: var(--border-base, #d4d4d8);
 
-  /* ── Color · primary (monochrome — buttons, checked controls, default badges) ── */
-  --lantern-primary: #18181b;
-  --lantern-primary-fg: #fafafa;
+  /* ── Color · primary ← fluxon primary (monochrome fallback standalone) ── */
+  --lantern-primary: var(--primary, #18181b);
+  --lantern-primary-fg: var(--foreground-primary, #fafafa);
 
-  /* ── Color · secondary (subtle filled controls) ── */
-  --lantern-secondary: #f4f4f5;
-  --lantern-secondary-fg: #18181b;
+  /* ── Color · secondary ← fluxon background-accent ── */
+  --lantern-secondary: var(--background-accent, #f4f4f5);
+  --lantern-secondary-fg: var(--foreground, #18181b);
 
-  /* ── Color · accent + status ── */
-  /* Flicker brand accent — coral/ember orange (OKLCH warm hue ~38), shared
-     across the lantern ecosystem. Used sparingly: focus rings, selection,
-     links, highlights, live-status. In a flicker/Fluxon host the
-     component-level fallback to --color-primary-600 already yields this. */
-  --lantern-accent: oklch(0.637 0.192 38);
-  --lantern-accent-fg: #ffffff;
-  --lantern-accent-soft: color-mix(in oklab, var(--lantern-accent) 12%, transparent);
-  --lantern-danger: #dc2626;
+  /* ── Color · accent + status ← fluxon primary / status tokens ── */
+  --lantern-accent: var(--primary, oklch(0.637 0.192 38));
+  --lantern-accent-fg: var(--foreground-primary, #ffffff);
+  --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 12%, transparent));
+  --lantern-danger: var(--danger, #dc2626);
   --lantern-danger-fg: #ffffff;
-  --lantern-success: #16a34a;
-  --lantern-warning: #d97706;
+  --lantern-success: var(--success, #16a34a);
+  --lantern-warning: var(--warning, #d97706);
+  --lantern-info: var(--info, var(--lantern-accent));
 
-  /* ── Focus ring (coral, shadcn-style 3px soft ring via color-mix) ── */
+  /* ── Focus ring ── */
   --lantern-ring: var(--lantern-accent);
   --lantern-ring-soft: color-mix(in oklab, var(--lantern-ring) 25%, transparent);
 
@@ -75,22 +78,20 @@
   --lantern-radius-md: 0.5rem;
   --lantern-radius-lg: 0.625rem;
 
-  /* ── Shadows (shadcn shadow-xs / shadow-sm) ── */
+  /* ── Shadows ── */
   --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
 
   /* ── Typography ── */
-  --lantern-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  /* Brand/heading face (logo, app-shell brand). Defaults to the body font;
-     override to a display face (e.g. Space Grotesk) to match a host's brand. */
+  --lantern-font: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
   --lantern-font-brand: var(--lantern-font);
-  --lantern-font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, monospace;
+  --lantern-font-mono: var(--font-mono, ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, monospace);
 
   /* ── Motion ── */
   --lantern-duration: 150ms;
   --lantern-ease: cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* ── Density (default = shadcn-compact: 32px controls, 13px text) ── */
+  /* ── Density (default = shadcn-compact) ── */
   --lantern-control-h: 2rem;
   --lantern-control-px: 0.75rem;
   --lantern-text: 0.8125rem;
@@ -99,7 +100,7 @@
   --lantern-radius: var(--lantern-radius-md);
 }
 
-/* Roomier scale for content-first hosts (marketing pages, forms-heavy apps). */
+/* Roomier scale for content-first hosts. */
 [data-lantern-density="comfortable"] {
   --lantern-control-h: 2.25rem;
   --lantern-control-px: 1rem;
@@ -108,62 +109,66 @@
   --lantern-gap: 0.5rem;
 }
 
-/* Light theme — explicit opt-in via `.light`, re-asserting the :root values
-   so a subtree can force light even when system dark applied them. */
+/* Light theme — explicit opt-in via `.light`, re-asserting the chain so a
+   subtree can force light even under system dark. */
 .light {
-  --lantern-fg: #09090b;
-  --lantern-fg-muted: #71717a;
-  --lantern-fg-subtle: #a1a1aa;
+  --lantern-fg: var(--foreground, #09090b);
+  --lantern-fg-muted: var(--foreground-soft, #71717a);
+  --lantern-fg-subtle: var(--foreground-softer, #a1a1aa);
 
-  --lantern-surface: #ffffff;
-  --lantern-surface-raised: #ffffff;
-  --lantern-surface-sunken: #f4f4f5;
-  --lantern-surface-hover: #f4f4f5;
+  --lantern-surface: var(--background-base, #ffffff);
+  --lantern-surface-raised: var(--surface, #ffffff);
+  --lantern-surface-sunken: var(--background-accent, #f4f4f5);
+  --lantern-surface-hover: var(--background-accent, #f4f4f5);
 
-  --lantern-border: #e4e4e7;
-  --lantern-border-strong: #d4d4d8;
+  --lantern-border: var(--border-base, #e4e4e7);
+  --lantern-border-strong: var(--border-base, #d4d4d8);
 
-  --lantern-primary: #18181b;
-  --lantern-primary-fg: #fafafa;
+  --lantern-primary: var(--primary, #18181b);
+  --lantern-primary-fg: var(--foreground-primary, #fafafa);
 
-  --lantern-secondary: #f4f4f5;
-  --lantern-secondary-fg: #18181b;
+  --lantern-secondary: var(--background-accent, #f4f4f5);
+  --lantern-secondary-fg: var(--foreground, #18181b);
 
-  --lantern-accent: oklch(0.637 0.192 38);
-  --lantern-accent-fg: #ffffff;
-  --lantern-danger: #dc2626;
-  --lantern-success: #16a34a;
-  --lantern-warning: #d97706;
+  --lantern-accent: var(--primary, oklch(0.637 0.192 38));
+  --lantern-accent-fg: var(--foreground-primary, #ffffff);
+  --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 12%, transparent));
+  --lantern-danger: var(--danger, #dc2626);
+  --lantern-success: var(--success, #16a34a);
+  --lantern-warning: var(--warning, #d97706);
 
   --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
 }
 
-/* Dark theme — explicit opt-in via `.dark`. */
+/* Dark theme — explicit opt-in via `.dark`. Same Fluxon token names; their
+   dark-scoped values win when a flicker dark theme is present, else the dark
+   fallbacks apply. */
 .dark {
-  --lantern-fg: #fafafa;
-  --lantern-fg-muted: #a1a1aa;
-  --lantern-fg-subtle: #71717a;
+  --lantern-fg: var(--foreground, #fafafa);
+  --lantern-fg-muted: var(--foreground-soft, #a1a1aa);
+  --lantern-fg-subtle: var(--foreground-softer, #71717a);
 
-  --lantern-surface: #09090b;
-  --lantern-surface-raised: #0c0c0e;
-  --lantern-surface-sunken: #18181b;
-  --lantern-surface-hover: #26262a;
+  --lantern-surface: var(--background-base, #09090b);
+  --lantern-surface-raised: var(--surface, #0c0c0e);
+  --lantern-surface-sunken: var(--background-accent, #18181b);
+  --lantern-surface-hover: var(--background-accent, #26262a);
 
-  --lantern-border: #26262a;
-  --lantern-border-strong: #3f3f46;
+  --lantern-border: var(--border-base, #26262a);
+  --lantern-border-strong: var(--border-base, #3f3f46);
 
-  --lantern-primary: #fafafa;
-  --lantern-primary-fg: #18181b;
+  --lantern-primary: var(--primary, #fafafa);
+  --lantern-primary-fg: var(--foreground-primary, #18181b);
 
-  --lantern-secondary: #27272a;
-  --lantern-secondary-fg: #fafafa;
+  --lantern-secondary: var(--background-accent, #27272a);
+  --lantern-secondary-fg: var(--foreground, #fafafa);
 
-  --lantern-accent: oklch(0.685 0.182 39);
-  --lantern-accent-fg: #ffffff;
-  --lantern-danger: #ef4444;
-  --lantern-success: #22c55e;
-  --lantern-warning: #f59e0b;
+  --lantern-accent: var(--primary, oklch(0.685 0.182 39));
+  --lantern-accent-fg: var(--foreground-primary, #ffffff);
+  --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 22%, transparent));
+  --lantern-danger: var(--danger, #ef4444);
+  --lantern-success: var(--success, #22c55e);
+  --lantern-warning: var(--warning, #f59e0b);
 
   --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.4);
   --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
@@ -172,29 +177,30 @@
 /* System dark — applies unless the host explicitly opts into `.light`. */
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
-    --lantern-fg: #fafafa;
-    --lantern-fg-muted: #a1a1aa;
-    --lantern-fg-subtle: #71717a;
+    --lantern-fg: var(--foreground, #fafafa);
+    --lantern-fg-muted: var(--foreground-soft, #a1a1aa);
+    --lantern-fg-subtle: var(--foreground-softer, #71717a);
 
-    --lantern-surface: #09090b;
-    --lantern-surface-raised: #0c0c0e;
-    --lantern-surface-sunken: #18181b;
-    --lantern-surface-hover: #26262a;
+    --lantern-surface: var(--background-base, #09090b);
+    --lantern-surface-raised: var(--surface, #0c0c0e);
+    --lantern-surface-sunken: var(--background-accent, #18181b);
+    --lantern-surface-hover: var(--background-accent, #26262a);
 
-    --lantern-border: #26262a;
-    --lantern-border-strong: #3f3f46;
+    --lantern-border: var(--border-base, #26262a);
+    --lantern-border-strong: var(--border-base, #3f3f46);
 
-    --lantern-primary: #fafafa;
-    --lantern-primary-fg: #18181b;
+    --lantern-primary: var(--primary, #fafafa);
+    --lantern-primary-fg: var(--foreground-primary, #18181b);
 
-    --lantern-secondary: #27272a;
-    --lantern-secondary-fg: #fafafa;
+    --lantern-secondary: var(--background-accent, #27272a);
+    --lantern-secondary-fg: var(--foreground, #fafafa);
 
-    --lantern-accent: oklch(0.685 0.182 39);
-    --lantern-accent-fg: #ffffff;
-    --lantern-danger: #ef4444;
-    --lantern-success: #22c55e;
-    --lantern-warning: #f59e0b;
+    --lantern-accent: var(--primary, oklch(0.685 0.182 39));
+    --lantern-accent-fg: var(--foreground-primary, #ffffff);
+    --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 22%, transparent));
+    --lantern-danger: var(--danger, #ef4444);
+    --lantern-success: var(--success, #22c55e);
+    --lantern-warning: var(--warning, #f59e0b);
 
     --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.4);
     --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);

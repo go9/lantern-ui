@@ -7,6 +7,18 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Changed
+- **Fluxon token compatibility** (flicker #882): every `--lantern-*` color now
+  chains through the matching Fluxon semantic token (`--primary`,
+  `--foreground`, `--foreground-soft/softer`, `--foreground-primary`,
+  `--background-base/accent`, `--surface`, `--border-base`,
+  `--danger/success/warning/info`) before its hard fallback. A flicker/Fluxon
+  theme — defined in exactly those names — now flows straight into lantern-ui
+  with no bridge and no component changes; standalone keeps the shadcn
+  monochrome look via the fallbacks. Non-destructive: only the theme file
+  gained the mapping layer. Under a theme, `--lantern-primary`/`--lantern-accent`
+  both pick up the brand `--primary` (matches flicker's single-brand look).
+
+### Changed
 - **`toast_group` placement** now supports all six positions — `top-left`,
   `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right`
   (was three). Toasts enter from the nearest screen edge (slide down from the
