@@ -362,7 +362,9 @@ defmodule LanternUI.ComponentsTest do
                :switch,
                :table,
                :tabs,
-               :textarea
+               :textarea,
+               :toast,
+               :tooltip
              ]
     end
   end

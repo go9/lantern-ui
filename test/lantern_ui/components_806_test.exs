@@ -209,7 +209,7 @@ defmodule LanternUI.Components806Test do
     test "new component groups are importable" do
       keys = Map.keys(LanternUI.__components__())
 
-      for k <- [:checkbox, :modal, :dropdown, :breadcrumb, :empty_state] do
+      for k <- [:checkbox, :modal, :dropdown, :breadcrumb, :empty_state, :tooltip, :toast] do
         assert k in keys
       end
     end

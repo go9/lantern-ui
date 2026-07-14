@@ -1345,6 +1345,205 @@ const LanternDropdown = {
   },
 }
 
+// ── Tooltip ────────────────────────────────────────────────────────────────
+//
+// Hover/focus tooltip. Top/bottom reuse the shared vertical placement helper;
+// left/right are fixed-positioned directly because the shared helper only
+// supports vertical sides.
+const LanternTooltip = {
+  mounted() {
+    this.trigger = this.el.querySelector('[data-part="trigger"]')
+    this.panel = this.el.querySelector('[data-part="panel"]')
+    if (!this.trigger || !this.panel) return
+
+    this.open = false
+    this.delay = parseInt(this.el.dataset.delay || "200", 10)
+    this.onEnter = () => this.scheduleShow()
+    this.onLeave = () => this.hide()
+    this.onFocusOut = (e) => {
+      if (!this.trigger.contains(e.relatedTarget)) this.hide()
+    }
+    this.onKey = (e) => {
+      if (e.key === "Escape") this.hide()
+    }
+    this.reposition = () => {
+      if (this.open) this.place()
+    }
+
+    this.trigger.addEventListener("mouseenter", this.onEnter)
+    this.trigger.addEventListener("focusin", this.onEnter)
+    this.trigger.addEventListener("mouseleave", this.onLeave)
+    this.trigger.addEventListener("focusout", this.onFocusOut)
+    document.addEventListener("keydown", this.onKey)
+  },
+
+  scheduleShow() {
+    clearTimeout(this.timer)
+    this.timer = setTimeout(() => this.show(), this.delay)
+  },
+
+  show() {
+    clearTimeout(this.timer)
+    if (!this.open) {
+      this.open = true
+      this.panel.hidden = false
+      window.addEventListener("scroll", this.reposition, true)
+      window.addEventListener("resize", this.reposition)
+    }
+    this.place()
+  },
+
+  hide() {
+    clearTimeout(this.timer)
+    if (!this.open) return
+    this.open = false
+    this.panel.hidden = true
+    window.removeEventListener("scroll", this.reposition, true)
+    window.removeEventListener("resize", this.reposition)
+  },
+
+  place() {
+    const placement = this.el.dataset.placement || "top"
+    if (placement === "left" || placement === "right") {
+      this.placeSide(placement)
+    } else {
+      const chosen = position(this.trigger, this.panel, { placement: `${placement}-start`, gap: 6 })
+      this.centerHorizontal(chosen.split("-")[0])
+    }
+  },
+
+  centerHorizontal(side) {
+    const a = this.trigger.getBoundingClientRect()
+    const f = this.panel.getBoundingClientRect()
+    const vw = document.documentElement.clientWidth
+    const left = Math.min(Math.max(a.left + (a.width - f.width) / 2, 8), vw - f.width - 8)
+    this.panel.style.left = `${left}px`
+    this.panel.dataset.placement = side
+    this.panel.style.setProperty("--lui-tooltip-arrow-x", `${a.left + a.width / 2 - left}px`)
+    this.panel.style.removeProperty("--lui-tooltip-arrow-y")
+  },
+
+  placeSide(preferred) {
+    const gap = 6
+    const a = this.trigger.getBoundingClientRect()
+    const f = this.panel.getBoundingClientRect()
+    const vw = document.documentElement.clientWidth
+    const vh = document.documentElement.clientHeight
+    const fitsLeft = a.left - gap - f.width >= 8
+    const fitsRight = a.right + gap + f.width <= vw - 8
+    let side = preferred
+    if (side === "left" && !fitsLeft && fitsRight) side = "right"
+    if (side === "right" && !fitsRight && fitsLeft) side = "left"
+
+    let left = side === "left" ? a.left - gap - f.width : a.right + gap
+    let top = a.top + (a.height - f.height) / 2
+    left = Math.min(Math.max(left, 8), vw - f.width - 8)
+    top = Math.min(Math.max(top, 8), vh - f.height - 8)
+
+    this.panel.style.position = "fixed"
+    this.panel.style.left = `${left}px`
+    this.panel.style.top = `${top}px`
+    this.panel.dataset.placement = side
+    this.panel.style.setProperty("--lui-tooltip-arrow-y", `${a.top + a.height / 2 - top}px`)
+    this.panel.style.removeProperty("--lui-tooltip-arrow-x")
+  },
+
+  destroyed() {
+    clearTimeout(this.timer)
+    this.hide()
+    if (!this.trigger) return
+    this.trigger.removeEventListener("mouseenter", this.onEnter)
+    this.trigger.removeEventListener("focusin", this.onEnter)
+    this.trigger.removeEventListener("mouseleave", this.onLeave)
+    this.trigger.removeEventListener("focusout", this.onFocusOut)
+    document.removeEventListener("keydown", this.onKey)
+  },
+}
+
+// ── Toasts ─────────────────────────────────────────────────────────────────
+//
+// Notification stack driven by LiveView push_event("lantern:toast", payload).
+const LanternToast = {
+  mounted() {
+    this.timers = new Set()
+    this.toastTimers = new Map()
+    this.handleEvent("lantern:toast", (toast) => this.add(toast))
+  },
+
+  add({ kind = "info", message = "", title = null, duration = 4000 } = {}) {
+    const toast = document.createElement("div")
+    toast.className = "lui-toast lui-toast-in"
+    toast.dataset.kind = kind || "info"
+
+    const dot = document.createElement("span")
+    dot.className = "lui-toast-dot"
+    dot.setAttribute("aria-hidden", "true")
+
+    const body = document.createElement("div")
+    body.className = "lui-toast-body"
+    if (title) {
+      const heading = document.createElement("strong")
+      heading.className = "lui-toast-title"
+      heading.textContent = String(title)
+      body.appendChild(heading)
+    }
+
+    const copy = document.createElement("p")
+    copy.className = "lui-toast-message"
+    copy.textContent = message == null ? "" : String(message)
+    body.appendChild(copy)
+
+    const close = document.createElement("button")
+    close.type = "button"
+    close.className = "lui-toast-close"
+    close.dataset.part = "close"
+    close.setAttribute("aria-label", "Close")
+    close.textContent = "×"
+    close.addEventListener("click", () => this.remove(toast))
+
+    toast.append(dot, body, close)
+    this.el.appendChild(toast)
+
+    const rawDuration = duration == null ? 4000 : Number(duration)
+    const ms = Number.isFinite(rawDuration) ? rawDuration : 4000
+    if (ms > 0) {
+      const timer = this.setTimer(() => this.remove(toast), ms)
+      this.toastTimers.set(toast, timer)
+    }
+  },
+
+  remove(toast) {
+    if (!toast || !toast.parentNode) return
+    if (toast.classList.contains("lui-toast-out")) return
+    this.clearTimer(this.toastTimers.get(toast))
+    this.toastTimers.delete(toast)
+    toast.classList.remove("lui-toast-in")
+    toast.classList.add("lui-toast-out")
+    this.setTimer(() => toast.remove(), 150)
+  },
+
+  setTimer(callback, ms) {
+    const timer = setTimeout(() => {
+      this.timers.delete(timer)
+      callback()
+    }, ms)
+    this.timers.add(timer)
+    return timer
+  },
+
+  clearTimer(timer) {
+    if (!timer) return
+    clearTimeout(timer)
+    this.timers.delete(timer)
+  },
+
+  destroyed() {
+    this.timers.forEach((timer) => clearTimeout(timer))
+    this.timers.clear()
+    this.toastTimers.clear()
+  },
+}
+
 export const Hooks = {
   ChartHover,
   LineHover,
@@ -1354,6 +1553,8 @@ export const Hooks = {
   LanternPicker,
   LanternModal,
   LanternDropdown,
+  LanternTooltip,
+  LanternToast,
   LanternSidebar,
   LanternSelect,
   LanternCollapse,
@@ -1368,6 +1569,8 @@ export {
   LanternPicker,
   LanternModal,
   LanternDropdown,
+  LanternTooltip,
+  LanternToast,
   LanternSidebar,
   LanternSelect,
   LanternCollapse,
