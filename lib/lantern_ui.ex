@@ -52,7 +52,14 @@ defmodule LanternUI do
     tabs: LanternUI.Components.Tabs,
     select: LanternUI.Components.Select,
     pagination: LanternUI.Components.Pagination,
-    data_table: LanternUI.Components.DataTable
+    data_table: LanternUI.Components.DataTable,
+    switch: LanternUI.Components.Switch,
+    radio: LanternUI.Components.Radio,
+    textarea: LanternUI.Components.Textarea,
+    alert: LanternUI.Components.Alert,
+    separator: LanternUI.Components.Separator,
+    tooltip: LanternUI.Components.Tooltip,
+    toast: LanternUI.Components.Toast
   }
 
   @doc false
@@ -85,6 +92,18 @@ defmodule LanternUI do
 
   def close_dialog(%Phoenix.LiveView.JS{} = js, id),
     do: Phoenix.LiveView.JS.dispatch(js, "lantern:dialog:close", to: "##{id}")
+
+  @doc """
+  Push a toast notification to a `LanternUI.Components.Toast.toast_group/1`.
+  """
+  def send_toast(%Phoenix.LiveView.Socket{} = socket, kind, message, opts \\ []) do
+    Phoenix.LiveView.push_event(socket, "lantern:toast", %{
+      kind: to_string(kind),
+      message: message,
+      title: opts[:title],
+      duration: opts[:duration] || 4000
+    })
+  end
 
   defmacro __using__(opts) do
     only = Keyword.get(opts, :only, [])
