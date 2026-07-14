@@ -52,7 +52,12 @@ defmodule LanternUI do
     tabs: LanternUI.Components.Tabs,
     select: LanternUI.Components.Select,
     pagination: LanternUI.Components.Pagination,
-    data_table: LanternUI.Components.DataTable
+    data_table: LanternUI.Components.DataTable,
+    switch: LanternUI.Components.Switch,
+    radio: LanternUI.Components.Radio,
+    textarea: LanternUI.Components.Textarea,
+    alert: LanternUI.Components.Alert,
+    separator: LanternUI.Components.Separator
   }
 
   @doc false
