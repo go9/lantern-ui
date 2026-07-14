@@ -59,7 +59,8 @@ defmodule LanternUI do
     alert: LanternUI.Components.Alert,
     separator: LanternUI.Components.Separator,
     tooltip: LanternUI.Components.Tooltip,
-    toast: LanternUI.Components.Toast
+    toast: LanternUI.Components.Toast,
+    theme: LanternUI.Components.Theme
   }
 
   @doc false
@@ -103,6 +104,16 @@ defmodule LanternUI do
       title: opts[:title],
       duration: opts[:duration] || 4000
     })
+  end
+
+  @doc "Apply persisted runtime theme overrides (see LanternUI.Components.Theme)."
+  def set_theme(%Phoenix.LiveView.Socket{} = socket, %{} = config) do
+    Phoenix.LiveView.push_event(socket, "lantern:set-theme", config)
+  end
+
+  @doc "Clear persisted runtime theme overrides."
+  def reset_theme(%Phoenix.LiveView.Socket{} = socket) do
+    Phoenix.LiveView.push_event(socket, "lantern:set-theme", %{reset: true})
   end
 
   defmacro __using__(opts) do

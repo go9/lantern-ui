@@ -363,6 +363,7 @@ defmodule LanternUI.ComponentsTest do
                :table,
                :tabs,
                :textarea,
+               :theme,
                :toast,
                :tooltip
              ]

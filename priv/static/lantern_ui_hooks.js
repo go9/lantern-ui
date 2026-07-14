@@ -1217,6 +1217,81 @@ const LanternTableChrome = {
   },
 }
 
+// Runtime theming: loads persisted --lantern-* overrides and injects them as a
+// stylesheet (light overrides on :root/.light, dark overrides on .dark and the
+// system media query), so user-selected themes track the active theme instead
+// of clobbering both. Update via window "lantern:set-theme" CustomEvent or the
+// server push_event of the same name ({reset: true} clears). Persisted per
+// data-storage-key in localStorage.
+const LanternTheme = {
+  mounted() {
+    this.key = this.el.dataset.storageKey || "lui-theme"
+    try {
+      this.config = JSON.parse(localStorage.getItem(this.key) || "null")
+    } catch (_) {
+      this.config = null
+    }
+    this.apply()
+
+    this.onSet = (e) => this.set(e.detail)
+    window.addEventListener("lantern:set-theme", this.onSet)
+    this.handleEvent("lantern:set-theme", (config) => this.set(config))
+  },
+
+  set(config) {
+    if (!config || config.reset) {
+      this.config = null
+      try {
+        localStorage.removeItem(this.key)
+      } catch (_) {}
+    } else {
+      this.config = { ...(this.config || {}), ...config }
+      try {
+        localStorage.setItem(this.key, JSON.stringify(this.config))
+      } catch (_) {}
+    }
+    this.apply()
+  },
+
+  vars(map) {
+    return Object.entries(map || {})
+      .map(([k, v]) => `--lantern-${k.replace(/_/g, "-")}: ${v};`)
+      .join(" ")
+  },
+
+  apply() {
+    let styleEl = document.getElementById("lantern-theme-overrides")
+    const html = document.documentElement
+    if (!this.config) {
+      styleEl?.remove()
+      html.removeAttribute("data-lantern-density")
+      return
+    }
+    if (!styleEl) {
+      styleEl = document.createElement("style")
+      styleEl.id = "lantern-theme-overrides"
+      document.head.appendChild(styleEl)
+    }
+    const light = { ...(this.config.light || {}) }
+    if (this.config.radius) light.radius = this.config.radius
+    const dark = { ...(this.config.dark || {}) }
+    if (this.config.radius) dark.radius = this.config.radius
+
+    styleEl.textContent = [
+      `:root, .light { ${this.vars(light)} }`,
+      `.dark { ${this.vars(dark)} }`,
+      `@media (prefers-color-scheme: dark) { :root:not(.light) { ${this.vars(dark)} } }`,
+    ].join("\n")
+
+    if (this.config.density) html.setAttribute("data-lantern-density", this.config.density)
+    else html.removeAttribute("data-lantern-density")
+  },
+
+  destroyed() {
+    window.removeEventListener("lantern:set-theme", this.onSet)
+  },
+}
+
 export const runtime = { position, trapFocus, onDismiss }
 
 // ── Modal ────────────────────────────────────────────────────────────────────
@@ -1559,6 +1634,7 @@ export const Hooks = {
   LanternSelect,
   LanternCollapse,
   LanternTableChrome,
+  LanternTheme,
 }
 export {
   ChartHover,
@@ -1575,5 +1651,6 @@ export {
   LanternSelect,
   LanternCollapse,
   LanternTableChrome,
+  LanternTheme,
 }
 export default Hooks
