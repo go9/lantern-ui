@@ -1184,7 +1184,7 @@ const LanternTableChrome = {
     filters.forEach((f, i) => {
       params[`filters[${i}][field]`] = f.field
       if (f.op && f.op !== "==") params[`filters[${i}][op]`] = f.op
-      if (f.values) params[`filters[${i}][value][]`] = f.values
+      if (f.values) params[`filters[${i}][value]`] = f.values
       else params[`filters[${i}][value]`] = f.value
     })
 
