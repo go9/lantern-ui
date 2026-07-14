@@ -84,6 +84,21 @@ defmodule LanternUI.FeedbackJSTest do
       assert html =~ ~s(data-placement="bottom-right")
       assert html =~ ~s(aria-live="polite")
     end
+
+    test "accepts every corner and edge-center placement" do
+      for placement <- ~w(top-left top-center top-right bottom-left bottom-center bottom-right) do
+        html =
+          render(fn assigns ->
+            assigns = Map.put(assigns, :placement, placement)
+
+            ~H"""
+            <LanternUI.Components.Toast.toast_group id="t" placement={@placement} />
+            """
+          end)
+
+        assert html =~ ~s(data-placement="#{placement}")
+      end
+    end
   end
 
   describe "theme/1" do

@@ -1305,19 +1305,16 @@
   font-family: var(--lantern-font);
 }
 .lui-toasts[hidden] { display: none; }
-.lui-toasts[data-placement="top-right"] {
-  top: 0.75rem;
-  right: 0.75rem;
-}
-.lui-toasts[data-placement="bottom-right"] {
-  right: 0.75rem;
-  bottom: 0.75rem;
-}
-.lui-toasts[data-placement="top-center"] {
-  top: 0.75rem;
-  left: 50%;
-  transform: translateX(-50%);
-}
+/* Vertical anchor — top placements grow downward, bottom placements grow up
+   (column-reverse keeps the newest toast nearest the edge). */
+.lui-toasts[data-placement^="top"] { top: 0.75rem; }
+.lui-toasts[data-placement^="bottom"] { bottom: 0.75rem; flex-direction: column-reverse; }
+/* Horizontal anchor. */
+.lui-toasts[data-placement$="left"] { left: 0.75rem; }
+.lui-toasts[data-placement$="right"] { right: 0.75rem; }
+.lui-toasts[data-placement$="center"] { left: 50%; transform: translateX(-50%); }
+/* Enter from the nearest edge: down from the top, up from the bottom. */
+.lui-toasts[data-placement^="bottom"] { --lui-toast-y: 0.25rem; }
 .lui-toast {
   --lui-toast-c: var(--lantern-accent);
   display: grid;
@@ -1396,13 +1393,13 @@
 @keyframes lui-toast-in {
   from {
     opacity: 0;
-    transform: translateY(-0.25rem);
+    transform: translateY(var(--lui-toast-y, -0.25rem));
   }
 }
 @keyframes lui-toast-out {
   to {
     opacity: 0;
-    transform: translateY(-0.25rem);
+    transform: translateY(var(--lui-toast-y, -0.25rem));
   }
 }
 @media (prefers-reduced-motion: reduce) {
