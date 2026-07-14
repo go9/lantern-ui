@@ -85,4 +85,21 @@ defmodule LanternUI.FeedbackJSTest do
       assert html =~ ~s(aria-live="polite")
     end
   end
+
+  describe "theme/1" do
+    import Phoenix.Component
+
+    test "renders the LanternTheme mount point" do
+      assigns = %{__changed__: nil}
+
+      html =
+        rendered_to_string(~H"""
+        <LanternUI.Components.Theme.theme />
+        """)
+
+      assert html =~ ~s(phx-hook="LanternTheme")
+      assert html =~ ~s(data-storage-key="lui-theme")
+      assert html =~ "hidden"
+    end
+  end
 end
