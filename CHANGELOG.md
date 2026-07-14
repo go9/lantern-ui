@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **`sheet`** (flicker #883) — slide-over/drawer panel mirroring Fluxon's
+  `sheet/1`. Shares the dialog runtime with `modal` (`open_dialog`/`close_dialog`),
+  slides from `left`/`right`/`top`/`bottom` with enter+exit animation, focus
+  trap, scroll lock, Escape/backdrop dismiss, optional header title + sticky
+  footer slot. `LanternSheet` hook; `[hidden]` display guard.
+
 ### Changed
 - **Fluxon token compatibility** (flicker #882): every `--lantern-*` color now
   chains through the matching Fluxon semantic token (`--primary`,

@@ -359,6 +359,7 @@ defmodule LanternUI.ComponentsTest do
                :radio,
                :select,
                :separator,
+               :sheet,
                :switch,
                :table,
                :tabs,
