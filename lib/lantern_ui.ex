@@ -60,7 +60,8 @@ defmodule LanternUI do
     separator: LanternUI.Components.Separator,
     tooltip: LanternUI.Components.Tooltip,
     toast: LanternUI.Components.Toast,
-    theme: LanternUI.Components.Theme
+    theme: LanternUI.Components.Theme,
+    sheet: LanternUI.Components.Sheet
   }
 
   @doc false

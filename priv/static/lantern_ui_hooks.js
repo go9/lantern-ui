@@ -1348,6 +1348,67 @@ const LanternModal = {
   },
 }
 
+// Sheet: same dialog runtime as the modal, but the panel slides from an edge.
+// Exit plays the slide-out keyframe (data-closing) before hiding.
+const LanternSheet = {
+  mounted() {
+    this.panel = this.el.querySelector('[data-part="panel"]')
+    this.cleanup = []
+    this.el.addEventListener("lantern:dialog:open", () => this.show())
+    this.el.addEventListener("lantern:dialog:close", () => this.hide())
+    this.handleEvent("lantern:dialog:open", ({ id }) => id === this.el.id && this.show())
+    this.handleEvent("lantern:dialog:close", ({ id }) => id === this.el.id && this.hide())
+    this.el.querySelectorAll('[data-part="close"]').forEach((btn) =>
+      btn.addEventListener("click", () => this.hide())
+    )
+    if (this.el.dataset.open != null) this.show()
+  },
+
+  show() {
+    if (this.open) return
+    this.open = true
+    clearTimeout(this.closeTimer)
+    this.el.removeAttribute("data-closing")
+    this.el.hidden = false
+    document.body.style.overflow = "hidden"
+    this.cleanup.push(trapFocus(this.panel))
+    const esc = this.el.dataset.closeOnEsc === "true"
+    const outside = this.el.dataset.closeOnOutside === "true"
+    this.cleanup.push(
+      onDismiss(this.panel, (reason) => {
+        if (reason === "escape" && !esc) return
+        if (reason === "outside" && !outside) return
+        this.hide()
+      })
+    )
+  },
+
+  hide() {
+    if (!this.open) return
+    this.open = false
+    this.cleanup.forEach((fn) => fn())
+    this.cleanup = []
+    document.body.style.overflow = ""
+    // Play the slide-out, then hide. Reduced-motion users get the 0ms path.
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    if (reduce) {
+      this.el.hidden = true
+      return
+    }
+    this.el.setAttribute("data-closing", "")
+    this.closeTimer = setTimeout(() => {
+      this.el.hidden = true
+      this.el.removeAttribute("data-closing")
+    }, 200)
+  },
+
+  destroyed() {
+    this.cleanup.forEach((fn) => fn())
+    clearTimeout(this.closeTimer)
+    document.body.style.overflow = ""
+  },
+}
+
 // ── Dropdown menu ────────────────────────────────────────────────────────────
 //
 // LanternOverlay behavior + WAI-ARIA menu keyboard interaction: ArrowUp/Down
@@ -1627,6 +1688,7 @@ export const Hooks = {
   LanternDatetimeField,
   LanternPicker,
   LanternModal,
+  LanternSheet,
   LanternDropdown,
   LanternTooltip,
   LanternToast,
@@ -1644,6 +1706,7 @@ export {
   LanternDatetimeField,
   LanternPicker,
   LanternModal,
+  LanternSheet,
   LanternDropdown,
   LanternTooltip,
   LanternToast,
