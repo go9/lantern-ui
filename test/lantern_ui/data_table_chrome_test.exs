@@ -132,7 +132,7 @@ defmodule LanternUI.DataTableChromeTest do
                total_pages: 1,
                params: %{
                  "filters" => %{
-                   "0" => %{"field" => "channel", "op" => "in", "value" => ["ebay", "direct"]}
+                   "0" => %{"field" => "channel", "op" => "in", "value" => ["eBay", "Direct"]}
                  }
                }
              }
@@ -149,9 +149,9 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ ~s(data-part="filter-rich")
     assert html =~ ~s(data-op="in")
     assert html =~ ~s(data-part="search-input")
-    # both current values prefilled as hidden inputs
-    assert html =~ ~s(value="ebay")
-    assert html =~ ~s(value="direct")
+    # both current values marked selected on the hidden native <select>
+    assert html =~ ~s(<option value="eBay" selected>)
+    assert html =~ ~s(<option value="Direct" selected>)
     assert html =~ "2 selected"
   end
 

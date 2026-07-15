@@ -80,6 +80,12 @@ defmodule LanternUI.Components.Select do
 
   attr(:multiple, :boolean, default: false, doc: "multi-select; submits name[] hidden inputs")
   attr(:max, :integer, default: nil, doc: "max selections when multiple")
+
+  attr(:clearable, :boolean,
+    default: false,
+    doc: "show a clear (×) button that resets the selection (Fluxon parity)."
+  )
+
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
 
   attr(:rest, :global,
@@ -154,26 +160,26 @@ defmodule LanternUI.Components.Select do
         data-name={@name}
         data-no-results={@search_no_results_text}
       >
-        <span :if={@include_hidden} data-part="values">
-          <%= if @multiple do %>
-            <input
-              :for={v <- @values_s}
-              type="hidden"
-              name={"#{@name}[]"}
-              value={v}
-              data-part="value"
-              {hidden_rest(@rest)}
-            />
-          <% else %>
-            <input
-              type="hidden"
-              name={@name}
-              value={@value_s}
-              data-part="value"
-              {hidden_rest(@rest)}
-            />
-          <% end %>
-        </span>
+        <select
+          :if={@include_hidden}
+          class="lui-sr-only"
+          data-part="native"
+          name={(@multiple && "#{@name}[]") || @name}
+          multiple={@multiple}
+          disabled={@disabled}
+          aria-hidden="true"
+          tabindex="-1"
+          {hidden_rest(@rest)}
+        >
+          <option :if={!@multiple} value="" selected={@values_s == []}>{@prompt}</option>
+          <option
+            :for={{label, value} <- @opts}
+            value={value}
+            selected={to_string(value) in @values_s}
+          >
+            {label}
+          </option>
+        </select>
         <button
           type="button"
           id={@id}
@@ -193,6 +199,16 @@ defmodule LanternUI.Components.Select do
             {toggle_label(@opts, @values_s, @multiple) || @placeholder}
           </span>
           <Icon.icon name="chevron-up-down" class="lui-select-caret" />
+        </button>
+        <button
+          :if={@clearable && @values_s != []}
+          type="button"
+          class="lui-select-clear"
+          data-part="clear"
+          aria-label="Clear selection"
+          tabindex="-1"
+        >
+          <Icon.icon name="x-mark" />
         </button>
 
         <div
@@ -249,7 +265,7 @@ defmodule LanternUI.Components.Select do
     |> assign(:opts, Enum.map(assigns.options, &option_pair/1))
     |> assign(:value_s, List.first(values_s))
     |> assign(:values_s, values_s)
-    |> assign_new(:id, fn -> assigns.name end)
+    |> assign(:id, assigns.id || assigns.name)
   end
 
   defp toggle_label(opts, values_s, multiple) do

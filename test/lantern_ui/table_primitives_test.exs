@@ -100,7 +100,7 @@ defmodule LanternUI.TablePrimitivesTest do
   end
 
   describe "select/1" do
-    test "rich path: hidden input, toggle, listbox options, selected label" do
+    test "rich path: hidden native select, toggle, listbox options, selected label" do
       html =
         render(fn assigns ->
           ~H"""
@@ -115,7 +115,10 @@ defmodule LanternUI.TablePrimitivesTest do
         end)
 
       assert html =~ ~s(phx-hook="LanternSelect")
-      assert html =~ ~s(type="hidden" name="channel" value="ebay")
+      # value rides a visually-hidden native <select> (Fluxon-style) so real
+      # form submission and LiveViewTest's form/3 both work.
+      assert html =~ ~s(data-part="native" name="channel")
+      assert html =~ ~s(<option value="ebay" selected>)
       assert html =~ ~s(aria-haspopup="listbox")
       assert html =~ ~s(role="listbox")
       assert html =~ ~s(data-value="shopify")
@@ -150,7 +153,30 @@ defmodule LanternUI.TablePrimitivesTest do
       refute html =~ "LanternSelect"
     end
 
-    test "multiple renders name[] hidden inputs and count label" do
+    test "rich path carries every option on the native <select> (form/3 drop-in)" do
+      # The custom listbox drives a hidden native <select> whose options ARE the
+      # full choice set — so a form submission (or LiveViewTest form/3) can set
+      # any of them, not just the currently-rendered value. This is the property
+      # that broke Fluxon→lantern migrations when the value rode a hidden input.
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Select.select
+            id="sp"
+            name="secret[seed_policy]"
+            value="seal"
+            options={[{"Seal", "seal"}, {"Generate", "generate"}, {"Derive", "derive"}]}
+          />
+          """
+        end)
+
+      assert html =~ ~s(<select class="lui-sr-only" data-part="native" name="secret[seed_policy]")
+      assert html =~ ~s(<option value="seal" selected>)
+      assert html =~ ~s(<option value="generate">)
+      assert html =~ ~s(<option value="derive">)
+    end
+
+    test "multiple renders a native multi-select and count label" do
       html =
         render(fn assigns ->
           ~H"""
@@ -165,8 +191,9 @@ defmodule LanternUI.TablePrimitivesTest do
         end)
 
       assert html =~ ~s(data-multiple)
-      assert html =~ ~s(name="channels[]" value="ebay")
-      assert html =~ ~s(name="channels[]" value="shopify")
+      assert html =~ ~s(data-part="native" name="channels[]" multiple)
+      assert html =~ ~s(<option value="ebay" selected>)
+      assert html =~ ~s(<option value="shopify" selected>)
       assert html =~ "2 selected"
       assert html =~ ~s(aria-multiselectable="true")
     end
