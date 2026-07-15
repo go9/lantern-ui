@@ -199,6 +199,22 @@ defmodule LanternUI.FormFeedbackTest do
       assert html =~ "phx-click"
     end
 
+    test "on_close shows the close button and drives its phx-click (Fluxon parity)" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Alert.alert id="a3" title="Flash" on_close={Phoenix.LiveView.JS.push("clear")}>
+            Dismissible
+          </Alert.alert>
+          """
+        end)
+
+      # on_close implies dismissible even with the default hide_close=true
+      assert html =~ "lui-alert-close"
+      assert html =~ "phx-click"
+      assert html =~ "clear"
+    end
+
     test "default icon by color; hide_icon suppresses it" do
       html =
         render(fn assigns ->

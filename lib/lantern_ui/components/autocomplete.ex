@@ -137,7 +137,7 @@ defmodule LanternUI.Components.Autocomplete do
     assigns
     |> assign(:opts, Enum.map(assigns.options, &option_pair/1))
     |> assign(:value_s, List.first(values_s))
-    |> assign_new(:id, fn -> assigns.name end)
+    |> assign(:id, assigns.id || assigns.name)
   end
 
   defp option_pair({label, value}), do: {label, value}

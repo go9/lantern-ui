@@ -25,6 +25,13 @@ defmodule LanternUI.Components.Alert do
 
   attr(:hide_icon, :boolean, default: false, doc: "Omit the leading status icon.")
   attr(:hide_close, :boolean, default: true, doc: "Hide the dismiss button (default).")
+
+  attr(:on_close, :any,
+    default: nil,
+    doc:
+      "JS command run when the alert is dismissed (Fluxon parity); its presence shows the close button. Defaults to hiding the alert."
+  )
+
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
   slot(:icon, doc: "Custom leading icon; overrides the color default.")
@@ -33,7 +40,7 @@ defmodule LanternUI.Components.Alert do
   def alert(assigns) do
     assigns =
       assigns
-      |> assign_new(:id, fn -> "lui-alert-#{System.unique_integer([:positive])}" end)
+      |> assign(:id, assigns.id || "lui-alert-#{System.unique_integer([:positive])}")
       |> assign(:icon_name, default_icon(assigns.color))
 
     ~H"""
@@ -59,11 +66,11 @@ defmodule LanternUI.Components.Alert do
       </div>
 
       <button
-        :if={!@hide_close}
+        :if={!@hide_close || @on_close}
         type="button"
         class="lui-alert-close"
         aria-label="Close"
-        phx-click={JS.hide(to: "##{@id}")}
+        phx-click={@on_close || JS.hide(to: "##{@id}")}
       >
         <Icon.icon name="x-mark" />
       </button>
