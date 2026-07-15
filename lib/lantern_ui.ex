@@ -57,6 +57,7 @@ defmodule LanternUI do
     radio: LanternUI.Components.Radio,
     textarea: LanternUI.Components.Textarea,
     alert: LanternUI.Components.Alert,
+    autocomplete: LanternUI.Components.Autocomplete,
     separator: LanternUI.Components.Separator,
     tooltip: LanternUI.Components.Tooltip,
     toast: LanternUI.Components.Toast,

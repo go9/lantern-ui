@@ -13,6 +13,12 @@ All notable changes to this project are documented here. The format follows
   module. Enables clean drop-in over apps that already define `icon`, etc.
 
 ### Added
+- **`autocomplete`** (flicker #892) — client-side typeahead (Fluxon parity):
+  a combobox text input that filters a provided `options` list as you type,
+  keyboard nav, no-results state, FormField-aware, over a hidden value input.
+  `LanternAutocomplete` hook.
+
+### Added
 - **`navlist` / `navheading` / `navlink`** (flicker #890) — standalone
   structured nav (Fluxon parity): navlist with optional heading, navlink that
   renders a link (navigate/patch/href) or button, active state + optional icon.

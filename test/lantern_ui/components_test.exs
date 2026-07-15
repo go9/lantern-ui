@@ -340,6 +340,7 @@ defmodule LanternUI.ComponentsTest do
 
       assert keys == [
                :alert,
+               :autocomplete,
                :badge,
                :breadcrumb,
                :button,
