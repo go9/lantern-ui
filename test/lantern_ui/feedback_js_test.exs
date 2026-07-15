@@ -40,6 +40,20 @@ defmodule LanternUI.FeedbackJSTest do
       assert html =~ "lui-tooltip-arrow"
     end
 
+    test "auto-generates an id when omitted (Fluxon drop-in parity)" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.Tooltip.tooltip value="No id given">
+            Hover
+          </LanternUI.Components.Tooltip.tooltip>
+          """
+        end)
+
+      assert html =~ ~r/id="lui-tooltip-\d+"/
+      assert html =~ ~s(phx-hook="LanternTooltip")
+    end
+
     test "content slot wins over value" do
       html =
         render(fn assigns ->

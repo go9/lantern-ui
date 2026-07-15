@@ -23,6 +23,12 @@ defmodule LanternUI.Components.Form do
   attr(:for, :string, default: nil, doc: "id of the labeled control.")
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
   attr(:sublabel, :string, default: nil, doc: "Secondary line under the primary label text.")
+
+  attr(:description, :string,
+    default: nil,
+    doc: "Helper line under the label (Fluxon parity)."
+  )
+
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
   slot(:inner_block, required: true, doc: "Primary label text.")
 
@@ -31,6 +37,7 @@ defmodule LanternUI.Components.Form do
     <label for={@for} class={Class.merge(["lui-label", @class])} {@rest}>
       {render_slot(@inner_block)}
       <span :if={@sublabel} class="lui-sublabel">{@sublabel}</span>
+      <span :if={@description} class="lui-description">{@description}</span>
     </label>
     """
   end

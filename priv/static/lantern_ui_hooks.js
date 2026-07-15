@@ -918,7 +918,7 @@ const LanternSelect = {
   mounted() {
     this.toggle = this.el.querySelector('[data-part="toggle"]')
     this.panel = this.el.querySelector('[data-part="panel"]')
-    this.valuesWrap = this.el.querySelector('[data-part="values"]')
+    this.native = this.el.querySelector('[data-part="native"]')
     this.label = this.el.querySelector('[data-part="label"]')
     this.search = this.el.querySelector('[data-part="search-input"]')
     this.noResults = this.el.querySelector('[data-part="no-results"]')
@@ -928,6 +928,11 @@ const LanternSelect = {
     this.open = false
 
     this.el.addEventListener("click", (e) => {
+      if (e.target.closest('[data-part="clear"]')) {
+        e.stopPropagation()
+        this.clear()
+        return
+      }
       if (e.target.closest('[data-part="toggle"]')) this.open ? this.hide() : this.show()
       const opt = e.target.closest('[data-part="option"]')
       if (opt) this.select(opt)
@@ -945,9 +950,29 @@ const LanternSelect = {
   },
 
   values() {
-    return this.valuesWrap
-      ? [...this.valuesWrap.querySelectorAll('[data-part="value"]')].map((i) => i.value)
+    return this.native
+      ? [...this.native.selectedOptions].map((o) => o.value).filter((v) => v !== "")
       : []
+  },
+
+  // Reflect the chosen values onto the hidden native <select> (the real form
+  // control) and fire input+change so LiveView — and LiveViewTest's form/3 —
+  // see them. Mirrors Fluxon, which drives a hidden <select> from its custom UI.
+  setNative(values) {
+    if (!this.native) return
+    const set = new Set(values.map(String))
+    let changed = false
+    for (const opt of this.native.options) {
+      const sel = set.has(opt.value)
+      if (opt.selected !== sel) {
+        opt.selected = sel
+        changed = true
+      }
+    }
+    if (changed) {
+      this.native.dispatchEvent(new Event("input", { bubbles: true }))
+      this.native.dispatchEvent(new Event("change", { bubbles: true }))
+    }
   },
 
   show() {
@@ -999,12 +1024,7 @@ const LanternSelect = {
       this.syncMultiple()
       // multi-select stays open for further picks
     } else {
-      const hidden = this.valuesWrap?.querySelector('[data-part="value"]')
-      if (hidden && hidden.value !== value) {
-        hidden.value = value
-        hidden.dispatchEvent(new Event("input", { bubbles: true }))
-        hidden.dispatchEvent(new Event("change", { bubbles: true }))
-      }
+      this.setNative([value])
       this.options().forEach((o) => o.setAttribute("aria-selected", String(o === opt)))
       this.setLabel(opt.querySelector(".lui-select-option-label")?.textContent.trim())
       this.hide()
@@ -1012,27 +1032,25 @@ const LanternSelect = {
   },
 
   syncMultiple() {
-    const name = `${this.el.dataset.name}[]`
     const picked = this.options().filter((o) => o.getAttribute("aria-selected") === "true")
-    this.valuesWrap.innerHTML = ""
-    picked.forEach((o) => {
-      const input = document.createElement("input")
-      input.type = "hidden"
-      input.name = name
-      input.value = o.dataset.value
-      input.setAttribute("data-part", "value")
-      this.valuesWrap.appendChild(input)
-    })
+    this.setNative(picked.map((o) => o.dataset.value))
     const labels = picked.map((o) =>
       o.querySelector(".lui-select-option-label")?.textContent.trim()
     )
     this.setLabel(
       labels.length === 0 ? null : labels.length === 1 ? labels[0] : `${labels.length} selected`
     )
-    const first = this.valuesWrap.firstElementChild
-    const target = first || this.valuesWrap
-    target.dispatchEvent(new Event("input", { bubbles: true }))
-    target.dispatchEvent(new Event("change", { bubbles: true }))
+  },
+
+  clear() {
+    this.setNative([])
+    this.options().forEach((o) => o.setAttribute("aria-selected", "false"))
+    this.setLabel(null)
+    // Hide the clear affordance immediately; a phx-change re-render will drop it
+    // from the DOM, but inline display covers the no-phx-change case too.
+    const clearBtn = this.el.querySelector('[data-part="clear"]')
+    if (clearBtn) clearBtn.style.display = "none"
+    if (this.open) this.hide()
   },
 
   setLabel(text) {

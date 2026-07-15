@@ -45,8 +45,12 @@ defmodule LanternUI.Components.Button do
   attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
 
+  attr(:navigate, :string, default: nil, doc: "LiveView navigate target; renders as a link.")
+  attr(:patch, :string, default: nil, doc: "LiveView patch target; renders as a link.")
+  attr(:href, :any, default: nil, doc: "External/full-page href; renders as a link.")
+
   attr(:rest, :global,
-    include: ~w(type form name value),
+    include: ~w(type form name value method download target rel),
     default: %{"data-part" => "button"},
     doc: "Arbitrary HTML/`phx-*` attributes passed through."
   )
@@ -55,14 +59,27 @@ defmodule LanternUI.Components.Button do
 
   def button(assigns) do
     assigns =
-      assign(
-        assigns,
-        :computed_class,
-        Class.merge(["lui-btn", assigns.class])
-      )
+      assigns
+      |> assign(:computed_class, Class.merge(["lui-btn", assigns.class]))
+      |> assign(:link?, assigns.navigate || assigns.patch || assigns.href)
 
     ~H"""
+    <.link
+      :if={@link?}
+      class={@computed_class}
+      data-variant={@variant}
+      data-color={@color}
+      data-size={@size}
+      data-disabled={@disabled || nil}
+      navigate={@navigate}
+      patch={@patch}
+      href={@href}
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </.link>
     <button
+      :if={!@link?}
       class={@computed_class}
       data-variant={@variant}
       data-color={@color}
