@@ -7,6 +7,14 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **`navlist` / `navheading` / `navlink`** (flicker #890) — standalone
+  structured nav (Fluxon parity): navlist with optional heading, navlink that
+  renders a link (navigate/patch/href) or button, active state + optional icon.
+- **`loading`** (flicker #891) — spinner (Fluxon parity): variants
+  `ring` / `dots-bounce` / `dots-fade` / `dots-scale`, sizes xs–xl,
+  `role="status"` + sr-only label, reduced-motion aware.
+
+### Added
 - **`sheet`** (flicker #883) — slide-over/drawer panel mirroring Fluxon's
   `sheet/1`. Shares the dialog runtime with `modal` (`open_dialog`/`close_dialog`),
   slides from `left`/`right`/`top`/`bottom` with enter+exit animation, focus
