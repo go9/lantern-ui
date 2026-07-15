@@ -1460,3 +1460,165 @@
 @media (prefers-reduced-motion: reduce) {
   .lui-sheet-panel, .lui-sheet-backdrop { animation: none !important; }
 }
+
+/* ── Screen-reader only ── */
+.lui-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Navlist ── */
+.lui-navlist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.lui-navlist-heading {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--lantern-fg-subtle, var(--lantern-fg-muted));
+  padding: 0 0.5rem;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+}
+.lui-navlink {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--lantern-radius-sm);
+  font-size: var(--lantern-text-sm, 0.8125rem);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--lantern-fg-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  box-sizing: border-box;
+}
+.lui-navlink:hover {
+  color: var(--lantern-fg);
+  background: var(--lantern-surface-sunken);
+}
+.lui-navlink-active {
+  color: var(--lantern-accent);
+  font-weight: 600;
+  background: var(--lantern-accent-soft);
+}
+.lui-navlink-active:hover {
+  color: var(--lantern-accent);
+  background: var(--lantern-accent-soft);
+}
+.lui-navlink-icon {
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+/* ── Loading ── */
+.lui-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  vertical-align: middle;
+  --lui-loading-size: 1.25rem;
+}
+.lui-loading[data-size="xs"] { --lui-loading-size: 0.75rem; }
+.lui-loading[data-size="sm"] { --lui-loading-size: 1rem; }
+.lui-loading[data-size="md"] { --lui-loading-size: 1.25rem; }
+.lui-loading[data-size="lg"] { --lui-loading-size: 1.5rem; }
+.lui-loading[data-size="xl"] { --lui-loading-size: 2rem; }
+
+.lui-loading-ring {
+  display: block;
+  box-sizing: border-box;
+  width: var(--lui-loading-size);
+  height: var(--lui-loading-size);
+  border: 2px solid var(--lantern-border, currentColor);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: lui-spin 0.6s linear infinite;
+}
+
+.lui-loading-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--lui-loading-size) * 0.25);
+  height: var(--lui-loading-size);
+}
+.lui-loading-dot {
+  display: block;
+  width: calc(var(--lui-loading-size) * 0.28);
+  height: calc(var(--lui-loading-size) * 0.28);
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* dots-bounce */
+.lui-loading[data-variant="dots-bounce"] .lui-loading-dot {
+  animation: lui-loading-bounce 0.6s ease-in-out infinite;
+}
+.lui-loading[data-variant="dots-bounce"] .lui-loading-dot:nth-child(2) {
+  animation-delay: 0.12s;
+}
+.lui-loading[data-variant="dots-bounce"] .lui-loading-dot:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+/* dots-fade */
+.lui-loading[data-variant="dots-fade"] .lui-loading-dot {
+  animation: lui-loading-fade 0.8s ease-in-out infinite;
+}
+.lui-loading[data-variant="dots-fade"] .lui-loading-dot:nth-child(2) {
+  animation-delay: 0.16s;
+}
+.lui-loading[data-variant="dots-fade"] .lui-loading-dot:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+/* dots-scale */
+.lui-loading[data-variant="dots-scale"] .lui-loading-dot {
+  animation: lui-loading-scale 0.7s ease-in-out infinite;
+}
+.lui-loading[data-variant="dots-scale"] .lui-loading-dot:nth-child(2) {
+  animation-delay: 0.14s;
+}
+.lui-loading[data-variant="dots-scale"] .lui-loading-dot:nth-child(3) {
+  animation-delay: 0.28s;
+}
+
+@keyframes lui-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes lui-loading-bounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-40%); }
+}
+@keyframes lui-loading-fade {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+@keyframes lui-loading-scale {
+  0%, 80%, 100% { transform: scale(0.65); }
+  40% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lui-loading-ring,
+  .lui-loading-dot {
+    animation: none !important;
+  }
+}
