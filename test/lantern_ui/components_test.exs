@@ -77,6 +77,35 @@ defmodule LanternUI.ComponentsTest do
       assert html =~ ~s(role="group")
       assert html =~ "lui-btn-group"
     end
+
+    test "navigate/href render an <a> link styled as a button (Fluxon parity)" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.Button.button navigate="/dashboard" variant="solid">
+            Go
+          </LanternUI.Components.Button.button>
+          """
+        end)
+
+      assert html =~ "<a"
+      assert html =~ ~s(href="/dashboard")
+      assert html =~ "lui-btn"
+      assert html =~ ~s(data-variant="solid")
+      refute html =~ "<button"
+    end
+
+    test "without navigate/href it stays a plain <button>" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.Button.button phx-click="go">Go</LanternUI.Components.Button.button>
+          """
+        end)
+
+      assert html =~ "<button"
+      refute html =~ "<a "
+    end
   end
 
   describe "input/1" do
