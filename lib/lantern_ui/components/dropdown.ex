@@ -23,7 +23,12 @@ defmodule LanternUI.Components.Dropdown do
 
   alias LanternUI.Class
 
-  attr(:id, :string, required: true, doc: "Stable DOM id for the dropdown hook.")
+  attr(:id, :string,
+    default: nil,
+    doc:
+      "Stable DOM id for the dropdown hook; auto-generated when omitted, mirroring Fluxon's dropdown (drop-in parity)."
+  )
+
   attr(:label, :string, default: nil, doc: "default toggle button text when no :toggle slot")
   attr(:class, :any, default: nil, doc: "classes for the menu panel")
   attr(:container_class, :any, default: nil, doc: "Extra classes on the dropdown root wrapper.")
@@ -52,6 +57,9 @@ defmodule LanternUI.Components.Dropdown do
   slot(:inner_block, required: true, doc: "Menu items (buttons, links, separators).")
 
   def dropdown(assigns) do
+    assigns =
+      assign(assigns, :id, assigns.id || "lui-dropdown-#{System.unique_integer([:positive])}")
+
     ~H"""
     <div
       id={@id}

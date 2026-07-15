@@ -148,6 +148,20 @@ defmodule LanternUI.Components806Test do
       assert html =~ ~s(aria-haspopup="menu")
     end
 
+    test "auto-generates an id when omitted (Fluxon drop-in parity)" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Dropdown.dropdown label="Actions">
+            <Dropdown.dropdown_button phx-click="go">Go</Dropdown.dropdown_button>
+          </Dropdown.dropdown>
+          """
+        end)
+
+      assert html =~ ~r/id="lui-dropdown-\d+"/
+      assert html =~ ~s(phx-hook="LanternDropdown")
+    end
+
     test "custom toggle slot replaces the default button" do
       html =
         render(fn assigns ->
