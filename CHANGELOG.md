@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- **`use LanternUI, only:/except:`** now accepts Fluxon-style `function: arity`
+  pairs in addition to component-key atoms — so a host can drop a single
+  colliding function (`use LanternUI, except: [icon: 1]`) instead of a whole
+  module. Enables clean drop-in over apps that already define `icon`, etc.
+
 ### Added
 - **`navlist` / `navheading` / `navlink`** (flicker #890) — standalone
   structured nav (Fluxon parity): navlist with optional heading, navlink that
