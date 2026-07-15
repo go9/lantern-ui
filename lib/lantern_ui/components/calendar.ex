@@ -21,14 +21,20 @@ defmodule LanternUI.Components.Calendar do
 
   @week_days ~w(Su Mo Tu We Th Fr Sa)
 
-  attr(:id, :string, required: true)
+  attr(:id, :string, required: true, doc: "Stable DOM id (state is persisted per id).")
   attr(:month, Date, default: nil, doc: "month to display; defaults to selected || today")
-  attr(:selected, Date, default: nil)
-  attr(:week_start, :integer, default: 0, values: 0..6)
+  attr(:selected, Date, default: nil, doc: "Currently selected date; highlighted in the grid.")
+
+  attr(:week_start, :integer,
+    default: 0,
+    values: 0..6,
+    doc: "First weekday column; 0 is Sunday, 1 is Monday."
+  )
+
   attr(:min, :string, default: nil, doc: "ISO date; earlier days are disabled")
   attr(:max, :string, default: nil, doc: "ISO date; later days are disabled")
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
   def calendar(assigns) do
     month = assigns.month || assigns.selected || Date.utc_today()

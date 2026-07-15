@@ -24,13 +24,34 @@ defmodule LanternUI.Components.Button do
   @variants ~w(solid soft surface outline dashed ghost)
   @sizes ~w(xs sm md lg xl icon-xs icon-sm icon-md icon icon-lg icon-xl)
 
-  attr(:color, :string, default: "primary", values: @colors)
-  attr(:variant, :string, default: "outline", values: @variants)
-  attr(:size, :string, default: "md", values: @sizes)
-  attr(:disabled, :boolean, default: false)
-  attr(:class, :any, default: nil)
-  attr(:rest, :global, include: ~w(type form name value), default: %{"data-part" => "button"})
-  slot(:inner_block, required: true)
+  attr(:color, :string,
+    default: "primary",
+    values: @colors,
+    doc: "Semantic color token for the button surface."
+  )
+
+  attr(:variant, :string,
+    default: "outline",
+    values: @variants,
+    doc: "Surface style: solid fills, outline borders, ghost is transparent."
+  )
+
+  attr(:size, :string,
+    default: "md",
+    values: @sizes,
+    doc: "Control height; icon-* sizes are square."
+  )
+
+  attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+
+  attr(:rest, :global,
+    include: ~w(type form name value),
+    default: %{"data-part" => "button"},
+    doc: "Arbitrary HTML/`phx-*` attributes passed through."
+  )
+
+  slot(:inner_block, required: true, doc: "Button label or content.")
 
   def button(assigns) do
     assigns =
@@ -57,9 +78,9 @@ defmodule LanternUI.Components.Button do
   @doc """
   Groups buttons into a single segmented control (shared borders, joined radius).
   """
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
-  slot(:inner_block, required: true)
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, required: true, doc: "Buttons to join into a segmented group.")
 
   def button_group(assigns) do
     ~H"""

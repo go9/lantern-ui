@@ -24,30 +24,68 @@ defmodule LanternUI.Components.Select do
   alias LanternUI.Components.Form
   alias LanternUI.Components.Icon
 
-  attr(:id, :any, default: nil)
-  attr(:name, :any, default: nil)
-  attr(:value, :any, default: nil)
-  attr(:field, Phoenix.HTML.FormField, default: nil)
-  attr(:options, :list, default: [])
-  attr(:label, :string, default: nil)
-  attr(:sublabel, :string, default: nil)
-  attr(:description, :string, default: nil)
-  attr(:help_text, :string, default: nil)
-  attr(:placeholder, :string, default: "Select…")
-  attr(:size, :string, default: "md", values: ~w(xs sm md lg xl))
-  attr(:disabled, :boolean, default: false)
-  attr(:errors, :list, default: [])
-  attr(:native, :boolean, default: false)
-  attr(:include_hidden, :boolean, default: true)
+  attr(:id, :any, default: nil, doc: "Element id; derived from field when omitted.")
+  attr(:name, :any, default: nil, doc: "Form input name; derived from field when omitted.")
+  attr(:value, :any, default: nil, doc: "Selected value(s); list when multiple.")
+
+  attr(:field, Phoenix.HTML.FormField,
+    default: nil,
+    doc: "Form field; derives id, name, value, and errors."
+  )
+
+  attr(:options, :list, default: [], doc: "Choices as values or {label, value} tuples.")
+  attr(:label, :string, default: nil, doc: "Primary label above the control.")
+  attr(:sublabel, :string, default: nil, doc: "Secondary label line under the primary label.")
+  attr(:description, :string, default: nil, doc: "Helper text under the label stack.")
+
+  attr(:help_text, :string,
+    default: nil,
+    doc: "Trailing help line under the field when no errors."
+  )
+
+  attr(:placeholder, :string, default: "Select…", doc: "Toggle text when nothing is selected.")
+
+  attr(:size, :string,
+    default: "md",
+    values: ~w(xs sm md lg xl),
+    doc: "Control density / type scale."
+  )
+
+  attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
+  attr(:errors, :list, default: [], doc: "Validation messages; derived from field when used.")
+
+  attr(:native, :boolean,
+    default: false,
+    doc: "Use a native <select> instead of the rich listbox."
+  )
+
+  attr(:include_hidden, :boolean,
+    default: true,
+    doc: "Emit a blank hidden input so empty submits."
+  )
+
   attr(:prompt, :string, default: nil, doc: "blank first option (native path)")
   attr(:searchable, :boolean, default: false, doc: "search box inside the listbox")
   attr(:search_threshold, :integer, default: nil, doc: "auto-enable search at N+ options")
-  attr(:search_input_placeholder, :string, default: "Search…")
-  attr(:search_no_results_text, :string, default: "No results")
+
+  attr(:search_input_placeholder, :string,
+    default: "Search…",
+    doc: "Placeholder for the listbox search input."
+  )
+
+  attr(:search_no_results_text, :string,
+    default: "No results",
+    doc: "Empty-state copy when search matches nothing."
+  )
+
   attr(:multiple, :boolean, default: false, doc: "multi-select; submits name[] hidden inputs")
   attr(:max, :integer, default: nil, doc: "max selections when multiple")
-  attr(:class, :any, default: nil)
-  attr(:rest, :global, include: ~w(form phx-change phx-target))
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+
+  attr(:rest, :global,
+    include: ~w(form phx-change phx-target),
+    doc: "Arbitrary HTML/`phx-*` attributes passed through."
+  )
 
   def select(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     errors = if Phoenix.Component.used_input?(field), do: field.errors, else: []

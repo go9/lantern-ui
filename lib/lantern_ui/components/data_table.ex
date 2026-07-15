@@ -40,23 +40,36 @@ defmodule LanternUI.Components.DataTable do
   alias LanternUI.Components.Select
   alias LanternUI.Components.Tabs
 
-  attr(:id, :string, required: true)
-  attr(:rows, :list, required: true)
+  attr(:id, :string, required: true, doc: "Stable DOM id for the table root and chrome.")
+  attr(:rows, :list, required: true, doc: "Current page of row structs/maps to render.")
   attr(:meta, :map, required: true, doc: "Flop.Meta (or same-shaped map)")
   attr(:path, :string, required: true, doc: "base path for sort/pagination patches")
-  attr(:selected_ids, :any, default: MapSet.new())
+
+  attr(:selected_ids, :any,
+    default: MapSet.new(),
+    doc: "MapSet (or enumerable) of selected row ids."
+  )
+
   attr(:row_id, :any, default: nil, doc: "row -> id fn; defaults to & &1.id")
-  attr(:show_checkboxes, :boolean, default: true)
-  attr(:target, :any, default: nil)
-  attr(:title, :string, default: nil)
-  attr(:subtitle, :string, default: nil)
+
+  attr(:show_checkboxes, :boolean,
+    default: true,
+    doc: "Show row selection checkboxes and bulk bar."
+  )
+
+  attr(:target, :any, default: nil, doc: "LiveView target for selection and bulk events.")
+  attr(:title, :string, default: nil, doc: "Optional table heading above the toolbar.")
+  attr(:subtitle, :string, default: nil, doc: "Secondary line under the table title.")
 
   attr(:info_modal_id, :string,
     default: nil,
     doc: "modal id the title's info button opens (LanternUI.open_dialog)"
   )
 
-  attr(:page_size_options, :list, default: [10, 25, 50, 100])
+  attr(:page_size_options, :list,
+    default: [10, 25, 50, 100],
+    doc: "Choices for the page-size control."
+  )
 
   attr(:search_field, :atom,
     default: nil,
@@ -64,7 +77,11 @@ defmodule LanternUI.Components.DataTable do
   )
 
   attr(:search_op, :string, default: "ilike", doc: "Flop op for the search filter")
-  attr(:search_placeholder, :string, default: "Search…")
+
+  attr(:search_placeholder, :string,
+    default: "Search…",
+    doc: "Placeholder for the toolbar search input."
+  )
 
   attr(:view, :string,
     default: "table",
@@ -72,40 +89,40 @@ defmodule LanternUI.Components.DataTable do
     doc: "active view when a :card slot is given"
   )
 
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
-  slot(:header_action)
-  slot(:toolbar)
+  slot(:header_action, doc: "Actions rendered in the title row (right side).")
+  slot(:toolbar, doc: "Extra controls in the filter/search toolbar.")
 
-  slot :col, required: true do
-    attr(:label, :string)
-    attr(:field, :atom)
-    attr(:sortable, :boolean)
-    attr(:class, :any)
-    attr(:td_class, :any)
+  slot :col, required: true, doc: "One data column; body is rendered per row via :let." do
+    attr(:label, :string, doc: "Header label for the column.")
+    attr(:field, :atom, doc: "Flop sort field when sortable.")
+    attr(:sortable, :boolean, doc: "Enable sort patch links on the header.")
+    attr(:class, :any, doc: "Extra classes on the header cell.")
+    attr(:td_class, :any, doc: "Extra classes on body cells for this column.")
   end
 
-  slot :bulk_action do
-    attr(:label, :string)
-    attr(:icon, :string)
-    attr(:event, :string)
-    attr(:color, :string)
+  slot :bulk_action, doc: "Action shown in the bulk bar when rows are selected." do
+    attr(:label, :string, doc: "Button label for the bulk action.")
+    attr(:icon, :string, doc: "Optional leading icon name.")
+    attr(:event, :string, doc: "phx-click event name fired to target.")
+    attr(:color, :string, doc: "Button color token (e.g. danger).")
   end
 
-  slot(:row_action)
-  slot(:empty)
+  slot(:row_action, doc: "Per-row trailing actions cell; receives the row via :let.")
+  slot(:empty, doc: "Empty-state content when there are no rows.")
 
-  slot :stat do
-    attr(:label, :string)
-    attr(:value, :any)
-    attr(:href, :string)
-    attr(:class, :any)
+  slot :stat, doc: "Overview metric card above the table." do
+    attr(:label, :string, doc: "Stat caption under or beside the value.")
+    attr(:value, :any, doc: "Primary metric value to display.")
+    attr(:href, :string, doc: "Optional link target wrapping the stat.")
+    attr(:class, :any, doc: "Extra classes on this stat card.")
   end
 
-  slot :tab do
-    attr(:label, :string)
-    attr(:count, :integer)
+  slot :tab, doc: "Filter preset tab in the table chrome." do
+    attr(:label, :string, doc: "Tab label text.")
+    attr(:count, :integer, doc: "Optional badge count beside the label.")
 
     attr(:filters, :list,
       doc:
@@ -113,14 +130,14 @@ defmodule LanternUI.Components.DataTable do
     )
   end
 
-  slot :filter do
-    attr(:field, :atom)
-    attr(:label, :string)
+  slot :filter, doc: "Toolbar filter control bound to a Flop field." do
+    attr(:field, :atom, doc: "Flop filter field atom.")
+    attr(:label, :string, doc: "Accessible/visible label for the control.")
     attr(:type, :atom, doc: ":select (default) | :text | :range")
-    attr(:op, :string)
-    attr(:options, :list)
-    attr(:prompt, :string)
-    attr(:placeholder, :string)
+    attr(:op, :string, doc: "Flop filter op (e.g. ==, ilike); defaults by type.")
+    attr(:options, :list, doc: "Select options as values or {label, value} tuples.")
+    attr(:prompt, :string, doc: "Blank/prompt option label for select filters.")
+    attr(:placeholder, :string, doc: "Placeholder for text filters.")
     attr(:multiple, :boolean, doc: "multi-select filter (Flop op: in)")
     attr(:searchable, :boolean, doc: "search box in the filter's listbox")
   end

@@ -22,23 +22,34 @@ defmodule LanternUI.Components.Modal do
 
   alias LanternUI.Class
 
-  attr(:id, :string, required: true)
+  attr(:id, :string, required: true, doc: "Stable DOM id used by open_dialog/close_dialog.")
   attr(:open, :boolean, default: false, doc: "render already open (server-driven modals)")
-  attr(:on_open, Phoenix.LiveView.JS, default: nil)
-  attr(:on_close, Phoenix.LiveView.JS, default: nil)
-  attr(:class, :any, default: nil)
-  attr(:container_class, :any, default: nil)
-  attr(:backdrop_class, :any, default: nil)
-  attr(:close_on_esc, :boolean, default: true)
-  attr(:close_on_outside_click, :boolean, default: true)
-  attr(:prevent_closing, :boolean, default: false)
-  attr(:hide_close_button, :boolean, default: false)
-  attr(:placement, :string, default: "center", values: ~w(center top))
+  attr(:on_open, Phoenix.LiveView.JS, default: nil, doc: "JS command run when the modal opens.")
+  attr(:on_close, Phoenix.LiveView.JS, default: nil, doc: "JS command run when the modal closes.")
+  attr(:class, :any, default: nil, doc: "Extra classes on the dialog panel.")
+  attr(:container_class, :any, default: nil, doc: "Extra classes on the overlay root.")
+  attr(:backdrop_class, :any, default: nil, doc: "Extra classes on the dimmed backdrop.")
+  attr(:close_on_esc, :boolean, default: true, doc: "Close when Escape is pressed.")
+
+  attr(:close_on_outside_click, :boolean,
+    default: true,
+    doc: "Close when the backdrop is clicked."
+  )
+
+  attr(:prevent_closing, :boolean, default: false, doc: "Block Escape and outside-click close.")
+  attr(:hide_close_button, :boolean, default: false, doc: "Hide the built-in close control.")
+
+  attr(:placement, :string,
+    default: "center",
+    values: ~w(center top),
+    doc: "Vertical panel placement within the viewport."
+  )
+
   attr(:animation, :string, default: nil, doc: "accepted for Fluxon compat; fade is token-driven")
   attr(:animation_enter, :string, default: nil, doc: "accepted for Fluxon compat")
   attr(:animation_leave, :string, default: nil, doc: "accepted for Fluxon compat")
-  attr(:rest, :global)
-  slot(:inner_block, required: true)
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, required: true, doc: "Dialog body content.")
 
   def modal(assigns) do
     ~H"""

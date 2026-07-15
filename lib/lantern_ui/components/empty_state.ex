@@ -12,12 +12,12 @@ defmodule LanternUI.Components.EmptyState do
 
   alias LanternUI.Class
 
-  attr(:icon, :string, default: nil)
-  attr(:title, :string, required: true)
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
-  slot(:inner_block)
-  slot(:action)
+  attr(:icon, :string, default: nil, doc: "Optional leading icon name from the icon set.")
+  attr(:title, :string, required: true, doc: "Primary empty-state heading.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, doc: "Supporting description under the title.")
+  slot(:action, doc: "CTA buttons or links below the description.")
 
   def empty_state(assigns) do
     ~H"""

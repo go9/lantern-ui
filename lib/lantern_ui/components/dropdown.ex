@@ -23,16 +23,17 @@ defmodule LanternUI.Components.Dropdown do
 
   alias LanternUI.Class
 
-  attr(:id, :string, required: true)
+  attr(:id, :string, required: true, doc: "Stable DOM id for the dropdown hook.")
   attr(:label, :string, default: nil, doc: "default toggle button text when no :toggle slot")
   attr(:class, :any, default: nil, doc: "classes for the menu panel")
-  attr(:container_class, :any, default: nil)
-  attr(:toggle_class, :any, default: nil)
-  attr(:disabled, :boolean, default: false)
+  attr(:container_class, :any, default: nil, doc: "Extra classes on the dropdown root wrapper.")
+  attr(:toggle_class, :any, default: nil, doc: "Classes on the default toggle button.")
+  attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
 
   attr(:placement, :string,
     default: "bottom-start",
-    values: ~w(bottom-start bottom-end top-start top-end)
+    values: ~w(bottom-start bottom-end top-start top-end),
+    doc: "Where the menu anchors relative to the toggle."
   )
 
   attr(:animation, :string, default: nil, doc: "accepted for Fluxon compat")
@@ -46,9 +47,9 @@ defmodule LanternUI.Components.Dropdown do
 
   attr(:hover_open_delay, :integer, default: nil, doc: "accepted for Fluxon compat")
   attr(:hover_close_delay, :integer, default: nil, doc: "accepted for Fluxon compat")
-  attr(:rest, :global)
-  slot(:toggle)
-  slot(:inner_block, required: true)
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:toggle, doc: "Custom trigger; defaults to a button using label.")
+  slot(:inner_block, required: true, doc: "Menu items (buttons, links, separators).")
 
   def dropdown(assigns) do
     ~H"""
@@ -83,9 +84,9 @@ defmodule LanternUI.Components.Dropdown do
     """
   end
 
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
-  slot(:inner_block, required: true)
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, required: true, doc: "Header label content.")
 
   def dropdown_header(assigns) do
     ~H"""
@@ -95,8 +96,8 @@ defmodule LanternUI.Components.Dropdown do
     """
   end
 
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
   def dropdown_separator(assigns) do
     ~H"""
@@ -104,10 +105,15 @@ defmodule LanternUI.Components.Dropdown do
     """
   end
 
-  attr(:class, :any, default: nil)
-  attr(:disabled, :boolean, default: false)
-  attr(:rest, :global, include: ~w(navigate patch href method download target))
-  slot(:inner_block, required: true)
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
+
+  attr(:rest, :global,
+    include: ~w(navigate patch href method download target),
+    doc: "Arbitrary HTML/`phx-*` attributes passed through."
+  )
+
+  slot(:inner_block, required: true, doc: "Link menu item label.")
 
   def dropdown_link(assigns) do
     ~H"""
@@ -123,10 +129,10 @@ defmodule LanternUI.Components.Dropdown do
     """
   end
 
-  attr(:class, :any, default: nil)
-  attr(:disabled, :boolean, default: false)
-  attr(:rest, :global)
-  slot(:inner_block, required: true)
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, required: true, doc: "Button menu item label.")
 
   def dropdown_button(assigns) do
     ~H"""
@@ -143,9 +149,9 @@ defmodule LanternUI.Components.Dropdown do
     """
   end
 
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
-  slot(:inner_block, required: true)
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, required: true, doc: "Custom non-item content inside the menu.")
 
   def dropdown_custom(assigns) do
     ~H"""

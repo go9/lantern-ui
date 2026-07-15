@@ -35,21 +35,43 @@ defmodule LanternUI.Components.DatePicker do
   alias LanternUI.Components.Icon
 
   @doc "Date-only picker (`YYYY-MM-DD`)."
-  attr(:id, :any, default: nil)
-  attr(:label, :string, default: nil)
-  attr(:sublabel, :string, default: nil)
-  attr(:description, :string, default: nil)
-  attr(:help_text, :string, default: nil)
-  attr(:class, :any, default: nil)
-  attr(:size, :string, default: "md", values: ~w(xs sm md lg xl))
-  attr(:disabled, :boolean, default: false)
-  attr(:field, Phoenix.HTML.FormField, default: nil)
-  attr(:value, :any, default: nil)
-  attr(:name, :any, default: nil)
-  attr(:errors, :list, default: [])
-  attr(:min, :string, default: nil)
-  attr(:max, :string, default: nil)
-  attr(:week_start, :integer, default: 0, values: 0..6)
+  attr(:id, :any, default: nil, doc: "Element id; derived from field when omitted.")
+  attr(:label, :string, default: nil, doc: "Primary label above the control.")
+  attr(:sublabel, :string, default: nil, doc: "Secondary label line under the primary label.")
+  attr(:description, :string, default: nil, doc: "Helper text under the label stack.")
+
+  attr(:help_text, :string,
+    default: nil,
+    doc: "Trailing help line under the field when no errors."
+  )
+
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+
+  attr(:size, :string,
+    default: "md",
+    values: ~w(xs sm md lg xl),
+    doc: "Control density / type scale."
+  )
+
+  attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
+
+  attr(:field, Phoenix.HTML.FormField,
+    default: nil,
+    doc: "Form field; derives id, name, value, and errors."
+  )
+
+  attr(:value, :any, default: nil, doc: "Canonical date string or Date struct.")
+  attr(:name, :any, default: nil, doc: "Form input name; derived from field when omitted.")
+  attr(:errors, :list, default: [], doc: "Validation messages; derived from field when used.")
+  attr(:min, :string, default: nil, doc: "ISO min date; earlier calendar days are disabled.")
+  attr(:max, :string, default: nil, doc: "ISO max date; later calendar days are disabled.")
+
+  attr(:week_start, :integer,
+    default: 0,
+    values: 0..6,
+    doc: "First weekday column; 0 is Sunday, 1 is Monday."
+  )
+
   attr(:display_format, :string, default: nil, doc: "accepted for Fluxon compat; not yet honored")
 
   attr(:form, :string,
@@ -58,31 +80,58 @@ defmodule LanternUI.Components.DatePicker do
       "HTML form attribute forwarded to the hidden value input (for editors outside the form element)"
   )
 
-  attr(:rest, :global)
-  slot(:inner_prefix)
-  slot(:outer_prefix)
-  slot(:inner_suffix)
-  slot(:outer_suffix)
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_prefix, doc: "Affix inside the control, before the segments.")
+  slot(:outer_prefix, doc: "Affix outside the control, before the wrap.")
+  slot(:inner_suffix, doc: "Affix inside the control, after the segments.")
+  slot(:outer_suffix, doc: "Affix outside the control, after the wrap.")
 
   def date_picker(assigns), do: picker(assign(assigns, :mode, :date))
 
   @doc "Date + time picker (`YYYY-MM-DDTHH:MM:SS.mmm`)."
-  attr(:id, :any, default: nil)
-  attr(:label, :string, default: nil)
-  attr(:sublabel, :string, default: nil)
-  attr(:description, :string, default: nil)
-  attr(:help_text, :string, default: nil)
-  attr(:class, :any, default: nil)
-  attr(:size, :string, default: "md", values: ~w(xs sm md lg xl))
-  attr(:disabled, :boolean, default: false)
-  attr(:field, Phoenix.HTML.FormField, default: nil)
-  attr(:value, :any, default: nil)
-  attr(:name, :any, default: nil)
-  attr(:errors, :list, default: [])
-  attr(:min, :string, default: nil)
-  attr(:max, :string, default: nil)
-  attr(:week_start, :integer, default: 0, values: 0..6)
-  attr(:precision, :atom, default: :minute, values: [:minute, :second, :millisecond])
+  attr(:id, :any, default: nil, doc: "Element id; derived from field when omitted.")
+  attr(:label, :string, default: nil, doc: "Primary label above the control.")
+  attr(:sublabel, :string, default: nil, doc: "Secondary label line under the primary label.")
+  attr(:description, :string, default: nil, doc: "Helper text under the label stack.")
+
+  attr(:help_text, :string,
+    default: nil,
+    doc: "Trailing help line under the field when no errors."
+  )
+
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+
+  attr(:size, :string,
+    default: "md",
+    values: ~w(xs sm md lg xl),
+    doc: "Control density / type scale."
+  )
+
+  attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
+
+  attr(:field, Phoenix.HTML.FormField,
+    default: nil,
+    doc: "Form field; derives id, name, value, and errors."
+  )
+
+  attr(:value, :any, default: nil, doc: "Canonical datetime string or DateTime/NaiveDateTime.")
+  attr(:name, :any, default: nil, doc: "Form input name; derived from field when omitted.")
+  attr(:errors, :list, default: [], doc: "Validation messages; derived from field when used.")
+  attr(:min, :string, default: nil, doc: "ISO min date; earlier calendar days are disabled.")
+  attr(:max, :string, default: nil, doc: "ISO max date; later calendar days are disabled.")
+
+  attr(:week_start, :integer,
+    default: 0,
+    values: 0..6,
+    doc: "First weekday column; 0 is Sunday, 1 is Monday."
+  )
+
+  attr(:precision, :atom,
+    default: :minute,
+    values: [:minute, :second, :millisecond],
+    doc: "Finest time segment shown in the field."
+  )
+
   attr(:display_format, :string, default: nil, doc: "accepted for Fluxon compat; not yet honored")
   attr(:time_format, :string, default: nil, doc: "accepted for Fluxon compat; not yet honored")
 
@@ -92,28 +141,49 @@ defmodule LanternUI.Components.DatePicker do
       "HTML form attribute forwarded to the hidden value input (for editors outside the form element)"
   )
 
-  attr(:rest, :global)
-  slot(:inner_prefix)
-  slot(:outer_prefix)
-  slot(:inner_suffix)
-  slot(:outer_suffix)
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_prefix, doc: "Affix inside the control, before the segments.")
+  slot(:outer_prefix, doc: "Affix outside the control, before the wrap.")
+  slot(:inner_suffix, doc: "Affix inside the control, after the segments.")
+  slot(:outer_suffix, doc: "Affix outside the control, after the wrap.")
 
   def date_time_picker(assigns), do: picker(assign(assigns, :mode, :datetime))
 
   @doc "Time-only picker (`HH:MM:SS.mmm`, segments only — no popover)."
-  attr(:id, :any, default: nil)
-  attr(:label, :string, default: nil)
-  attr(:sublabel, :string, default: nil)
-  attr(:description, :string, default: nil)
-  attr(:help_text, :string, default: nil)
-  attr(:class, :any, default: nil)
-  attr(:size, :string, default: "md", values: ~w(xs sm md lg xl))
-  attr(:disabled, :boolean, default: false)
-  attr(:field, Phoenix.HTML.FormField, default: nil)
-  attr(:value, :any, default: nil)
-  attr(:name, :any, default: nil)
-  attr(:errors, :list, default: [])
-  attr(:precision, :atom, default: :minute, values: [:minute, :second, :millisecond])
+  attr(:id, :any, default: nil, doc: "Element id; derived from field when omitted.")
+  attr(:label, :string, default: nil, doc: "Primary label above the control.")
+  attr(:sublabel, :string, default: nil, doc: "Secondary label line under the primary label.")
+  attr(:description, :string, default: nil, doc: "Helper text under the label stack.")
+
+  attr(:help_text, :string,
+    default: nil,
+    doc: "Trailing help line under the field when no errors."
+  )
+
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+
+  attr(:size, :string,
+    default: "md",
+    values: ~w(xs sm md lg xl),
+    doc: "Control density / type scale."
+  )
+
+  attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
+
+  attr(:field, Phoenix.HTML.FormField,
+    default: nil,
+    doc: "Form field; derives id, name, value, and errors."
+  )
+
+  attr(:value, :any, default: nil, doc: "Canonical time string or Time struct.")
+  attr(:name, :any, default: nil, doc: "Form input name; derived from field when omitted.")
+  attr(:errors, :list, default: [], doc: "Validation messages; derived from field when used.")
+
+  attr(:precision, :atom,
+    default: :minute,
+    values: [:minute, :second, :millisecond],
+    doc: "Finest time segment shown in the field."
+  )
 
   attr(:form, :string,
     default: nil,
@@ -121,11 +191,11 @@ defmodule LanternUI.Components.DatePicker do
       "HTML form attribute forwarded to the hidden value input (for editors outside the form element)"
   )
 
-  attr(:rest, :global)
-  slot(:inner_prefix)
-  slot(:outer_prefix)
-  slot(:inner_suffix)
-  slot(:outer_suffix)
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_prefix, doc: "Affix inside the control, before the segments.")
+  slot(:outer_prefix, doc: "Affix outside the control, before the wrap.")
+  slot(:inner_suffix, doc: "Affix inside the control, after the segments.")
+  slot(:outer_suffix, doc: "Affix outside the control, after the wrap.")
 
   def time_picker(assigns), do: picker(assign(assigns, :mode, :time))
 

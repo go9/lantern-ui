@@ -20,11 +20,11 @@ defmodule LanternUI.Components.Form do
 
   @sizes ~w(xs sm md lg xl)
 
-  attr(:for, :string, default: nil)
-  attr(:class, :any, default: nil)
-  attr(:sublabel, :string, default: nil)
-  attr(:rest, :global)
-  slot(:inner_block, required: true)
+  attr(:for, :string, default: nil, doc: "id of the labeled control.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:sublabel, :string, default: nil, doc: "Secondary line under the primary label text.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, required: true, doc: "Primary label text.")
 
   def label(assigns) do
     ~H"""
@@ -35,9 +35,9 @@ defmodule LanternUI.Components.Form do
     """
   end
 
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
-  slot(:inner_block, required: true)
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, required: true, doc: "Error message text.")
 
   def error(assigns) do
     ~H"""
@@ -48,29 +48,40 @@ defmodule LanternUI.Components.Form do
     """
   end
 
-  attr(:id, :any, default: nil)
-  attr(:label, :string, default: nil)
-  attr(:sublabel, :string, default: nil)
-  attr(:help_text, :string, default: nil)
-  attr(:description, :string, default: nil)
-  attr(:class, :any, default: nil)
-  attr(:size, :string, default: "md", values: @sizes)
-  attr(:disabled, :boolean, default: false)
-  attr(:field, Phoenix.HTML.FormField, default: nil)
-  attr(:value, :any, default: nil)
-  attr(:name, :any, default: nil)
-  attr(:errors, :list, default: [])
-  attr(:type, :string, default: "text")
+  attr(:id, :any, default: nil, doc: "Element id; derived from field when omitted.")
+  attr(:label, :string, default: nil, doc: "Primary label above the control.")
+  attr(:sublabel, :string, default: nil, doc: "Secondary label line under the primary label.")
+
+  attr(:help_text, :string,
+    default: nil,
+    doc: "Trailing help line under the field when no errors."
+  )
+
+  attr(:description, :string, default: nil, doc: "Helper text under the label stack.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:size, :string, default: "md", values: @sizes, doc: "Control density / type scale.")
+  attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
+
+  attr(:field, Phoenix.HTML.FormField,
+    default: nil,
+    doc: "Form field; derives id, name, value, and errors."
+  )
+
+  attr(:value, :any, default: nil, doc: "Current input value.")
+  attr(:name, :any, default: nil, doc: "Form input name; derived from field when omitted.")
+  attr(:errors, :list, default: [], doc: "Validation messages; derived from field when used.")
+  attr(:type, :string, default: "text", doc: "HTML input type (text, email, hidden, …).")
 
   attr(:rest, :global,
     include: ~w(placeholder autocomplete autofocus readonly required min max step
-                minlength maxlength pattern inputmode list form)
+                minlength maxlength pattern inputmode list form),
+    doc: "Arbitrary HTML/`phx-*` attributes passed through."
   )
 
-  slot(:inner_prefix)
-  slot(:outer_prefix)
-  slot(:inner_suffix)
-  slot(:outer_suffix)
+  slot(:inner_prefix, doc: "Affix inside the control, before the input.")
+  slot(:outer_prefix, doc: "Affix outside the control, before the wrap.")
+  slot(:inner_suffix, doc: "Affix inside the control, after the input.")
+  slot(:outer_suffix, doc: "Affix outside the control, after the wrap.")
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     errors = if Phoenix.Component.used_input?(field), do: field.errors, else: []

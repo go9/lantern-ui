@@ -17,19 +17,19 @@ defmodule LanternUI.Components.Breadcrumb do
 
   alias LanternUI.Class
 
-  attr(:class, :any, default: nil)
-  attr(:separator, :string, default: "/")
-  attr(:aria_label, :string, default: "Breadcrumb")
-  attr(:rest, :global)
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:separator, :string, default: "/", doc: "Glyph shown between breadcrumb items.")
+  attr(:aria_label, :string, default: "Breadcrumb", doc: "Accessible name for the nav landmark.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
-  slot :item, required: true do
-    attr(:current, :boolean)
-    attr(:navigate, :string)
-    attr(:patch, :string)
-    attr(:href, :string)
-    attr(:"phx-click", :string)
-    attr(:"phx-value-prefix", :string)
-    attr(:"phx-target", :any)
+  slot :item, required: true, doc: "One path segment; link, button, or current page." do
+    attr(:current, :boolean, doc: "Mark as the current page (plain text, aria-current).")
+    attr(:navigate, :string, doc: "LiveView navigate target for this segment.")
+    attr(:patch, :string, doc: "LiveView patch target for this segment.")
+    attr(:href, :string, doc: "External or full-page href for this segment.")
+    attr(:"phx-click", :string, doc: "LiveView click event when rendering as a button.")
+    attr(:"phx-value-prefix", :string, doc: "Optional phx-value-prefix for the click event.")
+    attr(:"phx-target", :any, doc: "LiveView target for the click event.")
   end
 
   def breadcrumb(assigns) do

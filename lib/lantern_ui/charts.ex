@@ -43,18 +43,18 @@ defmodule LanternUI.Charts do
 
   Requires the `ChartHover` JS hook for the crosshair/tooltip (see module docs).
   """
-  attr(:id, :string, required: true)
-  attr(:series, :list, default: [])
-  attr(:height, :integer, default: 250)
-  attr(:class, :string, default: nil)
+  attr(:id, :string, required: true, doc: "Stable DOM id for the chart root and hover hook.")
+  attr(:series, :list, default: [], doc: "Dated points: %{date: ISO|Date, value: number}.")
+  attr(:height, :integer, default: 250, doc: "SVG viewBox height in CSS pixels.")
+  attr(:class, :string, default: nil, doc: "Extra classes merged onto the root element.")
 
   attr(:value_format, :any,
     default: :number,
     doc: "`:number` | `:currency` | a 1-arity function `(number -> String.t())`"
   )
 
-  attr(:empty_message, :string, default: "No data")
-  attr(:aria_label, :string, default: "Area chart")
+  attr(:empty_message, :string, default: "No data", doc: "Copy shown when series is empty.")
+  attr(:aria_label, :string, default: "Area chart", doc: "Accessible name for the SVG.")
 
   def area_chart(assigns) do
     assigns =
@@ -121,11 +121,11 @@ defmodule LanternUI.Charts do
 
   `series` is a list of numbers. Renders nothing when empty.
   """
-  attr(:id, :string, required: true)
-  attr(:series, :list, default: [])
-  attr(:height, :integer, default: 40)
-  attr(:class, :string, default: nil)
-  attr(:aria_label, :string, default: "Sparkline")
+  attr(:id, :string, required: true, doc: "Stable DOM id for the sparkline SVG.")
+  attr(:series, :list, default: [], doc: "Numeric values plotted left-to-right.")
+  attr(:height, :integer, default: 40, doc: "SVG viewBox height in CSS pixels.")
+  attr(:class, :string, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:aria_label, :string, default: "Sparkline", doc: "Accessible name for the SVG.")
 
   def sparkline(assigns) do
     assigns = assign(assigns, spark_geometry(assigns.series, assigns.height))
@@ -159,18 +159,18 @@ defmodule LanternUI.Charts do
   `series` is a list of maps like `%{label: "Q1", value: 42}`. Empty series render
   an empty state.
   """
-  attr(:id, :string, required: true)
-  attr(:series, :list, default: [])
-  attr(:height, :integer, default: 180)
-  attr(:class, :string, default: nil)
+  attr(:id, :string, required: true, doc: "Stable DOM id for the chart root.")
+  attr(:series, :list, default: [], doc: "Categories: %{label: String.t(), value: number}.")
+  attr(:height, :integer, default: 180, doc: "SVG viewBox height in CSS pixels.")
+  attr(:class, :string, default: nil, doc: "Extra classes merged onto the root element.")
 
   attr(:value_format, :any,
     default: :number,
     doc: "`:number` | `:currency` | a 1-arity function `(number -> String.t())`"
   )
 
-  attr(:empty_message, :string, default: "No data")
-  attr(:aria_label, :string, default: "Bar chart")
+  attr(:empty_message, :string, default: "No data", doc: "Copy shown when series is empty.")
+  attr(:aria_label, :string, default: "Bar chart", doc: "Accessible name for the SVG.")
 
   def bar_chart(assigns) do
     assigns = assign(assigns, bar_geometry(assigns.series, assigns.height, assigns.value_format))
@@ -446,19 +446,19 @@ defmodule LanternUI.Charts do
 
   Requires the `LineHover` JS hook for the crosshair/tooltip.
   """
-  attr(:id, :string, required: true)
-  attr(:series, :list, default: [])
-  attr(:height, :integer, default: 200)
-  attr(:class, :string, default: nil)
+  attr(:id, :string, required: true, doc: "Stable DOM id for the chart root and hover hook.")
+  attr(:series, :list, default: [], doc: "Named series maps with points and optional color.")
+  attr(:height, :integer, default: 200, doc: "SVG viewBox height in CSS pixels.")
+  attr(:class, :string, default: nil, doc: "Extra classes merged onto the root element.")
 
   attr(:value_format, :any,
     default: :number,
     doc: "`:number` | `:currency` | a 1-arity function `(number -> String.t())`"
   )
 
-  attr(:legend, :boolean, default: true)
-  attr(:empty_message, :string, default: "No data")
-  attr(:aria_label, :string, default: "Line chart")
+  attr(:legend, :boolean, default: true, doc: "Show the series color key under the chart.")
+  attr(:empty_message, :string, default: "No data", doc: "Copy shown when series is empty.")
+  attr(:aria_label, :string, default: "Line chart", doc: "Accessible name for the SVG.")
 
   def line_chart(assigns) do
     assigns = assign(assigns, line_geometry(assigns.series, assigns.height, assigns.value_format))

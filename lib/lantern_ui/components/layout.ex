@@ -31,14 +31,14 @@ defmodule LanternUI.Components.Layout do
   alias LanternUI.Components.Icon
 
   attr(:id, :string, required: true, doc: "stable id — the collapse state is persisted per id")
-  attr(:collapsed, :boolean, default: false)
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
+  attr(:collapsed, :boolean, default: false, doc: "Initial sidebar collapsed (icon-rail) state.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
   slot(:brand, required: true, doc: "logo/name, top-left corner")
   slot(:header, doc: "inline context after the brand (breadcrumbs, switchers)")
   slot(:actions, doc: "top-right of the bar (user menu, etc.)")
   slot(:sidebar, required: true, doc: "nav_group / nav_item")
-  slot(:inner_block, required: true)
+  slot(:inner_block, required: true, doc: "Main content column.")
 
   def app_shell(assigns) do
     ~H"""
@@ -80,9 +80,9 @@ defmodule LanternUI.Components.Layout do
   end
 
   @doc "A labelled group of nav items. The label hides when the rail is collapsed."
-  attr(:label, :string, default: nil)
-  attr(:class, :any, default: nil)
-  slot(:inner_block, required: true)
+  attr(:label, :string, default: nil, doc: "Group heading; hides when the rail is collapsed.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  slot(:inner_block, required: true, doc: "nav_item children in this group.")
 
   def nav_group(assigns) do
     ~H"""
@@ -98,14 +98,18 @@ defmodule LanternUI.Components.Layout do
   button when given `phx-click`. Collapses to an icon-only rail item (with a
   tooltip) when the sidebar is collapsed.
   """
-  attr(:label, :string, required: true)
-  attr(:icon, :string, default: nil)
-  attr(:active, :boolean, default: false)
-  attr(:navigate, :string, default: nil)
-  attr(:patch, :string, default: nil)
-  attr(:href, :string, default: nil)
-  attr(:class, :any, default: nil)
-  attr(:rest, :global, include: ~w(phx-click phx-value-id phx-target))
+  attr(:label, :string, required: true, doc: "Nav label; becomes the collapsed-rail tooltip.")
+  attr(:icon, :string, default: nil, doc: "Leading icon name from the icon set.")
+  attr(:active, :boolean, default: false, doc: "Highlight as the current page.")
+  attr(:navigate, :string, default: nil, doc: "LiveView navigate target; renders as a link.")
+  attr(:patch, :string, default: nil, doc: "LiveView patch target; renders as a link.")
+  attr(:href, :string, default: nil, doc: "External or full-page href; renders as a link.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+
+  attr(:rest, :global,
+    include: ~w(phx-click phx-value-id phx-target),
+    doc: "Arbitrary HTML/`phx-*` attributes passed through."
+  )
 
   def nav_item(assigns) do
     assigns = assign(assigns, :link?, assigns.navigate || assigns.patch || assigns.href)

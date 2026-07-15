@@ -32,21 +32,31 @@ defmodule LanternUI.Components.DatetimeField do
   alias LanternUI.Class
   alias LanternUI.Components.Icon
 
-  attr(:id, :string, required: true)
+  attr(:id, :string, required: true, doc: "Stable DOM id for the datetime field hook.")
 
   attr(:name, :string,
     default: nil,
     doc: "omit for a non-submitting field (no name on the hidden input)"
   )
 
-  attr(:mode, :atom, default: :date, values: [:date, :time, :datetime])
-  attr(:precision, :atom, default: :minute, values: [:minute, :second, :millisecond])
+  attr(:mode, :atom,
+    default: :date,
+    values: [:date, :time, :datetime],
+    doc: "Which segment set to show: date, time, or both."
+  )
+
+  attr(:precision, :atom,
+    default: :minute,
+    values: [:minute, :second, :millisecond],
+    doc: "Finest time segment shown; coarser parts stay zeroed."
+  )
+
   attr(:value, :any, default: nil, doc: "canonical string (see value contract) or nil")
-  attr(:nullable, :boolean, default: true)
-  attr(:disabled, :boolean, default: false)
+  attr(:nullable, :boolean, default: true, doc: "Allow clearing all segments to empty/null.")
+  attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
   attr(:form, :string, default: nil, doc: "the form attribute forwarded to the hidden input")
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
   slot(:suffix, doc: "trailing affix inside the field (e.g. the picker's toggle button)")
 
   def datetime_field(assigns) do

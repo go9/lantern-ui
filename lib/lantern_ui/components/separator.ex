@@ -11,10 +11,15 @@ defmodule LanternUI.Components.Separator do
 
   alias LanternUI.Class
 
-  attr(:text, :string, default: nil)
-  attr(:vertical, :boolean, default: false)
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
+  attr(:text, :string, default: nil, doc: "Optional centered label on a horizontal rule.")
+
+  attr(:vertical, :boolean,
+    default: false,
+    doc: "Render a vertical divider instead of horizontal."
+  )
+
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
   def separator(assigns) do
     ~H"""
