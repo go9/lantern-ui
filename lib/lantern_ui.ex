@@ -15,7 +15,7 @@ defmodule LanternUI do
   or a subset:
 
       use LanternUI, only: [:charts]
-      use LanternUI, except: [:charts]
+      use LanternUI, except: [:charts]     # drop a module, or `except: [icon: 1]` a function
 
   Then call components directly in HEEx (`<.area_chart .../>`, and — as they land —
   `<.button>`, `<.date_time_picker>`, …). The public API mirrors Fluxon's so a
@@ -120,21 +120,45 @@ defmodule LanternUI do
   end
 
   defmacro __using__(opts) do
-    only = Keyword.get(opts, :only, [])
-    except = Keyword.get(opts, :except, [])
+    only = List.wrap(Keyword.get(opts, :only, []))
+    except = List.wrap(Keyword.get(opts, :except, []))
 
-    for {_key, module} <- LanternUI.__filter_components__(only, except) do
-      quote do: import(unquote(module))
+    # `only:`/`except:` accept BOTH component-key atoms (e.g. `:charts`) and
+    # Fluxon-style `function: arity` pairs (e.g. `[icon: 1]`). Atoms filter
+    # whole component modules; function pairs filter individual imports — so a
+    # host can drop just one colliding function (`use LanternUI, except: [icon: 1]`).
+    {only_keys, only_funs} = Enum.split_with(only, &is_atom/1)
+    {except_keys, except_funs} = Enum.split_with(except, &is_atom/1)
+
+    for {_key, module} <- LanternUI.__filter_components__(only_keys, except_keys) do
+      exports = module.__info__(:functions)
+      mod_only = Enum.filter(only_funs, &(&1 in exports))
+      mod_except = Enum.filter(except_funs, &(&1 in exports))
+
+      cond do
+        only_funs != [] and mod_only == [] ->
+          # host asked to import specific functions, none live in this module
+          nil
+
+        only_funs != [] ->
+          quote do: import(unquote(module), only: unquote(mod_only))
+
+        mod_except != [] ->
+          quote do: import(unquote(module), except: unquote(mod_except))
+
+        true ->
+          quote do: import(unquote(module))
+      end
     end
   end
 
   @doc false
-  def __filter_components__(only, except) do
+  def __filter_components__(only_keys, except_keys) do
     @components
     |> Enum.filter(fn {key, _module} ->
       cond do
-        only != [] -> key in only
-        except != [] -> key not in except
+        only_keys != [] -> key in only_keys
+        except_keys != [] -> key not in except_keys
         true -> true
       end
     end)
