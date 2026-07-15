@@ -1088,6 +1088,154 @@ const LanternSelect = {
   },
 }
 
+// Autocomplete listbox: a text input filters static options client-side while
+// a hidden input carries the selected value. Positioning and outside dismissal
+// intentionally match LanternSelect.
+const LanternAutocomplete = {
+  mounted() {
+    this.input = this.el.querySelector('[data-part="input"]')
+    this.hidden = this.el.querySelector('[data-part="value"]')
+    this.control = this.el.querySelector(".lui-autocomplete-control")
+    this.panel = this.el.querySelector('[data-part="panel"]')
+    this.noResults = this.el.querySelector('[data-part="no-results"]')
+    this.cleanup = []
+    this.open = false
+
+    this.onClick = (e) => {
+      const opt = e.target.closest('[data-part="option"]')
+      if (opt) {
+        this.select(opt)
+        return
+      }
+      if (this.input?.disabled) return
+      if (e.target.closest(".lui-autocomplete-control")) {
+        this.input?.focus()
+        this.show()
+      }
+    }
+    this.onInput = () => {
+      this.show()
+      this.filter()
+    }
+    this.onKeydown = (e) => this.onKey(e)
+
+    this.el.addEventListener("click", this.onClick)
+    this.el.addEventListener("keydown", this.onKeydown)
+    this.input?.addEventListener("input", this.onInput)
+  },
+
+  options(visibleOnly = false) {
+    const all = [...this.el.querySelectorAll('[data-part="option"]')]
+    return visibleOnly ? all.filter((o) => !o.hidden) : all
+  },
+
+  optionLabel(opt) {
+    return opt.querySelector(".lui-select-option-label")?.textContent.trim() || ""
+  },
+
+  selectedLabel() {
+    const value = this.hidden?.value || ""
+    const opt = this.options().find((o) => o.dataset.value === value)
+    return opt ? this.optionLabel(opt) : ""
+  },
+
+  show() {
+    if (!this.input || !this.panel || this.input.disabled) return
+    if (!this.open) {
+      this.open = true
+      this.panel.hidden = false
+      this.input.setAttribute("aria-expanded", "true")
+      this.cleanup.push(
+        onDismiss(
+          this.panel,
+          (reason) => this.hide({ refocus: false, restore: reason === "outside" }),
+          { anchor: this.control }
+        )
+      )
+    } else {
+      this.panel.hidden = false
+    }
+    position(this.control || this.input, this.panel, { placement: "bottom-start" })
+    this.panel.style.minWidth = `${(this.control || this.input).offsetWidth}px`
+    this.filter()
+  },
+
+  hide({ refocus = true, restore = false } = {}) {
+    if (!this.open) return
+    this.open = false
+    this.cleanup.forEach((fn) => fn())
+    this.cleanup = []
+    this.panel.hidden = true
+    this.input?.setAttribute("aria-expanded", "false")
+    if (restore) this.restoreInput()
+    if (refocus) this.input?.focus()
+  },
+
+  restoreInput() {
+    const label = this.selectedLabel()
+    if (this.input && this.input.value !== label) this.input.value = label
+  },
+
+  filter() {
+    const q = (this.input?.value || "").trim().toLowerCase()
+    let any = false
+    this.options().forEach((o) => {
+      const hit = q === "" || this.optionLabel(o).toLowerCase().includes(q)
+      o.hidden = !hit
+      any = any || hit
+    })
+    if (this.noResults) this.noResults.hidden = any
+  },
+
+  select(opt) {
+    const value = opt.dataset.value || ""
+    const label = this.optionLabel(opt)
+    if (this.hidden) {
+      this.hidden.value = value
+      this.hidden.dispatchEvent(new Event("input", { bubbles: true }))
+      this.hidden.dispatchEvent(new Event("change", { bubbles: true }))
+    }
+    this.options().forEach((o) => o.setAttribute("aria-selected", String(o === opt)))
+    if (this.input) this.input.value = label
+    this.hide()
+  },
+
+  onKey(e) {
+    if (!this.input || !this.panel) return
+    if (e.key === "Escape" && this.open) {
+      e.preventDefault()
+      e.stopPropagation()
+      this.hide({ restore: true })
+      return
+    }
+
+    if (!["ArrowDown", "ArrowUp", "Enter"].includes(e.key)) return
+    if (!this.open) this.show()
+
+    const opts = this.options(true)
+    const idx = opts.indexOf(document.activeElement)
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      opts[Math.min(idx + 1, opts.length - 1)]?.focus()
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      const next = idx <= 0 ? opts.length - 1 : idx - 1
+      opts[next]?.focus()
+    } else if (e.key === "Enter") {
+      e.preventDefault()
+      const opt = idx >= 0 ? opts[idx] : opts[0]
+      if (opt) this.select(opt)
+    }
+  },
+
+  destroyed() {
+    this.cleanup.forEach((fn) => fn())
+    this.el.removeEventListener("click", this.onClick)
+    this.el.removeEventListener("keydown", this.onKeydown)
+    this.input?.removeEventListener("input", this.onInput)
+  },
+}
+
 // Generic collapsible section (data-part="collapse-toggle" flips
 // data-collapsed on the hook root; persisted per element id).
 const LanternCollapse = {
@@ -1694,6 +1842,7 @@ export const Hooks = {
   LanternToast,
   LanternSidebar,
   LanternSelect,
+  LanternAutocomplete,
   LanternCollapse,
   LanternTableChrome,
   LanternTheme,
@@ -1712,6 +1861,7 @@ export {
   LanternToast,
   LanternSidebar,
   LanternSelect,
+  LanternAutocomplete,
   LanternCollapse,
   LanternTableChrome,
   LanternTheme,
