@@ -7,7 +7,12 @@ defmodule LanternUI.Components.Tooltip do
 
   alias LanternUI.Class
 
-  attr(:id, :string, required: true, doc: "Stable DOM id for the tooltip hook.")
+  attr(:id, :string,
+    default: nil,
+    doc:
+      "Stable DOM id for the tooltip hook; auto-generated when omitted, mirroring Fluxon's tooltip (drop-in parity)."
+  )
+
   attr(:value, :string, default: nil, doc: "Plain-text tip when no :content slot is given.")
 
   attr(:placement, :string,
@@ -24,6 +29,9 @@ defmodule LanternUI.Components.Tooltip do
   slot(:content, doc: "Rich tip body; overrides `value` when present.")
 
   def tooltip(assigns) do
+    assigns =
+      assign(assigns, :id, assigns.id || "lui-tooltip-#{System.unique_integer([:positive])}")
+
     ~H"""
     <span
       id={@id}
