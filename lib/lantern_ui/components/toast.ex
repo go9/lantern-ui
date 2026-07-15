@@ -14,10 +14,16 @@ defmodule LanternUI.Components.Toast do
 
   @placements ~w(top-left top-center top-right bottom-left bottom-center bottom-right)
 
-  attr(:id, :string, default: "lantern-toasts")
-  attr(:placement, :string, default: "top-right", values: @placements)
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
+  attr(:id, :string, default: "lantern-toasts", doc: "Stable DOM id for the toast stack hook.")
+
+  attr(:placement, :string,
+    default: "top-right",
+    values: @placements,
+    doc: "Corner or edge where the toast stack anchors."
+  )
+
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
   def toast_group(assigns) do
     ~H"""

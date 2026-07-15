@@ -16,20 +16,35 @@ defmodule LanternUI.Components.Checkbox do
   alias LanternUI.Class
   alias LanternUI.Components.Form
 
-  attr(:id, :any, default: nil)
-  attr(:name, :string, default: nil)
-  attr(:value, :any, default: nil)
-  attr(:checked, :boolean, default: nil)
-  attr(:checked_value, :any, default: "true")
-  attr(:unchecked_value, :any, default: "false")
-  attr(:label, :string, default: nil)
-  attr(:sublabel, :string, default: nil)
-  attr(:description, :string, default: nil)
-  attr(:errors, :list, default: [])
-  attr(:class, :any, default: nil)
-  attr(:field, Phoenix.HTML.FormField, default: nil)
-  attr(:disabled, :boolean, default: false)
-  attr(:rest, :global)
+  attr(:id, :any, default: nil, doc: "Element id; derived from field when omitted.")
+  attr(:name, :string, default: nil, doc: "Form input name; derived from field when omitted.")
+  attr(:value, :any, default: nil, doc: "Current value used to derive checked state.")
+
+  attr(:checked, :boolean,
+    default: nil,
+    doc: "Force checked state; else compares value to checked_value."
+  )
+
+  attr(:checked_value, :any, default: "true", doc: "Value submitted when the box is checked.")
+
+  attr(:unchecked_value, :any,
+    default: "false",
+    doc: "Hidden input value submitted when unchecked."
+  )
+
+  attr(:label, :string, default: nil, doc: "Primary label text beside the control.")
+  attr(:sublabel, :string, default: nil, doc: "Secondary label line under the primary label.")
+  attr(:description, :string, default: nil, doc: "Helper text under the label stack.")
+  attr(:errors, :list, default: [], doc: "Validation messages; derived from field when used.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+
+  attr(:field, Phoenix.HTML.FormField,
+    default: nil,
+    doc: "Form field; derives id, name, value, and errors."
+  )
+
+  attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
   def checkbox(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     errors = if Phoenix.Component.used_input?(field), do: field.errors, else: []

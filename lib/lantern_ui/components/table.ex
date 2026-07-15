@@ -23,9 +23,9 @@ defmodule LanternUI.Components.Table do
 
   alias LanternUI.Class
 
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
-  slot(:inner_block, required: true)
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, required: true, doc: "table_head and table_body children.")
 
   def table(assigns) do
     ~H"""
@@ -37,14 +37,14 @@ defmodule LanternUI.Components.Table do
     """
   end
 
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
-  slot :col do
-    attr(:class, :any)
+  slot :col, doc: "Header cell content for one column." do
+    attr(:class, :any, doc: "Extra classes on this header cell.")
   end
 
-  slot(:inner_block)
+  slot(:inner_block, doc: "Optional raw thead row content after :col cells.")
 
   def table_head(assigns) do
     ~H"""
@@ -59,9 +59,9 @@ defmodule LanternUI.Components.Table do
     """
   end
 
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
-  slot(:inner_block, required: true)
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, required: true, doc: "table_row children.")
 
   def table_body(assigns) do
     ~H"""
@@ -71,15 +71,19 @@ defmodule LanternUI.Components.Table do
     """
   end
 
-  attr(:selected, :boolean, default: false)
-  attr(:class, :any, default: nil)
-  attr(:rest, :global, include: ~w(phx-click phx-value-id phx-target))
+  attr(:selected, :boolean, default: false, doc: "Highlight the row as selected.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
 
-  slot :cell do
-    attr(:class, :any)
+  attr(:rest, :global,
+    include: ~w(phx-click phx-value-id phx-target),
+    doc: "Arbitrary HTML/`phx-*` attributes passed through."
+  )
+
+  slot :cell, doc: "One body cell in column order." do
+    attr(:class, :any, doc: "Extra classes on this cell.")
   end
 
-  slot(:inner_block)
+  slot(:inner_block, doc: "Optional raw row content after :cell cells.")
 
   def table_row(assigns) do
     ~H"""

@@ -119,9 +119,14 @@ defmodule LanternUI.Components.Icon do
   @doc """
   Renders an icon by name. Available: `#{Enum.join(@names, "`, `")}`.
   """
-  attr(:name, :string, required: true, values: @names)
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
+  attr(:name, :string,
+    required: true,
+    values: @names,
+    doc: "Icon key from the curated outline set."
+  )
+
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
   def icon(assigns) do
     assigns = assign(assigns, :paths, Map.fetch!(@paths, assigns.name))

@@ -7,15 +7,21 @@ defmodule LanternUI.Components.Tooltip do
 
   alias LanternUI.Class
 
-  attr(:id, :string, required: true)
-  attr(:value, :string, default: nil)
-  attr(:placement, :string, default: "top", values: ~w(top bottom left right))
-  attr(:delay, :integer, default: 200)
-  attr(:arrow, :boolean, default: true)
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
-  slot(:inner_block, required: true)
-  slot(:content)
+  attr(:id, :string, required: true, doc: "Stable DOM id for the tooltip hook.")
+  attr(:value, :string, default: nil, doc: "Plain-text tip when no :content slot is given.")
+
+  attr(:placement, :string,
+    default: "top",
+    values: ~w(top bottom left right),
+    doc: "Preferred side of the trigger; may flip for viewport fit."
+  )
+
+  attr(:delay, :integer, default: 200, doc: "Milliseconds before the tip appears on hover/focus.")
+  attr(:arrow, :boolean, default: true, doc: "Show the small pointer arrow toward the trigger.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, required: true, doc: "Trigger element that shows the tip.")
+  slot(:content, doc: "Rich tip body; overrides `value` when present.")
 
   def tooltip(assigns) do
     ~H"""

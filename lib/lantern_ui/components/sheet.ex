@@ -21,28 +21,43 @@ defmodule LanternUI.Components.Sheet do
   alias LanternUI.Class
   alias LanternUI.Components.Icon
 
-  attr(:id, :string, required: true)
+  attr(:id, :string, required: true, doc: "Stable DOM id used by open_dialog/close_dialog.")
   attr(:open, :boolean, default: false, doc: "render already open (server-driven sheets)")
-  attr(:placement, :string, default: "right", values: ~w(left right top bottom))
+
+  attr(:placement, :string,
+    default: "right",
+    values: ~w(left right top bottom),
+    doc: "Screen edge the panel slides in from."
+  )
+
   attr(:title, :string, default: nil, doc: "optional header title beside the close button")
-  attr(:on_open, Phoenix.LiveView.JS, default: nil)
-  attr(:on_close, Phoenix.LiveView.JS, default: nil)
-  attr(:close_on_esc, :boolean, default: true)
-  attr(:close_on_outside_click, :boolean, default: true)
-  attr(:prevent_closing, :boolean, default: false)
-  attr(:hide_close_button, :boolean, default: false)
-  attr(:class, :any, default: nil)
-  attr(:container_class, :any, default: nil)
-  attr(:backdrop_class, :any, default: nil)
+  attr(:on_open, Phoenix.LiveView.JS, default: nil, doc: "JS command run when the sheet opens.")
+  attr(:on_close, Phoenix.LiveView.JS, default: nil, doc: "JS command run when the sheet closes.")
+  attr(:close_on_esc, :boolean, default: true, doc: "Close when Escape is pressed.")
+
+  attr(:close_on_outside_click, :boolean,
+    default: true,
+    doc: "Close when the backdrop is clicked."
+  )
+
+  attr(:prevent_closing, :boolean, default: false, doc: "Block Escape and outside-click close.")
+  attr(:hide_close_button, :boolean, default: false, doc: "Hide the built-in close control.")
+  attr(:class, :any, default: nil, doc: "Extra classes on the sliding panel.")
+  attr(:container_class, :any, default: nil, doc: "Extra classes on the overlay root.")
+  attr(:backdrop_class, :any, default: nil, doc: "Extra classes on the dimmed backdrop.")
   # Accepted for Fluxon compat; the slide is token-driven.
-  attr(:animation, :string, default: nil)
-  attr(:animation_enter, :string, default: nil)
-  attr(:animation_leave, :string, default: nil)
-  attr(:rest, :global)
+  attr(:animation, :string,
+    default: nil,
+    doc: "Accepted for Fluxon compat; slide is token-driven."
+  )
+
+  attr(:animation_enter, :string, default: nil, doc: "Accepted for Fluxon compat.")
+  attr(:animation_leave, :string, default: nil, doc: "Accepted for Fluxon compat.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
   slot(:header, doc: "custom header content (replaces `title`)")
   slot(:footer, doc: "sticky footer (action buttons)")
-  slot(:inner_block, required: true)
+  slot(:inner_block, required: true, doc: "Sheet body content.")
 
   def sheet(assigns) do
     ~H"""

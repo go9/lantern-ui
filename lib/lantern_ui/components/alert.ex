@@ -13,21 +13,22 @@ defmodule LanternUI.Components.Alert do
   alias LanternUI.Components.Icon
   alias Phoenix.LiveView.JS
 
-  attr(:id, :string, default: nil)
-  attr(:title, :string, default: nil)
-  attr(:subtitle, :string, default: nil)
+  attr(:id, :string, default: nil, doc: "Element id; auto-generated when omitted.")
+  attr(:title, :string, default: nil, doc: "Primary heading shown next to the icon.")
+  attr(:subtitle, :string, default: nil, doc: "Secondary line under the title.")
 
   attr(:color, :string,
     default: "neutral",
-    values: ~w(neutral info success warning danger)
+    values: ~w(neutral info success warning danger),
+    doc: "Semantic color; also picks the default status icon."
   )
 
-  attr(:hide_icon, :boolean, default: false)
-  attr(:hide_close, :boolean, default: true)
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
-  slot(:icon)
-  slot(:inner_block)
+  attr(:hide_icon, :boolean, default: false, doc: "Omit the leading status icon.")
+  attr(:hide_close, :boolean, default: true, doc: "Hide the dismiss button (default).")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:icon, doc: "Custom leading icon; overrides the color default.")
+  slot(:inner_block, doc: "Alert body content below the title.")
 
   def alert(assigns) do
     assigns =

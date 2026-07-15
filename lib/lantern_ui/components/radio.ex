@@ -18,25 +18,36 @@ defmodule LanternUI.Components.Radio do
   alias LanternUI.Class
   alias LanternUI.Components.Form
 
-  attr(:id, :any, default: nil)
-  attr(:name, :string, default: nil)
-  attr(:value, :any, default: nil)
-  attr(:label, :string, default: nil)
-  attr(:sublabel, :string, default: nil)
-  attr(:description, :string, default: nil)
-  attr(:errors, :list, default: [])
-  attr(:variant, :string, default: "list", values: ~w(list cards))
-  attr(:class, :any, default: nil)
-  attr(:field, Phoenix.HTML.FormField, default: nil)
-  attr(:disabled, :boolean, default: false)
-  attr(:rest, :global)
+  attr(:id, :any, default: nil, doc: "Element id; derived from field or name when omitted.")
+  attr(:name, :string, default: nil, doc: "Shared radio name; derived from field when omitted.")
+  attr(:value, :any, default: nil, doc: "Currently selected option value.")
+  attr(:label, :string, default: nil, doc: "Group label above the options.")
+  attr(:sublabel, :string, default: nil, doc: "Secondary line under the group label.")
+  attr(:description, :string, default: nil, doc: "Helper text under the group label.")
+  attr(:errors, :list, default: [], doc: "Validation messages; derived from field when used.")
 
-  slot :radio, required: true do
-    attr(:value, :any, required: true)
-    attr(:label, :string)
-    attr(:sublabel, :string)
-    attr(:description, :string)
-    attr(:disabled, :boolean)
+  attr(:variant, :string,
+    default: "list",
+    values: ~w(list cards),
+    doc: "list is compact radios; cards is selectable panels."
+  )
+
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+
+  attr(:field, Phoenix.HTML.FormField,
+    default: nil,
+    doc: "Form field; derives id, name, value, and errors."
+  )
+
+  attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+
+  slot :radio, required: true, doc: "One exclusive option in the group." do
+    attr(:value, :any, required: true, doc: "Option value submitted when selected.")
+    attr(:label, :string, doc: "Primary label for this option.")
+    attr(:sublabel, :string, doc: "Secondary label for this option.")
+    attr(:description, :string, doc: "Helper text under this option's labels.")
+    attr(:disabled, :boolean, doc: "Disable this option only.")
   end
 
   def radio(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do

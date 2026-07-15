@@ -25,12 +25,17 @@ defmodule LanternUI.Components.Pagination do
   )
 
   attr(:patch_fn, :any, required: true, doc: "fn %{page: n} | %{page: 1, page_size: s} -> path")
-  attr(:id, :string, default: "pagination")
-  attr(:page_size_options, :list, default: [10, 25, 50, 100])
-  attr(:show_page_size, :boolean, default: true)
-  attr(:sibling_count, :integer, default: 1)
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
+  attr(:id, :string, default: "pagination", doc: "Base id for the page-size dropdown.")
+
+  attr(:page_size_options, :list,
+    default: [10, 25, 50, 100],
+    doc: "Choices in the page-size menu."
+  )
+
+  attr(:show_page_size, :boolean, default: true, doc: "Show the page-size dropdown control.")
+  attr(:sibling_count, :integer, default: 1, doc: "Page numbers shown on each side of current.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
   def pagination(assigns) do
     page = Map.get(assigns.meta, :current_page) || 1
@@ -88,10 +93,10 @@ defmodule LanternUI.Components.Pagination do
     """
   end
 
-  attr(:disabled, :boolean, required: true)
-  attr(:patch, :string, required: true)
-  attr(:label, :string, required: true)
-  slot(:inner_block, required: true)
+  attr(:disabled, :boolean, required: true, doc: "Render as a non-interactive span.")
+  attr(:patch, :string, required: true, doc: "LiveView patch path for this control.")
+  attr(:label, :string, required: true, doc: "Accessible label for the control.")
+  slot(:inner_block, required: true, doc: "Control contents (usually an icon).")
 
   defp pg_link(%{disabled: true} = assigns) do
     ~H"""

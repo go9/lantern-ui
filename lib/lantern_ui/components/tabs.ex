@@ -22,10 +22,10 @@ defmodule LanternUI.Components.Tabs do
 
   alias LanternUI.Class
 
-  attr(:id, :string, default: nil)
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
-  slot(:inner_block, required: true)
+  attr(:id, :string, default: nil, doc: "Element id for the tabs root.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, required: true, doc: "tabs_list and tabs_panel children.")
 
   def tabs(assigns) do
     ~H"""
@@ -35,23 +35,31 @@ defmodule LanternUI.Components.Tabs do
     """
   end
 
-  attr(:active_tab, :string, default: nil)
-  attr(:variant, :string, default: "segmented", values: ~w(segmented underline))
-  attr(:size, :string, default: "md", values: ~w(sm md))
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
+  attr(:active_tab, :string, default: nil, doc: "Name of the currently selected tab.")
 
-  slot :tab, required: true do
-    attr(:name, :string)
-    attr(:patch, :string)
-    attr(:navigate, :string)
-    attr(:class, :any)
-    attr(:"phx-click", :string)
-    attr(:"phx-value-tab", :string)
-    attr(:"phx-target", :any)
+  attr(:variant, :string,
+    default: "segmented",
+    values: ~w(segmented underline),
+    doc: "segmented is pill-style; underline is text tabs."
+  )
+
+  attr(:size, :string, default: "md", values: ~w(sm md), doc: "Tab control density.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+
+  slot :tab,
+    required: true,
+    doc: "One tab trigger; link via patch/navigate or button via phx-click." do
+    attr(:name, :string, doc: "Stable tab key; matched against active_tab.")
+    attr(:patch, :string, doc: "LiveView patch URL; renders the tab as a link.")
+    attr(:navigate, :string, doc: "LiveView navigate URL; renders the tab as a link.")
+    attr(:class, :any, doc: "Extra classes on this tab trigger.")
+    attr(:"phx-click", :string, doc: "LiveView click event when not using patch/navigate.")
+    attr(:"phx-value-tab", :string, doc: "phx-value-tab payload; defaults to name.")
+    attr(:"phx-target", :any, doc: "LiveView target for the click event.")
   end
 
-  slot(:inner_block)
+  slot(:inner_block, doc: "Optional extra content inside the tab list.")
 
   def tabs_list(assigns) do
     ~H"""
@@ -91,11 +99,11 @@ defmodule LanternUI.Components.Tabs do
     """
   end
 
-  attr(:name, :string, required: true)
-  attr(:active, :boolean, default: false)
-  attr(:class, :any, default: nil)
-  attr(:rest, :global)
-  slot(:inner_block, required: true)
+  attr(:name, :string, required: true, doc: "Tab key this panel belongs to.")
+  attr(:active, :boolean, default: false, doc: "When true, the panel is rendered.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, required: true, doc: "Panel body content.")
 
   def tabs_panel(assigns) do
     ~H"""

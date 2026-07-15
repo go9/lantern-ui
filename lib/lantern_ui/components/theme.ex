@@ -25,8 +25,12 @@ defmodule LanternUI.Components.Theme do
   """
   use Phoenix.Component
 
-  attr(:id, :string, default: "lantern-theme")
-  attr(:storage_key, :string, default: "lui-theme")
+  attr(:id, :string, default: "lantern-theme", doc: "Stable DOM id for the theme hook element.")
+
+  attr(:storage_key, :string,
+    default: "lui-theme",
+    doc: "localStorage key for persisted token overrides."
+  )
 
   def theme(assigns) do
     ~H"""
