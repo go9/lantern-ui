@@ -404,4 +404,94 @@ defmodule LanternUI.Components.DatePicker do
   end
 
   defp translate_error(msg) when is_binary(msg), do: msg
+
+  @doc """
+  Start/end date range, bound to two form fields.
+
+      <.date_range_picker start_field={f[:from]} end_field={f[:to]} max={Date.utc_today()} />
+
+  Each end submits its own canonical `YYYY-MM-DD` value, so the range lives in
+  two ordinary form fields rather than one parsed string.
+
+  ## Fluxon compatibility
+
+  Fluxon renders a range as ONE input driving a dual-month calendar; this
+  composes two `date_picker`s instead. Same field contract and same attrs
+  (`start_field`/`end_field`, `min`/`max`, `label`, `size`, `disabled`), so it
+  is a drop-in at the call site, but the panel is per-field rather than a linked
+  range calendar — picking a start does not constrain the end. `navigation`,
+  `placeholder`, and `display_format` are accepted and ignored.
+  """
+  attr(:id, :any, default: nil, doc: "Element id prefix; derived from the start field when nil.")
+  attr(:label, :string, default: nil, doc: "Primary label above the pair.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+
+  attr(:size, :string,
+    default: "md",
+    values: ~w(xs sm md lg xl),
+    doc: "Control density / type scale."
+  )
+
+  attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
+
+  attr(:start_field, Phoenix.HTML.FormField,
+    required: true,
+    doc: "Form field for the range start."
+  )
+
+  attr(:end_field, Phoenix.HTML.FormField, required: true, doc: "Form field for the range end.")
+
+  attr(:min, :any, default: nil, doc: "ISO string or Date; earlier days are disabled.")
+  attr(:max, :any, default: nil, doc: "ISO string or Date; later days are disabled.")
+
+  attr(:week_start, :integer,
+    default: 0,
+    values: 0..6,
+    doc: "First weekday column; 0 is Sunday, 1 is Monday."
+  )
+
+  attr(:separator, :string, default: "to", doc: "Text rendered between the two controls.")
+  attr(:navigation, :string, default: nil, doc: "accepted for Fluxon compat; not honored")
+  attr(:placeholder, :string, default: nil, doc: "accepted for Fluxon compat; not honored")
+  attr(:display_format, :string, default: nil, doc: "accepted for Fluxon compat; not honored")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+
+  def date_range_picker(assigns) do
+    assigns =
+      assigns
+      |> assign(:min, iso_bound(assigns.min))
+      |> assign(:max, iso_bound(assigns.max))
+
+    ~H"""
+    <div class={Class.merge(["lui-date-range", @class])} {@rest}>
+      <Form.label :if={@label}>{@label}</Form.label>
+      <div class="lui-date-range-row">
+        <.date_picker
+          field={@start_field}
+          min={@min}
+          max={@max}
+          size={@size}
+          disabled={@disabled}
+          week_start={@week_start}
+        />
+        <span :if={@separator} class="lui-date-range-sep">{@separator}</span>
+        <.date_picker
+          field={@end_field}
+          min={@min}
+          max={@max}
+          size={@size}
+          disabled={@disabled}
+          week_start={@week_start}
+        />
+      </div>
+    </div>
+    """
+  end
+
+  # date_picker takes ISO strings; callers routinely pass Date structs
+  # (e.g. `max={Date.utc_today()}`), so normalize both.
+  defp iso_bound(nil), do: nil
+  defp iso_bound(%Date{} = d), do: Date.to_iso8601(d)
+  defp iso_bound(bound) when is_binary(bound), do: bound
+  defp iso_bound(other), do: to_string(other)
 end

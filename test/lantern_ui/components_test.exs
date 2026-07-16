@@ -363,6 +363,75 @@ defmodule LanternUI.ComponentsTest do
     end
   end
 
+  describe "popover/1" do
+    test "renders trigger + panel on the overlay runtime, panel hidden until opened" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.Popover.popover placement="bottom-end">
+            <button>Filters</button>
+            <:content>
+              <div id="panel-body">Body</div>
+            </:content>
+          </LanternUI.Components.Popover.popover>
+          """
+        end)
+
+      assert html =~ ~s(phx-hook="LanternOverlay")
+      assert html =~ ~s(data-placement="bottom-end")
+      assert html =~ ~s(data-part="trigger")
+      assert html =~ ~s(data-part="panel")
+      assert html =~ "Filters"
+      assert html =~ "Body"
+      # a surface, not a menu — it holds inputs, so it must not be role=menu
+      assert html =~ ~s(role="dialog")
+      refute html =~ ~s(role="menu")
+      assert html =~ "hidden"
+    end
+
+    test "auto-generates an id when omitted (Fluxon drop-in parity)" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.Popover.popover>
+            <button>t</button>
+            <:content>c</:content>
+          </LanternUI.Components.Popover.popover>
+          """
+        end)
+
+      assert html =~ ~s(id="lui-popover-)
+    end
+  end
+
+  describe "date_range_picker/1" do
+    test "renders both fields and accepts a Date struct for max" do
+      form = Phoenix.Component.to_form(%{"from" => "", "to" => ""}, as: :filter)
+
+      html =
+        render(
+          fn assigns ->
+            ~H"""
+            <LanternUI.Components.DatePicker.date_range_picker
+              start_field={@form[:from]}
+              end_field={@form[:to]}
+              max={~D[2026-01-31]}
+              navigation="extended"
+              placeholder="Select date range"
+            />
+            """
+          end,
+          %{form: form}
+        )
+
+      assert html =~ "filter[from]"
+      assert html =~ "filter[to]"
+      # Date struct normalized to ISO for the underlying pickers
+      assert html =~ "2026-01-31"
+      assert html =~ "lui-date-range"
+    end
+  end
+
   describe "use LanternUI registry" do
     test "exposes the new component groups" do
       keys = LanternUI.__components__() |> Map.keys() |> Enum.sort()
@@ -388,6 +457,7 @@ defmodule LanternUI.ComponentsTest do
                :modal,
                :navlist,
                :pagination,
+               :popover,
                :radio,
                :select,
                :separator,

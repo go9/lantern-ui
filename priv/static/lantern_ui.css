@@ -515,6 +515,13 @@
 @keyframes lui-pop { from { opacity: 0; transform: scale(0.97); } }
 
 /* ── Dropdown menu ── */
+.lui-date-range-row { display: flex; align-items: center; gap: 0.5rem; }
+.lui-date-range-sep { color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
+.lui-popover { display: inline-block; position: relative; }
+.lui-popover-panel { z-index: 50; padding: 0;
+  background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md);
+  animation: lui-pop var(--lantern-duration) var(--lantern-ease); }
 .lui-dropdown { display: inline-block; position: relative; }
 .lui-dropdown-menu { z-index: 50; min-width: 11rem; padding: 0.25rem;
   background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
@@ -564,7 +571,7 @@
 .lui-empty-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 
 @media (prefers-reduced-motion: reduce) {
-  .lui-modal-backdrop, .lui-modal-panel, .lui-dropdown-menu { animation: none; }
+  .lui-modal-backdrop, .lui-modal-panel, .lui-dropdown-menu, .lui-popover-panel { animation: none; }
 }
 
 /* ── App shell (top bar + fixed sidebar + main) ── */
