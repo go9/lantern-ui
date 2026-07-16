@@ -38,6 +38,7 @@ defmodule LanternUI do
     button: LanternUI.Components.Button,
     icon: LanternUI.Components.Icon,
     form: LanternUI.Components.Form,
+    popover: LanternUI.Components.Popover,
     calendar: LanternUI.Components.Calendar,
     datetime_field: LanternUI.Components.DatetimeField,
     date_picker: LanternUI.Components.DatePicker,
