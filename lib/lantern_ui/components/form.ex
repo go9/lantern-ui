@@ -146,10 +146,17 @@ defmodule LanternUI.Components.Form do
 
   # Minimal error translation: apply interpolated bindings. Hosts with gettext
   # can pre-translate and pass `errors` explicitly.
+  #
+  # The replacement MUST stay lazy (`fn _ -> ... end`, as Phoenix's own
+  # translate_error does). An eager `to_string(value)` is evaluated for every
+  # opt even when the message never references it, and changeset opts routinely
+  # carry values that cannot be stringified — a unique-constraint error ships
+  # `[:email]`, and `to_string([:email])` raises ArgumentError. That crashed
+  # every "email has already been taken" render.
   @doc "Interpolate a changeset error tuple into a message string."
   def translate_error({msg, opts}) do
     Enum.reduce(opts, msg, fn {key, value}, acc ->
-      String.replace(acc, "%{#{key}}", to_string(value))
+      String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
     end)
   end
 

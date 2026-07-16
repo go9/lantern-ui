@@ -363,6 +363,26 @@ defmodule LanternUI.ComponentsTest do
     end
   end
 
+  describe "translate_error/1" do
+    test "does not stringify opts the message never references (unique-constraint regression)" do
+      # A unique-constraint error carries a non-stringifiable list in its opts.
+      # Eagerly calling to_string(value) raised ArgumentError and crashed the
+      # whole render of any "has already been taken" form.
+      msg =
+        LanternUI.Components.Form.translate_error(
+          {"has already been taken", [constraint: :unique, fields: [:email]]}
+        )
+
+      assert msg == "has already been taken"
+    end
+
+    test "still interpolates bindings the message does reference" do
+      assert LanternUI.Components.Form.translate_error(
+               {"should be at least %{count} character(s)", [count: 8, fields: [:password]]}
+             ) == "should be at least 8 character(s)"
+    end
+  end
+
   describe "popover/1" do
     test "renders trigger + panel on the overlay runtime, panel hidden until opened" do
       html =
