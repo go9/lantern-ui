@@ -24,7 +24,16 @@ defmodule LanternUI.Components.Select do
   alias LanternUI.Components.Form
   alias LanternUI.Components.Icon
 
-  attr(:id, :any, default: nil, doc: "Element id; derived from field when omitted.")
+  attr(:id, :any,
+    default: nil,
+    doc: """
+    Element id. Derived from `field` when omitted. With a bare `name` and no
+    `field`, the rich path falls back to `name` (the id feeds a hook, so it must
+    stay stable) while `native` auto-generates a unique `lui-select-<n>`,
+    mirroring Fluxon. Pass an explicit id to get a stable, predictable id on the
+    native path.
+    """
+  )
   attr(:name, :any, default: nil, doc: "Form input name; derived from field when omitted.")
   attr(:value, :any, default: nil, doc: "Selected value(s); list when multiple.")
 
@@ -265,8 +274,28 @@ defmodule LanternUI.Components.Select do
     |> assign(:opts, Enum.map(assigns.options, &option_pair/1))
     |> assign(:value_s, List.first(values_s))
     |> assign(:values_s, values_s)
-    |> assign(:id, assigns.id || assigns.name)
+    |> assign(:id, assigns.id || default_id(assigns))
   end
+
+  # Id fallback when neither `id` nor `field` is given (a bare `name=`). An
+  # explicit `id` always wins, and the `field` clause has already resolved
+  # `field.id` before we get here — so this only decides the ad-hoc path, where
+  # `name` alone is NOT form-scoped and therefore not unique by construction.
+  #
+  # The two paths pull opposite ways, so they resolve differently:
+  #
+  #   * rich path — `@id` is the `phx-hook="LanternSelect"` element's id
+  #     (`#{@id}-select`) and JS targets it, so it MUST stay stable across
+  #     patches. Uniqueness loses; derive from `name` (matches Fluxon).
+  #   * native path — a plain `<select>` with no hook; `@id` only wires
+  #     `<label for>` and `#{@id}-error`. Nothing needs it stable, so
+  #     uniqueness wins and we generate (matches Fluxon's `gen_id()`).
+  #
+  # A stateless function component cannot be told which instance it is, so a
+  # bare `name` cannot be both unique and stable. Callers who need a stable id
+  # on the native path pass one explicitly.
+  defp default_id(%{native: true}), do: "lui-select-#{System.unique_integer([:positive])}"
+  defp default_id(%{name: name}), do: name
 
   defp toggle_label(opts, values_s, multiple) do
     case {multiple, values_s} do
