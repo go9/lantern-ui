@@ -34,6 +34,7 @@ defmodule LanternUI.Components.Select do
     native path.
     """
   )
+
   attr(:name, :any, default: nil, doc: "Form input name; derived from field when omitted.")
   attr(:value, :any, default: nil, doc: "Selected value(s); list when multiple.")
 
