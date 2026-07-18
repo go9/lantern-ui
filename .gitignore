@@ -1,1 +1,19 @@
+# Build artifacts and fetched dependencies. Reproducible from mix.lock via
+# `mix deps.get` — never commit them (they polluted every diff until #961).
+/_build/
+/deps/
+/cover/
+/doc/
+*.ez
+lantern_ui-*.tar
+
+# Crash dumps
+erl_crash.dump
+
+# Editor / language server
+/.elixir_ls/
+/.lexical/
+
+# Local, machine-specific config
 flicker.toml
+.env
