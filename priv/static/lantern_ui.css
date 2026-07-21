@@ -1647,3 +1647,75 @@
     animation: none !important;
   }
 }
+
+/* ── Progress ── */
+.lui-progress {
+  --lui-progress-h: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: var(--lui-progress-h);
+  border-radius: var(--lantern-radius);
+  background: var(--lantern-surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--lantern-border);
+  box-sizing: border-box;
+}
+.lui-progress[data-size="sm"] { --lui-progress-h: 0.375rem; }
+.lui-progress[data-size="md"] { --lui-progress-h: 0.5rem; }
+.lui-progress[data-size="lg"] { --lui-progress-h: 0.75rem; }
+
+.lui-progress-fill {
+  position: relative;
+  height: 100%;
+  min-width: 0.5rem;
+  border-radius: inherit;
+  background: var(--lantern-accent);
+  transition: width var(--lantern-duration) var(--lantern-ease);
+  overflow: hidden;
+}
+.lui-progress[data-color="primary"] .lui-progress-fill { background: var(--lantern-primary); }
+.lui-progress[data-color="accent"] .lui-progress-fill { background: var(--lantern-accent); }
+.lui-progress[data-color="success"] .lui-progress-fill { background: var(--lantern-success); }
+.lui-progress[data-color="warning"] .lui-progress-fill { background: var(--lantern-warning); }
+.lui-progress[data-color="danger"] .lui-progress-fill { background: var(--lantern-danger); }
+.lui-progress[data-color="info"] .lui-progress-fill { background: var(--lantern-info); }
+.lui-progress[data-color="neutral"] .lui-progress-fill { background: var(--lantern-border-strong); }
+
+/* shimmer (determinate, active work) */
+.lui-progress[data-shimmer="true"] .lui-progress-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgb(255 255 255 / 0) 0%,
+    rgb(255 255 255 / 0.4) 50%,
+    rgb(255 255 255 / 0) 100%
+  );
+  animation: lui-progress-shimmer 1.15s ease-in-out infinite;
+}
+@keyframes lui-progress-shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+/* indeterminate */
+.lui-progress[data-state="indeterminate"] .lui-progress-fill {
+  width: 40%;
+  min-width: 0;
+  animation: lui-progress-indeterminate 1.4s ease-in-out infinite;
+}
+@keyframes lui-progress-indeterminate {
+  from { transform: translateX(-60%); }
+  to { transform: translateX(260%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lui-progress-fill {
+    transition: none;
+  }
+  .lui-progress[data-shimmer="true"] .lui-progress-fill::after,
+  .lui-progress[data-state="indeterminate"] .lui-progress-fill {
+    animation: none !important;
+  }
+}

@@ -478,6 +478,7 @@ defmodule LanternUI.ComponentsTest do
                :navlist,
                :pagination,
                :popover,
+               :progress,
                :radio,
                :select,
                :separator,

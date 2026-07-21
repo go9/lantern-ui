@@ -65,7 +65,8 @@ defmodule LanternUI do
     theme: LanternUI.Components.Theme,
     sheet: LanternUI.Components.Sheet,
     navlist: LanternUI.Components.Navlist,
-    loading: LanternUI.Components.Loading
+    loading: LanternUI.Components.Loading,
+    progress: LanternUI.Components.Progress
   }
 
   @doc false
