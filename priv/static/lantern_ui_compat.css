@@ -91,6 +91,53 @@
   --radius-base: var(--radius-lg);
   --radius-badge: var(--radius-md);
   --shadow-base: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+
+  /* LanternUI component tokens. Components read ONLY --lantern-*; each chains
+     through the Fluxon semantic tokens defined above, so defining those themes
+     the components too. This mirrors lantern_ui_theme.css and is what makes the
+     documented "import compat INSTEAD OF theme" actually theme the components —
+     without it every --lantern-* is undefined and components render with square
+     corners, no surfaces, and broken dropdowns. Recolor by overriding any
+     --lantern-* (or the Fluxon token it chains through) AFTER this import. */
+  --lantern-fg: var(--foreground, #09090b);
+  --lantern-fg-muted: var(--foreground-soft, #71717a);
+  --lantern-fg-subtle: var(--foreground-softer, #a1a1aa);
+  --lantern-surface: var(--background-base, #ffffff);
+  --lantern-surface-raised: var(--surface, #ffffff);
+  --lantern-surface-sunken: var(--background-accent, #f4f4f5);
+  --lantern-surface-hover: var(--background-accent, #f4f4f5);
+  --lantern-border: var(--border-base, #e4e4e7);
+  --lantern-border-strong: var(--border-base, #d4d4d8);
+  --lantern-primary: var(--primary, #18181b);
+  --lantern-primary-fg: var(--foreground-primary, #fafafa);
+  --lantern-secondary: var(--background-accent, #f4f4f5);
+  --lantern-secondary-fg: var(--foreground, #18181b);
+  --lantern-accent: var(--primary, oklch(0.637 0.192 38));
+  --lantern-accent-fg: var(--foreground-primary, #ffffff);
+  --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 12%, transparent));
+  --lantern-danger: var(--danger, #dc2626);
+  --lantern-danger-fg: #ffffff;
+  --lantern-success: var(--success, #16a34a);
+  --lantern-warning: var(--warning, #d97706);
+  --lantern-info: var(--info, var(--lantern-accent));
+  --lantern-ring: var(--lantern-accent);
+  --lantern-ring-soft: color-mix(in oklab, var(--lantern-ring) 25%, transparent);
+  --lantern-radius-sm: 0.375rem;
+  --lantern-radius-md: 0.5rem;
+  --lantern-radius-lg: 0.625rem;
+  --lantern-radius: var(--lantern-radius-md);
+  --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --lantern-font: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+  --lantern-font-brand: var(--lantern-font);
+  --lantern-font-mono: var(--font-mono, ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, monospace);
+  --lantern-duration: 150ms;
+  --lantern-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --lantern-control-h: 2rem;
+  --lantern-control-px: 0.75rem;
+  --lantern-text: 0.8125rem;
+  --lantern-text-sm: 0.75rem;
+  --lantern-gap: 0.4375rem;
 }
 
 @theme inline {

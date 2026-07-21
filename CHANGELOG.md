@@ -6,6 +6,19 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- **`lantern_ui_compat.css` now defines the `--lantern-*` component tokens.**
+  The file's docs said to import it *instead of* `lantern_ui_theme.css` and that
+  it "themes LanternUI for free", but it only defined the Fluxon host tokens —
+  never the `--lantern-*` values the components actually read. Following the
+  documented path left every `--lantern-*` undefined, so components rendered
+  with square corners (no `--lantern-radius`), no surfaces/backgrounds (no
+  `--lantern-surface`), and broken dropdowns. Every migrating app hit this and
+  had to hand-vendor the bridge (flicker did; enventory/skusync/goprint/foodfeed
+  forgot and shipped broken styling). compat.css now carries the bridge, so
+  `import compat` alone themes the components. Backward compatible — an app's own
+  `--lantern-*` overrides declared after the import still win.
+
 ### Changed
 - **`use LanternUI, only:/except:`** now accepts Fluxon-style `function: arity`
   pairs in addition to component-key atoms — so a host can drop a single
