@@ -13,6 +13,7 @@ All notable changes to this project are documented here. The format follows
   module. Enables clean drop-in over apps that already define `icon`, etc.
 
 ### Added
+- **`progress`** (flicker) — determinate + indeterminate progress bar / meter (sizes, semantic colors, optional shimmer), pure CSS.
 - **`autocomplete`** (flicker #892) — client-side typeahead (Fluxon parity):
   a combobox text input that filters a provided `options` list as you type,
   keyboard nav, no-results state, FormField-aware, over a hidden value input.
