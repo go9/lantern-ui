@@ -307,6 +307,7 @@ defmodule LanternUI.Components.Select do
     end
   end
 
+  defp option_pair(%{label: label, value: value}), do: {label, value}
   defp option_pair({label, value}), do: {label, value}
   defp option_pair(value), do: {to_string(value), value}
 
