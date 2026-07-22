@@ -116,6 +116,8 @@ defmodule LanternUI.Components.DataTable do
   slot :stat, doc: "Overview metric card above the table." do
     attr(:label, :string, doc: "Stat caption under or beside the value.")
     attr(:value, :any, doc: "Primary metric value to display.")
+    attr(:icon, :string, doc: "Optional heroicon name shown top-right of the label row.")
+    attr(:subtitle, :string, doc: "Optional muted caption under the value.")
     attr(:href, :string, doc: "Optional link target wrapping the stat.")
     attr(:class, :any, doc: "Extra classes on this stat card.")
   end
@@ -176,10 +178,18 @@ defmodule LanternUI.Components.DataTable do
             navigate={stat[:href]}
             class={Class.merge(["lui-dt-stat", !stat[:href] && "lui-dt-stat-static", stat[:class]])}
           >
-            <span class="lui-dt-stat-label">{stat[:label]}</span>
+            <div class="lui-dt-stat-head">
+              <span class="lui-dt-stat-label">{stat[:label]}</span>
+              <span
+                :if={stat[:icon]}
+                class={Class.merge(["lui-dt-stat-icon", stat[:icon]])}
+                aria-hidden="true"
+              ></span>
+            </div>
             <span class="lui-dt-stat-value">
               {if stat[:inner_block], do: render_slot(stat), else: stat[:value]}
             </span>
+            <span :if={stat[:subtitle]} class="lui-dt-stat-sub">{stat[:subtitle]}</span>
           </.link>
         </div>
       </section>
