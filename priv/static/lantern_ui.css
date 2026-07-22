@@ -966,6 +966,22 @@
 .lui-datatable .lui-dt-bulkbar { margin-bottom: 0; border: none; border-radius: 0;
   border-bottom: 1px solid color-mix(in oklab, var(--lantern-accent) 25%, transparent); }
 .lui-datatable .lui-table-wrap { border: none; border-radius: 0; }
+
+/* Fill mode (`<.data_table fill>`): the datatable stretches to its flex parent's
+   height, the table body becomes the vertical scroll region, and the overview /
+   header / chrome / pagination stay pinned and always visible. Opt-in so the
+   default table keeps its natural content height. */
+.lui-datatable-fill {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+}
+.lui-datatable-fill > .lui-table-wrap {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
+}
 .lui-datatable .lui-dt-cards { padding: 0.9rem; }
 .lui-datatable .lui-dt-pagination { margin-top: 0; padding: 0.55rem 0.9rem;
   border-top: 1px solid var(--lantern-border); }

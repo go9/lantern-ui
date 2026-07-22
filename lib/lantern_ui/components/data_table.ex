@@ -90,6 +90,14 @@ defmodule LanternUI.Components.DataTable do
   )
 
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+
+  attr(:fill, :boolean,
+    default: false,
+    doc:
+      "Stretch to the parent's height (the parent must be a flex column with a definite height), " <>
+        "scroll the table body, and pin the header/overview/pagination. Without it the table is " <>
+        "its natural content height."
+  )
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
   slot(:header_action, doc: "Actions rendered in the title row (right side).")
@@ -161,7 +169,7 @@ defmodule LanternUI.Components.DataTable do
       )
 
     ~H"""
-    <div id={@id} class={Class.merge(["lui-datatable", @class])} {@rest}>
+    <div id={@id} class={Class.merge(["lui-datatable", @fill && "lui-datatable-fill", @class])} {@rest}>
       <section
         :if={@stat != []}
         id={"#{@id}-overview"}

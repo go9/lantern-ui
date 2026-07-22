@@ -57,6 +57,25 @@ defmodule LanternUI.DataTableTest do
     assert html =~ "page=3"
   end
 
+  test "fill mode adds lui-datatable-fill; default does not" do
+    off = render(&table/1, %{rows: rows(), meta: @meta, selected: MapSet.new()})
+    refute off =~ "lui-datatable-fill"
+
+    on =
+      render(
+        fn assigns ->
+          ~H"""
+          <DataTable.data_table id="t" fill rows={@rows} meta={@meta} path="/o" selected_ids={@selected}>
+            <:col :let={r} label="Name">{r.name}</:col>
+          </DataTable.data_table>
+          """
+        end,
+        %{rows: rows(), meta: @meta, selected: MapSet.new()}
+      )
+
+    assert on =~ "lui-datatable-fill"
+  end
+
   test "selection: checkboxes, selected row class, bulk bar + events" do
     html = render(&table/1, %{rows: rows(), meta: @meta, selected: MapSet.new([1])})
 
