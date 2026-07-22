@@ -57,6 +57,7 @@ defmodule LanternUI do
     switch: LanternUI.Components.Switch,
     radio: LanternUI.Components.Radio,
     textarea: LanternUI.Components.Textarea,
+    color_input: LanternUI.Components.ColorInput,
     alert: LanternUI.Components.Alert,
     autocomplete: LanternUI.Components.Autocomplete,
     separator: LanternUI.Components.Separator,

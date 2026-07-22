@@ -27,6 +27,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 - **`progress`** (flicker) — determinate + indeterminate progress bar / meter (sizes, semantic colors, optional shimmer), pure CSS.
+- **`color_input`** — native color picker (Fluxon parity): a real
+  `<input type="color">` styled as a swatch plus a read-only hex readout,
+  no JS. Standard field chrome (label/sublabel/description/help/errors),
+  FormField-aware, `size` xs–xl. Accepts the `name`/`value`/`label` surface
+  the playground theme editor already uses.
 - **`autocomplete`** (flicker #892) — client-side typeahead (Fluxon parity):
   a combobox text input that filters a provided `options` list as you type,
   keyboard nav, no-results state, FormField-aware, over a hidden value input.

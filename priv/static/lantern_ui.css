@@ -243,6 +243,80 @@
 .lui-field[data-size="lg"] .lui-input-wrap { height: 2.25rem; }
 .lui-field[data-size="xl"] .lui-input-wrap { height: 2.5rem; }
 
+/* ── Color input ──
+ * A native <input type="color"> styled as a swatch, plus a read-only hex
+ * readout, inside the shared bordered wrap. No JS: the color input is the
+ * submitted control; the hex text mirrors its value for display. */
+.lui-color-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  height: var(--lantern-control-h);
+  padding: 0 0.625rem 0 0.375rem;
+  background: var(--lantern-surface);
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius);
+  box-shadow: var(--lantern-shadow);
+  transition:
+    border-color var(--lantern-duration) var(--lantern-ease),
+    box-shadow var(--lantern-duration) var(--lantern-ease);
+}
+.lui-color-wrap:focus-within {
+  border-color: var(--lantern-ring);
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft);
+}
+.lui-color-wrap[data-invalid] {
+  border-color: var(--lantern-danger);
+}
+.lui-color-wrap[data-invalid]:focus-within {
+  border-color: var(--lantern-danger);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--lantern-danger) 20%, transparent);
+}
+.lui-color-wrap[data-disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.lui-color-swatch {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  background: none;
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-sm);
+  cursor: pointer;
+  outline: none;
+}
+.lui-color-swatch::-webkit-color-swatch-wrapper { padding: 0; }
+.lui-color-swatch::-webkit-color-swatch {
+  border: none;
+  border-radius: calc(var(--lantern-radius-sm) - 1px);
+}
+.lui-color-swatch::-moz-color-swatch {
+  border: none;
+  border-radius: calc(var(--lantern-radius-sm) - 1px);
+}
+.lui-color-hex {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  padding: 0;
+  font-family: var(--lantern-font-mono);
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg);
+  text-transform: uppercase;
+}
+
+.lui-field[data-size="xs"] .lui-color-wrap { height: 1.5rem; }
+.lui-field[data-size="sm"] .lui-color-wrap { height: 1.75rem; }
+.lui-field[data-size="lg"] .lui-color-wrap { height: 2.25rem; }
+.lui-field[data-size="xl"] .lui-color-wrap { height: 2.5rem; }
+
 /* ── Calendar ── */
 .lui-cal {
   display: inline-block;
