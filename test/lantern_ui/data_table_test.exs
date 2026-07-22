@@ -94,6 +94,26 @@ defmodule LanternUI.DataTableTest do
     assert path =~ "filters[0][value]=active"
   end
 
+  defp stat_table(assigns) do
+    ~H"""
+    <DataTable.data_table id="s" rows={@rows} meta={@meta} path="/orders" selected_ids={@selected}>
+      <:stat label="Total" value="42" icon="hero-check-circle" subtitle="Last 24 hours" />
+      <:col :let={r} label="Name">{r.name}</:col>
+    </DataTable.data_table>
+    """
+  end
+
+  test "stat slot renders icon class and subtitle" do
+    html = render(&stat_table/1, %{rows: rows(), meta: @meta, selected: MapSet.new()})
+
+    assert html =~ "lui-dt-stat-icon"
+    assert html =~ "hero-check-circle"
+    assert html =~ "lui-dt-stat-sub"
+    assert html =~ "Last 24 hours"
+    assert html =~ ">Total<"
+    assert html =~ "42"
+  end
+
   test "meta without flop/params still works (plain maps)" do
     meta = %{current_page: 1, total_pages: 1, page_size: nil, total_count: 0}
 
