@@ -1512,8 +1512,14 @@
   letter-spacing: 0.05em;
   color: var(--lantern-fg-subtle, var(--lantern-fg-muted));
   padding: 0 0.5rem;
+  margin-top: 1rem;
   margin-bottom: 0.25rem;
   white-space: nowrap;
+}
+
+/* First heading in a list shouldn't push off the top edge. */
+.lui-navlist > .lui-navlist-heading:first-child {
+  margin-top: 0;
 }
 .lui-navlink {
   display: flex;
