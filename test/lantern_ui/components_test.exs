@@ -465,6 +465,7 @@ defmodule LanternUI.ComponentsTest do
                :calendar,
                :charts,
                :checkbox,
+               :color_input,
                :data_table,
                :date_picker,
                :datetime_field,
