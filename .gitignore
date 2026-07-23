@@ -17,3 +17,8 @@ erl_crash.dump
 # Local, machine-specific config
 flicker.toml
 .env
+
+# Symlinked into worktrees; a trailing-slash pattern matches a DIRECTORY,
+# not a symlink, so these need bare entries too.
+/deps
+/_build

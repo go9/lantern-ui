@@ -7,6 +7,17 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Fixed
+- **`data_table fill` now pins the column header.** In fill mode the table body
+  is the scroll region, but nothing in `lantern_ui.css` was sticky — so on any
+  list taller than the viewport the `<thead>` scrolled away with the rows and
+  you lost the column labels (and the sort controls) exactly when a long list
+  makes them matter most. The header/chrome/overview/pagination already stayed
+  pinned; only the column header was lost. `.lui-th` is now `position: sticky`
+  inside a fill-mode scroll region. Because `.lui-table` uses
+  `border-collapse: collapse` the border belongs to the table rather than the
+  cell — a sticky `th` therefore drops its `border-bottom` on scroll — so the
+  hairline is redrawn as an inset shadow. Scoped to fill mode; default tables
+  are unchanged.
 - **`lantern_ui_compat.css` now defines the `--lantern-*` component tokens.**
   The file's docs said to import it *instead of* `lantern_ui_theme.css` and that
   it "themes LanternUI for free", but it only defined the Fluxon host tokens —
