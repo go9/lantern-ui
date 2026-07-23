@@ -51,7 +51,13 @@ defmodule LanternUI.AutocompleteTest do
     assert html =~ ~s(id="thing_status-ac")
     assert html =~ ~s(name="thing[status]")
     assert html =~ ~s(value="active")
-    assert html =~ ~s(disabled)
+
+    document = Floki.parse_document!(html)
+
+    assert [{"input", attrs, []}] =
+             Floki.find(document, ~s(input[type="hidden"][name="thing[status]"]))
+
+    assert {"disabled", "disabled"} in attrs
   end
 
   test "renders Fluxon-compatible async configuration and resolvable ARIA relationships" do
@@ -81,8 +87,9 @@ defmodule LanternUI.AutocompleteTest do
     assert html =~ ~s(data-search-threshold="2")
     assert html =~ ~s(data-search-mode="starts-with")
     assert html =~ ~s(data-open-on-focus="true")
-    assert html =~ ~s(data-animation-enter="enter")
-    assert html =~ ~s(data-animation-leave="leave")
+    refute html =~ "motion"
+    refute html =~ ~s(data-animation-enter)
+    refute html =~ ~s(data-animation-leave)
     assert html =~ ~s(autofocus)
     assert html =~ ~s(data-part="clear")
     assert html =~ ~s(data-part="loading")
@@ -120,7 +127,7 @@ defmodule LanternUI.AutocompleteTest do
     assert html =~ ~s(data-default-text="false")
   end
 
-  test "default empty state keeps query interpolation template" do
+  test "restores the existing static placeholder and empty-state defaults" do
     html =
       render(fn assigns ->
         ~H"""
@@ -128,7 +135,39 @@ defmodule LanternUI.AutocompleteTest do
         """
       end)
 
-    assert html =~ ~s(data-empty-template="No results found for &quot;%{query}&quot;.")
+    assert html =~ ~s(placeholder="Search…")
+    assert html =~ ~s(data-empty-template="No results")
     assert html =~ ~s(data-default-text="true")
+
+    assert Floki.find(Floki.parse_document!(html), ~s([data-part="no-results"])) |> Floki.text() =~
+             "No results"
+  end
+
+  test "preserves list-valued tuples and offers an explicit unambiguous group form" do
+    list_value =
+      render(fn assigns ->
+        ~H"""
+        <Autocomplete.autocomplete id="scope" name="scope" options={[{"Scopes", ["read", "write"]}]} />
+        """
+      end)
+
+    assert Floki.find(Floki.parse_document!(list_value), ~s([data-part="group"])) == []
+    assert length(Floki.find(Floki.parse_document!(list_value), ~s([data-part="option"]))) == 1
+
+    explicit_group =
+      render(fn assigns ->
+        ~H"""
+        <Autocomplete.autocomplete
+          id="scope-group"
+          name="scope-group"
+          options={[{:group, "Scopes", ["read", "write"]}]}
+        />
+        """
+      end)
+
+    assert length(Floki.find(Floki.parse_document!(explicit_group), ~s([data-part="group"]))) == 1
+
+    assert length(Floki.find(Floki.parse_document!(explicit_group), ~s([data-part="option"]))) ==
+             2
   end
 end

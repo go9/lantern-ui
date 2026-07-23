@@ -146,9 +146,17 @@ loading state, and stops loading when the patched options arrive:
 </.autocomplete>
 ```
 
-Options may be nested labelled groups. `inner_prefix`, `inner_suffix`,
-`outer_prefix`, `outer_suffix`, `header`, and `footer` slots customize the
-surrounding states without moving search or selection ownership into LanternUI.
+Options may be nested labelled groups. A Fluxon-style `{label, children}` is a
+group when `children` is a non-empty tuple list. Use
+`{:group, label, children}` for an empty group or scalar children; this explicit
+form preserves existing `{label, list_value}` options without ambiguity.
+`inner_prefix`, `inner_suffix`, `outer_prefix`, `outer_suffix`, `header`, and
+`footer` slots customize the surrounding states without moving search or
+selection ownership into LanternUI.
+
+The `animation`, `animation_enter`, and `animation_leave` attrs are accepted as
+Fluxon compatibility no-ops. Like Lantern's modal, autocomplete motion is
+controlled by the bundled CSS and duration tokens.
 
 ## Theming
 
