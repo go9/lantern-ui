@@ -17,6 +17,7 @@ embeddable Postgres table viewer; `lantern_ui` is the UI component set.
 - `LanternUI.Components.Accordion.accordion/1` + `accordion_item/1` — a
   Fluxon-compatible, WAI-ARIA accordion with single/multiple-open behavior.
 - `LanternUI.Charts.Geometry` — pure scaling / "nice" ticks / SVG path helpers.
+- `LanternUI.Components.Skeleton.skeleton/1` — decorative CSS-only loading placeholder.
 
 Geometry is computed in Elixir, so charts re-render through normal LiveView
 assigns. The only client JS is one small hook (`ChartHover`) for the area chart's
@@ -73,6 +74,27 @@ Or from git while iterating:
 maps; datetime = `DateTime`/`NaiveDateTime`/`Date`/ISO-8601 string).
 
 `area_chart` `series`: a list of `%{date: iso8601 | Date, value: number}`.
+
+## Skeleton placeholders
+
+`Skeleton.skeleton/1` is decorative and needs no JavaScript or Tailwind. Its
+bundled `lui-skeleton` CSS makes the default placeholder full width and one line
+high; `class` or `style` can supply application-specific geometry. Mark the
+surrounding loading region busy and give that region an accessible name:
+
+```heex
+<section aria-busy="true" aria-label="Loading profile">
+  <LanternUI.Components.Skeleton.skeleton
+    class="profile-avatar-placeholder"
+    style="width: 3rem; height: 3rem; border-radius: 9999px;"
+  />
+  <LanternUI.Components.Skeleton.skeleton style="width: 12rem;" />
+  <LanternUI.Components.Skeleton.skeleton style="height: 8rem; margin-top: 1rem;" />
+</section>
+```
+
+Each skeleton renders with `aria-hidden="true"`. Its pulse automatically stops
+when the user enables reduced motion.
 
 ### Accordion
 
