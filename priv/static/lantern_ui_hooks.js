@@ -1111,10 +1111,13 @@ const LanternSelect = {
 // aria-activedescendant, including across LiveView result patches.
 const LanternAutocomplete = {
   mounted() {
-    this.cleanup = []
     this.open = false
     this.activeIndex = -1
     this.loading = false
+    this.dismissRelease = null
+    this.pendingSearch = null
+    this.inFlightSearches = []
+    this.searchSequence = 0
     this.captureElements()
 
     this.onClick = (e) => {
@@ -1146,6 +1149,8 @@ const LanternAutocomplete = {
     }
     this.onKeydown = (e) => this.onKey(e)
 
+    // These listeners stay on the hook root, which LiveView retains. Delegation
+    // means patched inputs/options never need their own listeners reattached.
     this.el.addEventListener("click", this.onClick)
     this.el.addEventListener("input", this.onInput)
     this.el.addEventListener("focusin", this.onFocus)
@@ -1158,9 +1163,26 @@ const LanternAutocomplete = {
     this.hidden = this.el.querySelector('[data-part="value"]')
     this.control = this.el.querySelector(".lui-autocomplete-control")
     this.panel = this.el.querySelector('[data-part="panel"]')
+    this.resultsContainer = this.el.querySelector('[data-part="options"]')
     this.loadingEl = this.el.querySelector('[data-part="loading"]')
     this.noResults = this.el.querySelector('[data-part="no-results"]')
     this.clearButton = this.el.querySelector('[data-part="clear"]')
+  },
+
+  resultSignature() {
+    return JSON.stringify({
+      options: this.options().map((option) => [
+        option.id,
+        option.dataset.value,
+        this.optionLabel(option),
+        option.getAttribute("aria-selected"),
+      ]),
+      groups: [...this.el.querySelectorAll('[data-part="group"]')].map((group) => [
+        group.dataset.depth,
+        group.textContent.trim(),
+      ]),
+      empty: this.noResults?.textContent.trim() || "",
+    })
   },
 
   beforeUpdate() {
@@ -1170,14 +1192,31 @@ const LanternAutocomplete = {
       hiddenValue: this.hidden?.value || "",
       inputValue: this.input?.value || "",
       selectedLabel: this.selectedLabel(),
+      resultsContainer: this.resultsContainer,
+      noResults: this.noResults,
+      resultSignature: this.resultSignature(),
     }
+    // onDismiss closes over the old panel/control. Release it before morphdom
+    // can detach those nodes; updated() re-arms against the current pair.
+    if (this.open) this.releaseDismissal()
   },
 
   updated() {
     const state = this.patchState || {}
     this.captureElements()
-    clearTimeout(this.searchTimer)
-    this.setLoading(false)
+
+    const resultsPatched =
+      state.resultsContainer !== this.resultsContainer ||
+      state.noResults !== this.noResults ||
+      state.resultSignature !== this.resultSignature()
+
+    // A hook update can be caused by validation chrome or another unrelated
+    // patch. Record result-surface changes, but do not clear loading here: the
+    // exact pushEvent reply completes the matching token below, so an older or
+    // unrelated patch cannot acknowledge a newer query.
+    if (resultsPatched && this.inFlightSearches.length > 0) {
+      this.inFlightSearches[0].resultsPatched = true
+    }
 
     if (state.hiddenValue && state.hiddenValue === (this.hidden?.value || "") && !this.selectedOption()) {
       this.retainedValue = state.hiddenValue
@@ -1187,18 +1226,28 @@ const LanternAutocomplete = {
       this.retainedLabel = this.optionLabel(this.selectedOption())
     }
 
-    if (state.focused && this.input) {
-      this.input.value = state.inputValue
-      this.input.focus()
-    } else if (this.input && this.retainedValue === (this.hidden?.value || "")) {
+    const pendingQuery = this.pendingSearch?.query
+    if (this.input && pendingQuery != null) this.input.value = pendingQuery
+    else if (state.focused && this.input) this.input.value = state.inputValue
+    else if (this.input && this.retainedValue === (this.hidden?.value || "")) {
       this.input.value = this.retainedLabel || ""
     }
-    if (this.open) this.show()
+
+    // Server markup always renders loading/closed. Reapply client-owned state
+    // after capturing the replacement nodes without changing pending timers.
+    this.setLoading(this.loading)
+    if (this.open) {
+      this.panel.hidden = false
+      this.input?.setAttribute("aria-expanded", "true")
+      this.positionPanel()
+      this.armDismissal()
+    }
     this.updateResults()
 
     const byValue = this.options(true).find((option) => option.dataset.value === state.activeValue)
     if (byValue) this.setActive(this.options(true).indexOf(byValue))
     else this.setActive(Math.min(this.activeIndex, this.options(true).length - 1))
+    if (state.focused) this.input?.focus()
   },
 
   options(visibleOnly = false) {
@@ -1226,30 +1275,45 @@ const LanternAutocomplete = {
     return this.options(true)[this.activeIndex]
   },
 
+  positionPanel() {
+    if (!this.panel || !this.input) return
+    position(this.control || this.input, this.panel, { placement: "bottom-start" })
+    this.panel.style.minWidth = `${(this.control || this.input).offsetWidth}px`
+  },
+
+  armDismissal() {
+    this.releaseDismissal()
+    if (!this.panel || !this.control) return
+    this.dismissRelease = onDismiss(
+      this.panel,
+      (reason) => this.hide({ refocus: false, restore: reason === "outside" }),
+      { anchor: this.control }
+    )
+  },
+
+  releaseDismissal() {
+    this.dismissRelease?.()
+    this.dismissRelease = null
+  },
+
   show() {
     if (!this.input || !this.panel || this.input.disabled) return
     if (!this.open) {
       this.open = true
-      this.cleanup.push(
-        onDismiss(
-          this.panel,
-          (reason) => this.hide({ refocus: false, restore: reason === "outside" }),
-          { anchor: this.control }
-        )
-      )
+      this.armDismissal()
+    } else if (!this.dismissRelease) {
+      this.armDismissal()
     }
     this.panel.hidden = false
     this.input.setAttribute("aria-expanded", "true")
-    position(this.control || this.input, this.panel, { placement: "bottom-start" })
-    this.panel.style.minWidth = `${(this.control || this.input).offsetWidth}px`
+    this.positionPanel()
     this.updateResults()
   },
 
   hide({ refocus = true, restore = false } = {}) {
     if (!this.open) return
     this.open = false
-    this.cleanup.forEach((release) => release())
-    this.cleanup = []
+    this.releaseDismissal()
     this.panel.hidden = true
     this.input?.setAttribute("aria-expanded", "false")
     this.setActive(-1)
@@ -1263,11 +1327,13 @@ const LanternAutocomplete = {
     clearTimeout(this.searchTimer)
 
     if (this.input?.disabled) {
+      this.pendingSearch = null
       this.setLoading(false)
       return
     }
 
     if (query.length < threshold) {
+      this.pendingSearch = null
       this.setLoading(false)
       this.updateResults()
       return
@@ -1275,15 +1341,34 @@ const LanternAutocomplete = {
 
     const event = this.el.dataset.serverSearch
     if (!event) {
+      this.pendingSearch = null
       this.updateResults()
       return
     }
 
+    const request = { query, token: ++this.searchSequence, phase: "debouncing" }
+    this.pendingSearch = request
     this.setLoading(true)
     const debounce = Math.max(0, parseInt(this.el.dataset.debounce || "200", 10))
     this.searchTimer = setTimeout(() => {
-      if (!this.input?.disabled) this.pushEvent(event, { query })
+      if (this.input?.disabled || this.pendingSearch?.token !== request.token) return
+      request.phase = "waiting"
+      this.inFlightSearches.push(request)
+      this.pushEvent(event, { query }, () => {
+        // LiveView applies the event reply's diff in the same turn. Defer one
+        // task so loading remains visible through that result patch; this also
+        // completes identical/empty results whose DOM signature cannot change.
+        setTimeout(() => this.completeSearch(request), 0)
+      })
     }, debounce)
+  },
+
+  completeSearch(request) {
+    this.inFlightSearches = this.inFlightSearches.filter((item) => item.token !== request.token)
+    if (this.pendingSearch?.token !== request.token) return
+    this.pendingSearch = null
+    this.setLoading(false)
+    this.updateResults()
   },
 
   matches(label, query) {
@@ -1317,7 +1402,7 @@ const LanternAutocomplete = {
   },
 
   updateGroups() {
-    const children = [...(this.el.querySelector('[data-part="options"]')?.children || [])]
+    const children = [...(this.resultsContainer?.children || [])]
     children.forEach((item, index) => {
       if (item.dataset.part !== "group") return
       const depth = parseInt(item.dataset.depth || "0", 10)
@@ -1369,6 +1454,10 @@ const LanternAutocomplete = {
   },
 
   clear() {
+    clearTimeout(this.searchTimer)
+    this.pendingSearch = null
+    this.inFlightSearches = []
+    this.setLoading(false)
     if (this.hidden) {
       this.hidden.value = ""
       this.hidden.dispatchEvent(new Event("input", { bubbles: true }))
@@ -1408,7 +1497,7 @@ const LanternAutocomplete = {
 
   destroyed() {
     clearTimeout(this.searchTimer)
-    this.cleanup.forEach((release) => release())
+    this.releaseDismissal()
     this.el.removeEventListener("click", this.onClick)
     this.el.removeEventListener("input", this.onInput)
     this.el.removeEventListener("focusin", this.onFocus)

@@ -8,6 +8,12 @@ defmodule LanternUI.Components.Autocomplete do
   Static options are filtered in the browser. When `on_search` is set, the
   LiveView owns the options and receives `%{"query" => query}` after the
   configured threshold and debounce.
+
+  Fluxon-style `{label, children}` groups are recognized when `children` is a
+  non-empty list of tuples. Use `{:group, label, children}` for empty groups or
+  groups of scalar options; other list-valued tuples remain ordinary options.
+  Animation attrs are accepted for Fluxon compatibility but are no-ops;
+  Lantern's panel motion is CSS/token-driven, matching `LanternUI.Components.Modal`.
   """
   use Phoenix.Component
 
@@ -24,12 +30,16 @@ defmodule LanternUI.Components.Autocomplete do
     doc: "Form field; derives id, name, value, and errors."
   )
 
-  attr(:options, :list, default: [], doc: "Choices as values, tuples, or nested labelled groups.")
+  attr(:options, :list,
+    default: [],
+    doc: "Choices as values, tuples, tuple-child groups, or `{:group, label, children}`."
+  )
+
   attr(:label, :string, default: nil, doc: "Primary label above the control.")
   attr(:sublabel, :string, default: nil, doc: "Secondary label beside the primary label.")
   attr(:description, :string, default: nil, doc: "Description between label and control.")
   attr(:help_text, :string, default: nil, doc: "Help line shown when there are no errors.")
-  attr(:placeholder, :string, default: nil, doc: "Placeholder shown in the search input.")
+  attr(:placeholder, :string, default: "Search…", doc: "Placeholder shown in the search input.")
   attr(:autofocus, :boolean, default: false, doc: "Focus the search input on page load.")
 
   attr(:size, :string,
@@ -43,8 +53,8 @@ defmodule LanternUI.Components.Autocomplete do
   attr(:search_threshold, :integer, default: 0, doc: "Characters required before searching.")
 
   attr(:no_results_text, :string,
-    default: ~s(No results found for "%{query}".),
-    doc: "Empty copy; `%{query}` is replaced in the browser."
+    default: "No results",
+    doc: "Empty copy; an optional `%{query}` placeholder is replaced in the browser."
   )
 
   attr(:on_search, :string,
@@ -64,17 +74,17 @@ defmodule LanternUI.Components.Autocomplete do
 
   attr(:animation, :string,
     default: "transition duration-150 ease-in-out",
-    doc: "Compatibility classes for panel animation."
+    doc: "Accepted for Fluxon compatibility; currently a CSS/token-driven no-op."
   )
 
   attr(:animation_enter, :string,
     default: "opacity-100 scale-100",
-    doc: "Compatibility classes for panel entry."
+    doc: "Accepted for Fluxon compatibility; currently a no-op."
   )
 
   attr(:animation_leave, :string,
     default: "opacity-0 scale-95",
-    doc: "Compatibility classes for panel exit."
+    doc: "Accepted for Fluxon compatibility; currently a no-op."
   )
 
   attr(:clearable, :boolean, default: false, doc: "Show a button that clears the selection.")
@@ -148,10 +158,15 @@ defmodule LanternUI.Components.Autocomplete do
         data-search-mode={@search_mode}
         data-open-on-focus={to_string(@open_on_focus)}
         data-empty-template={@no_results_text}
-        data-animation-enter={@animation_enter}
-        data-animation-leave={@animation_leave}
       >
-        <input type="hidden" name={@name} value={@value_s} data-part="value" {hidden_rest(@rest)} />
+        <input
+          type="hidden"
+          name={@name}
+          value={@value_s}
+          data-part="value"
+          disabled={@disabled}
+          {hidden_rest(@rest)}
+        />
         <div class="lui-autocomplete-row">
           <span
             :for={slot <- @outer_prefix}
@@ -211,7 +226,7 @@ defmodule LanternUI.Components.Autocomplete do
 
         <div
           id={"#{@id}-listbox"}
-          class={Class.merge(["lui-select-listbox", @animation])}
+          class="lui-select-listbox"
           data-part="panel"
           role="listbox"
           aria-label={@label || @placeholder || "Suggestions"}
@@ -304,14 +319,18 @@ defmodule LanternUI.Components.Autocomplete do
 
   defp normalize_options(options, depth, index) do
     Enum.reduce(options, {[], index}, fn
+      {:group, label, children}, {items, next} when is_list(children) ->
+        append_group(items, label, children, depth, next)
+
       {label, children}, {items, next} when is_list(children) ->
-        group = %{kind: :group, label: label, depth: depth, index: next}
-        {nested, after_nested} = normalize_options(children, depth + 1, next + 1)
-        {items ++ [group | nested], after_nested}
+        if tuple_group?(children) do
+          append_group(items, label, children, depth, next)
+        else
+          append_option(items, label, children, depth, next)
+        end
 
       {label, value}, {items, next} ->
-        {items ++ [%{kind: :option, label: label, value: value, depth: depth, index: next}],
-         next + 1}
+        append_option(items, label, value, depth, next)
 
       value, {items, next} ->
         {items ++
@@ -319,6 +338,21 @@ defmodule LanternUI.Components.Autocomplete do
          next + 1}
     end)
   end
+
+  defp append_group(items, label, children, depth, next) do
+    group = %{kind: :group, label: label, depth: depth, index: next}
+    {nested, after_nested} = normalize_options(children, depth + 1, next + 1)
+    {items ++ [group | nested], after_nested}
+  end
+
+  defp append_option(items, label, value, depth, next) do
+    {items ++ [%{kind: :option, label: label, value: value, depth: depth, index: next}], next + 1}
+  end
+
+  defp tuple_group?([]), do: false
+
+  defp tuple_group?(children),
+    do: Enum.all?(children, &(is_tuple(&1) and tuple_size(&1) in [2, 3]))
 
   defp selected_label(_items, value_s) when value_s in [nil, ""], do: nil
 
