@@ -7,17 +7,19 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
-- **`accordion` — a headless-driven, WAI-ARIA APG accordion** (`use LanternUI`
-  exposes `<.accordion>` with `<:item title=...>` slots). Server renders the
-  anatomy + initial open state; the namespaced `LanternAccordion` hook owns
-  open/close and the APG keyboard model (`Enter`/`Space` toggle, `ArrowUp`/
-  `ArrowDown`/`Home`/`End` between headers), which a server round-trip can't
-  provide. Panels stay in the DOM (`hidden`) so `aria-controls`/`aria-labelledby`
-  idrefs always resolve and collapsed content leaves the tab order + a11y tree;
-  single-open by default, `multiple` allows many; header `heading_level` sets the
-  `role="heading"` `aria-level`; the chevron respects `prefers-reduced-motion`.
-  Passes the ARIA conformance gate. Implemented **clean-room** from the W3C
-  WAI-ARIA APG (no Mishka Chelekom source copied — see
+- **`accordion/1` + `accordion_item/1` — a headless-driven, WAI-ARIA APG
+  accordion with the Fluxon 2.3.1 public API.** A Fluxon call migrates by
+  changing only `use Fluxon` to `use LanternUI`: container `multiple`,
+  `prevent_all_closed`, and `animation_duration` options; item `expanded` and
+  `icon` options; required `header`/`panel` slots with slot classes; optional
+  generated ids; and global attrs are supported. The namespaced
+  `LanternAccordion` hook owns open/close and the APG keyboard model
+  (`Enter`/`Space` toggle, `ArrowUp`/`ArrowDown`/`Home`/`End` between headers).
+  Panels stay in the DOM (`hidden`) so ARIA idrefs always resolve and collapsed
+  content leaves the tab order + a11y tree. The chevron respects both
+  `animation_duration` and `prefers-reduced-motion`. Passes the ARIA conformance
+  gate. Implemented **clean-room** from the public Fluxon API facts and W3C
+  WAI-ARIA APG; no commercial Fluxon or Chelekom expression copied (see
   `docs/upstreams/chelekom.md`, flicker #921).
 
 ### Changed

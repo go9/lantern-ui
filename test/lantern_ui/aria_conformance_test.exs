@@ -57,9 +57,18 @@ defmodule LanternUI.ARIAConformanceTest do
       render(fn assigns ->
         ~H"""
         <Accordion.accordion id="faq">
-          <:item title="Shipping">We ship worldwide.</:item>
-          <:item title="Returns" expanded>Thirty days.</:item>
-          <:item title="Warranty" disabled>Soon.</:item>
+          <Accordion.accordion_item id="shipping">
+            <:header>Shipping</:header>
+            <:panel>We ship worldwide.</:panel>
+          </Accordion.accordion_item>
+          <Accordion.accordion_item id="returns" expanded>
+            <:header>Returns</:header>
+            <:panel>Thirty days.</:panel>
+          </Accordion.accordion_item>
+          <Accordion.accordion_item id="warranty">
+            <:header>Warranty</:header>
+            <:panel>Soon.</:panel>
+          </Accordion.accordion_item>
         </Accordion.accordion>
         """
       end)

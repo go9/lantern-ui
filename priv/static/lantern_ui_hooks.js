@@ -1865,6 +1865,10 @@ const LanternAccordion = {
     return this.el.dataset.multiple === "true"
   },
 
+  preventsAllClosed() {
+    return this.el.dataset.preventAllClosed === "true"
+  },
+
   setOpen(trigger, open) {
     const item = trigger.closest('[data-part="item"]')
     const panel = document.getElementById(trigger.getAttribute("aria-controls"))
@@ -1876,6 +1880,10 @@ const LanternAccordion = {
 
   toggle(trigger) {
     const open = trigger.getAttribute("aria-expanded") === "true"
+    if (open && this.preventsAllClosed()) {
+      const openCount = this.triggers().filter((t) => t.getAttribute("aria-expanded") === "true").length
+      if (openCount === 1) return
+    }
     if (!open && !this.isMultiple()) {
       this.triggers().forEach((t) => t !== trigger && this.setOpen(t, false))
     }
@@ -1896,6 +1904,13 @@ const LanternAccordion = {
     this.el.querySelectorAll('[data-part="trigger"]').forEach((t) => {
       this.state.set(t.id, t.getAttribute("aria-expanded") === "true")
     })
+
+    const open = this.triggers().filter((t) => t.getAttribute("aria-expanded") === "true")
+    if (!this.isMultiple()) open.slice(1).forEach((t) => this.setOpen(t, false))
+    if (this.preventsAllClosed() && open.length === 0) {
+      const first = this.triggers()[0]
+      if (first) this.setOpen(first, true)
+    }
 
     this.onClick = (e) => {
       const trigger = e.target.closest('[data-part="trigger"]')

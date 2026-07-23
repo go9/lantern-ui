@@ -1903,7 +1903,7 @@
   height: 1.1em;
   flex-shrink: 0;
   color: var(--lantern-fg-muted);
-  transition: transform var(--lantern-duration) var(--lantern-ease);
+  transition: transform var(--lui-accordion-duration, 300ms) var(--lantern-ease);
 }
 .lui-accordion-trigger[aria-expanded="true"] .lui-accordion-icon { transform: rotate(180deg); }
 
