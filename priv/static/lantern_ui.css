@@ -955,7 +955,7 @@
   gap: 1px; background: var(--lantern-border); border-top: 1px solid var(--lantern-border); }
 .lui-stat-grid { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
   overflow: hidden; }
-.lui-dt-stat { flex: 1 1 9.5rem; display: flex; flex-direction: column; gap: 0.15rem;
+.lui-dt-stat { flex: 1 1 9.5rem; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem;
   padding: 0.7rem 0.8rem;
   background: var(--lantern-surface-raised); text-decoration: none; }
 .lui-dt-stat:hover { background: var(--lantern-surface-hover); }
@@ -964,7 +964,8 @@
 .lui-dt-stat-label { font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); }
 .lui-dt-stat-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
 .lui-dt-stat-icon { flex: none; width: 1rem; height: 1rem; color: var(--lantern-fg-muted); }
-.lui-dt-stat-value { font-size: 1.2rem; font-weight: 650; letter-spacing: -0.02em;
+.lui-dt-stat-value { min-width: 0; max-width: 100%; overflow-wrap: anywhere;
+  font-size: 1.2rem; font-weight: 650; letter-spacing: -0.02em;
   color: var(--lantern-fg); font-variant-numeric: tabular-nums; }
 .lui-dt-stat-sub { font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); margin-top: 0.1rem; }
 .lui-dt-tabsrow { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem; }

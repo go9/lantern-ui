@@ -132,17 +132,37 @@ defmodule LanternUI.DataTableTest do
         linked_value: "custom value"
       })
 
-    assert html =~ ~s(<div class="lui-dt-stats" data-part="collapse-body">)
-    refute html =~ "lui-stat-grid"
-    assert html =~ "lui-dt-stat-icon"
-    assert html =~ "hero-check-circle"
-    assert html =~ "lui-dt-stat-sub"
-    assert html =~ "Last 24 hours"
-    assert html =~ ">Total<"
-    assert html =~ "42"
-    assert html =~ ~s(href="/orders/linked")
-    assert html =~ ~s(class="lui-dt-stat custom-stat")
-    assert html =~ "custom value"
+    assert Floki.find(Floki.parse_fragment!(html), ".lui-dt-stats") == [
+             {"div", [{"class", "lui-dt-stats"}, {"data-part", "collapse-body"}],
+              [
+                {"div", [{"class", "lui-dt-stat lui-dt-stat-static"}],
+                 [
+                   {"div", [{"class", "lui-dt-stat-head"}],
+                    [
+                      {"span", [{"class", "lui-dt-stat-label"}], ["Total"]},
+                      {"span",
+                       [
+                         {"class", "lui-dt-stat-icon hero-check-circle"},
+                         {"aria-hidden", "true"}
+                       ], []}
+                    ]},
+                   {"span", [{"class", "lui-dt-stat-value"}], ["42"]},
+                   {"span", [{"class", "lui-dt-stat-sub"}], ["Last 24 hours"]}
+                 ]},
+                {"a",
+                 [
+                   {"href", "/orders/linked"},
+                   {"data-phx-link", "redirect"},
+                   {"data-phx-link-state", "push"},
+                   {"class", "lui-dt-stat custom-stat"}
+                 ],
+                 [
+                   {"div", [{"class", "lui-dt-stat-head"}],
+                    [{"span", [{"class", "lui-dt-stat-label"}], ["Linked"]}]},
+                   {"span", [{"class", "lui-dt-stat-value"}], ["custom value"]}
+                 ]}
+              ]}
+           ]
   end
 
   test "meta without flop/params still works (plain maps)" do

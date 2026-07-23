@@ -88,7 +88,7 @@ widths without caller breakpoints.
 
 <.stat_grid aria-label="Order summary">
   <:stat label="Open" value={42} />
-  <:stat label="Shipped" value={128} href={~p"/orders?status=shipped"} />
+  <:stat label="Shipped" href={~p"/orders?status=shipped"}>{128}</:stat>
 </.stat_grid>
 
 <.stat_grid aria-label="Store health">
@@ -99,8 +99,11 @@ widths without caller breakpoints.
 </.stat_grid>
 ```
 
-`label` and `value` are required. `subtitle`, host heroicon `icon`, `href`, and
-`class` are optional. Keep values concise; calculations, formatting, trends,
+`stat_card/1` requires `label` and `value`. Every `stat_grid/1` `:stat` slot
+requires `label`; provide its metric through either the `value` attribute or
+inner slot content, as shown above. `subtitle`, host heroicon `icon`, `href`,
+and `class` are optional. Cards without `href` render as non-interactive
+`div`s; cards with `href` render as links. Calculations, formatting, trends,
 charts, and navigation state remain caller-owned.
 
 ## Skeleton placeholders

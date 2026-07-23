@@ -26,31 +26,54 @@ defmodule LanternUI.Components.Stat do
 
   @doc "Renders one compact summary metric."
   def stat_card(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :card_class,
+        Class.merge(["lui-dt-stat", !assigns.href && "lui-dt-stat-static", assigns.class])
+      )
+
     ~H"""
-    <.link
-      navigate={@href}
-      class={Class.merge(["lui-dt-stat", !@href && "lui-dt-stat-static", @class])}
-    >
-      <div class="lui-dt-stat-head">
-        <span class="lui-dt-stat-label">{@label}</span>
-        <span
-          :if={@icon}
-          class={Class.merge(["lui-dt-stat-icon", @icon])}
-          aria-hidden="true"
-        ></span>
-      </div>
-      <span class="lui-dt-stat-value">{@value}</span>
-      <span :if={@subtitle} class="lui-dt-stat-sub">{@subtitle}</span>
+    <.link :if={@href} navigate={@href} class={@card_class}>
+      <.stat_card_content label={@label} value={@value} icon={@icon} subtitle={@subtitle} />
     </.link>
+    <div :if={!@href} class={@card_class}>
+      <.stat_card_content label={@label} value={@value} icon={@icon} subtitle={@subtitle} />
+    </div>
+    """
+  end
+
+  attr(:label, :string, required: true)
+  attr(:value, :any, required: true)
+  attr(:icon, :string, default: nil)
+  attr(:subtitle, :string, default: nil)
+
+  defp stat_card_content(assigns) do
+    ~H"""
+    <div class="lui-dt-stat-head">
+      <span class="lui-dt-stat-label">{@label}</span>
+      <span
+        :if={@icon}
+        class={Class.merge(["lui-dt-stat-icon", @icon])}
+        aria-hidden="true"
+      ></span>
+    </div>
+    <span class="lui-dt-stat-value">{@value}</span>
+    <span :if={@subtitle} class="lui-dt-stat-sub">{@subtitle}</span>
     """
   end
 
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the grid.")
   attr(:rest, :global, doc: "Arbitrary HTML attributes passed through to the grid.")
 
-  slot :stat, doc: "A summary metric card." do
-    attr(:label, :string, doc: "Short caption identifying the metric.")
-    attr(:value, :any, doc: "Primary metric value; slot content takes precedence when present.")
+  slot :stat,
+    doc: "A summary metric card; provide its value with the :value attribute or inner content." do
+    attr(:label, :string, required: true, doc: "Short caption identifying the metric.")
+
+    attr(:value, :any,
+      doc: "Primary metric value; inner slot content takes precedence when present."
+    )
+
     attr(:icon, :string, doc: "Optional host heroicon class shown by the label.")
     attr(:subtitle, :string, doc: "Optional muted context below the value.")
     attr(:href, :string, doc: "Optional LiveView navigation target.")
