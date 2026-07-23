@@ -4,7 +4,6 @@
 /deps/
 /cover/
 /doc/
-/node_modules/
 *.ez
 lantern_ui-*.tar
 
