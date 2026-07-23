@@ -26,6 +26,11 @@ All notable changes to this project are documented here. The format follows
 - **`skeleton`** (flicker #1029) — a standalone CSS-only decorative loading
   placeholder with class/style/global attribute passthrough, token-driven
   color and radius, a visible default geometry, and reduced-motion-safe pulse.
+- **`stat_card` / `stat_grid`** (flicker #1009) — standalone, responsive KPI
+  summaries extracted from DataTable's existing overview stat renderer. Cards
+  support label/value plus optional subtitle, host heroicon, navigation target,
+  and merged classes; an empty slot-driven grid emits no wrapper. DataTable now
+  delegates its unchanged `:stat` DOM and appearance to the same renderer.
 
 ### Changed
 - **`nav_item` icons accept host heroicons (`hero-*`), not just lantern's icon

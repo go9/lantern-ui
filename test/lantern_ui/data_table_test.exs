@@ -117,20 +117,32 @@ defmodule LanternUI.DataTableTest do
     ~H"""
     <DataTable.data_table id="s" rows={@rows} meta={@meta} path="/orders" selected_ids={@selected}>
       <:stat label="Total" value="42" icon="hero-check-circle" subtitle="Last 24 hours" />
+      <:stat label="Linked" href="/orders/linked" class="custom-stat">{@linked_value}</:stat>
       <:col :let={r} label="Name">{r.name}</:col>
     </DataTable.data_table>
     """
   end
 
-  test "stat slot renders icon class and subtitle" do
-    html = render(&stat_table/1, %{rows: rows(), meta: @meta, selected: MapSet.new()})
+  test "stat slot preserves its DOM, appearance classes, attributes, and inner content" do
+    html =
+      render(&stat_table/1, %{
+        rows: rows(),
+        meta: @meta,
+        selected: MapSet.new(),
+        linked_value: "custom value"
+      })
 
+    assert html =~ ~s(<div class="lui-dt-stats" data-part="collapse-body">)
+    refute html =~ "lui-stat-grid"
     assert html =~ "lui-dt-stat-icon"
     assert html =~ "hero-check-circle"
     assert html =~ "lui-dt-stat-sub"
     assert html =~ "Last 24 hours"
     assert html =~ ">Total<"
     assert html =~ "42"
+    assert html =~ ~s(href="/orders/linked")
+    assert html =~ ~s(class="lui-dt-stat custom-stat")
+    assert html =~ "custom value"
   end
 
   test "meta without flop/params still works (plain maps)" do

@@ -38,6 +38,7 @@ defmodule LanternUI.Components.DataTable do
   alias LanternUI.Components.Badge
   alias LanternUI.Components.Pagination
   alias LanternUI.Components.Select
+  alias LanternUI.Components.Stat
   alias LanternUI.Components.Tabs
 
   attr(:id, :string, required: true, doc: "Stable DOM id for the table root and chrome.")
@@ -186,24 +187,15 @@ defmodule LanternUI.Components.DataTable do
           <Icon.icon name="chevron-down" class="lui-dt-overview-chev" />
         </button>
         <div class="lui-dt-stats" data-part="collapse-body">
-          <.link
+          <Stat.stat_card
             :for={stat <- @stat}
-            navigate={stat[:href]}
-            class={Class.merge(["lui-dt-stat", !stat[:href] && "lui-dt-stat-static", stat[:class]])}
-          >
-            <div class="lui-dt-stat-head">
-              <span class="lui-dt-stat-label">{stat[:label]}</span>
-              <span
-                :if={stat[:icon]}
-                class={Class.merge(["lui-dt-stat-icon", stat[:icon]])}
-                aria-hidden="true"
-              ></span>
-            </div>
-            <span class="lui-dt-stat-value">
-              {if stat[:inner_block], do: render_slot(stat), else: stat[:value]}
-            </span>
-            <span :if={stat[:subtitle]} class="lui-dt-stat-sub">{stat[:subtitle]}</span>
-          </.link>
+            label={stat[:label]}
+            value={if stat[:inner_block], do: render_slot(stat), else: stat[:value]}
+            icon={stat[:icon]}
+            subtitle={stat[:subtitle]}
+            href={stat[:href]}
+            class={stat[:class]}
+          />
         </div>
       </section>
 

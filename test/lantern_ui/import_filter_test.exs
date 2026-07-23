@@ -42,4 +42,10 @@ defmodule LanternUI.ImportFilterTest do
     assert compiles?("use LanternUI, only: [button: 1]", "button(assigns)")
     refute compiles?("use LanternUI, only: [button: 1]", "badge(assigns)")
   end
+
+  test "stat registry key imports the standalone stat components" do
+    assert compiles?("use LanternUI, only: [:stat]", "stat_card(assigns)")
+    assert compiles?("use LanternUI, only: [:stat]", "stat_grid(assigns)")
+    refute compiles?("use LanternUI, except: [:stat]", "stat_card(assigns)")
+  end
 end
