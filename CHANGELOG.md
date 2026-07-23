@@ -15,9 +15,11 @@ All notable changes to this project are documented here. The format follows
   generated ids; and global attrs are supported. The namespaced
   `LanternAccordion` hook owns open/close and the APG keyboard model
   (`Enter`/`Space` toggle, `ArrowUp`/`ArrowDown`/`Home`/`End` between headers).
-  Panels stay in the DOM (`hidden`) so ARIA idrefs always resolve and collapsed
-  content leaves the tab order + a11y tree. The chevron respects both
-  `animation_duration` and `prefers-reduced-motion`. Passes the ARIA conformance
+  Nested accordions are isolated; client state and focused headers survive
+  generated-id LiveView patches/reconnects; the sole required-open trigger is
+  exposed as `aria-disabled`. Panels stay in the DOM (`hidden`) so ARIA idrefs
+  always resolve and collapsed content leaves the tab order + a11y tree. The
+  chevron respects both `animation_duration` and `prefers-reduced-motion`. Passes the ARIA conformance
   gate. Implemented **clean-room** from the public Fluxon API facts and W3C
   WAI-ARIA APG; no commercial Fluxon or Chelekom expression copied (see
   `docs/upstreams/chelekom.md`, flicker #921).

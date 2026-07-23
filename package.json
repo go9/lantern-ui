@@ -1,0 +1,12 @@
+{
+  "name": "lantern-ui-hooks-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check:hooks": "node --check priv/static/lantern_ui_hooks.js",
+    "test:hooks": "node --test test/js/*_test.mjs"
+  },
+  "devDependencies": {
+    "happy-dom": "^20.11.1"
+  }
+}
