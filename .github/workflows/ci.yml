@@ -16,17 +16,24 @@ jobs:
       # fails `mix format --check-formatted` under 1.18 — on files the PR never
       # touched. CI only runs on pull_request, so this went unnoticed on main.
       - uses: erlef/setup-beam@v1
+        id: beam
         with:
           otp-version: "28"
           elixir-version: "1.19"
 
+      # The cache key MUST include the OTP/Elixir version. deps and _build hold
+      # version-compiled artifacts — including the Phoenix.LiveView.HTMLFormatter
+      # plugin that `mix format` loads — so a cache compiled under an old
+      # toolchain formats HEEx differently than the new binary expects, failing
+      # `--check-formatted` on files no PR touched. Keying only on mix.lock (which
+      # is unchanged by a toolchain bump) served exactly that stale cache.
       - uses: actions/cache@v4
         with:
           path: |
             deps
             _build
-          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
-          restore-keys: ${{ runner.os }}-mix-
+          key: ${{ runner.os }}-otp${{ steps.beam.outputs.otp-version }}-elixir${{ steps.beam.outputs.elixir-version }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-otp${{ steps.beam.outputs.otp-version }}-elixir${{ steps.beam.outputs.elixir-version }}-mix-
 
       - run: mix deps.get
       - run: mix format --check-formatted
