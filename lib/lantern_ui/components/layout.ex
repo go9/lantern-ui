@@ -99,7 +99,14 @@ defmodule LanternUI.Components.Layout do
   tooltip) when the sidebar is collapsed.
   """
   attr(:label, :string, required: true, doc: "Nav label; becomes the collapsed-rail tooltip.")
-  attr(:icon, :string, default: nil, doc: "Leading icon name from the icon set.")
+
+  attr(:icon, :string,
+    default: nil,
+    doc:
+      "Leading icon. A lantern icon-set name (e.g. `chart-bar`), or a host heroicon " <>
+        "name (`hero-*`) rendered as a CSS-mask span so an app can keep its own icons."
+  )
+
   attr(:active, :boolean, default: false, doc: "Highlight as the current page.")
   attr(:navigate, :string, default: nil, doc: "LiveView navigate target; renders as a link.")
   attr(:patch, :string, default: nil, doc: "LiveView patch target; renders as a link.")
@@ -125,7 +132,7 @@ defmodule LanternUI.Components.Layout do
       aria-current={@active && "page"}
       {@rest}
     >
-      <Icon.icon :if={@icon} name={@icon} class="lui-nav-item-icon" />
+      <.nav_item_icon :if={@icon} name={@icon} />
       <span class="lui-nav-item-label">{@label}</span>
     </.link>
     <button
@@ -136,9 +143,27 @@ defmodule LanternUI.Components.Layout do
       aria-current={@active && "page"}
       {@rest}
     >
-      <Icon.icon :if={@icon} name={@icon} class="lui-nav-item-icon" />
+      <.nav_item_icon :if={@icon} name={@icon} />
       <span class="lui-nav-item-label">{@label}</span>
     </button>
+    """
+  end
+
+  # Renders a nav icon by name. A `hero-*` name is a host heroicon, rendered as a
+  # CSS-mask span (same convention Phoenix apps use for `<.icon name="hero-…">`),
+  # so an app can keep its own icon set without lantern owning every glyph. Any
+  # other name resolves against lantern's built-in icon set.
+  attr(:name, :string, required: true)
+
+  defp nav_item_icon(%{name: "hero-" <> _} = assigns) do
+    ~H"""
+    <span class={["lui-nav-item-icon", "lui-nav-item-icon-mask", @name]} aria-hidden="true" />
+    """
+  end
+
+  defp nav_item_icon(assigns) do
+    ~H"""
+    <Icon.icon name={@name} class="lui-nav-item-icon" />
     """
   end
 end

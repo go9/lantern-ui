@@ -712,6 +712,12 @@
   background: var(--lantern-accent-soft); }
 .lui-nav-item-active:hover { color: var(--lantern-accent); background: var(--lantern-accent-soft); }
 .lui-nav-item-icon { font-size: 1.05rem; flex-shrink: 0; }
+/* A host heroicon (hero-*) renders as a CSS-mask span whose own hero-* class sets
+   a larger default size (and loads after this file); constrain it to match
+   lantern's inline icons. Two classes on the element out-specify the single
+   `.hero-*` class regardless of source order. Scoped to the mask marker so
+   lantern's SVG icons (sized by font-size) are untouched. */
+.lui-nav-item-icon.lui-nav-item-icon-mask { width: 1.15rem; height: 1.15rem; }
 .lui-nav-item-label { overflow: hidden; text-overflow: ellipsis; }
 
 /* Collapsed rail: hide text, center icons, flip the collapse chevron. */

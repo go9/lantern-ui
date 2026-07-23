@@ -7,6 +7,15 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Changed
+- **`nav_item` icons accept host heroicons (`hero-*`), not just lantern's icon
+  set.** `icon="chart-bar"` still renders a lantern inline SVG, but `icon="hero-home"`
+  now renders as the host's CSS-mask span (the same convention Phoenix apps use for
+  `<.icon name="hero-…">`) so an app can migrate its hand-rolled sidebar onto
+  `app_shell` + `nav_group`/`nav_item` while keeping its own heroicons — lantern
+  doesn't have to own every glyph (it has no `home`/`cog`). The mask span is
+  constrained to lantern's icon size via a marker class that out-specifies the
+  `.hero-*` size regardless of stylesheet order. Requires the host's heroicons CSS
+  to be loaded (already true in the target apps).
 - **`app_shell` main is now a bounded, independently-scrolling region on desktop
   — so `data_table fill` works inside it.** Previously `.lui-app` was
   `min-height: 100vh` (whole-page scroll) and `.lui-app-main` had no height/flex,
