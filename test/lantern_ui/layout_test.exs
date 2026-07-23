@@ -111,6 +111,34 @@ defmodule LanternUI.LayoutTest do
       assert html =~ ~s(phx-click="go")
       refute html =~ ~s(href=)
     end
+
+    test "a hero-* icon renders as a host CSS-mask span, not a lantern svg" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.nav_item label="Home" icon="hero-home" navigate="/" />
+          """
+        end)
+
+      # host heroicon: a span carrying its own hero-* class + the mask marker
+      assert html =~ "hero-home"
+      assert html =~ "lui-nav-item-icon-mask"
+      assert html =~ "lui-nav-item-icon"
+      # not lantern's inline svg (which has no such glyph anyway)
+      refute html =~ "<svg"
+    end
+
+    test "a lantern icon-set name still renders an inline svg" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.nav_item label="Charts" icon="chart-bar" navigate="/" />
+          """
+        end)
+
+      assert html =~ "<svg"
+      refute html =~ "lui-nav-item-icon-mask"
+    end
   end
 
   describe "nav_group/1" do
