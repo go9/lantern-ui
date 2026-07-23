@@ -98,6 +98,7 @@ defmodule LanternUI.Components.DataTable do
         "scroll the table body, and pin the header/overview/pagination. Without it the table is " <>
         "its natural content height."
   )
+
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
   slot(:header_action, doc: "Actions rendered in the title row (right side).")
@@ -169,7 +170,11 @@ defmodule LanternUI.Components.DataTable do
       )
 
     ~H"""
-    <div id={@id} class={Class.merge(["lui-datatable", @fill && "lui-datatable-fill", @class])} {@rest}>
+    <div
+      id={@id}
+      class={Class.merge(["lui-datatable", @fill && "lui-datatable-fill", @class])}
+      {@rest}
+    >
       <section
         :if={@stat != []}
         id={"#{@id}-overview"}
