@@ -116,6 +116,40 @@ let liveSocket = new LiveSocket("/live", Socket, { params: {/* ... */}, hooks: H
 `sparkline` and `bar_chart` need no JavaScript. Accordion always requires the
 hook bundle above.
 
+## Autocomplete
+
+`autocomplete` filters local options by default and keeps the selected value in a
+normal hidden form input:
+
+```heex
+<.autocomplete field={@form[:country]} options={@countries} clearable />
+```
+
+For remote data, the LiveView owns the result list. Set `on_search`; the hook
+pushes `%{"query" => query}` after `search_threshold` and `debounce`, displays its
+loading state, and stops loading when the patched options arrive:
+
+```heex
+<.autocomplete
+  field={@form[:user_id]}
+  options={@user_results}
+  on_search="search_users"
+  search_threshold={2}
+  debounce={250}
+  open_on_focus
+  clearable
+>
+  <:option :let={{name, id}}>
+    <strong>{name}</strong> <small>#{id}</small>
+  </:option>
+  <:empty_state>No matching users</:empty_state>
+</.autocomplete>
+```
+
+Options may be nested labelled groups. `inner_prefix`, `inner_suffix`,
+`outer_prefix`, `outer_suffix`, `header`, and `footer` slots customize the
+surrounding states without moving search or selection ownership into LanternUI.
+
 ## Theming
 
 Components read colors from CSS variables with chained fallbacks:

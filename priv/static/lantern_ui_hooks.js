@@ -1106,63 +1106,130 @@ const LanternSelect = {
   },
 }
 
-// Autocomplete listbox: a text input filters static options client-side while
-// a hidden input carries the selected value. Positioning and outside dismissal
-// intentionally match LanternSelect.
+// Autocomplete listbox: static matching or debounced LiveView search. The
+// input keeps DOM focus and exposes the highlighted option through
+// aria-activedescendant, including across LiveView result patches.
 const LanternAutocomplete = {
   mounted() {
-    this.input = this.el.querySelector('[data-part="input"]')
-    this.hidden = this.el.querySelector('[data-part="value"]')
-    this.control = this.el.querySelector(".lui-autocomplete-control")
-    this.panel = this.el.querySelector('[data-part="panel"]')
-    this.noResults = this.el.querySelector('[data-part="no-results"]')
     this.cleanup = []
     this.open = false
+    this.activeIndex = -1
+    this.loading = false
+    this.captureElements()
 
     this.onClick = (e) => {
+      const clear = e.target.closest('[data-part="clear"]')
+      if (clear) {
+        e.preventDefault()
+        e.stopPropagation()
+        this.clear()
+        return
+      }
       const opt = e.target.closest('[data-part="option"]')
       if (opt) {
         this.select(opt)
         return
       }
-      if (this.input?.disabled) return
-      if (e.target.closest(".lui-autocomplete-control")) {
-        this.input?.focus()
+      if (!this.input?.disabled && e.target.closest(".lui-autocomplete-control")) {
+        this.input.focus()
         this.show()
       }
     }
-    this.onInput = () => {
+    this.onInput = (e) => {
+      if (e.target !== this.input || this.input.disabled) return
+      this.activeIndex = -1
       this.show()
-      this.filter()
+      this.search()
+    }
+    this.onFocus = (e) => {
+      if (e.target === this.input && this.el.dataset.openOnFocus === "true") this.show()
     }
     this.onKeydown = (e) => this.onKey(e)
 
     this.el.addEventListener("click", this.onClick)
+    this.el.addEventListener("input", this.onInput)
+    this.el.addEventListener("focusin", this.onFocus)
     this.el.addEventListener("keydown", this.onKeydown)
-    this.input?.addEventListener("input", this.onInput)
+    this.updateResults()
+  },
+
+  captureElements() {
+    this.input = this.el.querySelector('[data-part="input"]')
+    this.hidden = this.el.querySelector('[data-part="value"]')
+    this.control = this.el.querySelector(".lui-autocomplete-control")
+    this.panel = this.el.querySelector('[data-part="panel"]')
+    this.loadingEl = this.el.querySelector('[data-part="loading"]')
+    this.noResults = this.el.querySelector('[data-part="no-results"]')
+    this.clearButton = this.el.querySelector('[data-part="clear"]')
+  },
+
+  beforeUpdate() {
+    this.patchState = {
+      activeValue: this.activeOption()?.dataset.value,
+      focused: document.activeElement === this.input,
+      hiddenValue: this.hidden?.value || "",
+      inputValue: this.input?.value || "",
+      selectedLabel: this.selectedLabel(),
+    }
+  },
+
+  updated() {
+    const state = this.patchState || {}
+    this.captureElements()
+    clearTimeout(this.searchTimer)
+    this.setLoading(false)
+
+    if (state.hiddenValue && state.hiddenValue === (this.hidden?.value || "") && !this.selectedOption()) {
+      this.retainedValue = state.hiddenValue
+      this.retainedLabel = state.selectedLabel
+    } else if (this.selectedOption()) {
+      this.retainedValue = this.hidden.value
+      this.retainedLabel = this.optionLabel(this.selectedOption())
+    }
+
+    if (state.focused && this.input) {
+      this.input.value = state.inputValue
+      this.input.focus()
+    } else if (this.input && this.retainedValue === (this.hidden?.value || "")) {
+      this.input.value = this.retainedLabel || ""
+    }
+    if (this.open) this.show()
+    this.updateResults()
+
+    const byValue = this.options(true).find((option) => option.dataset.value === state.activeValue)
+    if (byValue) this.setActive(this.options(true).indexOf(byValue))
+    else this.setActive(Math.min(this.activeIndex, this.options(true).length - 1))
   },
 
   options(visibleOnly = false) {
     const all = [...this.el.querySelectorAll('[data-part="option"]')]
-    return visibleOnly ? all.filter((o) => !o.hidden) : all
+    return visibleOnly ? all.filter((option) => !option.hidden) : all
   },
 
-  optionLabel(opt) {
-    return opt.querySelector(".lui-select-option-label")?.textContent.trim() || ""
+  optionLabel(option) {
+    return option?.dataset.label || option?.textContent.trim() || ""
+  },
+
+  selectedOption() {
+    const value = this.hidden?.value || ""
+    return this.options().find((option) => option.dataset.value === value)
   },
 
   selectedLabel() {
-    const value = this.hidden?.value || ""
-    const opt = this.options().find((o) => o.dataset.value === value)
-    return opt ? this.optionLabel(opt) : ""
+    const selected = this.selectedOption()
+    if (selected) return this.optionLabel(selected)
+    if (this.retainedValue === (this.hidden?.value || "")) return this.retainedLabel || ""
+    return ""
+  },
+
+  activeOption() {
+    return this.options(true)[this.activeIndex]
   },
 
   show() {
     if (!this.input || !this.panel || this.input.disabled) return
     if (!this.open) {
       this.open = true
-      this.panel.hidden = false
-      this.input.setAttribute("aria-expanded", "true")
       this.cleanup.push(
         onDismiss(
           this.panel,
@@ -1170,87 +1237,182 @@ const LanternAutocomplete = {
           { anchor: this.control }
         )
       )
-    } else {
-      this.panel.hidden = false
     }
+    this.panel.hidden = false
+    this.input.setAttribute("aria-expanded", "true")
     position(this.control || this.input, this.panel, { placement: "bottom-start" })
     this.panel.style.minWidth = `${(this.control || this.input).offsetWidth}px`
-    this.filter()
+    this.updateResults()
   },
 
   hide({ refocus = true, restore = false } = {}) {
     if (!this.open) return
     this.open = false
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup.forEach((release) => release())
     this.cleanup = []
     this.panel.hidden = true
     this.input?.setAttribute("aria-expanded", "false")
-    if (restore) this.restoreInput()
+    this.setActive(-1)
+    if (restore && this.input) this.input.value = this.selectedLabel()
     if (refocus) this.input?.focus()
   },
 
-  restoreInput() {
-    const label = this.selectedLabel()
-    if (this.input && this.input.value !== label) this.input.value = label
+  search() {
+    const query = (this.input?.value || "").trim()
+    const threshold = Math.max(0, parseInt(this.el.dataset.searchThreshold || "0", 10))
+    clearTimeout(this.searchTimer)
+
+    if (this.input?.disabled) {
+      this.setLoading(false)
+      return
+    }
+
+    if (query.length < threshold) {
+      this.setLoading(false)
+      this.updateResults()
+      return
+    }
+
+    const event = this.el.dataset.serverSearch
+    if (!event) {
+      this.updateResults()
+      return
+    }
+
+    this.setLoading(true)
+    const debounce = Math.max(0, parseInt(this.el.dataset.debounce || "200", 10))
+    this.searchTimer = setTimeout(() => {
+      if (!this.input?.disabled) this.pushEvent(event, { query })
+    }, debounce)
   },
 
-  filter() {
-    const q = (this.input?.value || "").trim().toLowerCase()
-    let any = false
-    this.options().forEach((o) => {
-      const hit = q === "" || this.optionLabel(o).toLowerCase().includes(q)
-      o.hidden = !hit
-      any = any || hit
+  matches(label, query) {
+    const candidate = label.toLocaleLowerCase()
+    const needle = query.toLocaleLowerCase()
+    if (this.el.dataset.searchMode === "exact") return candidate === needle
+    if (this.el.dataset.searchMode === "starts-with") return candidate.startsWith(needle)
+    return candidate.includes(needle)
+  },
+
+  updateResults() {
+    if (!this.input) return
+    const query = this.input.value.trim()
+    const threshold = Math.max(0, parseInt(this.el.dataset.searchThreshold || "0", 10))
+    const server = !!this.el.dataset.serverSearch
+
+    this.options().forEach((option) => {
+      option.hidden = query.length < threshold || (!server && !this.matches(this.optionLabel(option), query))
     })
-    if (this.noResults) this.noResults.hidden = any
+    this.updateGroups()
+
+    const any = this.options(true).length > 0
+    if (this.noResults) {
+      this.noResults.hidden = this.loading || query.length < threshold || any
+      if (!this.noResults.hidden && this.noResults.dataset.defaultText !== "false") {
+        const template = this.el.dataset.emptyTemplate || "No results"
+        if (!this.noResults.querySelector("*")) this.noResults.textContent = template.replaceAll("%{query}", query)
+      }
+    }
+    this.setActive(Math.min(this.activeIndex, this.options(true).length - 1))
   },
 
-  select(opt) {
-    const value = opt.dataset.value || ""
-    const label = this.optionLabel(opt)
+  updateGroups() {
+    const children = [...(this.el.querySelector('[data-part="options"]')?.children || [])]
+    children.forEach((item, index) => {
+      if (item.dataset.part !== "group") return
+      const depth = parseInt(item.dataset.depth || "0", 10)
+      let any = false
+      for (let i = index + 1; i < children.length; i++) {
+        const child = children[i]
+        const childDepth = parseInt(child.dataset.depth || "0", 10)
+        if (child.dataset.part === "group" && childDepth <= depth) break
+        if (child.dataset.part === "option" && !child.hidden) any = true
+      }
+      item.hidden = !any
+    })
+  },
+
+  setLoading(loading) {
+    this.loading = loading
+    if (this.loadingEl) this.loadingEl.hidden = !loading
+    this.el.toggleAttribute("data-loading", loading)
+    if (loading && this.noResults) this.noResults.hidden = true
+  },
+
+  setActive(index) {
+    const options = this.options(true)
+    this.activeIndex = options.length === 0 ? -1 : Math.max(-1, Math.min(index, options.length - 1))
+    options.forEach((option, optionIndex) => option.toggleAttribute("data-active", optionIndex === this.activeIndex))
+    const active = options[this.activeIndex]
+    if (active) {
+      this.input?.setAttribute("aria-activedescendant", active.id)
+      active.scrollIntoView?.({ block: "nearest" })
+    } else {
+      this.input?.removeAttribute("aria-activedescendant")
+    }
+  },
+
+  select(option) {
+    const value = option.dataset.value || ""
+    const label = this.optionLabel(option)
     if (this.hidden) {
       this.hidden.value = value
       this.hidden.dispatchEvent(new Event("input", { bubbles: true }))
       this.hidden.dispatchEvent(new Event("change", { bubbles: true }))
     }
-    this.options().forEach((o) => o.setAttribute("aria-selected", String(o === opt)))
+    this.retainedValue = value
+    this.retainedLabel = label
+    this.options().forEach((item) => item.setAttribute("aria-selected", String(item === option)))
     if (this.input) this.input.value = label
+    if (this.clearButton) this.clearButton.hidden = false
+    this.hide()
+  },
+
+  clear() {
+    if (this.hidden) {
+      this.hidden.value = ""
+      this.hidden.dispatchEvent(new Event("input", { bubbles: true }))
+      this.hidden.dispatchEvent(new Event("change", { bubbles: true }))
+    }
+    this.retainedValue = ""
+    this.retainedLabel = ""
+    this.options().forEach((option) => option.setAttribute("aria-selected", "false"))
+    if (this.input) this.input.value = ""
+    if (this.clearButton) this.clearButton.hidden = true
     this.hide()
   },
 
   onKey(e) {
-    if (!this.input || !this.panel) return
+    if (e.target !== this.input || !this.input || this.input.disabled) return
     if (e.key === "Escape" && this.open) {
       e.preventDefault()
       e.stopPropagation()
       this.hide({ restore: true })
       return
     }
-
     if (!["ArrowDown", "ArrowUp", "Enter"].includes(e.key)) return
     if (!this.open) this.show()
 
-    const opts = this.options(true)
-    const idx = opts.indexOf(document.activeElement)
+    const options = this.options(true)
     if (e.key === "ArrowDown") {
       e.preventDefault()
-      opts[Math.min(idx + 1, opts.length - 1)]?.focus()
+      this.setActive(options.length ? (this.activeIndex + 1) % options.length : -1)
     } else if (e.key === "ArrowUp") {
       e.preventDefault()
-      const next = idx <= 0 ? opts.length - 1 : idx - 1
-      opts[next]?.focus()
-    } else if (e.key === "Enter") {
+      this.setActive(options.length ? (this.activeIndex <= 0 ? options.length - 1 : this.activeIndex - 1) : -1)
+    } else if (e.key === "Enter" && this.activeOption()) {
       e.preventDefault()
-      const opt = idx >= 0 ? opts[idx] : opts[0]
-      if (opt) this.select(opt)
+      this.select(this.activeOption())
     }
   },
 
   destroyed() {
-    this.cleanup.forEach((fn) => fn())
+    clearTimeout(this.searchTimer)
+    this.cleanup.forEach((release) => release())
     this.el.removeEventListener("click", this.onClick)
+    this.el.removeEventListener("input", this.onInput)
+    this.el.removeEventListener("focusin", this.onFocus)
     this.el.removeEventListener("keydown", this.onKeydown)
-    this.input?.removeEventListener("input", this.onInput)
   },
 }
 

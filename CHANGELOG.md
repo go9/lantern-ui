@@ -84,10 +84,13 @@ All notable changes to this project are documented here. The format follows
   no JS. Standard field chrome (label/sublabel/description/help/errors),
   FormField-aware, `size` xs–xl. Accepts the `name`/`value`/`label` surface
   the playground theme editor already uses.
-- **`autocomplete`** (flicker #892) — client-side typeahead (Fluxon parity):
-  a combobox text input that filters a provided `options` list as you type,
-  keyboard nav, no-results state, FormField-aware, over a hidden value input.
-  `LanternAutocomplete` hook.
+- **`autocomplete`** (flicker #892, #1027) — static and async typeahead (Fluxon
+  2.3.1 public API parity): local contains/starts-with/exact matching or debounced
+  LiveView `on_search`, loading and custom empty states, nested option groups,
+  rich option/header/footer/affix slots, clear/open-on-focus modes, and
+  active-descendant keyboard/ARIA behavior. FormField-aware over a hidden value
+  input; selected labels and focus survive result patches. `LanternAutocomplete`
+  hook.
 
 ### Added
 - **`navlist` / `navheading` / `navlink`** (flicker #890) — standalone

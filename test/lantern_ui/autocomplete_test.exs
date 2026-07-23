@@ -10,7 +10,7 @@ defmodule LanternUI.AutocompleteTest do
     fun.(Map.put(assigns, :__changed__, nil)) |> rendered_to_string()
   end
 
-  test "renders hook, hidden value, combobox input, options, and no-results element" do
+  test "keeps static form semantics and selected label" do
     html =
       render(fn assigns ->
         ~H"""
@@ -26,21 +26,23 @@ defmodule LanternUI.AutocompleteTest do
     assert html =~ ~s(phx-hook="LanternAutocomplete")
     assert html =~ ~s(type="hidden" name="sku" value="sku-2")
     assert html =~ ~s(role="combobox")
-    assert html =~ ~s(aria-autocomplete="list")
-    assert html =~ ~s(data-part="option")
-    assert html =~ ~s(data-value="sku-1")
-    assert html =~ ~s(data-part="no-results")
-    assert html =~ "No results"
+    assert html =~ ~s(value="SKU Two")
+    assert html =~ ~s(data-value="sku-2")
+    assert html =~ ~s(aria-selected="true")
   end
 
-  test "FormField clause extracts name and value" do
+  test "FormField derives id, name, value, and disabled state remains native" do
     form = Phoenix.Component.to_form(%{"status" => "active"}, as: :thing)
 
     html =
       render(
         fn assigns ->
           ~H"""
-          <Autocomplete.autocomplete field={@form[:status]} options={[{"Active", "active"}]} />
+          <Autocomplete.autocomplete
+            field={@form[:status]}
+            options={[{"Active", "active"}]}
+            disabled
+          />
           """
         end,
         %{form: form}
@@ -49,24 +51,84 @@ defmodule LanternUI.AutocompleteTest do
     assert html =~ ~s(id="thing_status-ac")
     assert html =~ ~s(name="thing[status]")
     assert html =~ ~s(value="active")
+    assert html =~ ~s(disabled)
   end
 
-  test "selected value prefills the input label" do
+  test "renders Fluxon-compatible async configuration and resolvable ARIA relationships" do
     html =
       render(fn assigns ->
         ~H"""
         <Autocomplete.autocomplete
-          id="channel"
-          name="channel"
-          value="shopify"
-          options={[{"eBay", "ebay"}, {"Shopify", "shopify"}]}
+          id="user"
+          name="user_id"
+          options={[]}
+          autofocus
+          on_search="search_users"
+          debounce={350}
+          search_threshold={2}
+          search_mode="starts-with"
+          open_on_focus
+          clearable
+          animation="motion"
+          animation_enter="enter"
+          animation_leave="leave"
         />
         """
       end)
 
-    assert html =~ ~s(class="lui-autocomplete-input")
-    assert html =~ ~s(value="Shopify")
-    assert html =~ ~s(data-value="shopify")
-    assert html =~ ~s(aria-selected="true")
+    assert html =~ ~s(data-server-search="search_users")
+    assert html =~ ~s(data-debounce="350")
+    assert html =~ ~s(data-search-threshold="2")
+    assert html =~ ~s(data-search-mode="starts-with")
+    assert html =~ ~s(data-open-on-focus="true")
+    assert html =~ ~s(data-animation-enter="enter")
+    assert html =~ ~s(data-animation-leave="leave")
+    assert html =~ ~s(autofocus)
+    assert html =~ ~s(data-part="clear")
+    assert html =~ ~s(data-part="loading")
+    assert html =~ ~s(aria-controls="user-listbox")
+    assert html =~ ~s(id="user-listbox")
+  end
+
+  test "renders grouped rich options, all affixes, header, footer, and custom empty state" do
+    html =
+      render(fn assigns ->
+        ~H"""
+        <Autocomplete.autocomplete
+          id="place"
+          name="place"
+          options={[{"Europe", [{"France", [{"Paris", 1}]}]}, {"Asia", [{"Tokyo", 2}]}]}
+        >
+          <:outer_prefix class="op">Outside before</:outer_prefix>
+          <:inner_prefix class="ip">Inside before</:inner_prefix>
+          <:inner_suffix class="is">Inside after</:inner_suffix>
+          <:outer_suffix class="os">Outside after</:outer_suffix>
+          <:header class="head">Suggested places</:header>
+          <:option :let={{label, value}} class="rich">{label} ({value})</:option>
+          <:empty_state class="empty">Nothing here</:empty_state>
+          <:footer class="foot">Keep typing</:footer>
+        </Autocomplete.autocomplete>
+        """
+      end)
+
+    assert html =~ ~s(data-part="group")
+    assert html =~ "Europe"
+    assert html =~ "France"
+    assert html =~ "Paris (1)"
+    for marker <- ~w(op ip is os head rich empty foot), do: assert(html =~ marker)
+    assert html =~ "Nothing here"
+    assert html =~ ~s(data-default-text="false")
+  end
+
+  test "default empty state keeps query interpolation template" do
+    html =
+      render(fn assigns ->
+        ~H"""
+        <Autocomplete.autocomplete id="empty" name="empty" options={[]} />
+        """
+      end)
+
+    assert html =~ ~s(data-empty-template="No results found for &quot;%{query}&quot;.")
+    assert html =~ ~s(data-default-text="true")
   end
 end
