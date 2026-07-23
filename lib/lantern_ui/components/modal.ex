@@ -38,6 +38,15 @@ defmodule LanternUI.Components.Modal do
 
   attr(:prevent_closing, :boolean, default: false, doc: "Block Escape and outside-click close.")
   attr(:hide_close_button, :boolean, default: false, doc: "Hide the built-in close control.")
+  attr(:role, :string, default: "dialog", doc: "ARIA role for the dialog panel.")
+  attr(:aria_label, :string, default: nil, doc: "Accessible name for the dialog panel.")
+  attr(:aria_labelledby, :string, default: nil, doc: "Id of the dialog title element.")
+  attr(:aria_describedby, :string, default: nil, doc: "Id of the dialog description element.")
+
+  attr(:initial_focus, :string,
+    default: nil,
+    doc: "Selector for the element or region that receives focus when opened."
+  )
 
   attr(:placement, :string,
     default: "center",
@@ -60,6 +69,7 @@ defmodule LanternUI.Components.Modal do
       data-open={@open || nil}
       data-close-on-esc={to_string(@close_on_esc and not @prevent_closing)}
       data-close-on-outside={to_string(@close_on_outside_click and not @prevent_closing)}
+      data-initial-focus={@initial_focus}
       data-placement={@placement}
       hidden={!@open}
       {@rest}
@@ -68,8 +78,11 @@ defmodule LanternUI.Components.Modal do
       <div
         class={Class.merge(["lui-modal-panel", @class])}
         data-part="panel"
-        role="dialog"
+        role={@role}
         aria-modal="true"
+        aria-label={@aria_label}
+        aria-labelledby={@aria_labelledby}
+        aria-describedby={@aria_describedby}
       >
         <button
           :if={!@hide_close_button and !@prevent_closing}

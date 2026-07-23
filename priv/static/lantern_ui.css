@@ -585,6 +585,19 @@
   background: none; color: var(--lantern-fg-subtle); cursor: pointer; padding: 0.25rem;
   border-radius: var(--lantern-radius-sm); line-height: 0; }
 .lui-modal-close:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
+
+/* Alert dialog: semantic confirmation anatomy on the modal runtime. */
+.lui-alert-dialog { max-width: 26rem; }
+.lui-alert-dialog-title { margin: 0; color: var(--lantern-fg);
+  font-size: var(--lantern-text-lg, 1.125rem); font-weight: 600; line-height: 1.35; }
+.lui-alert-dialog-description { margin-top: 0.5rem; color: var(--lantern-fg-muted);
+  font-size: var(--lantern-text-sm); line-height: 1.5; }
+.lui-alert-dialog-actions { display: flex; justify-content: flex-end;
+  gap: var(--lantern-gap, 0.5rem); margin-top: 1.25rem; }
+.lui-alert-dialog-cancel, .lui-alert-dialog-action { display: contents; }
+@media (max-width: 480px) {
+  .lui-alert-dialog-actions { flex-direction: column; }
+}
 @keyframes lui-fade { from { opacity: 0; } }
 @keyframes lui-pop { from { opacity: 0; transform: scale(0.97); } }
 

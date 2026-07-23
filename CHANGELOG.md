@@ -78,6 +78,11 @@ All notable changes to this project are documented here. The format follows
   module. Enables clean drop-in over apps that already define `icon`, etc.
 
 ### Added
+- **`alert_dialog`** (flicker #1028) — semantic destructive confirmation composed
+  on the existing `LanternModal` runtime. Requires title, description, cancel,
+  and action slots; wires `alertdialog` label/description idrefs, focuses the
+  cancel control first, ignores outside clicks, and retains Escape dismissal,
+  focus trapping, and trigger-focus restoration.
 - **`progress`** (flicker) — determinate + indeterminate progress bar / meter (sizes, semantic colors, optional shimmer), pure CSS.
 - **`color_input`** — native color picker (Fluxon parity): a real
   `<input type="color">` styled as a swatch plus a read-only hex readout,

@@ -54,7 +54,7 @@ defmodule LanternUI.ARIAConformance do
   }
 
   # Roles that need an accessible name from *either* source.
-  @needs_accessible_name ~w(dialog menu listbox tablist tooltip)
+  @needs_accessible_name ~w(dialog alertdialog menu listbox tablist tooltip)
 
   defmodule Violation do
     @moduledoc false
