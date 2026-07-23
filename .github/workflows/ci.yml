@@ -11,6 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
       # Must match the toolchain the repo is actually developed on. The HEEx
       # formatter changed between 1.18 and 1.19, so a repo formatted with 1.19
       # fails `mix format --check-formatted` under 1.18 — on files the PR never
@@ -36,6 +41,9 @@ jobs:
           restore-keys: ${{ runner.os }}-otp${{ steps.beam.outputs.otp-version }}-elixir${{ steps.beam.outputs.elixir-version }}-mix-
 
       - run: mix deps.get
+      - run: npm ci
       - run: mix format --check-formatted
       - run: mix compile --warnings-as-errors
       - run: mix test
+      - run: npm run check:hooks
+      - run: npm run test:hooks
