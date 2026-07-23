@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **`accordion` — a headless-driven, WAI-ARIA APG accordion** (`use LanternUI`
+  exposes `<.accordion>` with `<:item title=...>` slots). Server renders the
+  anatomy + initial open state; the namespaced `LanternAccordion` hook owns
+  open/close and the APG keyboard model (`Enter`/`Space` toggle, `ArrowUp`/
+  `ArrowDown`/`Home`/`End` between headers), which a server round-trip can't
+  provide. Panels stay in the DOM (`hidden`) so `aria-controls`/`aria-labelledby`
+  idrefs always resolve and collapsed content leaves the tab order + a11y tree;
+  single-open by default, `multiple` allows many; header `heading_level` sets the
+  `role="heading"` `aria-level`; the chevron respects `prefers-reduced-motion`.
+  Passes the ARIA conformance gate. Implemented **clean-room** from the W3C
+  WAI-ARIA APG (no Mishka Chelekom source copied — see
+  `docs/upstreams/chelekom.md`, flicker #921).
+
 ### Changed
 - **`nav_item` icons accept host heroicons (`hero-*`), not just lantern's icon
   set.** `icon="chart-bar"` still renders a lantern inline SVG, but `icon="hero-home"`

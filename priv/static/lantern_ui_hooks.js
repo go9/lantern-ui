@@ -1846,6 +1846,104 @@ const LanternToast = {
   },
 }
 
+// ── Accordion ─────────────────────────────────────────────────────────────
+//
+// Client driver for `LanternUI.Components.Accordion`. The server renders the
+// full anatomy (headers, panels, idrefs) and the initial open state; this hook
+// owns toggling and the WAI-ARIA APG accordion keyboard model — arrow-key focus
+// movement between headers can't be delivered server-side. Panels stay in the
+// DOM and are shown/hidden via the `hidden` attribute (idrefs always resolve;
+// collapsed content leaves the tab order + a11y tree). Open state is client-
+// owned after mount and re-applied across LiveView patches (which strip
+// hook-set attributes).
+const LanternAccordion = {
+  triggers() {
+    return Array.from(this.el.querySelectorAll('[data-part="trigger"]:not([disabled])'))
+  },
+
+  isMultiple() {
+    return this.el.dataset.multiple === "true"
+  },
+
+  setOpen(trigger, open) {
+    const item = trigger.closest('[data-part="item"]')
+    const panel = document.getElementById(trigger.getAttribute("aria-controls"))
+    trigger.setAttribute("aria-expanded", String(open))
+    if (panel) panel.hidden = !open
+    if (item) item.setAttribute("data-state", open ? "open" : "closed")
+    this.state.set(trigger.id, open)
+  },
+
+  toggle(trigger) {
+    const open = trigger.getAttribute("aria-expanded") === "true"
+    if (!open && !this.isMultiple()) {
+      this.triggers().forEach((t) => t !== trigger && this.setOpen(t, false))
+    }
+    this.setOpen(trigger, !open)
+  },
+
+  focusBy(current, delta) {
+    const items = this.triggers()
+    const i = items.indexOf(current)
+    if (i === -1) return
+    const next = (i + delta + items.length) % items.length
+    items[next].focus()
+  },
+
+  mounted() {
+    // Snapshot the server-rendered open state; the hook owns it from here.
+    this.state = new Map()
+    this.el.querySelectorAll('[data-part="trigger"]').forEach((t) => {
+      this.state.set(t.id, t.getAttribute("aria-expanded") === "true")
+    })
+
+    this.onClick = (e) => {
+      const trigger = e.target.closest('[data-part="trigger"]')
+      if (trigger && this.el.contains(trigger) && !trigger.disabled) this.toggle(trigger)
+    }
+
+    this.onKeydown = (e) => {
+      const trigger = e.target.closest('[data-part="trigger"]')
+      if (!trigger || !this.el.contains(trigger)) return
+      const items = this.triggers()
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault()
+          this.focusBy(trigger, 1)
+          break
+        case "ArrowUp":
+          e.preventDefault()
+          this.focusBy(trigger, -1)
+          break
+        case "Home":
+          e.preventDefault()
+          items[0] && items[0].focus()
+          break
+        case "End":
+          e.preventDefault()
+          items[items.length - 1] && items[items.length - 1].focus()
+          break
+      }
+    }
+
+    this.el.addEventListener("click", this.onClick)
+    this.el.addEventListener("keydown", this.onKeydown)
+  },
+
+  // LiveView patches re-render from the server's initial state, wiping the
+  // hook-set attributes — re-apply the client-owned open state.
+  updated() {
+    this.el.querySelectorAll('[data-part="trigger"]').forEach((t) => {
+      if (this.state.has(t.id)) this.setOpen(t, this.state.get(t.id))
+    })
+  },
+
+  destroyed() {
+    this.el.removeEventListener("click", this.onClick)
+    this.el.removeEventListener("keydown", this.onKeydown)
+  },
+}
+
 export const Hooks = {
   ChartHover,
   LineHover,
@@ -1862,6 +1960,7 @@ export const Hooks = {
   LanternSelect,
   LanternAutocomplete,
   LanternCollapse,
+  LanternAccordion,
   LanternTableChrome,
   LanternTheme,
 }
@@ -1881,6 +1980,7 @@ export {
   LanternSelect,
   LanternAutocomplete,
   LanternCollapse,
+  LanternAccordion,
   LanternTableChrome,
   LanternTheme,
 }
