@@ -266,14 +266,15 @@ const FOCUSABLE =
 
 // Contain Tab focus inside `container`. Returns a release function that
 // restores focus to the previously focused element.
-function trapFocus(container) {
+function trapFocus(container, initialFocusSelector = null) {
   const prev = document.activeElement
+
+  const visibleFocusable = (root) =>
+    [...root.querySelectorAll(FOCUSABLE)].filter((el) => el.offsetParent !== null)
 
   const onKeydown = (e) => {
     if (e.key !== "Tab") return
-    const items = [...container.querySelectorAll(FOCUSABLE)].filter(
-      (el) => el.offsetParent !== null
-    )
+    const items = visibleFocusable(container)
     if (items.length === 0) return
     const first = items[0]
     const last = items[items.length - 1]
@@ -287,7 +288,12 @@ function trapFocus(container) {
   }
 
   container.addEventListener("keydown", onKeydown)
-  const target = container.querySelector(FOCUSABLE)
+  const initial = initialFocusSelector && container.querySelector(initialFocusSelector)
+  const initialTarget =
+    initial?.matches(FOCUSABLE) && initial.offsetParent !== null
+      ? initial
+      : initial && visibleFocusable(initial)[0]
+  const target = initialTarget || visibleFocusable(container)[0]
   if (target) target.focus()
 
   return () => {
@@ -1738,7 +1744,7 @@ const LanternModal = {
     this.open = true
     this.el.hidden = false
     document.body.style.overflow = "hidden"
-    this.cleanup.push(trapFocus(this.panel))
+    this.cleanup.push(trapFocus(this.panel, this.el.dataset.initialFocus))
     const esc = this.el.dataset.closeOnEsc === "true"
     const outside = this.el.dataset.closeOnOutside === "true"
     this.cleanup.push(
