@@ -75,6 +75,34 @@ maps; datetime = `DateTime`/`NaiveDateTime`/`Date`/ISO-8601 string).
 
 `area_chart` `series`: a list of `%{date: iso8601 | Date, value: number}`.
 
+## Summary stats
+
+`stat_card/1` exposes the same compact metric presentation used by the data
+table overview. Use it for a single metric, or use the slot-driven
+`stat_grid/1` for responsive groups. The grid wraps cards from the same
+9.5rem basis, so one, two, or many cards fill wide layouts and reflow at narrow
+widths without caller breakpoints.
+
+```heex
+<.stat_card label="Open orders" value={42} icon="hero-inbox" />
+
+<.stat_grid aria-label="Order summary">
+  <:stat label="Open" value={42} />
+  <:stat label="Shipped" value={128} href={~p"/orders?status=shipped"} />
+</.stat_grid>
+
+<.stat_grid aria-label="Store health">
+  <:stat label="Products" value={@product_count} />
+  <:stat label="Low stock" value={@low_stock_count} subtitle="Needs attention" />
+  <:stat label="Orders" value={@order_count} />
+  <:stat label="Revenue" value={@formatted_revenue} />
+</.stat_grid>
+```
+
+`label` and `value` are required. `subtitle`, host heroicon `icon`, `href`, and
+`class` are optional. Keep values concise; calculations, formatting, trends,
+charts, and navigation state remain caller-owned.
+
 ## Skeleton placeholders
 
 `Skeleton.skeleton/1` is decorative and needs no JavaScript or Tailwind. Its

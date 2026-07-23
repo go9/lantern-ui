@@ -55,6 +55,7 @@ defmodule LanternUI do
     select: LanternUI.Components.Select,
     pagination: LanternUI.Components.Pagination,
     data_table: LanternUI.Components.DataTable,
+    stat: LanternUI.Components.Stat,
     switch: LanternUI.Components.Switch,
     radio: LanternUI.Components.Radio,
     textarea: LanternUI.Components.Textarea,
