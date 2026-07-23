@@ -987,6 +987,18 @@
   min-height: 0;
   overflow-y: auto;
 }
+/* In fill mode the wrap is the scroll region, so the column header would scroll
+   away with the rows. Pin it. `.lui-table` uses border-collapse: collapse, which
+   gives the border to the TABLE rather than the cell — a sticky th therefore
+   loses its border-bottom on scroll, so redraw that hairline as an inset shadow.
+   The th already carries an opaque --lantern-surface-sunken background, so rows
+   cannot show through it. */
+.lui-datatable-fill > .lui-table-wrap .lui-th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  box-shadow: inset 0 -1px 0 var(--lantern-border);
+}
 .lui-datatable .lui-dt-cards { padding: 0.9rem; }
 .lui-datatable .lui-dt-pagination { margin-top: 0; padding: 0.55rem 0.9rem;
   border-top: 1px solid var(--lantern-border); }
