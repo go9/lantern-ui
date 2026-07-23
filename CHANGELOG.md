@@ -23,6 +23,9 @@ All notable changes to this project are documented here. The format follows
   gate. Implemented **clean-room** from the public Fluxon API facts and W3C
   WAI-ARIA APG; no commercial Fluxon or Chelekom expression copied (see
   `docs/upstreams/chelekom.md`, flicker #921).
+- **`skeleton`** (flicker #1029) — a standalone CSS-only decorative loading
+  placeholder with class/style/global attribute passthrough, token-driven
+  color and radius, a visible default geometry, and reduced-motion-safe pulse.
 
 ### Changed
 - **`nav_item` icons accept host heroicons (`hero-*`), not just lantern's icon
