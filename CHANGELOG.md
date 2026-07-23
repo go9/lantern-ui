@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- **`app_shell` main is now a bounded, independently-scrolling region on desktop
+  — so `data_table fill` works inside it.** Previously `.lui-app` was
+  `min-height: 100vh` (whole-page scroll) and `.lui-app-main` had no height/flex,
+  so a `.lui-datatable-fill` child had no bounded parent to fill: full-height
+  tables with pinned header/overview/pagination silently didn't fill. Now, at
+  `min-width: 769px`, `.lui-app` is viewport-height with `overflow: hidden` and
+  `.lui-app-main` is a `box-sizing: border-box` flex column of height
+  `calc(100vh - appbar)` with `overflow-y: auto`. Normal pages scroll inside main
+  exactly as before (the bar is already `position: fixed`); a fill table now fills
+  the height and pins its chrome. Mobile (≤768px, sidebar becomes a strip) keeps
+  natural page scroll. This unblocks migrating apps off hand-rolled shells onto
+  `app_shell` without losing full-height tables.
+
 ### Fixed
 - **`data_table fill` now pins the column header.** In fill mode the table body
   is the scroll region, but nothing in `lantern_ui.css` was sticky — so on any

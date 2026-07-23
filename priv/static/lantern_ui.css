@@ -686,6 +686,18 @@
 .lui-app-main { margin-left: var(--lui-sidebar-w); padding: 1.5rem 1.5rem 4rem; min-width: 0;
   transition: margin-left var(--lantern-duration) var(--lantern-ease); }
 
+/* Desktop: bound the shell to the viewport and make MAIN the scroll region — a
+   flex column whose height is the space below the fixed bar. Normal pages scroll
+   inside main exactly as before (the bar is already position:fixed), and a
+   `.lui-datatable-fill` child now has a bounded flex parent to fill, so full-height
+   tables with pinned header/overview/pagination work inside app_shell. Mobile
+   (<=768px, sidebar becomes a strip) keeps natural page scroll. */
+@media (min-width: 769px) {
+  .lui-app { height: 100vh; overflow: hidden; }
+  .lui-app-main { box-sizing: border-box; height: calc(100vh - var(--lui-appbar-h));
+    overflow-y: auto; display: flex; flex-direction: column; }
+}
+
 /* Nav */
 .lui-nav-group { margin-bottom: 1rem; }
 .lui-nav-group-label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
