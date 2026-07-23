@@ -67,7 +67,8 @@ defmodule LanternUI do
     sheet: LanternUI.Components.Sheet,
     navlist: LanternUI.Components.Navlist,
     loading: LanternUI.Components.Loading,
-    progress: LanternUI.Components.Progress
+    progress: LanternUI.Components.Progress,
+    accordion: LanternUI.Components.Accordion
   }
 
   @doc false

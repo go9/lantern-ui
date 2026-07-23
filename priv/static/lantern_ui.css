@@ -1853,3 +1853,68 @@
     animation: none !important;
   }
 }
+
+/* ── Accordion ──
+ * Server renders the anatomy + initial open state; the LanternAccordion hook
+ * toggles panels and drives the APG keyboard model. Panels stay in the DOM and
+ * are hidden via [hidden] so idrefs resolve and collapsed content leaves the
+ * tab order. Only the chevron animates (reduced-motion disables it). */
+.lui-accordion {
+  background: var(--lantern-surface-raised);
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius);
+  overflow: hidden;
+}
+.lui-accordion-item + .lui-accordion-item { border-top: 1px solid var(--lantern-border); }
+
+.lui-accordion-header { margin: 0; }
+
+.lui-accordion-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem var(--lantern-control-px);
+  background: transparent;
+  border: none;
+  font-family: var(--lantern-font);
+  font-size: var(--lantern-text);
+  font-weight: 500;
+  color: var(--lantern-fg);
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--lantern-duration) var(--lantern-ease);
+}
+.lui-accordion-trigger:hover { background: var(--lantern-surface-hover); }
+.lui-accordion-trigger:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--lantern-ring);
+}
+.lui-accordion-trigger[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.lui-accordion-title { flex: 1; min-width: 0; }
+
+.lui-accordion-icon {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
+  color: var(--lantern-fg-muted);
+  transition: transform var(--lantern-duration) var(--lantern-ease);
+}
+.lui-accordion-trigger[aria-expanded="true"] .lui-accordion-icon { transform: rotate(180deg); }
+
+.lui-accordion-panel[hidden] { display: none; }
+.lui-accordion-body {
+  padding: 0 var(--lantern-control-px) 0.85rem;
+  font-size: var(--lantern-text);
+  color: var(--lantern-fg-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lui-accordion-trigger,
+  .lui-accordion-icon { transition: none; }
+}

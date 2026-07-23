@@ -457,6 +457,7 @@ defmodule LanternUI.ComponentsTest do
       keys = LanternUI.__components__() |> Map.keys() |> Enum.sort()
 
       assert keys == [
+               :accordion,
                :alert,
                :autocomplete,
                :badge,
