@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- **`app_shell`: a full-height `data_table fill` no longer leaves a ~4rem dead
+  band at the bottom.** `.lui-app-main`'s 4rem bottom gutter is sized for
+  scrolling content; under a `.lui-datatable-fill` panel it sat *below* the table
+  so the pinned pagination stopped ~64px short of the viewport. When main directly
+  holds a fill table, the bottom gutter now matches the sides (1.5rem), so the
+  table reaches the bottom with a balanced inset.
+
 ### Added
 - **`accordion/1` + `accordion_item/1` — a headless-driven, WAI-ARIA APG
   accordion with the Fluxon 2.3.1 public API.** A Fluxon call migrates by
