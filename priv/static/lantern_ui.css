@@ -709,6 +709,11 @@
   .lui-app { height: 100vh; overflow: hidden; }
   .lui-app-main { box-sizing: border-box; height: calc(100vh - var(--lui-appbar-h));
     overflow-y: auto; display: flex; flex-direction: column; }
+  /* The 4rem bottom gutter is sized for scrolling content. A `.lui-datatable-fill`
+     is a full-height panel, so that gutter becomes a dead band under it (the
+     pinned pagination stops ~4rem short of the viewport). When main holds a fill
+     table, match the bottom gutter to the sides so the table reaches the bottom. */
+  .lui-app-main:has(> .lui-datatable-fill) { padding-bottom: 1.5rem; }
 }
 
 /* Nav */
