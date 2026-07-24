@@ -14,6 +14,7 @@ defmodule LanternUI.ARIAConformanceTest do
   import Phoenix.LiveViewTest, only: [rendered_to_string: 1]
 
   alias LanternUI.ARIAConformance
+  alias LanternUI.Components.Accordion
   alias LanternUI.Components.Modal
   alias LanternUI.Components.Select
   alias LanternUI.Components.Sheet
@@ -50,6 +51,28 @@ defmodule LanternUI.ARIAConformanceTest do
         """
       end)
       |> assert_conformant()
+    end
+
+    test "accordion: region panels are labelled and every idref resolves" do
+      render(fn assigns ->
+        ~H"""
+        <Accordion.accordion id="faq">
+          <Accordion.accordion_item id="shipping">
+            <:header>Shipping</:header>
+            <:panel>We ship worldwide.</:panel>
+          </Accordion.accordion_item>
+          <Accordion.accordion_item id="returns" expanded>
+            <:header>Returns</:header>
+            <:panel>Thirty days.</:panel>
+          </Accordion.accordion_item>
+          <Accordion.accordion_item id="warranty">
+            <:header>Warranty</:header>
+            <:panel>Soon.</:panel>
+          </Accordion.accordion_item>
+        </Accordion.accordion>
+        """
+      end)
+      |> assert_conformant(hook_owned: @hook_owned)
     end
   end
 

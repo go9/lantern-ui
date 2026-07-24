@@ -1846,6 +1846,204 @@ const LanternToast = {
   },
 }
 
+// ── Accordion ─────────────────────────────────────────────────────────────
+//
+// Client driver for `LanternUI.Components.Accordion`. The server renders the
+// full anatomy (headers, panels, idrefs) and the initial open state; this hook
+// owns toggling and the WAI-ARIA APG accordion keyboard model — arrow-key focus
+// movement between headers can't be delivered server-side. Panels stay in the
+// DOM and are shown/hidden via the `hidden` attribute (idrefs always resolve;
+// collapsed content leaves the tab order + a11y tree). Open state is client-
+// owned after mount and re-applied across LiveView patches (which strip
+// hook-set attributes).
+const LanternAccordion = {
+  // A nested accordion's triggers are descendants of the outer root too. Every
+  // query and delegated event must therefore verify which hook root owns it.
+  ownedTrigger(node) {
+    const trigger = node && node.closest && node.closest('[data-part="trigger"]')
+    if (!trigger || trigger.disabled) return null
+    return trigger.closest('[phx-hook="LanternAccordion"]') === this.el ? trigger : null
+  },
+
+  triggers() {
+    return Array.from(this.el.querySelectorAll('[data-part="trigger"]')).filter(
+      (trigger) => this.ownedTrigger(trigger) === trigger
+    )
+  },
+
+  isMultiple() {
+    return this.el.dataset.multiple === "true"
+  },
+
+  preventsAllClosed() {
+    return this.el.dataset.preventAllClosed === "true"
+  },
+
+  panelFor(trigger) {
+    const item = trigger.closest('[data-part="item"]')
+    if (!item || item.closest('[phx-hook="LanternAccordion"]') !== this.el) return null
+    return Array.from(item.querySelectorAll('[data-part="panel"]')).find(
+      (panel) => panel.closest('[data-part="item"]') === item
+    )
+  },
+
+  remember(trigger, open) {
+    if (trigger.id) this.stateById.set(trigger.id, open)
+    const position = this.triggers().indexOf(trigger)
+    if (position !== -1) this.stateByPosition[position] = open
+  },
+
+  setOpen(trigger, open) {
+    const item = trigger.closest('[data-part="item"]')
+    const panel = this.panelFor(trigger)
+    trigger.setAttribute("aria-expanded", String(open))
+    if (panel) panel.hidden = !open
+    if (item) item.setAttribute("data-state", open ? "open" : "closed")
+    this.remember(trigger, open)
+  },
+
+  syncAriaDisabled() {
+    const triggers = this.triggers()
+    const open = triggers.filter((trigger) => trigger.getAttribute("aria-expanded") === "true")
+    const inoperable = this.preventsAllClosed() && open.length === 1 ? open[0] : null
+    triggers.forEach((trigger) => {
+      if (trigger === inoperable) trigger.setAttribute("aria-disabled", "true")
+      else trigger.removeAttribute("aria-disabled")
+    })
+  },
+
+  enforceConstraints() {
+    const triggers = this.triggers()
+    const open = triggers.filter((trigger) => trigger.getAttribute("aria-expanded") === "true")
+    if (!this.isMultiple()) open.slice(1).forEach((trigger) => this.setOpen(trigger, false))
+    const allClosed = this.triggers().every(
+      (trigger) => trigger.getAttribute("aria-expanded") !== "true"
+    )
+    if (this.preventsAllClosed() && allClosed) {
+      const first = triggers[0]
+      if (first) this.setOpen(first, true)
+    }
+    this.syncAriaDisabled()
+  },
+
+  toggle(trigger) {
+    const open = trigger.getAttribute("aria-expanded") === "true"
+    if (open && trigger.getAttribute("aria-disabled") === "true") return
+    if (!open && !this.isMultiple()) {
+      this.triggers().forEach((item) => item !== trigger && this.setOpen(item, false))
+    }
+    this.setOpen(trigger, !open)
+    this.enforceConstraints()
+  },
+
+  focusBy(current, delta) {
+    const items = this.triggers()
+    const i = items.indexOf(current)
+    if (i === -1) return
+    const next = (i + delta + items.length) % items.length
+    items[next].focus()
+  },
+
+  captureFocus() {
+    const active = this.ownedTrigger(document.activeElement)
+    this.focusedId = active && active.id
+    this.focusedPosition = active ? this.triggers().indexOf(active) : -1
+  },
+
+  restoreFocus() {
+    if (this.focusedPosition < 0) return
+    const triggers = this.triggers()
+    const byId = triggers.find((item) => item.id === this.focusedId)
+    const trigger = byId || triggers[this.focusedPosition]
+    if (trigger) trigger.focus()
+  },
+
+  restoreState() {
+    const previousById = this.stateById
+    const previousByPosition = this.stateByPosition
+    this.stateById = new Map()
+    this.stateByPosition = []
+    this.triggers().forEach((trigger, position) => {
+      const serverOpen = trigger.getAttribute("aria-expanded") === "true"
+      const open = previousById.has(trigger.id)
+        ? previousById.get(trigger.id)
+        : (previousByPosition[position] ?? serverOpen)
+      this.setOpen(trigger, open)
+    })
+    this.enforceConstraints()
+  },
+
+  mounted() {
+    // State is keyed by stable item id when available and mirrored by owned
+    // item position so Fluxon's optional/generated ids can change on a patch.
+    this.stateById = new Map()
+    this.stateByPosition = []
+    this.focusedId = null
+    this.focusedPosition = -1
+    this.triggers().forEach((trigger) => {
+      this.remember(trigger, trigger.getAttribute("aria-expanded") === "true")
+    })
+    this.enforceConstraints()
+
+    this.onClick = (event) => {
+      const trigger = this.ownedTrigger(event.target)
+      if (trigger) this.toggle(trigger)
+    }
+
+    this.onKeydown = (event) => {
+      const trigger = this.ownedTrigger(event.target)
+      if (!trigger) return
+      const items = this.triggers()
+      switch (event.key) {
+        case "ArrowDown":
+          event.preventDefault()
+          this.focusBy(trigger, 1)
+          break
+        case "ArrowUp":
+          event.preventDefault()
+          this.focusBy(trigger, -1)
+          break
+        case "Home":
+          event.preventDefault()
+          items[0] && items[0].focus()
+          break
+        case "End":
+          event.preventDefault()
+          items[items.length - 1] && items[items.length - 1].focus()
+          break
+      }
+    }
+
+    this.el.addEventListener("click", this.onClick)
+    this.el.addEventListener("keydown", this.onKeydown)
+  },
+
+  beforeUpdate() {
+    this.captureFocus()
+  },
+
+  // LiveView patches re-render the server's initial state and may regenerate
+  // optional ids. Reapply client-owned state by stable id, then item position.
+  updated() {
+    this.restoreState()
+    this.restoreFocus()
+  },
+
+  disconnected() {
+    this.captureFocus()
+  },
+
+  reconnected() {
+    this.restoreState()
+    this.restoreFocus()
+  },
+
+  destroyed() {
+    this.el.removeEventListener("click", this.onClick)
+    this.el.removeEventListener("keydown", this.onKeydown)
+  },
+}
+
 export const Hooks = {
   ChartHover,
   LineHover,
@@ -1862,6 +2060,7 @@ export const Hooks = {
   LanternSelect,
   LanternAutocomplete,
   LanternCollapse,
+  LanternAccordion,
   LanternTableChrome,
   LanternTheme,
 }
@@ -1881,6 +2080,7 @@ export {
   LanternSelect,
   LanternAutocomplete,
   LanternCollapse,
+  LanternAccordion,
   LanternTableChrome,
   LanternTheme,
 }

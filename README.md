@@ -14,6 +14,8 @@ embeddable Postgres table viewer; `lantern_ui` is the UI component set.
 - `LanternUI.Charts.bar_chart/1` — categorical bars.
 - `LanternUI.Charts.line_chart/1` — multi-series time-series lines with a legend
   and a shared crosshair tooltip (built for resource/monitoring metrics).
+- `LanternUI.Components.Accordion.accordion/1` + `accordion_item/1` — a
+  Fluxon-compatible, WAI-ARIA accordion with single/multiple-open behavior.
 - `LanternUI.Charts.Geometry` — pure scaling / "nice" ticks / SVG path helpers.
 
 Geometry is computed in Elixir, so charts re-render through normal LiveView
@@ -72,11 +74,37 @@ maps; datetime = `DateTime`/`NaiveDateTime`/`Date`/ISO-8601 string).
 
 `area_chart` `series`: a list of `%{date: iso8601 | Date, value: number}`.
 
-## JS hook (required for area_chart hover)
+### Accordion
 
-`area_chart` uses `ChartHover` and `line_chart` uses `LineHover` for their
-crosshair/tooltips — both ship in `LanternHooks`, so the single import below
-registers them. In `assets/js/app.js`:
+`accordion/1` and `accordion_item/1` mirror Fluxon 2.3.1, so an existing call can
+migrate by changing only `use Fluxon` to `use LanternUI`:
+
+```heex
+<.accordion id="faq" prevent_all_closed animation_duration={300}>
+  <.accordion_item id="shipping" expanded>
+    <:header>Where do you ship?</:header>
+    <:panel>Worldwide.</:panel>
+  </.accordion_item>
+  <.accordion_item id="returns" icon={false}>
+    <:header class="font-semibold">What is the return window?</:header>
+    <:panel class="prose">Thirty days.</:panel>
+  </.accordion_item>
+</.accordion>
+```
+
+Both ids are optional and generated when omitted. `multiple` allows several
+panels open; `prevent_all_closed` keeps one open. The panel remains in the DOM
+and is hidden when collapsed so ARIA relationships stay valid. The indicator
+uses `animation_duration`; `prefers-reduced-motion: reduce` disables its
+transition.
+
+## JS hooks (mandatory for Accordion and interactive components)
+
+**Register the complete `LanternHooks` bundle whenever Accordion is used.**
+Without `LanternAccordion`, headers do not toggle, keyboard navigation does not
+run, and `prevent_all_closed` cannot be enforced. `area_chart` uses
+`ChartHover`, and `line_chart` uses `LineHover`; the same single import below
+registers all shipped hooks. In `assets/js/app.js`:
 
 ```js
 import LanternHooks from "../../deps/lantern_ui/priv/static/lantern_ui_hooks.js"
@@ -85,7 +113,8 @@ let Hooks = { ...LanternHooks /* , ...yourOtherHooks */ }
 let liveSocket = new LiveSocket("/live", Socket, { params: {/* ... */}, hooks: Hooks })
 ```
 
-`sparkline` and `bar_chart` need no JavaScript.
+`sparkline` and `bar_chart` need no JavaScript. Accordion always requires the
+hook bundle above.
 
 ## Theming
 

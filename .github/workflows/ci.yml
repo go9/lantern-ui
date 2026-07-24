@@ -39,3 +39,5 @@ jobs:
       - run: mix format --check-formatted
       - run: mix compile --warnings-as-errors
       - run: mix test
+      - run: node --check priv/static/lantern_ui_hooks.js
+      - run: node --test test/js/accordion_hook_test.mjs
