@@ -846,6 +846,31 @@
   padding: 0; height: 100%; }
 .lui-autocomplete-input::placeholder { color: var(--lantern-fg-subtle); }
 .lui-autocomplete-input:disabled { opacity: 0.5; cursor: not-allowed; }
+.lui-autocomplete-row { display: flex; align-items: center; gap: 0.5rem; }
+.lui-autocomplete-row .lui-autocomplete-control { flex: 1; min-width: 0; }
+.lui-autocomplete-affix { display: inline-flex; align-items: center; flex: none; color: var(--lantern-fg-muted); }
+.lui-autocomplete-outer { min-height: var(--lantern-control-h); }
+.lui-autocomplete-clear { display: inline-flex; align-items: center; justify-content: center;
+  width: 1.5rem; height: 1.5rem; padding: 0; border: 0; border-radius: var(--lantern-radius-sm);
+  background: transparent; color: var(--lantern-fg-muted); cursor: pointer; }
+.lui-autocomplete-clear:hover { background: var(--lantern-surface-sunken); color: var(--lantern-fg); }
+.lui-autocomplete-header, .lui-autocomplete-footer { padding: 0.45rem 0.6rem;
+  color: var(--lantern-fg-muted); font-size: 0.875em; }
+.lui-autocomplete-header { border-bottom: 1px solid var(--lantern-border); }
+.lui-autocomplete-footer { border-top: 1px solid var(--lantern-border); }
+.lui-autocomplete-group { padding: 0.45rem 0.6rem 0.25rem; color: var(--lantern-fg-subtle);
+  font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.lui-autocomplete-group[data-depth="1"] { padding-left: 1rem; }
+.lui-autocomplete-group[data-depth="2"] { padding-left: 1.4rem; }
+.lui-select-option[data-depth="1"] { padding-left: 1rem; }
+.lui-select-option[data-depth="2"] { padding-left: 1.4rem; }
+.lui-select-option[data-active] { outline: none; background: var(--lantern-surface-sunken); }
+.lui-autocomplete-loading { display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.75rem; color: var(--lantern-fg-muted); font-size: 0.875em; }
+.lui-autocomplete-loading[hidden] { display: none; }
+.lui-autocomplete-spinner { width: 0.9rem; height: 0.9rem; border: 2px solid var(--lantern-border);
+  border-top-color: var(--lantern-accent); border-radius: 999px; animation: lui-spin 0.7s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .lui-autocomplete-spinner { animation-duration: 1.5s; } }
 .lui-select-native-wrap { position: relative; display: block; }
 .lui-select-native { appearance: none; width: 100%; height: var(--lantern-control-h);
   padding: 0 1.9rem 0 var(--lantern-control-px); font-size: var(--lantern-text);

@@ -15,6 +15,7 @@ defmodule LanternUI.ARIAConformanceTest do
 
   alias LanternUI.ARIAConformance
   alias LanternUI.Components.Accordion
+  alias LanternUI.Components.Autocomplete
   alias LanternUI.Components.Modal
   alias LanternUI.Components.Select
   alias LanternUI.Components.Sheet
@@ -44,6 +45,20 @@ defmodule LanternUI.ARIAConformanceTest do
   @hook_owned ["aria-expanded"]
 
   describe "conformant today (regression guard)" do
+    test "autocomplete: combobox controls a named listbox with resolvable option ids" do
+      render(fn assigns ->
+        ~H"""
+        <Autocomplete.autocomplete
+          id="assignee"
+          name="assignee"
+          label="Assignee"
+          options={[{"Ada", "1"}, {"Grace", "2"}]}
+        />
+        """
+      end)
+      |> assert_conformant(hook_owned: ["aria-expanded", "aria-activedescendant"])
+    end
+
     test "sheet: dialog has an accessible name and no dangling idrefs" do
       render(fn assigns ->
         ~H"""

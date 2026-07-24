@@ -1106,151 +1106,402 @@ const LanternSelect = {
   },
 }
 
-// Autocomplete listbox: a text input filters static options client-side while
-// a hidden input carries the selected value. Positioning and outside dismissal
-// intentionally match LanternSelect.
+// Autocomplete listbox: static matching or debounced LiveView search. The
+// input keeps DOM focus and exposes the highlighted option through
+// aria-activedescendant, including across LiveView result patches.
 const LanternAutocomplete = {
   mounted() {
-    this.input = this.el.querySelector('[data-part="input"]')
-    this.hidden = this.el.querySelector('[data-part="value"]')
-    this.control = this.el.querySelector(".lui-autocomplete-control")
-    this.panel = this.el.querySelector('[data-part="panel"]')
-    this.noResults = this.el.querySelector('[data-part="no-results"]')
-    this.cleanup = []
     this.open = false
+    this.activeIndex = -1
+    this.loading = false
+    this.dismissRelease = null
+    this.pendingSearch = null
+    this.inFlightSearches = []
+    this.searchSequence = 0
+    this.captureElements()
 
     this.onClick = (e) => {
+      const clear = e.target.closest('[data-part="clear"]')
+      if (clear) {
+        e.preventDefault()
+        e.stopPropagation()
+        this.clear()
+        return
+      }
       const opt = e.target.closest('[data-part="option"]')
       if (opt) {
         this.select(opt)
         return
       }
-      if (this.input?.disabled) return
-      if (e.target.closest(".lui-autocomplete-control")) {
-        this.input?.focus()
+      if (!this.input?.disabled && e.target.closest(".lui-autocomplete-control")) {
+        this.input.focus()
         this.show()
       }
     }
-    this.onInput = () => {
+    this.onInput = (e) => {
+      if (e.target !== this.input || this.input.disabled) return
+      this.activeIndex = -1
       this.show()
-      this.filter()
+      this.search()
+    }
+    this.onFocus = (e) => {
+      if (e.target === this.input && this.el.dataset.openOnFocus === "true") this.show()
     }
     this.onKeydown = (e) => this.onKey(e)
 
+    // These listeners stay on the hook root, which LiveView retains. Delegation
+    // means patched inputs/options never need their own listeners reattached.
     this.el.addEventListener("click", this.onClick)
+    this.el.addEventListener("input", this.onInput)
+    this.el.addEventListener("focusin", this.onFocus)
     this.el.addEventListener("keydown", this.onKeydown)
-    this.input?.addEventListener("input", this.onInput)
+    this.updateResults()
+  },
+
+  captureElements() {
+    this.input = this.el.querySelector('[data-part="input"]')
+    this.hidden = this.el.querySelector('[data-part="value"]')
+    this.control = this.el.querySelector(".lui-autocomplete-control")
+    this.panel = this.el.querySelector('[data-part="panel"]')
+    this.resultsContainer = this.el.querySelector('[data-part="options"]')
+    this.loadingEl = this.el.querySelector('[data-part="loading"]')
+    this.noResults = this.el.querySelector('[data-part="no-results"]')
+    this.clearButton = this.el.querySelector('[data-part="clear"]')
+  },
+
+  resultSignature() {
+    return JSON.stringify({
+      options: this.options().map((option) => [
+        option.id,
+        option.dataset.value,
+        this.optionLabel(option),
+        option.getAttribute("aria-selected"),
+      ]),
+      groups: [...this.el.querySelectorAll('[data-part="group"]')].map((group) => [
+        group.dataset.depth,
+        group.textContent.trim(),
+      ]),
+      empty: this.noResults?.textContent.trim() || "",
+    })
+  },
+
+  beforeUpdate() {
+    this.patchState = {
+      activeValue: this.activeOption()?.dataset.value,
+      focused: document.activeElement === this.input,
+      hiddenValue: this.hidden?.value || "",
+      inputValue: this.input?.value || "",
+      selectedLabel: this.selectedLabel(),
+      resultsContainer: this.resultsContainer,
+      noResults: this.noResults,
+      resultSignature: this.resultSignature(),
+    }
+    // onDismiss closes over the old panel/control. Release it before morphdom
+    // can detach those nodes; updated() re-arms against the current pair.
+    if (this.open) this.releaseDismissal()
+  },
+
+  updated() {
+    const state = this.patchState || {}
+    this.captureElements()
+
+    const resultsPatched =
+      state.resultsContainer !== this.resultsContainer ||
+      state.noResults !== this.noResults ||
+      state.resultSignature !== this.resultSignature()
+
+    // A hook update can be caused by validation chrome or another unrelated
+    // patch. Record result-surface changes, but do not clear loading here: the
+    // exact pushEvent reply completes the matching token below, so an older or
+    // unrelated patch cannot acknowledge a newer query.
+    if (resultsPatched && this.inFlightSearches.length > 0) {
+      this.inFlightSearches[0].resultsPatched = true
+    }
+
+    if (state.hiddenValue && state.hiddenValue === (this.hidden?.value || "") && !this.selectedOption()) {
+      this.retainedValue = state.hiddenValue
+      this.retainedLabel = state.selectedLabel
+    } else if (this.selectedOption()) {
+      this.retainedValue = this.hidden.value
+      this.retainedLabel = this.optionLabel(this.selectedOption())
+    }
+
+    const pendingQuery = this.pendingSearch?.query
+    if (this.input && pendingQuery != null) this.input.value = pendingQuery
+    else if (state.focused && this.input) this.input.value = state.inputValue
+    else if (this.input && this.retainedValue === (this.hidden?.value || "")) {
+      this.input.value = this.retainedLabel || ""
+    }
+
+    // Server markup always renders loading/closed. Reapply client-owned state
+    // after capturing the replacement nodes without changing pending timers.
+    this.setLoading(this.loading)
+    if (this.open) {
+      this.panel.hidden = false
+      this.input?.setAttribute("aria-expanded", "true")
+      this.positionPanel()
+      this.armDismissal()
+    }
+    this.updateResults()
+
+    const byValue = this.options(true).find((option) => option.dataset.value === state.activeValue)
+    if (byValue) this.setActive(this.options(true).indexOf(byValue))
+    else this.setActive(Math.min(this.activeIndex, this.options(true).length - 1))
+    if (state.focused) this.input?.focus()
   },
 
   options(visibleOnly = false) {
     const all = [...this.el.querySelectorAll('[data-part="option"]')]
-    return visibleOnly ? all.filter((o) => !o.hidden) : all
+    return visibleOnly ? all.filter((option) => !option.hidden) : all
   },
 
-  optionLabel(opt) {
-    return opt.querySelector(".lui-select-option-label")?.textContent.trim() || ""
+  optionLabel(option) {
+    return option?.dataset.label || option?.textContent.trim() || ""
+  },
+
+  selectedOption() {
+    const value = this.hidden?.value || ""
+    return this.options().find((option) => option.dataset.value === value)
   },
 
   selectedLabel() {
-    const value = this.hidden?.value || ""
-    const opt = this.options().find((o) => o.dataset.value === value)
-    return opt ? this.optionLabel(opt) : ""
+    const selected = this.selectedOption()
+    if (selected) return this.optionLabel(selected)
+    if (this.retainedValue === (this.hidden?.value || "")) return this.retainedLabel || ""
+    return ""
+  },
+
+  activeOption() {
+    return this.options(true)[this.activeIndex]
+  },
+
+  positionPanel() {
+    if (!this.panel || !this.input) return
+    position(this.control || this.input, this.panel, { placement: "bottom-start" })
+    this.panel.style.minWidth = `${(this.control || this.input).offsetWidth}px`
+  },
+
+  armDismissal() {
+    this.releaseDismissal()
+    if (!this.panel || !this.control) return
+    this.dismissRelease = onDismiss(
+      this.panel,
+      (reason) => this.hide({ refocus: false, restore: reason === "outside" }),
+      { anchor: this.control }
+    )
+  },
+
+  releaseDismissal() {
+    this.dismissRelease?.()
+    this.dismissRelease = null
   },
 
   show() {
     if (!this.input || !this.panel || this.input.disabled) return
     if (!this.open) {
       this.open = true
-      this.panel.hidden = false
-      this.input.setAttribute("aria-expanded", "true")
-      this.cleanup.push(
-        onDismiss(
-          this.panel,
-          (reason) => this.hide({ refocus: false, restore: reason === "outside" }),
-          { anchor: this.control }
-        )
-      )
-    } else {
-      this.panel.hidden = false
+      this.armDismissal()
+    } else if (!this.dismissRelease) {
+      this.armDismissal()
     }
-    position(this.control || this.input, this.panel, { placement: "bottom-start" })
-    this.panel.style.minWidth = `${(this.control || this.input).offsetWidth}px`
-    this.filter()
+    this.panel.hidden = false
+    this.input.setAttribute("aria-expanded", "true")
+    this.positionPanel()
+    this.updateResults()
   },
 
   hide({ refocus = true, restore = false } = {}) {
     if (!this.open) return
     this.open = false
-    this.cleanup.forEach((fn) => fn())
-    this.cleanup = []
+    this.releaseDismissal()
     this.panel.hidden = true
     this.input?.setAttribute("aria-expanded", "false")
-    if (restore) this.restoreInput()
+    this.setActive(-1)
+    if (restore && this.input) this.input.value = this.selectedLabel()
     if (refocus) this.input?.focus()
   },
 
-  restoreInput() {
-    const label = this.selectedLabel()
-    if (this.input && this.input.value !== label) this.input.value = label
+  search() {
+    const query = (this.input?.value || "").trim()
+    const threshold = Math.max(0, parseInt(this.el.dataset.searchThreshold || "0", 10))
+    clearTimeout(this.searchTimer)
+
+    if (this.input?.disabled) {
+      this.pendingSearch = null
+      this.setLoading(false)
+      return
+    }
+
+    if (query.length < threshold) {
+      this.pendingSearch = null
+      this.setLoading(false)
+      this.updateResults()
+      return
+    }
+
+    const event = this.el.dataset.serverSearch
+    if (!event) {
+      this.pendingSearch = null
+      this.updateResults()
+      return
+    }
+
+    const request = { query, token: ++this.searchSequence, phase: "debouncing" }
+    this.pendingSearch = request
+    this.setLoading(true)
+    const debounce = Math.max(0, parseInt(this.el.dataset.debounce || "200", 10))
+    this.searchTimer = setTimeout(() => {
+      if (this.input?.disabled || this.pendingSearch?.token !== request.token) return
+      request.phase = "waiting"
+      this.inFlightSearches.push(request)
+      this.pushEvent(event, { query }, () => {
+        // LiveView applies the event reply's diff in the same turn. Defer one
+        // task so loading remains visible through that result patch; this also
+        // completes identical/empty results whose DOM signature cannot change.
+        setTimeout(() => this.completeSearch(request), 0)
+      })
+    }, debounce)
   },
 
-  filter() {
-    const q = (this.input?.value || "").trim().toLowerCase()
-    let any = false
-    this.options().forEach((o) => {
-      const hit = q === "" || this.optionLabel(o).toLowerCase().includes(q)
-      o.hidden = !hit
-      any = any || hit
+  completeSearch(request) {
+    this.inFlightSearches = this.inFlightSearches.filter((item) => item.token !== request.token)
+    if (this.pendingSearch?.token !== request.token) return
+    this.pendingSearch = null
+    this.setLoading(false)
+    this.updateResults()
+  },
+
+  matches(label, query) {
+    const candidate = label.toLocaleLowerCase()
+    const needle = query.toLocaleLowerCase()
+    if (this.el.dataset.searchMode === "exact") return candidate === needle
+    if (this.el.dataset.searchMode === "starts-with") return candidate.startsWith(needle)
+    return candidate.includes(needle)
+  },
+
+  updateResults() {
+    if (!this.input) return
+    const query = this.input.value.trim()
+    const threshold = Math.max(0, parseInt(this.el.dataset.searchThreshold || "0", 10))
+    const server = !!this.el.dataset.serverSearch
+
+    this.options().forEach((option) => {
+      option.hidden = query.length < threshold || (!server && !this.matches(this.optionLabel(option), query))
     })
-    if (this.noResults) this.noResults.hidden = any
+    this.updateGroups()
+
+    const any = this.options(true).length > 0
+    if (this.noResults) {
+      this.noResults.hidden = this.loading || query.length < threshold || any
+      if (!this.noResults.hidden && this.noResults.dataset.defaultText !== "false") {
+        const template = this.el.dataset.emptyTemplate || "No results"
+        if (!this.noResults.querySelector("*")) this.noResults.textContent = template.replaceAll("%{query}", query)
+      }
+    }
+    this.setActive(Math.min(this.activeIndex, this.options(true).length - 1))
   },
 
-  select(opt) {
-    const value = opt.dataset.value || ""
-    const label = this.optionLabel(opt)
+  updateGroups() {
+    const children = [...(this.resultsContainer?.children || [])]
+    children.forEach((item, index) => {
+      if (item.dataset.part !== "group") return
+      const depth = parseInt(item.dataset.depth || "0", 10)
+      let any = false
+      for (let i = index + 1; i < children.length; i++) {
+        const child = children[i]
+        const childDepth = parseInt(child.dataset.depth || "0", 10)
+        if (child.dataset.part === "group" && childDepth <= depth) break
+        if (child.dataset.part === "option" && !child.hidden) any = true
+      }
+      item.hidden = !any
+    })
+  },
+
+  setLoading(loading) {
+    this.loading = loading
+    if (this.loadingEl) this.loadingEl.hidden = !loading
+    this.el.toggleAttribute("data-loading", loading)
+    if (loading && this.noResults) this.noResults.hidden = true
+  },
+
+  setActive(index) {
+    const options = this.options(true)
+    this.activeIndex = options.length === 0 ? -1 : Math.max(-1, Math.min(index, options.length - 1))
+    options.forEach((option, optionIndex) => option.toggleAttribute("data-active", optionIndex === this.activeIndex))
+    const active = options[this.activeIndex]
+    if (active) {
+      this.input?.setAttribute("aria-activedescendant", active.id)
+      active.scrollIntoView?.({ block: "nearest" })
+    } else {
+      this.input?.removeAttribute("aria-activedescendant")
+    }
+  },
+
+  select(option) {
+    const value = option.dataset.value || ""
+    const label = this.optionLabel(option)
     if (this.hidden) {
       this.hidden.value = value
       this.hidden.dispatchEvent(new Event("input", { bubbles: true }))
       this.hidden.dispatchEvent(new Event("change", { bubbles: true }))
     }
-    this.options().forEach((o) => o.setAttribute("aria-selected", String(o === opt)))
+    this.retainedValue = value
+    this.retainedLabel = label
+    this.options().forEach((item) => item.setAttribute("aria-selected", String(item === option)))
     if (this.input) this.input.value = label
+    if (this.clearButton) this.clearButton.hidden = false
+    this.hide()
+  },
+
+  clear() {
+    clearTimeout(this.searchTimer)
+    this.pendingSearch = null
+    this.inFlightSearches = []
+    this.setLoading(false)
+    if (this.hidden) {
+      this.hidden.value = ""
+      this.hidden.dispatchEvent(new Event("input", { bubbles: true }))
+      this.hidden.dispatchEvent(new Event("change", { bubbles: true }))
+    }
+    this.retainedValue = ""
+    this.retainedLabel = ""
+    this.options().forEach((option) => option.setAttribute("aria-selected", "false"))
+    if (this.input) this.input.value = ""
+    if (this.clearButton) this.clearButton.hidden = true
     this.hide()
   },
 
   onKey(e) {
-    if (!this.input || !this.panel) return
+    if (e.target !== this.input || !this.input || this.input.disabled) return
     if (e.key === "Escape" && this.open) {
       e.preventDefault()
       e.stopPropagation()
       this.hide({ restore: true })
       return
     }
-
     if (!["ArrowDown", "ArrowUp", "Enter"].includes(e.key)) return
     if (!this.open) this.show()
 
-    const opts = this.options(true)
-    const idx = opts.indexOf(document.activeElement)
+    const options = this.options(true)
     if (e.key === "ArrowDown") {
       e.preventDefault()
-      opts[Math.min(idx + 1, opts.length - 1)]?.focus()
+      this.setActive(options.length ? (this.activeIndex + 1) % options.length : -1)
     } else if (e.key === "ArrowUp") {
       e.preventDefault()
-      const next = idx <= 0 ? opts.length - 1 : idx - 1
-      opts[next]?.focus()
-    } else if (e.key === "Enter") {
+      this.setActive(options.length ? (this.activeIndex <= 0 ? options.length - 1 : this.activeIndex - 1) : -1)
+    } else if (e.key === "Enter" && this.activeOption()) {
       e.preventDefault()
-      const opt = idx >= 0 ? opts[idx] : opts[0]
-      if (opt) this.select(opt)
+      this.select(this.activeOption())
     }
   },
 
   destroyed() {
-    this.cleanup.forEach((fn) => fn())
+    clearTimeout(this.searchTimer)
+    this.releaseDismissal()
     this.el.removeEventListener("click", this.onClick)
+    this.el.removeEventListener("input", this.onInput)
+    this.el.removeEventListener("focusin", this.onFocus)
     this.el.removeEventListener("keydown", this.onKeydown)
-    this.input?.removeEventListener("input", this.onInput)
   },
 }
 
