@@ -738,11 +738,27 @@
 .lui-nav-item-icon.lui-nav-item-icon-mask { width: 1.15rem; height: 1.15rem; }
 .lui-nav-item-label { overflow: hidden; text-overflow: ellipsis; }
 
+/* Expandable nav_item (`:subnav` slot): a toggle with a chevron over a
+   grid-rows-based slide panel — client-side via JS.toggle_attribute on
+   data-expanded (Fluxon-parity nesting). */
+.lui-nav-sub-chevron { margin-left: auto; font-size: 0.75rem; flex-shrink: 0;
+  color: var(--lantern-fg-subtle);
+  transition: transform var(--lantern-duration) var(--lantern-ease); }
+.lui-nav-item[data-expanded] .lui-nav-sub-chevron { transform: rotate(90deg); }
+.lui-nav-sub-panel { display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows var(--lantern-duration) var(--lantern-ease); }
+.lui-nav-item[data-expanded] + .lui-nav-sub-panel { grid-template-rows: 1fr; }
+.lui-nav-sub-inner { overflow: hidden; margin-left: 0.85rem; padding-left: 0.5rem;
+  border-left: 1px solid var(--lantern-border); }
+
 /* Collapsed rail: hide text, center icons, flip the collapse chevron. */
 .lui-app[data-collapsed] .lui-nav-item-label,
 .lui-app[data-collapsed] .lui-nav-group-label,
 .lui-app[data-collapsed] .lui-brand-name,
+.lui-app[data-collapsed] .lui-nav-sub-chevron,
 .lui-app[data-collapsed] .lui-collapse-label { display: none; }
+/* On the rail, don't expand the subnav panel. */
+.lui-app[data-collapsed] .lui-nav-sub-panel { grid-template-rows: 0fr; }
 .lui-app[data-collapsed] .lui-nav-item { justify-content: center; padding-inline: 0; }
 .lui-app[data-collapsed] .lui-collapse-btn { justify-content: center; }
 .lui-app[data-collapsed] .lui-collapse-icon { transform: rotate(180deg); }

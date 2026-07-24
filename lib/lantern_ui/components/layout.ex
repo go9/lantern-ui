@@ -29,6 +29,7 @@ defmodule LanternUI.Components.Layout do
 
   alias LanternUI.Class
   alias LanternUI.Components.Icon
+  alias Phoenix.LiveView.JS
 
   attr(:id, :string, required: true, doc: "stable id — the collapse state is persisted per id")
   attr(:collapsed, :boolean, default: false, doc: "Initial sidebar collapsed (icon-rail) state.")
@@ -97,8 +98,18 @@ defmodule LanternUI.Components.Layout do
   A sidebar nav item. Renders a link when given `navigate`/`patch`/`href`, or a
   button when given `phx-click`. Collapses to an icon-only rail item (with a
   tooltip) when the sidebar is collapsed.
+
+  Pass a `:subnav` slot of nested `nav_item`s to make it an expandable section
+  (Fluxon parity): the item becomes a toggle with a chevron, and the subnav
+  slides open/closed client-side. Use `expanded` for the initial open state
+  (e.g. `expanded={@in_this_section?}`). The subnav is hidden on the icon rail.
   """
   attr(:label, :string, required: true, doc: "Nav label; becomes the collapsed-rail tooltip.")
+
+  attr(:expanded, :boolean,
+    default: false,
+    doc: "Initial open state when a `:subnav` is present."
+  )
 
   attr(:icon, :string,
     default: nil,
@@ -118,12 +129,32 @@ defmodule LanternUI.Components.Layout do
     doc: "Arbitrary HTML/`phx-*` attributes passed through."
   )
 
+  slot(:subnav, doc: "Nested nav_items. When present the item becomes an expandable section.")
+
   def nav_item(assigns) do
     assigns = assign(assigns, :link?, assigns.navigate || assigns.patch || assigns.href)
 
     ~H"""
+    <div :if={@subnav != []} class="lui-nav-sub">
+      <button
+        type="button"
+        class={Class.merge(["lui-nav-item", @active && "lui-nav-item-active", @class])}
+        title={@label}
+        aria-expanded={to_string(@expanded)}
+        data-expanded={@expanded || nil}
+        phx-click={JS.toggle_attribute({"data-expanded", ""})}
+        {@rest}
+      >
+        <.nav_item_icon :if={@icon} name={@icon} />
+        <span class="lui-nav-item-label">{@label}</span>
+        <Icon.icon name="chevron-right" class="lui-nav-sub-chevron" />
+      </button>
+      <div class="lui-nav-sub-panel">
+        <div class="lui-nav-sub-inner">{render_slot(@subnav)}</div>
+      </div>
+    </div>
     <.link
-      :if={@link?}
+      :if={@subnav == [] && @link?}
       class={Class.merge(["lui-nav-item", @active && "lui-nav-item-active", @class])}
       navigate={@navigate}
       patch={@patch}
@@ -136,7 +167,7 @@ defmodule LanternUI.Components.Layout do
       <span class="lui-nav-item-label">{@label}</span>
     </.link>
     <button
-      :if={!@link?}
+      :if={@subnav == [] && !@link?}
       type="button"
       class={Class.merge(["lui-nav-item", @active && "lui-nav-item-active", @class])}
       title={@label}
