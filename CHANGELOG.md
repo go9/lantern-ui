@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **`nav_item` now nests (Fluxon-parity expandable nav) via a `:subnav` slot.**
+  Pass a `:subnav` of nested `nav_item`s and the item becomes a toggle with a
+  chevron over a `grid-rows`-based slide panel, opened/closed client-side with
+  `JS.toggle_attribute` on `data-expanded` — the same expandable pattern Fluxon's
+  `navlink` used, now built into `app_shell`'s `nav_item`. `expanded` sets the
+  initial open state (e.g. `expanded={@in_this_section?}`); the subnav is hidden
+  on the collapsed icon rail.
+
 ### Fixed
 - **`app_shell`: a full-height `data_table fill` no longer leaves a ~4rem dead
   band at the bottom.** `.lui-app-main`'s 4rem bottom gutter is sized for

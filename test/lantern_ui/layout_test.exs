@@ -128,6 +128,44 @@ defmodule LanternUI.LayoutTest do
       refute html =~ "<svg"
     end
 
+    test "a :subnav slot makes it an expandable toggle over a slide panel" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.nav_item label="Org Settings" icon="hero-cog-6-tooth" expanded>
+            <:subnav>
+              <Layout.nav_item label="General" navigate="/s/general" active />
+              <Layout.nav_item label="eBay" navigate="/s/ebay" />
+            </:subnav>
+          </Layout.nav_item>
+          """
+        end)
+
+      # a toggle button (not a link) carrying the client-side toggle + initial state
+      assert html =~ ~s(<button)
+      assert html =~ "phx-click"
+      assert html =~ ~s(data-expanded)
+      assert html =~ "lui-nav-sub-chevron"
+      # the slide panel + nested items
+      assert html =~ "lui-nav-sub-panel"
+      assert html =~ "General"
+      assert html =~ "eBay"
+      assert html =~ ~s(href="/s/general")
+    end
+
+    test "without a :subnav it is a plain link (no toggle/panel)" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.nav_item label="Dashboard" navigate="/" />
+          """
+        end)
+
+      refute html =~ "lui-nav-sub-panel"
+      refute html =~ "lui-nav-sub-chevron"
+      assert html =~ ~s(href="/")
+    end
+
     test "a lantern icon-set name still renders an inline svg" do
       html =
         render(fn assigns ->
