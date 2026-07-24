@@ -98,13 +98,38 @@ and is hidden when collapsed so ARIA relationships stay valid. The indicator
 uses `animation_duration`; `prefers-reduced-motion: reduce` disables its
 transition.
 
+### Destructive confirmations
+
+Use `alert_dialog/1` instead of hand-building destructive modal semantics. Its
+four slots are required; cancel is focused first, backdrop clicks are ignored,
+and Escape closes while restoring focus to the trigger.
+
+```heex
+<.button phx-click={LanternUI.open_dialog("delete-project")}>Delete…</.button>
+
+<.alert_dialog id="delete-project">
+  <:title>Delete this project?</:title>
+  <:description>This permanently deletes the project and its data.</:description>
+  <:cancel>
+    <.button phx-click={LanternUI.close_dialog("delete-project")}>Cancel</.button>
+  </:cancel>
+  <:action>
+    <.button color="danger" phx-click="delete-project">Delete project</.button>
+  </:action>
+</.alert_dialog>
+```
+
+The application owns action and cancel events. Use an alert dialog only for an
+important, usually irreversible confirmation, not for informational content.
+
 ## JS hooks (mandatory for Accordion and interactive components)
 
 **Register the complete `LanternHooks` bundle whenever Accordion is used.**
 Without `LanternAccordion`, headers do not toggle, keyboard navigation does not
-run, and `prevent_all_closed` cannot be enforced. `area_chart` uses
-`ChartHover`, and `line_chart` uses `LineHover`; the same single import below
-registers all shipped hooks. In `assets/js/app.js`:
+run, and `prevent_all_closed` cannot be enforced. Interactive components,
+including `alert_dialog` through `LanternModal`, ship their hooks in the same
+bundle. `area_chart` uses `ChartHover`, and `line_chart` uses `LineHover`; the
+single import below registers all shipped hooks. In `assets/js/app.js`:
 
 ```js
 import LanternHooks from "../../deps/lantern_ui/priv/static/lantern_ui_hooks.js"
