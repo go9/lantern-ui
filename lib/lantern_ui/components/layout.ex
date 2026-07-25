@@ -252,5 +252,4 @@ defmodule LanternUI.Components.Layout do
     </div>
     """
   end
-
 end

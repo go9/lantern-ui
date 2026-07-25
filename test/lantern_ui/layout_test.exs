@@ -257,5 +257,4 @@ defmodule LanternUI.LayoutTest do
       assert html =~ "NEW"
     end
   end
-
 end
