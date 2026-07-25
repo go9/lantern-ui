@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Changed
+- **Breadcrumb + page_header density cut ~3×.** Trail is 0.6875rem with 0.75rem
+  icons and a ~1.35rem sticky bar; page title is 0.9375rem with minimal margins.
+  `app_shell` main drops top padding when a breadcrumb strip is present. Saves
+  vertical real estate without changing the goprint home/chevron structure.
 - **Breadcrumb matches goprint chrome.** Leading optional `home` link (house
   icon), chevron separators by default (text `separator` still available),
   compact 0.8125rem labels. Sticky `breadcrumb_bar` no longer uses a negative
