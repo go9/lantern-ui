@@ -216,6 +216,21 @@ defmodule LanternUI.Components806Test do
       assert html =~ ~s(aria-current="page")
       assert html =~ "lui-breadcrumb-sep"
     end
+
+    test "home renders a leading home-icon crumb before items" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Breadcrumb.breadcrumb home="/" items={[%{label: "Tickets", path: nil}]} />
+          """
+        end)
+
+      assert html =~ "lui-breadcrumb-home"
+      assert html =~ ~s(aria-label="Home")
+      assert html =~ ~s(href="/")
+      assert html =~ "Tickets"
+      assert html =~ "lui-breadcrumb-chevron"
+    end
   end
 
   describe "empty_state/1" do

@@ -7,6 +7,13 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Changed
+- **Breadcrumb matches goprint chrome.** Leading optional `home` link (house
+  icon), chevron separators by default (text `separator` still available),
+  compact 0.8125rem labels. Sticky `breadcrumb_bar` no longer uses a negative
+  top margin under `app_shell` (that was clipping titles). `page_header` title
+  is body font at 1.125rem with normal casing — not brand-display caps.
+
+### Changed
 - **Breadcrumb chrome is layout-owned and compact.** `app_shell` gains a
   `:breadcrumb` slot that renders a sticky `lui-app-breadcrumb` region under
   the appbar (goprint-style density). New `breadcrumb_bar/1` exposes the same
