@@ -194,4 +194,68 @@ defmodule LanternUI.LayoutTest do
       assert html =~ "Workspace"
     end
   end
+
+  describe "breadcrumb slot + breadcrumb_bar/1 + page_header/1" do
+    test "app_shell renders the breadcrumb region when the slot is filled" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.app_shell id="bc">
+            <:brand>b</:brand>
+            <:breadcrumb>TRAIL</:breadcrumb>
+            <:sidebar>n</:sidebar>
+            BODY
+          </Layout.app_shell>
+          """
+        end)
+
+      assert html =~ "lui-app-breadcrumb"
+      assert html =~ "TRAIL"
+      assert html =~ "BODY"
+    end
+
+    test "app_shell omits the breadcrumb region when the slot is empty" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.app_shell id="nobc">
+            <:brand>b</:brand><:sidebar>n</:sidebar>x
+          </Layout.app_shell>
+          """
+        end)
+
+      refute html =~ "lui-app-breadcrumb"
+    end
+
+    test "breadcrumb_bar/1 wraps its contents in the same chrome class" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.breadcrumb_bar>TRAIL</Layout.breadcrumb_bar>
+          """
+        end)
+
+      assert html =~ "lui-app-breadcrumb"
+      assert html =~ "TRAIL"
+    end
+
+    test "page_header/1 renders a compact title, description, and actions" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.page_header title="Buckets" description="Object storage.">
+            <:actions>NEW</:actions>
+          </Layout.page_header>
+          """
+        end)
+
+      assert html =~ "lui-page-header"
+      assert html =~ "lui-page-title"
+      assert html =~ "Buckets"
+      assert html =~ "Object storage."
+      assert html =~ "lui-page-header-actions"
+      assert html =~ "NEW"
+    end
+  end
+
 end

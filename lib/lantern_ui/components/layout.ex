@@ -1,14 +1,17 @@
 defmodule LanternUI.Components.Layout do
   @moduledoc """
-  App shell — a full-width top bar (brand in the corner + inline context +
-  right-side actions) over a fixed, collapsible left sidebar and a main content
-  column. Mirrors the shape of a typical product app layout (top bar +
-  sidebar), so an app can migrate its Fluxon layout onto it.
+  App shell — a full-width top bar (brand + inline context + actions) over a
+  fixed, collapsible left sidebar and a main content column. Breadcrumb chrome
+  is a first-class layout region (goprint-style sticky trail under the appbar),
+  not a per-app one-off.
 
       <.app_shell id="app">
         <:brand><.icon name="bolt" /> <span class="lui-brand-name">Acme</span></:brand>
-        <:header>…breadcrumb / switchers…</:header>
+        <:header>…switchers…</:header>
         <:actions>…user menu…</:actions>
+        <:breadcrumb>
+          <.breadcrumb items={@breadcrumbs} />
+        </:breadcrumb>
         <:sidebar>
           <.nav_group label="Workspace">
             <.nav_item label="Dashboard" icon="chart-bar" navigate="/" active />
@@ -16,14 +19,17 @@ defmodule LanternUI.Components.Layout do
           </.nav_group>
         </:sidebar>
 
+        <.page_header title="Buckets" description="Object storage.">
+          <:actions><.button>New</.button></:actions>
+        </.page_header>
         main content…
       </.app_shell>
 
-  The brand sits top-left; `:header` holds inline context (breadcrumbs,
-  switchers) and `:actions` the top-right. A collapse control at the sidebar's
-  foot toggles the icon rail; the state persists per `id` in localStorage via
-  the `LanternSidebar` hook. Narrow viewports drop the sidebar to a strip below
-  the bar.
+  The brand sits top-left; `:header` is inline context in the appbar (switchers);
+  `:breadcrumb` is the compact sticky trail under the appbar; `:actions` is
+  top-right. A collapse control at the sidebar's foot toggles the icon rail;
+  the state persists per `id` in localStorage via the `LanternSidebar` hook.
+  Narrow viewports drop the sidebar to a strip below the bar.
   """
   use Phoenix.Component
 
@@ -36,8 +42,9 @@ defmodule LanternUI.Components.Layout do
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
   slot(:brand, required: true, doc: "logo/name, top-left corner")
-  slot(:header, doc: "inline context after the brand (breadcrumbs, switchers)")
+  slot(:header, doc: "inline context after the brand (switchers, etc.)")
   slot(:actions, doc: "top-right of the bar (user menu, etc.)")
+  slot(:breadcrumb, doc: "compact sticky trail under the appbar (pass <.breadcrumb>)")
   slot(:sidebar, required: true, doc: "nav_group / nav_item")
   slot(:inner_block, required: true, doc: "Main content column.")
 
@@ -73,6 +80,9 @@ defmodule LanternUI.Components.Layout do
         </aside>
 
         <main class="lui-app-main">
+          <div :if={@breadcrumb != []} class="lui-app-breadcrumb">
+            {render_slot(@breadcrumb)}
+          </div>
           {render_slot(@inner_block)}
         </main>
       </div>
@@ -197,4 +207,50 @@ defmodule LanternUI.Components.Layout do
     <Icon.icon name={@name} class="lui-nav-item-icon" />
     """
   end
+
+  @doc """
+  Compact sticky breadcrumb region for use outside `app_shell` (or when the
+  host app still owns the outer shell). Same chrome `app_shell`'s
+  `:breadcrumb` slot renders.
+  """
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, required: true, doc: "Usually a single <.breadcrumb>.")
+
+  def breadcrumb_bar(assigns) do
+    ~H"""
+    <div class={Class.merge(["lui-app-breadcrumb", @class])} {@rest}>
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  @doc """
+  Page title row — compact, goprint-density. Renders under the breadcrumb bar
+  inside main content. Title + optional description + right-side actions.
+  """
+  attr(:title, :string, default: nil, doc: "Page heading.")
+  attr(:description, :string, default: nil, doc: "Optional supporting line under the title.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:actions, doc: "Right-side actions (buttons, menus).")
+  slot(:inner_block, doc: "Optional body under the title row (rarely needed).")
+
+  def page_header(assigns) do
+    ~H"""
+    <div class={Class.merge(["lui-page-header", @class])} {@rest}>
+      <div :if={@title} class="lui-page-header-row">
+        <div class="lui-page-header-text">
+          <h1 class="lui-page-title">{@title}</h1>
+          <p :if={@description} class="lui-page-desc">{@description}</p>
+        </div>
+        <div :if={@actions != []} class="lui-page-header-actions">
+          {render_slot(@actions)}
+        </div>
+      </div>
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
 end

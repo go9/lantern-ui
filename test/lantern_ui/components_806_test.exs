@@ -198,6 +198,24 @@ defmodule LanternUI.Components806Test do
       assert html =~ ~s(aria-current="page")
       assert html =~ "lui-breadcrumb-sep"
     end
+
+    test "items list API renders links and marks the last segment current" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Breadcrumb.breadcrumb items={[
+            %{label: "Acme", path: "/o/acme"},
+            %{label: "Apps", path: nil}
+          ]} />
+          """
+        end)
+
+      assert html =~ ~s(href="/o/acme")
+      assert html =~ "Acme"
+      assert html =~ "Apps"
+      assert html =~ ~s(aria-current="page")
+      assert html =~ "lui-breadcrumb-sep"
+    end
   end
 
   describe "empty_state/1" do

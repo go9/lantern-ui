@@ -682,6 +682,51 @@
   color: var(--lantern-fg-muted); font-size: 0.8125rem; }
 .lui-appbar-actions { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
 
+/* Compact sticky breadcrumb region under the appbar (layout chrome).
+   Host apps that still own the outer shell (e.g. flicker) can render
+   `<.breadcrumb_bar>` as a full-width sticky strip; inside app_shell it
+   full-bleeds under main padding. */
+.lui-app-breadcrumb {
+  flex: none;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: block;
+  width: 100%;
+  min-height: 1.75rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--lantern-border);
+  background: color-mix(in oklab, var(--lantern-surface) 92%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-sizing: border-box;
+}
+/* When used as a direct main child (app_shell), pull full-bleed under padding */
+.lui-app-main > .lui-app-breadcrumb {
+  margin: -1.5rem -1.5rem 0.75rem;
+  padding: 0.35rem 1.5rem;
+}
+
+/* Page title row — compact goprint density */
+.lui-page-header { margin-bottom: 0.75rem; }
+.lui-page-header-row {
+  display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+.lui-page-header-text { min-width: 0; flex: 1 1 12rem; }
+.lui-page-title {
+  margin: 0; font-size: 1.25rem; font-weight: 650; letter-spacing: -0.015em;
+  line-height: 1.25; color: var(--lantern-fg);
+  font-family: var(--lantern-font-brand, var(--lantern-font));
+}
+.lui-page-desc {
+  margin: 0.2rem 0 0; font-size: var(--lantern-text-sm); line-height: 1.4;
+  color: var(--lantern-fg-muted); max-width: 42rem;
+}
+.lui-page-header-actions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; flex: none;
+}
+
 /* Sidebar (below the bar, fixed) */
 .lui-app-body { padding-top: var(--lui-appbar-h); }
 .lui-app-sidebar { position: fixed; top: var(--lui-appbar-h); bottom: 0; left: 0;

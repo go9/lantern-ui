@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- **Breadcrumb chrome is layout-owned and compact.** `app_shell` gains a
+  `:breadcrumb` slot that renders a sticky `lui-app-breadcrumb` region under
+  the appbar (goprint-style density). New `breadcrumb_bar/1` exposes the same
+  chrome for hosts that still own their outer shell; `page_header/1` is the
+  matching compact title row. `<.breadcrumb>` now also accepts an `items`
+  list of `%{label:, path:}` maps (product app chrome) in addition to the
+  existing `:item` slots, and the trail defaults to a tighter separator/`sm`
+  type size.
+
 ### Added
 - **`nav_item` now nests (Fluxon-parity expandable nav) via a `:subnav` slot.**
   Pass a `:subnav` of nested `nav_item`s and the item becomes a toggle with a
