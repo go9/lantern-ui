@@ -631,21 +631,24 @@
 .lui-dropdown-item[data-danger] { color: var(--lantern-danger); }
 .lui-dropdown-custom { padding: 0.375rem 0.625rem; }
 
-/* ── Breadcrumb ── */
-.lui-breadcrumb-list { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem;
-  list-style: none; margin: 0; padding: 0; font-size: var(--lantern-text); }
-.lui-breadcrumb-item { display: inline-flex; align-items: center; gap: 0.25rem;
+/* ── Breadcrumb (compact trail — goprint-style, slightly tighter) ── */
+.lui-breadcrumb { min-width: 0; line-height: 1; }
+.lui-breadcrumb-list { display: flex; flex-wrap: wrap; align-items: center; gap: 0.15rem;
+  list-style: none; margin: 0; padding: 0; font-size: var(--lantern-text-sm);
+  line-height: 1.15; }
+.lui-breadcrumb-item { display: inline-flex; align-items: center; gap: 0.15rem;
   min-width: 0; }
-.lui-breadcrumb-sep { color: var(--lantern-fg-subtle); user-select: none; }
-.lui-breadcrumb-link { border: none; background: none; padding: 0.125rem 0.25rem;
+.lui-breadcrumb-sep { color: var(--lantern-fg-subtle); user-select: none;
+  font-size: 0.7em; line-height: 1; padding: 0 0.05rem; }
+.lui-breadcrumb-link { border: none; background: none; padding: 0.05rem 0.15rem;
   font: inherit; color: var(--lantern-fg-muted); text-decoration: none; cursor: pointer;
-  border-radius: var(--lantern-radius-sm); max-width: 16rem; overflow: hidden;
-  text-overflow: ellipsis; white-space: nowrap; }
+  border-radius: var(--lantern-radius-sm); max-width: 12rem; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
 .lui-breadcrumb-link:hover { color: var(--lantern-accent);
   background: var(--lantern-surface-sunken); }
 .lui-breadcrumb-current { color: var(--lantern-fg); font-weight: 550;
-  padding: 0.125rem 0.25rem; max-width: 16rem; overflow: hidden; text-overflow: ellipsis;
-  white-space: nowrap; }
+  padding: 0.05rem 0.15rem; max-width: 12rem; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; line-height: 1.2; }
 
 /* ── Empty state ── */
 .lui-empty { display: flex; flex-direction: column; align-items: center; gap: 0.375rem;
