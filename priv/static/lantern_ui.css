@@ -631,21 +631,24 @@
 .lui-dropdown-item[data-danger] { color: var(--lantern-danger); }
 .lui-dropdown-custom { padding: 0.375rem 0.625rem; }
 
-/* ── Breadcrumb ── */
-.lui-breadcrumb-list { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem;
-  list-style: none; margin: 0; padding: 0; font-size: var(--lantern-text); }
-.lui-breadcrumb-item { display: inline-flex; align-items: center; gap: 0.25rem;
+/* ── Breadcrumb (compact trail — goprint-style, slightly tighter) ── */
+.lui-breadcrumb { min-width: 0; line-height: 1; }
+.lui-breadcrumb-list { display: flex; flex-wrap: wrap; align-items: center; gap: 0.15rem;
+  list-style: none; margin: 0; padding: 0; font-size: var(--lantern-text-sm);
+  line-height: 1.15; }
+.lui-breadcrumb-item { display: inline-flex; align-items: center; gap: 0.15rem;
   min-width: 0; }
-.lui-breadcrumb-sep { color: var(--lantern-fg-subtle); user-select: none; }
-.lui-breadcrumb-link { border: none; background: none; padding: 0.125rem 0.25rem;
+.lui-breadcrumb-sep { color: var(--lantern-fg-subtle); user-select: none;
+  font-size: 0.7em; line-height: 1; padding: 0 0.05rem; }
+.lui-breadcrumb-link { border: none; background: none; padding: 0.05rem 0.15rem;
   font: inherit; color: var(--lantern-fg-muted); text-decoration: none; cursor: pointer;
-  border-radius: var(--lantern-radius-sm); max-width: 16rem; overflow: hidden;
-  text-overflow: ellipsis; white-space: nowrap; }
+  border-radius: var(--lantern-radius-sm); max-width: 12rem; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
 .lui-breadcrumb-link:hover { color: var(--lantern-accent);
   background: var(--lantern-surface-sunken); }
 .lui-breadcrumb-current { color: var(--lantern-fg); font-weight: 550;
-  padding: 0.125rem 0.25rem; max-width: 16rem; overflow: hidden; text-overflow: ellipsis;
-  white-space: nowrap; }
+  padding: 0.05rem 0.15rem; max-width: 12rem; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; line-height: 1.2; }
 
 /* ── Empty state ── */
 .lui-empty { display: flex; flex-direction: column; align-items: center; gap: 0.375rem;
@@ -678,6 +681,51 @@
 .lui-appbar-header { display: flex; align-items: center; gap: 0.4rem; min-width: 0;
   color: var(--lantern-fg-muted); font-size: 0.8125rem; }
 .lui-appbar-actions { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
+
+/* Compact sticky breadcrumb region under the appbar (layout chrome).
+   Host apps that still own the outer shell (e.g. flicker) can render
+   `<.breadcrumb_bar>` as a full-width sticky strip; inside app_shell it
+   full-bleeds under main padding. */
+.lui-app-breadcrumb {
+  flex: none;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: block;
+  width: 100%;
+  min-height: 1.75rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--lantern-border);
+  background: color-mix(in oklab, var(--lantern-surface) 92%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-sizing: border-box;
+}
+/* When used as a direct main child (app_shell), pull full-bleed under padding */
+.lui-app-main > .lui-app-breadcrumb {
+  margin: -1.5rem -1.5rem 0.75rem;
+  padding: 0.35rem 1.5rem;
+}
+
+/* Page title row — compact goprint density */
+.lui-page-header { margin-bottom: 0.75rem; }
+.lui-page-header-row {
+  display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+.lui-page-header-text { min-width: 0; flex: 1 1 12rem; }
+.lui-page-title {
+  margin: 0; font-size: 1.25rem; font-weight: 650; letter-spacing: -0.015em;
+  line-height: 1.25; color: var(--lantern-fg);
+  font-family: var(--lantern-font-brand, var(--lantern-font));
+}
+.lui-page-desc {
+  margin: 0.2rem 0 0; font-size: var(--lantern-text-sm); line-height: 1.4;
+  color: var(--lantern-fg-muted); max-width: 42rem;
+}
+.lui-page-header-actions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; flex: none;
+}
 
 /* Sidebar (below the bar, fixed) */
 .lui-app-body { padding-top: var(--lui-appbar-h); }
