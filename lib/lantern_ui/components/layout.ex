@@ -29,7 +29,11 @@ defmodule LanternUI.Components.Layout do
   `:breadcrumb` is the compact sticky trail under the appbar; `:actions` is
   top-right. A collapse control at the sidebar's foot toggles the icon rail;
   the state persists per `id` in localStorage via the `LanternSidebar` hook.
-  Narrow viewports drop the sidebar to a strip below the bar.
+
+  On narrow viewports the sidebar becomes an off-canvas drawer opened by the
+  hamburger in the bar, over a scrim. It closes on scrim click, Escape, and on
+  tapping a nav item — so a `navigate` link doesn't leave the drawer covering
+  the page it just went to.
   """
   use Phoenix.Component
 
@@ -58,13 +62,24 @@ defmodule LanternUI.Components.Layout do
       {@rest}
     >
       <header class="lui-appbar">
+        <button
+          type="button"
+          class="lui-appbar-toggle"
+          data-part="sidebar-toggle"
+          aria-label="Open navigation"
+          aria-expanded="false"
+          aria-controls={"#{@id}-sidebar"}
+        >
+          <Icon.icon name="bars-3" />
+        </button>
         <div class="lui-appbar-brand">{render_slot(@brand)}</div>
         <div :if={@header != []} class="lui-appbar-header">{render_slot(@header)}</div>
         <div :if={@actions != []} class="lui-appbar-actions">{render_slot(@actions)}</div>
       </header>
 
       <div class="lui-app-body">
-        <aside class="lui-app-sidebar" data-part="sidebar">
+        <div class="lui-app-scrim" data-part="sidebar-scrim" aria-hidden="true"></div>
+        <aside id={"#{@id}-sidebar"} class="lui-app-sidebar" data-part="sidebar">
           <div class="lui-app-nav">{render_slot(@sidebar)}</div>
           <div class="lui-app-sidebar-foot">
             <button
