@@ -42,6 +42,23 @@ defmodule LanternUI.LayoutTest do
       assert html =~ "BODY"
     end
 
+    test "renders the mobile drawer trigger, scrim, and the sidebar it controls" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.app_shell id="app">
+            <:brand>b</:brand><:sidebar>n</:sidebar>x
+          </Layout.app_shell>
+          """
+        end)
+
+      assert html =~ ~s(data-part="sidebar-toggle")
+      assert html =~ ~s(aria-controls="app-sidebar")
+      assert html =~ ~s(aria-expanded="false")
+      assert html =~ ~s(id="app-sidebar")
+      assert html =~ ~s(data-part="sidebar-scrim")
+    end
+
     test "collapsed sets data-collapsed; omitting it does not" do
       collapsed =
         render(fn assigns ->

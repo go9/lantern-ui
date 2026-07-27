@@ -681,6 +681,12 @@
 .lui-appbar { position: fixed; top: 0; left: 0; right: 0; height: var(--lui-appbar-h); z-index: 30;
   display: flex; align-items: center; gap: 0.75rem; padding: 0 1rem;
   background: var(--lantern-surface); border-bottom: 1px solid var(--lantern-border); }
+.lui-appbar-toggle { display: none; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-left: -0.5rem; width: 2.5rem; height: 2.5rem; padding: 0;
+  border: none; background: none;
+  color: var(--lantern-fg-muted); cursor: pointer; border-radius: var(--lantern-radius-sm);
+  font-size: 1.25rem; }
+.lui-appbar-toggle:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
 .lui-appbar-brand { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;
   font-family: var(--lantern-font-brand, var(--lantern-font)); font-weight: 600;
   font-size: 0.9375rem; letter-spacing: -0.01em; color: var(--lantern-fg); white-space: nowrap; }
@@ -761,7 +767,7 @@
    inside main exactly as before (the bar is already position:fixed), and a
    `.lui-datatable-fill` child now has a bounded flex parent to fill, so full-height
    tables with pinned header/overview/pagination work inside app_shell. Mobile
-   (<=768px, sidebar becomes a strip) keeps natural page scroll. */
+   (<=768px, sidebar becomes a drawer) keeps natural page scroll. */
 @media (min-width: 769px) {
   .lui-app { height: 100vh; overflow: hidden; }
   .lui-app-main { box-sizing: border-box; height: calc(100vh - var(--lui-appbar-h));
@@ -808,30 +814,45 @@
 .lui-nav-sub-inner { overflow: hidden; margin-left: 0.85rem; padding-left: 0.5rem;
   border-left: 1px solid var(--lantern-border); }
 
-/* Collapsed rail: hide text, center icons, flip the collapse chevron. */
-.lui-app[data-collapsed] .lui-nav-item-label,
-.lui-app[data-collapsed] .lui-nav-group-label,
-.lui-app[data-collapsed] .lui-brand-name,
-.lui-app[data-collapsed] .lui-nav-sub-chevron,
-.lui-app[data-collapsed] .lui-collapse-label { display: none; }
-/* On the rail, don't expand the subnav panel. */
-.lui-app[data-collapsed] .lui-nav-sub-panel { grid-template-rows: 0fr; }
-.lui-app[data-collapsed] .lui-nav-item { justify-content: center; padding-inline: 0; }
-.lui-app[data-collapsed] .lui-collapse-btn { justify-content: center; }
-.lui-app[data-collapsed] .lui-collapse-icon { transform: rotate(180deg); }
-.lui-app[data-collapsed] .lui-nav-group { margin-bottom: 0.5rem; }
+/* Collapsed rail: hide text, center icons, flip the collapse chevron. Desktop
+   only — the mobile drawer has room for the full labels. */
+@media (min-width: 769px) {
+  .lui-app[data-collapsed] .lui-nav-item-label,
+  .lui-app[data-collapsed] .lui-nav-group-label,
+  .lui-app[data-collapsed] .lui-brand-name,
+  .lui-app[data-collapsed] .lui-nav-sub-chevron,
+  .lui-app[data-collapsed] .lui-collapse-label { display: none; }
+  /* On the rail, don't expand the subnav panel. */
+  .lui-app[data-collapsed] .lui-nav-sub-panel { grid-template-rows: 0fr; }
+  .lui-app[data-collapsed] .lui-nav-item { justify-content: center; padding-inline: 0; }
+  .lui-app[data-collapsed] .lui-collapse-btn { justify-content: center; }
+  .lui-app[data-collapsed] .lui-collapse-icon { transform: rotate(180deg); }
+  .lui-app[data-collapsed] .lui-nav-group { margin-bottom: 0.5rem; }
+}
 
-/* Narrow viewports: sidebar drops to a horizontal strip under the bar. */
+/* Scrim: only ever painted behind the open mobile drawer. */
+.lui-app-scrim { display: none; position: fixed; inset: var(--lui-appbar-h) 0 0 0; z-index: 19;
+  background: rgb(0 0 0 / 0.45); }
+
+/* Narrow viewports: the sidebar becomes an off-canvas drawer behind the
+   hamburger in the bar. The rail width is ignored here — a drawer shows labels. */
 @media (max-width: 768px) {
-  .lui-app-body { display: flex; flex-direction: column; }
-  .lui-app-sidebar, .lui-app[data-collapsed] .lui-app-sidebar { position: static; top: 0;
-    width: 100%; height: auto; flex-direction: row; align-items: center; overflow-x: auto;
-    overflow-y: hidden; border-right: none; border-bottom: 1px solid var(--lantern-border); }
-  .lui-app-nav { display: flex; gap: 0.5rem; padding: 0.5rem 0.6rem; }
-  .lui-nav-group { display: flex; gap: 0.15rem; margin-bottom: 0; flex-shrink: 0; }
-  .lui-nav-group-label { display: none; }
+  .lui-appbar-toggle { display: inline-flex; }
+  .lui-app-sidebar, .lui-app[data-collapsed] .lui-app-sidebar { width: min(17rem, 82vw);
+    z-index: 20; transform: translateX(-100%); visibility: hidden;
+    transition: transform var(--lantern-duration) var(--lantern-ease),
+      visibility 0s linear var(--lantern-duration); }
+  .lui-app[data-nav-open] .lui-app-sidebar { transform: none; visibility: visible;
+    transition: transform var(--lantern-duration) var(--lantern-ease); }
+  .lui-app[data-nav-open] .lui-app-scrim { display: block; }
+  .lui-app-main, .lui-app[data-collapsed] .lui-app-main { margin-left: 0;
+    padding: 1.25rem 1.25rem 4rem; }
   .lui-app-sidebar-foot { display: none; }
-  .lui-app-main, .lui-app[data-collapsed] .lui-app-main { margin-left: 0; padding: 1.25rem 1.25rem 4rem; }
+}
+
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  .lui-app-sidebar, .lui-app[data-collapsed] .lui-app-sidebar,
+  .lui-app[data-nav-open] .lui-app-sidebar { transition: none; }
 }
 
 /* ── Badge ── */

@@ -37,6 +37,18 @@ All notable changes to this project are documented here. The format follows
   on the collapsed icon rail.
 
 ### Fixed
+- **`app_shell/1` gets a real mobile navigation drawer.** Below 768px the
+  sidebar used to flatten into a horizontal scrolling strip under the app bar,
+  which is unusable once the nav has more than a handful of items — group labels
+  were dropped and everything else had to be side-scrolled through a ~3-item
+  window. It is now an off-canvas drawer behind a hamburger in the bar, over a
+  scrim, with the full grouped nav and labels. It closes on scrim click, Escape,
+  widening past the breakpoint, and on tapping a nav item — so a `navigate` link
+  no longer leaves the drawer covering the page it just went to. The collapsed
+  icon-rail rules are now scoped to `min-width: 769px`, so a persisted
+  `data-collapsed` no longer strips the labels (or the `:subnav` chevrons) out
+  of the mobile drawer.
+
 - **`app_shell`: a full-height `data_table fill` no longer leaves a ~4rem dead
   band at the bottom.** `.lui-app-main`'s 4rem bottom gutter is sized for
   scrolling content; under a `.lui-datatable-fill` panel it sat *below* the table

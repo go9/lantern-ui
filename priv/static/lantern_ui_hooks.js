@@ -879,39 +879,80 @@ const LanternPicker = {
   },
 }
 
-// App-shell sidebar: collapse/expand to an icon rail, persisted per element id
-// in localStorage. Triggered by the sidebar's own collapse control
-// ([data-part="sidebar-collapse"]) — deliberately NOT the generic
-// [data-part="toggle"], which other components (date picker, dropdown) use
-// inside the shell.
+// App-shell sidebar. Two independent states:
+//
+//   data-collapsed — desktop icon rail, persisted per element id in
+//     localStorage. Triggered by the sidebar's own collapse control
+//     ([data-part="sidebar-collapse"]) — deliberately NOT the generic
+//     [data-part="toggle"], which other components (date picker, dropdown)
+//     use inside the shell.
+//   data-nav-open — the mobile off-canvas drawer, opened by the bar's
+//     hamburger. Ephemeral: closes on scrim click, Escape, widening past the
+//     drawer breakpoint, and on any nav item click — that last one is what
+//     stops a `navigate` link from leaving the drawer over the new page.
+//
+// The drawer attribute is re-asserted in updated() because a LiveView patch
+// re-renders the root without it.
+const MOBILE_NAV_MQ = "(min-width: 769px)"
+
 const LanternSidebar = {
   key() {
     return `lui-sidebar:${this.el.id}`
   },
 
   mounted() {
+    this.navOpen = false
+    this.syncCollapsed()
+
+    this.onClick = (e) => {
+      if (e.target.closest('[data-part="sidebar-collapse"]')) {
+        const collapsed = this.el.toggleAttribute("data-collapsed")
+        try {
+          localStorage.setItem(this.key(), String(collapsed))
+        } catch (_) {}
+        return
+      }
+      if (e.target.closest('[data-part="sidebar-toggle"]')) return this.setNav(!this.navOpen)
+      if (e.target.closest('[data-part="sidebar-scrim"]')) return this.setNav(false)
+      if (e.target.closest('[data-part="sidebar"] .lui-nav-item')) this.setNav(false)
+    }
+    this.el.addEventListener("click", this.onClick)
+
+    this.onKey = (e) => e.key === "Escape" && this.setNav(false)
+    document.addEventListener("keydown", this.onKey)
+
+    this.mq = window.matchMedia(MOBILE_NAV_MQ)
+    this.onMq = () => this.mq.matches && this.setNav(false)
+    this.mq.addEventListener("change", this.onMq)
+  },
+
+  setNav(open) {
+    if (this.navOpen === open) return
+    this.navOpen = open
+    this.el.toggleAttribute("data-nav-open", open)
+    const btn = this.el.querySelector('[data-part="sidebar-toggle"]')
+    if (btn) btn.setAttribute("aria-expanded", String(open))
+    // Only the drawer touches the scroll lock, and only on a real transition —
+    // re-asserting it every patch would stomp an open modal's lock.
+    document.body.style.overflow = open ? "hidden" : ""
+  },
+
+  syncCollapsed() {
     const stored = localStorage.getItem(this.key())
     if (stored === "true") this.el.setAttribute("data-collapsed", "")
     if (stored === "false") this.el.removeAttribute("data-collapsed")
-
-    this.onToggle = (e) => {
-      if (!e.target.closest('[data-part="sidebar-collapse"]')) return
-      const collapsed = this.el.toggleAttribute("data-collapsed")
-      try {
-        localStorage.setItem(this.key(), String(collapsed))
-      } catch (_) {}
-    }
-    this.el.addEventListener("click", this.onToggle)
   },
 
   updated() {
-    const stored = localStorage.getItem(this.key())
-    if (stored === "true") this.el.setAttribute("data-collapsed", "")
-    if (stored === "false") this.el.removeAttribute("data-collapsed")
+    this.syncCollapsed()
+    this.el.toggleAttribute("data-nav-open", this.navOpen)
   },
 
   destroyed() {
-    this.el.removeEventListener("click", this.onToggle)
+    this.el.removeEventListener("click", this.onClick)
+    document.removeEventListener("keydown", this.onKey)
+    this.mq.removeEventListener("change", this.onMq)
+    if (this.navOpen) document.body.style.overflow = ""
   },
 }
 
