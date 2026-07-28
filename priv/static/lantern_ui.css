@@ -2082,7 +2082,7 @@
 }
 
 .lui-skeleton-status {
-  display: contents;
+  display: block;
 }
 
 @keyframes lui-skeleton-pulse {

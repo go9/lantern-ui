@@ -36,12 +36,12 @@ defmodule LanternUI.Components.Skeleton do
 
   def skeleton(%{label: label} = assigns) when is_binary(label) do
     ~H"""
-    <div class="lui-skeleton-status" role="status" aria-busy="true">
+    <div class="lui-skeleton-status" role="status">
       <span class="lui-sr-only">{@label}</span>
       <span
         class={Class.merge(["lui-skeleton", @class])}
         style={@style}
-        data-variant={@variant}
+        data-variant={data_variant(@variant)}
         aria-hidden="true"
         {@rest}
       ></span>
@@ -54,10 +54,15 @@ defmodule LanternUI.Components.Skeleton do
     <span
       class={Class.merge(["lui-skeleton", @class])}
       style={@style}
-      data-variant={@variant}
+      data-variant={data_variant(@variant)}
       aria-hidden="true"
       {@rest}
     ></span>
     """
   end
+
+  # The default variant needs no data attribute (no CSS targets it), which
+  # keeps bare `<.skeleton />` output identical to v1.
+  defp data_variant("block"), do: nil
+  defp data_variant(variant), do: variant
 end

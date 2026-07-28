@@ -12,7 +12,7 @@ defmodule LanternUI.SkeletonTest do
   end
 
   describe "skeleton/1" do
-    test "renders the visible default class with decorative semantics" do
+    test "bare skeleton renders byte-identical to v1 with decorative semantics" do
       html =
         render(fn assigns ->
           ~H"""
@@ -20,9 +20,10 @@ defmodule LanternUI.SkeletonTest do
           """
         end)
 
-      assert html =~ ~s(class="lui-skeleton")
-      assert html =~ ~s(data-variant="block")
-      assert html =~ ~s(aria-hidden="true")
+      assert String.trim(html) ==
+               ~s(<span class="lui-skeleton" style="" aria-hidden="true"></span>)
+
+      refute html =~ "data-variant"
       refute html =~ ~s(role="status")
     end
 
@@ -49,7 +50,9 @@ defmodule LanternUI.SkeletonTest do
 
       assert html =~ ~s(class="lui-skeleton-status")
       assert html =~ ~s(role="status")
-      assert html =~ ~s(aria-busy="true")
+      # aria-busy on the status wrapper lets AT withhold the announcement
+      # forever (the wrapper is removed, never un-busied) — must stay absent.
+      refute html =~ "aria-busy"
       assert html =~ ~s(<span class="lui-sr-only">Loading profile</span>)
       assert html =~ ~s(aria-hidden="true")
       assert ARIAConformance.audit(html) == []
@@ -96,6 +99,13 @@ defmodule LanternUI.SkeletonTest do
 
       assert css =~ ~s(.lui-skeleton[data-variant="text"])
       assert css =~ ~s(.lui-skeleton[data-variant="circle"])
+    end
+
+    test "bundled CSS gives the status wrapper a neutral display (not display: contents)" do
+      css = File.read!("priv/static/lantern_ui.css")
+
+      assert css =~ ~r/\.lui-skeleton-status \{\s*display: block;/
+      refute css =~ ~r/\.lui-skeleton-status \{\s*display: contents/
     end
 
     test "registry and only importer expose skeleton/1" do
