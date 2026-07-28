@@ -20,6 +20,7 @@ defmodule LanternUI.ARIAConformanceTest do
   alias LanternUI.Components.ScrollArea
   alias LanternUI.Components.Select
   alias LanternUI.Components.Sheet
+  alias LanternUI.Components.Slider
   alias LanternUI.Components.Switch
   alias LanternUI.Components.Tabs
   alias LanternUI.Components.Tooltip
@@ -64,6 +65,17 @@ defmodule LanternUI.ARIAConformanceTest do
       render(fn assigns ->
         ~H"""
         <Sheet.sheet id="edit" placement="right" title="Edit theme">BODY</Sheet.sheet>
+        """
+      end)
+      |> assert_conformant()
+    end
+
+    test "slider: role=slider carries valuenow/min/max and a resolvable label" do
+      # aria-valuenow/valuetext are server-rendered literals the LanternSlider
+      # hook rewrites on drag/keys — nothing is hook-exclusive, so no exemptions.
+      render(fn assigns ->
+        ~H"""
+        <Slider.slider name="volume" value={40} label="Volume" value_text="{value}%" />
         """
       end)
       |> assert_conformant()

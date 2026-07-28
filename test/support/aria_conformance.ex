@@ -51,11 +51,12 @@ defmodule LanternUI.ARIAConformance do
     "option" => ~w(aria-selected),
     "spinbutton" => ~w(aria-valuenow),
     "meter" => ~w(aria-valuenow),
+    "slider" => ~w(aria-valuenow aria-valuemin aria-valuemax),
     "columnheader" => []
   }
 
   # Roles that need an accessible name from *either* source.
-  @needs_accessible_name ~w(dialog alertdialog menu listbox tablist tooltip meter region)
+  @needs_accessible_name ~w(dialog alertdialog menu listbox tablist tooltip meter region slider)
 
   defmodule Violation do
     @moduledoc false

@@ -18,6 +18,12 @@ All notable changes to this project are documented here. The format follows
   `-size` with token fallbacks. `orientation` picks the scroll axis; `label`
   renders a focusable, keyboard-scrollable `role="region"` per the WAI-ARIA
   guidance for scrollable containers. No Fluxon equivalent.
+- **`slider/1`** — single-thumb slider on the WAI-ARIA APG slider pattern
+  (flicker #1023). `field`/`name`/`value` form surface like the other form
+  controls, with the value in a hidden input so `phx-change`/submit behave
+  natively. The `LanternSlider` hook owns pointer drag plus Arrow/Home/End/
+  PageUp/PageDown stepping on the `role="slider"` thumb; `value_text` templates
+  `aria-valuetext` (e.g. `"{value}%"`). No Fluxon equivalent.
 
 ### Changed
 - **Breadcrumb + page_header density cut ~3×.** Trail is 0.6875rem with 0.75rem
