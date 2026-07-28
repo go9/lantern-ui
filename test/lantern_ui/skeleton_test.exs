@@ -4,6 +4,7 @@ defmodule LanternUI.SkeletonTest do
   import Phoenix.Component
   import Phoenix.LiveViewTest, only: [rendered_to_string: 1]
 
+  alias LanternUI.ARIAConformance
   alias LanternUI.Components.Skeleton
 
   defp render(fun) do
@@ -20,8 +21,38 @@ defmodule LanternUI.SkeletonTest do
         end)
 
       assert html =~ ~s(class="lui-skeleton")
+      assert html =~ ~s(data-variant="block")
       assert html =~ ~s(aria-hidden="true")
       refute html =~ ~s(role="status")
+    end
+
+    test "renders text and circle variants as data-variant" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Skeleton.skeleton variant="text" />
+          <Skeleton.skeleton variant="circle" />
+          """
+        end)
+
+      assert html =~ ~s(data-variant="text")
+      assert html =~ ~s(data-variant="circle")
+    end
+
+    test "label wraps the skeleton in a polite status region and passes the ARIA gate" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Skeleton.skeleton label="Loading profile" />
+          """
+        end)
+
+      assert html =~ ~s(class="lui-skeleton-status")
+      assert html =~ ~s(role="status")
+      assert html =~ ~s(aria-busy="true")
+      assert html =~ ~s(<span class="lui-sr-only">Loading profile</span>)
+      assert html =~ ~s(aria-hidden="true")
+      assert ARIAConformance.audit(html) == []
     end
 
     test "passes through class, style, and global attributes" do
@@ -58,6 +89,13 @@ defmodule LanternUI.SkeletonTest do
 
       assert css =~
                ~r/@media \(prefers-reduced-motion: reduce\) \{\s*\.lui-skeleton \{\s*animation: none;/
+    end
+
+    test "bundled CSS styles the text and circle variants" do
+      css = File.read!("priv/static/lantern_ui.css")
+
+      assert css =~ ~s(.lui-skeleton[data-variant="text"])
+      assert css =~ ~s(.lui-skeleton[data-variant="circle"])
     end
 
     test "registry and only importer expose skeleton/1" do

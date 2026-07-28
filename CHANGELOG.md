@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **Skeleton variants + labeled status.** `skeleton/1` gains
+  `variant="block|text|circle"` (rendered as `data-variant`) and an opt-in
+  `label` that wraps the placeholder in a polite `role="status"` region with a
+  visually hidden label. Bare `<.skeleton />` renders as before; reduced motion
+  still disables the pulse. (flicker #1026)
+
 ### Changed
 - **Breadcrumb + page_header density cut ~3×.** Trail is 0.6875rem with 0.75rem
   icons and a ~1.35rem sticky bar; page title is 0.9375rem with minimal margins.

@@ -2071,6 +2071,20 @@
   animation: lui-skeleton-pulse 1.5s ease-in-out infinite;
 }
 
+.lui-skeleton[data-variant="text"] {
+  height: 1em;
+}
+
+.lui-skeleton[data-variant="circle"] {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+}
+
+.lui-skeleton-status {
+  display: contents;
+}
+
 @keyframes lui-skeleton-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.55; }
