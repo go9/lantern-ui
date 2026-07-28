@@ -12,6 +12,12 @@ All notable changes to this project are documented here. The format follows
   `label` that wraps the placeholder in a polite `role="status"` region with a
   visually hidden label. Bare `<.skeleton />` renders as before; reduced motion
   still disables the pulse. (flicker #1026)
+- **`scroll_area/1` — themed scrollbar wrapper (flicker #1024).** Pure CSS over
+  native overflow scrolling (no JS hook): `scrollbar-width`/`scrollbar-color`
+  plus `::-webkit-scrollbar`, themed via `--lantern-scrollbar-thumb`/`-track`/
+  `-size` with token fallbacks. `orientation` picks the scroll axis; `label`
+  renders a focusable, keyboard-scrollable `role="region"` per the WAI-ARIA
+  guidance for scrollable containers. No Fluxon equivalent.
 
 ### Changed
 - **Breadcrumb + page_header density cut ~3×.** Trail is 0.6875rem with 0.75rem

@@ -484,6 +484,7 @@ defmodule LanternUI.ComponentsTest do
                :popover,
                :progress,
                :radio,
+               :scroll_area,
                :select,
                :separator,
                :sheet,

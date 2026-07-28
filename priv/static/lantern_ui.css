@@ -2128,3 +2128,34 @@
     animation: none;
   }
 }
+
+/* ── ScrollArea ──
+ * Native overflow scrolling with a themed scrollbar. `scrollbar-width` /
+ * `scrollbar-color` where supported; `::-webkit-scrollbar` for WebKit. The
+ * browser still owns wheel/touch/momentum and hides the bar when nothing
+ * overflows. */
+.lui-scroll-area {
+  --lui-sb-thumb: var(--lantern-scrollbar-thumb, var(--lantern-border-strong, var(--lantern-border)));
+  --lui-sb-track: var(--lantern-scrollbar-track, transparent);
+  --lui-sb-size: var(--lantern-scrollbar-size, 0.5rem);
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--lui-sb-thumb) var(--lui-sb-track);
+}
+.lui-scroll-area[data-orientation="vertical"]   { overflow: hidden auto; }
+.lui-scroll-area[data-orientation="horizontal"] { overflow: auto hidden; }
+
+.lui-scroll-area:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--lantern-ring-soft);
+}
+
+.lui-scroll-area::-webkit-scrollbar {
+  width: var(--lui-sb-size);
+  height: var(--lui-sb-size);
+}
+.lui-scroll-area::-webkit-scrollbar-track { background: var(--lui-sb-track); }
+.lui-scroll-area::-webkit-scrollbar-thumb {
+  background: var(--lui-sb-thumb);
+  border-radius: 9999px;
+}
