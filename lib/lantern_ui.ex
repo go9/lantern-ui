@@ -70,6 +70,7 @@ defmodule LanternUI do
     navlist: LanternUI.Components.Navlist,
     loading: LanternUI.Components.Loading,
     progress: LanternUI.Components.Progress,
+    meter: LanternUI.Components.Meter,
     accordion: LanternUI.Components.Accordion,
     skeleton: LanternUI.Components.Skeleton
   }
