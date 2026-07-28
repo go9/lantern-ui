@@ -17,6 +17,7 @@ defmodule LanternUI.ARIAConformanceTest do
   alias LanternUI.Components.Accordion
   alias LanternUI.Components.Autocomplete
   alias LanternUI.Components.Modal
+  alias LanternUI.Components.ScrollArea
   alias LanternUI.Components.Select
   alias LanternUI.Components.Sheet
   alias LanternUI.Components.Switch
@@ -88,6 +89,15 @@ defmodule LanternUI.ARIAConformanceTest do
         """
       end)
       |> assert_conformant(hook_owned: @hook_owned)
+    end
+
+    test "scroll_area: labeled region carries its accessible name, no hook-owned attrs" do
+      render(fn assigns ->
+        ~H"""
+        <ScrollArea.scroll_area label="Recent activity">Feed</ScrollArea.scroll_area>
+        """
+      end)
+      |> assert_conformant()
     end
   end
 

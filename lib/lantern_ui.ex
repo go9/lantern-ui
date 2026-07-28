@@ -72,7 +72,8 @@ defmodule LanternUI do
     progress: LanternUI.Components.Progress,
     meter: LanternUI.Components.Meter,
     accordion: LanternUI.Components.Accordion,
-    skeleton: LanternUI.Components.Skeleton
+    skeleton: LanternUI.Components.Skeleton,
+    scroll_area: LanternUI.Components.ScrollArea
   }
 
   @doc false
