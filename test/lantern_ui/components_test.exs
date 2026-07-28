@@ -477,6 +477,7 @@ defmodule LanternUI.ComponentsTest do
                :icon,
                :layout,
                :loading,
+               :meter,
                :modal,
                :navlist,
                :pagination,

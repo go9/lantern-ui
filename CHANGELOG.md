@@ -35,6 +35,12 @@ All notable changes to this project are documented here. The format follows
   type size.
 
 ### Added
+- **`meter`** (flicker #1025) — semantic `role="meter"` for scalar measurements
+  within a known range (APG Meter pattern), distinct from `progress` (task
+  completion). `aria-valuenow/min/max`, optional `aria-valuetext`, sizes, and
+  optional `low`/`high`/`optimum` thresholds that color the fill via
+  `data-state` (optimal/suboptimal/critical). Pure CSS, no JS. No Fluxon
+  equivalent.
 - **`nav_item` now nests (Fluxon-parity expandable nav) via a `:subnav` slot.**
   Pass a `:subnav` of nested `nav_item`s and the item becomes a toggle with a
   chevron over a `grid-rows`-based slide panel, opened/closed client-side with

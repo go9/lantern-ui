@@ -1995,6 +1995,39 @@
   }
 }
 
+/* ── Meter ── */
+.lui-meter {
+  --lui-meter-h: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: var(--lui-meter-h);
+  border-radius: var(--lantern-radius);
+  background: var(--lantern-surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--lantern-border);
+  box-sizing: border-box;
+}
+.lui-meter[data-size="sm"] { --lui-meter-h: 0.375rem; }
+.lui-meter[data-size="md"] { --lui-meter-h: 0.5rem; }
+.lui-meter[data-size="lg"] { --lui-meter-h: 0.75rem; }
+
+.lui-meter-fill {
+  height: 100%;
+  min-width: 0.5rem;
+  border-radius: inherit;
+  background: var(--lantern-accent);
+  transition: width var(--lantern-duration) var(--lantern-ease);
+}
+.lui-meter[data-state="optimal"] .lui-meter-fill { background: var(--lantern-success); }
+.lui-meter[data-state="suboptimal"] .lui-meter-fill { background: var(--lantern-warning); }
+.lui-meter[data-state="critical"] .lui-meter-fill { background: var(--lantern-danger); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lui-meter-fill {
+    transition: none;
+  }
+}
+
 /* ── Accordion ──
  * Server renders the anatomy + initial open state; the LanternAccordion hook
  * toggles panels and drives the APG keyboard model. Panels stay in the DOM and
