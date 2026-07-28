@@ -89,11 +89,26 @@ defmodule LanternUI.MeterTest do
       assert html =~ ~s(data-state="critical")
     end
 
-    test "optimum defaults to max when low/high given" do
+    test "optimum defaults to the range midpoint (HTML <meter> spec)" do
+      # implied optimum = (0 + 100) / 2 = 50, the middle region
+      for {value, state} <- [{50, "optimal"}, {90, "suboptimal"}, {10, "suboptimal"}] do
+        html =
+          render(fn assigns ->
+            assigns = assign(assigns, :value, value)
+
+            ~H"""
+            <Meter.meter value={@value} low={20} high={80} />
+            """
+          end)
+
+        assert html =~ ~s(data-state="#{state}"), "value #{value} expected #{state}"
+      end
+
+      # warn-above-high with only `high`: healthy values stay optimal
       html =
         render(fn assigns ->
           ~H"""
-          <Meter.meter value={90} low={20} high={80} />
+          <Meter.meter value={50} high={80} />
           """
         end)
 

@@ -28,7 +28,9 @@ defmodule LanternUI.Components.Meter do
 
   attr(:optimum, :any,
     default: nil,
-    doc: "Optimal value; region distance drives data-state (optimal/suboptimal/critical)."
+    doc:
+      "Optimal value; region distance drives data-state (optimal/suboptimal/critical). " <>
+        "Defaults to the range midpoint, (min + max) / 2, per HTML <meter>."
   )
 
   attr(:value_text, :string,
@@ -92,7 +94,7 @@ defmodule LanternUI.Components.Meter do
   # the region distance between the value and the optimum: same region →
   # optimal, adjacent → suboptimal, opposite ends → critical.
   defp state(%{low: low, high: high} = assigns) when is_number(low) or is_number(high) do
-    optimum = assigns.optimum || assigns.max
+    optimum = assigns.optimum || (assigns.min + assigns.max) / 2
     distance = abs(region(assigns.value, low, high) - region(optimum, low, high))
 
     case distance do
