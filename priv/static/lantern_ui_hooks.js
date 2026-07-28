@@ -2054,6 +2054,235 @@ const LanternDropdown = {
   },
 }
 
+// ── Menu / menubar ───────────────────────────────────────────────────────────
+//
+// Clean-room implementation of the WAI-ARIA APG menu-button and menubar
+// patterns (w3.org/WAI/ARIA/apg/patterns/menu-button/ and /patterns/menubar/),
+// on the shared overlay primitives (position, onDismiss). Focus moves by
+// roving tabindex + .focus() — the library-wide model (flicker #945); no
+// aria-activedescendant. The hooks own aria-expanded and every tabindex.
+
+// Actionable items of one popup menu, in DOM order.
+const menuItems = (menu) =>
+  [...menu.querySelectorAll('[role="menuitem"]:not([disabled]):not([data-disabled])')]
+
+// Roving tabindex: `target` becomes the one tab stop and takes focus.
+const rove = (items, target) => {
+  items.forEach((el) => el.setAttribute("tabindex", el === target ? "0" : "-1"))
+  target.focus()
+}
+
+// Shared vertical menu keyboard model: returns the item the key moves focus
+// to (ArrowDown/ArrowUp wrap per the APG; Home/End jump), or null.
+const menuNav = (key, items) => {
+  const idx = items.indexOf(document.activeElement)
+  switch (key) {
+    case "ArrowDown": return items[(idx + 1) % items.length]
+    case "ArrowUp": return items[(idx - 1 + items.length) % items.length]
+    case "Home": return items[0]
+    case "End": return items[items.length - 1]
+    default: return null
+  }
+}
+
+// Menu button: Enter/Space/click toggle (open focuses the first item),
+// ArrowDown opens on the first item, ArrowUp opens on the last. Escape closes
+// and returns focus to the trigger; Tab and item activation close.
+const LanternMenu = {
+  mounted() {
+    this.trigger = this.el.querySelector('[data-part="trigger"]')
+    this.menu = this.el.querySelector('[data-part="menu"]')
+    if (!this.trigger || !this.menu) return
+    this.open = false
+    this.cleanup = []
+
+    this.trigger.addEventListener("click", () => (this.open ? this.hide() : this.show()))
+    this.trigger.addEventListener("keydown", (e) => {
+      if (this.open) return
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault()
+        this.show(e.key === "ArrowUp" ? "last" : "first")
+      }
+    })
+
+    this.menu.addEventListener("click", (e) => {
+      if (e.target.closest('[role="menuitem"]')) {
+        // APG menu button: closing via activation returns focus to the
+        // trigger (hiding while focus is inside would drop it on <body>).
+        this.hide()
+        this.trigger.focus()
+      }
+    })
+
+    this.menu.addEventListener("keydown", (e) => {
+      const items = menuItems(this.menu)
+      if (items.length === 0) return
+      const next = menuNav(e.key, items)
+      if (next) {
+        e.preventDefault()
+        rove(items, next)
+      } else if (e.key === "Tab") {
+        this.hide()
+      }
+    })
+  },
+
+  show(focusTarget = "first") {
+    this.open = true
+    this.menu.hidden = false
+    position(this.trigger, this.menu, { placement: this.el.dataset.placement })
+    this.trigger.setAttribute("aria-expanded", "true")
+    const items = menuItems(this.menu)
+    const target = focusTarget === "last" ? items[items.length - 1] : items[0]
+    if (target) rove(items, target)
+    this.cleanup.push(
+      onDismiss(
+        this.menu,
+        (reason) => {
+          this.hide()
+          if (reason === "escape") this.trigger.focus()
+        },
+        { anchor: this.trigger },
+      ),
+    )
+  },
+
+  hide() {
+    if (!this.open) return
+    this.open = false
+    this.cleanup.forEach((fn) => fn())
+    this.cleanup = []
+    this.menu.hidden = true
+    this.trigger.setAttribute("aria-expanded", "false")
+  },
+
+  destroyed() {
+    this.cleanup.forEach((fn) => fn())
+  },
+}
+
+// Menubar: one horizontal row of role=menuitem triggers with roving tabindex
+// (ArrowLeft/ArrowRight wrap, Home/End jump). ArrowDown/Enter/Space open the
+// submenu on its first item, ArrowUp on its last. While a submenu is open,
+// ArrowRight/ArrowLeft move to the adjacent top-level item and open its
+// submenu; Escape closes and returns focus to the top-level item.
+const LanternMenubar = {
+  mounted() {
+    this.openTrigger = null
+    this.cleanup = []
+
+    const triggers = this.triggers()
+    triggers.forEach((t, i) => t.setAttribute("tabindex", i === 0 ? "0" : "-1"))
+
+    this.el.addEventListener("click", (e) => {
+      const trigger = e.target.closest('[data-part="trigger"]')
+      if (trigger) {
+        this.openTrigger === trigger ? this.close() : this.openMenu(trigger)
+      } else if (e.target.closest('[role="menuitem"]')) {
+        // Closing via activation returns focus to the top-level trigger
+        // (close() hides while focus is inside, which would drop it on <body>).
+        const opener = this.openTrigger
+        this.close()
+        if (opener) opener.focus()
+      }
+    })
+
+    this.el.addEventListener("keydown", (e) => {
+      const triggers = this.triggers()
+      const onTrigger = e.target.closest('[data-part="trigger"]')
+
+      if (onTrigger) {
+        let next = null
+        const idx = triggers.indexOf(onTrigger)
+        if (e.key === "ArrowRight") next = triggers[(idx + 1) % triggers.length]
+        else if (e.key === "ArrowLeft") next = triggers[(idx - 1 + triggers.length) % triggers.length]
+        else if (e.key === "Home") next = triggers[0]
+        else if (e.key === "End") next = triggers[triggers.length - 1]
+        else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          e.preventDefault()
+          this.openMenu(onTrigger, e.key === "ArrowUp" ? "last" : "first")
+          return
+        }
+        if (next) {
+          e.preventDefault()
+          const wasOpen = this.openTrigger !== null
+          rove(triggers, next)
+          if (wasOpen) this.openMenu(next)
+        }
+        return
+      }
+
+      const menu = e.target.closest('[data-part="menu"]')
+      if (!menu || !this.openTrigger) return
+      const items = menuItems(menu)
+      const next = items.length > 0 && menuNav(e.key, items)
+      if (next) {
+        e.preventDefault()
+        rove(items, next)
+      } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        e.preventDefault()
+        const dir = e.key === "ArrowRight" ? 1 : -1
+        const idx = triggers.indexOf(this.openTrigger)
+        const adjacent = triggers[(idx + dir + triggers.length) % triggers.length]
+        rove(triggers, adjacent)
+        this.openMenu(adjacent)
+      } else if (e.key === "Tab") {
+        this.close()
+      }
+    })
+  },
+
+  triggers() {
+    return [...this.el.querySelectorAll('[data-part="trigger"]:not([disabled])')]
+  },
+
+  menuFor(trigger) {
+    return document.getElementById(trigger.getAttribute("aria-controls"))
+  },
+
+  openMenu(trigger, focusTarget = "first") {
+    this.close()
+    const menu = this.menuFor(trigger)
+    if (!menu) return
+    this.openTrigger = trigger
+    // Keep the roving tabindex in sync on every open path (mouse click
+    // included): the focused menubar item must be the single tab stop.
+    rove(this.triggers(), trigger)
+    menu.hidden = false
+    position(trigger, menu, { placement: "bottom-start" })
+    trigger.setAttribute("aria-expanded", "true")
+    const items = menuItems(menu)
+    const target = focusTarget === "last" ? items[items.length - 1] : items[0]
+    if (target) rove(items, target)
+    this.cleanup.push(
+      onDismiss(
+        menu,
+        (reason) => {
+          this.close()
+          // Rove, not just focus: the trigger must also become the single
+          // tab stop so tabbing away and back lands on it.
+          if (reason === "escape") rove(this.triggers(), trigger)
+        },
+        { anchor: trigger },
+      ),
+    )
+  },
+
+  close() {
+    if (!this.openTrigger) return
+    const menu = this.menuFor(this.openTrigger)
+    this.cleanup.forEach((fn) => fn())
+    this.cleanup = []
+    if (menu) menu.hidden = true
+    this.openTrigger.setAttribute("aria-expanded", "false")
+    this.openTrigger = null
+  },
+
+  destroyed() {
+    this.cleanup.forEach((fn) => fn())
+  },
+}
+
 // ── Tooltip ────────────────────────────────────────────────────────────────
 //
 // Hover/focus tooltip. Top/bottom reuse the shared vertical placement helper;
@@ -2461,6 +2690,8 @@ export const Hooks = {
   LanternModal,
   LanternSheet,
   LanternDropdown,
+  LanternMenu,
+  LanternMenubar,
   LanternTooltip,
   LanternToast,
   LanternSidebar,
@@ -2482,6 +2713,8 @@ export {
   LanternModal,
   LanternSheet,
   LanternDropdown,
+  LanternMenu,
+  LanternMenubar,
   LanternTooltip,
   LanternToast,
   LanternSidebar,

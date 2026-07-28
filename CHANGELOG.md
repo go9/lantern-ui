@@ -24,6 +24,15 @@ All notable changes to this project are documented here. The format follows
   natively. The `LanternSlider` hook owns pointer drag plus Arrow/Home/End/
   PageUp/PageDown stepping on the `role="slider"` thumb; `value_text` templates
   `aria-valuetext` (e.g. `"{value}%"`). No Fluxon equivalent.
+- **`menu/1` + `menubar/1` — the WAI-ARIA APG menu-button and menubar
+  patterns** (`menu_item`, `menu_separator`, `menubar_menu`; no Fluxon
+  equivalent). Clean-room from the APG: the component owns the trigger button
+  so `aria-haspopup`/`aria-expanded`/`aria-controls` are always wired, the
+  popup is a trigger-labelled `role="menu"`, and the `LanternMenu` /
+  `LanternMenubar` hooks run the full keyboard model on the shared overlay
+  primitives — wrapping ArrowUp/Down, Home/End, roving tabindex, Escape back
+  to the trigger, and horizontal ArrowLeft/Right across menubar entries that
+  carries an open submenu along.
 
 ### Changed
 - **Breadcrumb + page_header density cut ~3×.** Trail is 0.6875rem with 0.75rem
