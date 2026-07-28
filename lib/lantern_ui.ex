@@ -46,6 +46,7 @@ defmodule LanternUI do
     modal: LanternUI.Components.Modal,
     alert_dialog: LanternUI.Components.AlertDialog,
     dropdown: LanternUI.Components.Dropdown,
+    menu: LanternUI.Components.Menu,
     breadcrumb: LanternUI.Components.Breadcrumb,
     empty_state: LanternUI.Components.EmptyState,
     layout: LanternUI.Components.Layout,

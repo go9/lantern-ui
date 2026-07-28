@@ -16,6 +16,7 @@ defmodule LanternUI.ARIAConformanceTest do
   alias LanternUI.ARIAConformance
   alias LanternUI.Components.Accordion
   alias LanternUI.Components.Autocomplete
+  alias LanternUI.Components.Menu
   alias LanternUI.Components.Modal
   alias LanternUI.Components.ScrollArea
   alias LanternUI.Components.Select
@@ -110,6 +111,35 @@ defmodule LanternUI.ARIAConformanceTest do
         """
       end)
       |> assert_conformant()
+    end
+
+    test "menu: trigger controls a trigger-labelled role=menu with resolvable idrefs" do
+      render(fn assigns ->
+        ~H"""
+        <Menu.menu id="actions" label="Actions">
+          <Menu.menu_item phx-click="edit">Edit</Menu.menu_item>
+          <Menu.menu_separator />
+          <Menu.menu_item phx-click="delete" data-danger>Delete</Menu.menu_item>
+        </Menu.menu>
+        """
+      end)
+      |> assert_conformant(hook_owned: @hook_owned)
+    end
+
+    test "menubar: labelled menubar whose entries control labelled submenus" do
+      render(fn assigns ->
+        ~H"""
+        <Menu.menubar id="editor" label="Editor">
+          <Menu.menubar_menu id="file" label="File">
+            <Menu.menu_item phx-click="new">New</Menu.menu_item>
+          </Menu.menubar_menu>
+          <Menu.menubar_menu id="edit" label="Edit">
+            <Menu.menu_item phx-click="undo">Undo</Menu.menu_item>
+          </Menu.menubar_menu>
+        </Menu.menubar>
+        """
+      end)
+      |> assert_conformant(hook_owned: @hook_owned)
     end
   end
 
