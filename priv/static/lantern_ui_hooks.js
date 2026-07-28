@@ -1552,6 +1552,115 @@ const LanternAutocomplete = {
   },
 }
 
+// Slider value engine (APG slider pattern): pointer drag on the track plus
+// Arrow/Home/End/PageUp/PageDown stepping on the role="slider" thumb. The hook
+// owns aria-valuenow/aria-valuetext and the --lui-slider-pct visual at runtime.
+// Commits write the hidden input (the real form control) and dispatch bubbling
+// input+change so phx-change and LiveViewTest's form/3 see the value — key
+// steps and drag release commit; intermediate drag moves are visual-only.
+const LanternSlider = {
+  mounted() {
+    this.input = this.el.querySelector('[data-part="input"]')
+    this.track = this.el.querySelector('[data-part="track"]')
+    this.thumb = this.el.querySelector('[data-part="thumb"]')
+
+    this.onPointerDown = (e) => this.startDrag(e)
+    this.onKeydown = (e) => this.onKey(e)
+    this.el.addEventListener("pointerdown", this.onPointerDown)
+    this.thumb.addEventListener("keydown", this.onKeydown)
+  },
+
+  disabled() {
+    return this.el.hasAttribute("data-disabled")
+  },
+
+  bounds() {
+    const num = (key, fallback) => {
+      const v = parseFloat(this.el.dataset[key])
+      return Number.isFinite(v) ? v : fallback
+    }
+    const min = num("min", 0)
+    return { min, max: Math.max(num("max", 100), min), step: Math.abs(num("step", 1)) || 1 }
+  },
+
+  value() {
+    const v = parseFloat(this.input.value)
+    return Number.isFinite(v) ? v : this.bounds().min
+  },
+
+  // Snap to the step grid (anchored at min), clamp, and kill float drift —
+  // min 0 / step 0.1 must yield 0.3, not 0.30000000000000004.
+  snap(raw) {
+    const { min, max, step } = this.bounds()
+    const decimals = (s) => (String(s).split(".")[1] || "").length
+    const places = Math.max(decimals(step), decimals(min))
+    const v = min + Math.round((raw - min) / step) * step
+    return Math.min(max, Math.max(min, parseFloat(v.toFixed(places))))
+  },
+
+  valueFromPointer(e) {
+    const rect = this.track.getBoundingClientRect()
+    const { min, max } = this.bounds()
+    const ratio = rect.width === 0 ? 0 : (e.clientX - rect.left) / rect.width
+    return min + Math.min(1, Math.max(0, ratio)) * (max - min)
+  },
+
+  set(raw, { commit } = {}) {
+    const v = this.snap(raw)
+    const { min, max } = this.bounds()
+    this.thumb.setAttribute("aria-valuenow", String(v))
+    const tpl = this.el.dataset.valueText
+    if (tpl) this.thumb.setAttribute("aria-valuetext", tpl.replace("{value}", String(v)))
+    const pct = max === min ? 0 : ((v - min) / (max - min)) * 100
+    this.el.style.setProperty("--lui-slider-pct", `${pct}%`)
+    if (commit && this.input.value !== String(v)) {
+      this.input.value = String(v)
+      this.input.dispatchEvent(new Event("input", { bubbles: true }))
+      this.input.dispatchEvent(new Event("change", { bubbles: true }))
+    }
+  },
+
+  startDrag(e) {
+    if (this.disabled() || e.button !== 0) return
+    e.preventDefault()
+    this.thumb.focus()
+    this.el.setPointerCapture?.(e.pointerId)
+    this.set(this.valueFromPointer(e))
+
+    const move = (ev) => this.set(this.valueFromPointer(ev))
+    const stop = (ev) => {
+      this.el.removeEventListener("pointermove", move)
+      this.el.removeEventListener("pointerup", stop)
+      this.el.removeEventListener("pointercancel", stop)
+      this.set(this.valueFromPointer(ev), { commit: true })
+    }
+    this.el.addEventListener("pointermove", move)
+    this.el.addEventListener("pointerup", stop)
+    this.el.addEventListener("pointercancel", stop)
+  },
+
+  onKey(e) {
+    if (this.disabled()) return
+    const { min, max, step } = this.bounds()
+    const cur = this.value()
+    let next
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") next = cur + step
+    else if (e.key === "ArrowLeft" || e.key === "ArrowDown") next = cur - step
+    else if (e.key === "Home") next = min
+    else if (e.key === "End") next = max
+    else if (e.key === "PageUp") next = cur + step * 10
+    else if (e.key === "PageDown") next = cur - step * 10
+    else return
+    e.preventDefault()
+    this.set(next, { commit: true })
+  },
+
+  destroyed() {
+    this.el.removeEventListener("pointerdown", this.onPointerDown)
+    this.thumb.removeEventListener("keydown", this.onKeydown)
+  },
+}
+
 // Generic collapsible section (data-part="collapse-toggle" flips
 // data-collapsed on the hook root; persisted per element id).
 const LanternCollapse = {
@@ -2356,6 +2465,7 @@ export const Hooks = {
   LanternToast,
   LanternSidebar,
   LanternSelect,
+  LanternSlider,
   LanternAutocomplete,
   LanternCollapse,
   LanternAccordion,
@@ -2376,6 +2486,7 @@ export {
   LanternToast,
   LanternSidebar,
   LanternSelect,
+  LanternSlider,
   LanternAutocomplete,
   LanternCollapse,
   LanternAccordion,

@@ -57,6 +57,7 @@ defmodule LanternUI do
     data_table: LanternUI.Components.DataTable,
     stat: LanternUI.Components.Stat,
     switch: LanternUI.Components.Switch,
+    slider: LanternUI.Components.Slider,
     radio: LanternUI.Components.Radio,
     textarea: LanternUI.Components.Textarea,
     color_input: LanternUI.Components.ColorInput,

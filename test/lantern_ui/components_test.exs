@@ -489,6 +489,7 @@ defmodule LanternUI.ComponentsTest do
                :separator,
                :sheet,
                :skeleton,
+               :slider,
                :stat,
                :switch,
                :table,
