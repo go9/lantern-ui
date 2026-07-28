@@ -2106,7 +2106,12 @@ const LanternMenu = {
     })
 
     this.menu.addEventListener("click", (e) => {
-      if (e.target.closest('[role="menuitem"]')) this.hide()
+      if (e.target.closest('[role="menuitem"]')) {
+        // APG menu button: closing via activation returns focus to the
+        // trigger (hiding while focus is inside would drop it on <body>).
+        this.hide()
+        this.trigger.focus()
+      }
     })
 
     this.menu.addEventListener("keydown", (e) => {
@@ -2174,7 +2179,11 @@ const LanternMenubar = {
       if (trigger) {
         this.openTrigger === trigger ? this.close() : this.openMenu(trigger)
       } else if (e.target.closest('[role="menuitem"]')) {
+        // Closing via activation returns focus to the top-level trigger
+        // (close() hides while focus is inside, which would drop it on <body>).
+        const opener = this.openTrigger
         this.close()
+        if (opener) opener.focus()
       }
     })
 
@@ -2236,6 +2245,9 @@ const LanternMenubar = {
     const menu = this.menuFor(trigger)
     if (!menu) return
     this.openTrigger = trigger
+    // Keep the roving tabindex in sync on every open path (mouse click
+    // included): the focused menubar item must be the single tab stop.
+    rove(this.triggers(), trigger)
     menu.hidden = false
     position(trigger, menu, { placement: "bottom-start" })
     trigger.setAttribute("aria-expanded", "true")
@@ -2247,7 +2259,9 @@ const LanternMenubar = {
         menu,
         (reason) => {
           this.close()
-          if (reason === "escape") trigger.focus()
+          // Rove, not just focus: the trigger must also become the single
+          // tab stop so tabbing away and back lands on it.
+          if (reason === "escape") rove(this.triggers(), trigger)
         },
         { anchor: trigger },
       ),
