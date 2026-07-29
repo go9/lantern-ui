@@ -725,7 +725,9 @@
 
 /* Compact sticky breadcrumb region under the appbar (layout chrome).
    Full-width sticky strip; inside app_shell it only bleeds horizontally so it
-   never slides under the fixed appbar (that was clipping titles/crumbs). */
+   never slides under the fixed appbar (that was clipping titles/crumbs).
+   With :actions, trail left + actions right (Linear action bar). Multi-entry
+   actions past the first collapse into a More menu when the bar is narrow. */
 .lui-app-breadcrumb {
   flex: none;
   position: sticky;
@@ -733,6 +735,7 @@
   z-index: 10;
   display: flex;
   align-items: center;
+  gap: 0.5rem 0.75rem;
   width: 100%;
   min-height: 1.35rem;
   padding: 0.1rem 0;
@@ -740,11 +743,56 @@
   background: var(--lantern-surface);
   box-sizing: border-box;
   overflow: visible;
+  container-type: inline-size;
+  container-name: lui-breadcrumb;
 }
 /* Horizontal full-bleed only — keep top flush with main, no negative top margin */
 .lui-app-main > .lui-app-breadcrumb {
   margin: 0 -1.5rem 0.35rem;
   padding: 0.15rem 1.5rem;
+}
+.lui-app-breadcrumb-trail {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+}
+.lui-app-breadcrumb-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  flex: none;
+  margin-left: auto;
+  min-width: 0;
+}
+.lui-app-breadcrumb-action {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+/* Overflow menu hidden while the bar is wide enough for every action entry. */
+/* Two-stage action bar. At normal width: up to :max_inline quick buttons, and
+   the More menu holds only what is past the cap. As the bar narrows, the quick
+   buttons hide and their menu entries reveal, so every action stays reachable
+   and none is ever visible in both places at once. The menu always renders all
+   entries; visibility is decided here. */
+.lui-app-breadcrumb-overflow { display: inline-flex; }
+.lui-app-breadcrumb-overflow[data-has-folded="false"] { display: none; }
+.lui-app-breadcrumb-more-item[data-inline="true"] { display: none; }
+.lui-app-breadcrumb-more { display: inline-flex; }
+.lui-app-breadcrumb-more-trigger {
+  min-width: 1.75rem;
+  padding-inline: 0.35rem;
+}
+/* Narrow bar: quick buttons collapse into the menu, which now shows every
+   entry. Keyed off the bar's own inline size, not the viewport, so the same
+   component behaves correctly inside a rail or a split pane. */
+@container lui-breadcrumb (max-width: 34rem) {
+  .lui-app-breadcrumb-action { display: none; }
+  .lui-app-breadcrumb-overflow,
+  .lui-app-breadcrumb-overflow[data-has-folded="false"] { display: inline-flex; }
+  .lui-app-breadcrumb-more-item[data-inline="true"] { display: flex; }
 }
 
 /* Page title row — dense, not a marketing hero */

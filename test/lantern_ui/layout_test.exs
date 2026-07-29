@@ -244,6 +244,31 @@ defmodule LanternUI.LayoutTest do
       refute html =~ "lui-app-breadcrumb"
     end
 
+    test "app_shell breadcrumb_actions render on the same bar as the trail" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.app_shell id="bca">
+            <:brand>b</:brand>
+            <:breadcrumb>TRAIL</:breadcrumb>
+            <:breadcrumb_actions>ACT</:breadcrumb_actions>
+            <:sidebar>n</:sidebar>
+            BODY
+          </Layout.app_shell>
+          """
+        end)
+
+      assert html =~ "lui-app-breadcrumb"
+      assert html =~ "lui-app-breadcrumb-trail"
+      assert html =~ "lui-app-breadcrumb-actions"
+      assert html =~ "TRAIL"
+      assert html =~ "ACT"
+      # The menu element always renders (narrow bars fold the quick buttons into
+      # it), but with nothing past the cap it is marked not-folded and stays
+      # hidden at normal width.
+      assert html =~ ~s(data-has-folded="false")
+    end
+
     test "breadcrumb_bar/1 wraps its contents in the same chrome class" do
       html =
         render(fn assigns ->
@@ -254,6 +279,173 @@ defmodule LanternUI.LayoutTest do
 
       assert html =~ "lui-app-breadcrumb"
       assert html =~ "TRAIL"
+    end
+
+    test "breadcrumb_bar/1 without actions is byte-identical to the trail-only chrome" do
+      # Additive contract: unused :actions must not change markup for existing call sites.
+      # Mirror the pre-slot component shape exactly (same Class.merge root + inner block).
+      expected =
+        render(fn assigns ->
+          ~H"""
+          <div class={LanternUI.Class.merge(["lui-app-breadcrumb", nil])}>
+            TRAIL
+          </div>
+          """
+        end)
+
+      actual =
+        render(fn assigns ->
+          ~H"""
+          <Layout.breadcrumb_bar>TRAIL</Layout.breadcrumb_bar>
+          """
+        end)
+
+      assert actual == expected
+    end
+
+    test "breadcrumb_bar/1 with free-form actions is a flex row: trail left, actions right" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.breadcrumb_bar>
+            TRAIL
+            <:actions><button type="button">New</button></:actions>
+          </Layout.breadcrumb_bar>
+          """
+        end)
+
+      assert html =~ ~s(class="lui-app-breadcrumb")
+      assert html =~ ~s(class="lui-app-breadcrumb-trail")
+      assert html =~ "TRAIL"
+      assert html =~ ~s(class="lui-app-breadcrumb-actions")
+      assert html =~ "New"
+      # single free-form entry: no automatic overflow menu
+      # The menu element always renders (narrow bars fold the quick buttons into
+      # it), but with nothing past the cap it is marked not-folded and stays
+      # hidden at normal width.
+      assert html =~ ~s(data-has-folded="false")
+      # The menu (and its hook) always mount, since a narrow bar folds the quick
+      # buttons into it; only its visibility is conditional.
+      assert html =~ ~s(phx-hook="LanternMenu")
+
+      # DOM order: trail before actions (tab order follows)
+      trail_at = :binary.match(html, "lui-app-breadcrumb-trail") |> elem(0)
+      actions_at = :binary.match(html, "lui-app-breadcrumb-actions") |> elem(0)
+      assert trail_at < actions_at
+    end
+
+    test "breadcrumb_bar/1 multi-entry actions overflow into an APG menu" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.breadcrumb_bar id="bc-more">
+            TRAIL
+            <:actions><button type="button">Primary</button></:actions>
+            <:actions label="Import" phx-click="import">
+              <button type="button" phx-click="import">Import</button>
+            </:actions>
+            <:actions label="Export" phx-click="export">
+              <button type="button" phx-click="export">Export</button>
+            </:actions>
+          </Layout.breadcrumb_bar>
+          """
+        end)
+
+      assert html =~ "lui-app-breadcrumb-action"
+      assert html =~ "Primary"
+      assert html =~ "Import"
+      assert html =~ "Export"
+      assert html =~ "lui-app-breadcrumb-overflow"
+      assert html =~ ~s(phx-hook="LanternMenu")
+      assert html =~ ~s(id="bc-more")
+      assert html =~ ~s(data-placement="bottom-end")
+      assert html =~ "More actions"
+      # overflow menu items carry the slot labels + events (APG menu_item)
+      assert html =~ ~s(role="menu")
+      assert html =~ ~s(role="menuitem")
+      assert html =~ ~s(phx-click="import")
+      assert html =~ ~s(phx-click="export")
+    end
+
+    test "breadcrumb_bar/1 keeps at most :max_inline entries as quick buttons" do
+      # Exactly at the cap: both inline, and no More menu is rendered at all.
+      at_cap =
+        render(fn assigns ->
+          ~H"""
+          <Layout.breadcrumb_bar>
+            TRAIL
+            <:actions><button type="button">One</button></:actions>
+            <:actions label="Two"><button type="button">Two</button></:actions>
+          </Layout.breadcrumb_bar>
+          """
+        end)
+
+      assert at_cap =~ "One"
+      assert at_cap =~ "Two"
+      # The menu still renders (mobile needs it) but is hidden while nothing is folded.
+      assert at_cap =~ ~s(data-has-folded="false")
+
+      # Past the cap: the third folds into the menu and is reachable there.
+      over_cap =
+        render(fn assigns ->
+          ~H"""
+          <Layout.breadcrumb_bar id="bc-cap">
+            TRAIL
+            <:actions><button type="button">One</button></:actions>
+            <:actions label="Two"><button type="button">Two</button></:actions>
+            <:actions label="Three" phx-click="three">
+              <button type="button" phx-click="three">Three</button>
+            </:actions>
+          </Layout.breadcrumb_bar>
+          """
+        end)
+
+      assert over_cap =~ "lui-app-breadcrumb-overflow"
+      assert over_cap =~ ~s(role="menuitem")
+      assert over_cap =~ ~s(phx-click="three")
+      assert length(String.split(over_cap, "lui-app-breadcrumb-action\"")) - 1 == 2
+    end
+
+    # A folded entry renders from the slot ATTRS; its body is never rendered.
+    # A destructive action whose data-confirm lives only on an inner button
+    # therefore loses its guard the moment it passes the cap, which is a
+    # delete-without-confirmation bug. The attr must survive folding.
+    test "breadcrumb_bar/1 carries data-confirm onto a folded destructive entry" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.breadcrumb_bar id="bc-danger">
+            TRAIL
+            <:actions><button type="button">One</button></:actions>
+            <:actions label="Two"><button type="button">Two</button></:actions>
+            <:actions label="Delete" phx-click="delete" data-confirm="Delete this? Cannot be undone.">
+              <button type="button" phx-click="delete" data-confirm="Delete this? Cannot be undone.">
+                Delete
+              </button>
+            </:actions>
+          </Layout.breadcrumb_bar>
+          """
+        end)
+
+      assert html =~ ~s(role="menuitem")
+      assert html =~ ~s(phx-click="delete")
+      assert html =~ ~s(data-confirm="Delete this? Cannot be undone.")
+    end
+
+    test "breadcrumb_bar/1 honours an explicit :max_inline" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.breadcrumb_bar id="bc-one" max_inline={1}>
+            TRAIL
+            <:actions><button type="button">One</button></:actions>
+            <:actions label="Two"><button type="button">Two</button></:actions>
+          </Layout.breadcrumb_bar>
+          """
+        end)
+
+      assert html =~ "lui-app-breadcrumb-overflow"
+      assert length(String.split(html, "lui-app-breadcrumb-action\"")) - 1 == 1
     end
 
     test "page_header/1 renders a compact title, description, and actions" do
@@ -272,6 +464,34 @@ defmodule LanternUI.LayoutTest do
       assert html =~ "Object storage."
       assert html =~ "lui-page-header-actions"
       assert html =~ "NEW"
+    end
+  end
+
+  describe "breadcrumb actions CSS region" do
+    test "stylesheet defines the actions region" do
+      css = File.read!(Path.join(:code.priv_dir(:lantern_ui), "static/lantern_ui.css"))
+
+      assert css =~ ~r/\.lui-app-breadcrumb-trail\s*\{/
+      assert css =~ ~r/\.lui-app-breadcrumb-actions\s*\{/
+      assert css =~ ~r/\.lui-app-breadcrumb-overflow\s*\{/
+      assert css =~ "margin-left: auto"
+    end
+
+    # The split is fixed, not width-based. The component renders the overflow
+    # wrapper only when there are folded actions, and those actions exist
+    # nowhere else, so CSS must never hide it: a `display: none` here (as an
+    # earlier width-based draft had) makes every action past the cap invisible.
+    test "the overflow wrapper is never hidden by CSS" do
+      css = File.read!(Path.join(:code.priv_dir(:lantern_ui), "static/lantern_ui.css"))
+
+      refute css =~ ~r/\.lui-app-breadcrumb-overflow\s*\{\s*display:\s*none/
+
+      # Narrow bar: quick buttons hide and their menu entries reveal, so nothing
+      # becomes unreachable. Both halves must be present or actions are lost.
+      assert css =~ "@container lui-breadcrumb"
+
+      assert css =~
+               ~r/\.lui-app-breadcrumb-more-item\[data-inline="true"\]\s*\{\s*display:\s*flex/
     end
   end
 end
