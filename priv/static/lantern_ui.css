@@ -2290,8 +2290,10 @@
  * Vertical event sequence: fixed marker rail on the left, content column with
  * min-width: 0 so long titles truncate. Connector is a real element; CSS hides
  * it on the last item (no caller flag). Status colors the marker only; the
- * label text carries state for grayscale legibility. */
+ * label text carries state for grayscale legibility. Optional leading `at`
+ * column, custom marker slot, and native details disclosure for :detail. */
 .lui-timeline {
+  --lui-timeline-label-w: 4.5rem;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -2306,6 +2308,34 @@
   grid-template-columns: var(--lui-timeline-marker-col) minmax(0, 1fr);
   column-gap: 0.625rem;
   position: relative;
+}
+
+/* Leading timestamps: fixed-width column left of the marker rail */
+.lui-timeline-item[data-label-position="leading"] {
+  grid-template-columns:
+    var(--lui-timeline-label-w) var(--lui-timeline-marker-col) minmax(0, 1fr);
+}
+
+.lui-timeline-item[data-label-position="leading"] > .lui-timeline-at {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: end;
+  align-self: start;
+  padding-right: 0.25rem;
+  margin-top: 0.2rem;
+}
+
+.lui-timeline-item[data-label-position="leading"] > .lui-timeline-marker {
+  grid-column: 2;
+}
+
+.lui-timeline-item[data-label-position="leading"] > .lui-timeline-content {
+  grid-column: 3;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "title"
+    "label"
+    "body";
 }
 
 .lui-timeline-marker {
@@ -2331,6 +2361,7 @@
   background: var(--lantern-border);
   color: var(--lantern-fg-muted);
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .lui-timeline-dot .lui-icon {
@@ -2344,6 +2375,25 @@
   height: 1rem;
   background: transparent;
   color: var(--lantern-border);
+}
+
+/* Custom :marker slot (e.g. avatar): CSS owns size so rail alignment holds */
+.lui-timeline-dot[data-slot="marker"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.15rem;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+}
+
+.lui-timeline-dot[data-slot="marker"] > * {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 .lui-timeline-item[data-status="done"] .lui-timeline-dot {
@@ -2372,8 +2422,17 @@
 .lui-timeline-item[data-status="active"] .lui-timeline-dot:has(.lui-icon),
 .lui-timeline-item[data-status="pending"] .lui-timeline-dot:has(.lui-icon),
 .lui-timeline-item[data-status="danger"] .lui-timeline-dot:has(.lui-icon),
-.lui-timeline-item[data-status="neutral"] .lui-timeline-dot:has(.lui-icon) {
+.lui-timeline-item[data-status="neutral"] .lui-timeline-dot:has(.lui-icon),
+.lui-timeline-item[data-status="done"] .lui-timeline-dot[data-slot="marker"],
+.lui-timeline-item[data-status="active"] .lui-timeline-dot[data-slot="marker"],
+.lui-timeline-item[data-status="pending"] .lui-timeline-dot[data-slot="marker"],
+.lui-timeline-item[data-status="danger"] .lui-timeline-dot[data-slot="marker"],
+.lui-timeline-item[data-status="neutral"] .lui-timeline-dot[data-slot="marker"] {
   background: transparent;
+}
+
+.lui-timeline-item[data-status="active"] .lui-timeline-dot[data-slot="marker"] {
+  box-shadow: none;
 }
 
 .lui-timeline-connector {
@@ -2403,6 +2462,41 @@
 
 .lui-timeline-item:last-child .lui-timeline-content {
   padding-bottom: 0;
+}
+
+/* Collapsible entry: details fills the content grid; summary reuses title/at areas */
+.lui-timeline-details {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.lui-timeline-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title at"
+    "label at";
+  column-gap: 0.75rem;
+  row-gap: 0.125rem;
+  cursor: pointer;
+  list-style: none;
+  min-width: 0;
+}
+
+.lui-timeline-summary::-webkit-details-marker {
+  display: none;
+}
+
+.lui-timeline-item[data-label-position="leading"] .lui-timeline-summary {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "title"
+    "label";
+}
+
+.lui-timeline-detail {
+  min-width: 0;
+  margin-top: 0.375rem;
 }
 
 .lui-timeline-title {
@@ -2441,6 +2535,22 @@
   font-size: var(--lantern-text-sm);
   color: var(--lantern-fg-muted);
   line-height: 1.45;
+}
+
+/* When details is present, body sits under the disclosure */
+.lui-timeline-content:has(> .lui-timeline-details) {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "details"
+    "body";
+}
+
+.lui-timeline-content:has(> .lui-timeline-details) > .lui-timeline-details {
+  grid-area: details;
+}
+
+.lui-timeline-content:has(> .lui-timeline-details) > .lui-timeline-body {
+  grid-area: body;
 }
 
 @media (prefers-reduced-motion: reduce) {

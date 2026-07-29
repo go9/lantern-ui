@@ -14,6 +14,12 @@ All notable changes to this project are documented here. The format follows
   `danger`/`neutral`); the state `label` always renders as text so items stay
   legible in grayscale. Connector lines between markers hide on the last item
   via CSS `:last-child`. Pure presentational CSS, no JS. No Fluxon equivalent.
+  Additive shapes: `:detail` slot wraps title/label/at in a native
+  `<details>`/`<summary>` disclosure (`open` for initial state); 
+  `label_position={:leading}` (set on `timeline/1`, overridable per item)
+  places `at` in a fixed-width column left of the rail (`--lui-timeline-label-w`);
+  `:marker` slot replaces the dot/icon (e.g. avatar). Unused options leave
+  existing markup unchanged.
 - **`breadcrumb_bar/1` gains an `:actions` slot (Linear action bar, flicker #1202).**
   Trail left, actions right-aligned on the same sticky chrome. The first
   `:max_inline` entries (default 2) render as quick buttons; everything after
