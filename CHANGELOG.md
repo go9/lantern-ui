@@ -7,6 +7,13 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **`timeline/1` + `timeline_item/1` — vertical event sequence with a marker
+  rail (flicker #1202).** Ordered list of steps: status dot (or optional
+  icon), title, state label, preformatted `at` timestamp, and optional body.
+  `status` paints the marker via `data-status` (`done`/`active`/`pending`/
+  `danger`/`neutral`); the state `label` always renders as text so items stay
+  legible in grayscale. Connector lines between markers hide on the last item
+  via CSS `:last-child`. Pure presentational CSS, no JS. No Fluxon equivalent.
 - **`breadcrumb_bar/1` gains an `:actions` slot (Linear action bar, flicker #1202).**
   Trail left, actions right-aligned on the same sticky chrome. The first
   `:max_inline` entries (default 2) render as quick buttons; everything after

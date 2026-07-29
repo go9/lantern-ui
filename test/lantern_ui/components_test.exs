@@ -497,6 +497,7 @@ defmodule LanternUI.ComponentsTest do
                :tabs,
                :textarea,
                :theme,
+               :timeline,
                :toast,
                :tooltip
              ]
