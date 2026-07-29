@@ -681,9 +681,13 @@
   line-height: 1.15; }
 .lui-breadcrumb-link:hover { color: var(--lantern-fg);
   background: var(--lantern-surface-sunken); }
-.lui-breadcrumb-current { color: var(--lantern-fg); font-weight: 550; font-size: 0.6875rem;
-  padding: 0.05rem 0.15rem; max-width: 12rem; overflow: hidden; text-overflow: ellipsis;
-  white-space: nowrap; line-height: 1.15; }
+/* The current (last) crumb IS the page title — hosts no longer render a separate
+   heading — so it reads as one: bold, a step up in size from the trail links,
+   full foreground. The width cap is generous because a title should not ellipsis
+   at a name length that a heading would have shown in full. */
+.lui-breadcrumb-current { color: var(--lantern-fg); font-weight: 600; font-size: 0.8125rem;
+  padding: 0.05rem 0.15rem; max-width: 24rem; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; line-height: 1.25; letter-spacing: -0.006em; }
 
 /* ── Empty state ── */
 .lui-empty { display: flex; flex-direction: column; align-items: center; gap: 0.375rem;
@@ -737,8 +741,11 @@
   align-items: center;
   gap: 0.5rem 0.75rem;
   width: 100%;
-  min-height: 1.35rem;
-  padding: 0.1rem 0;
+  /* The bar carries the page title now (the last crumb), so it is the page's
+     header chrome rather than a thin trail: room to breathe, and tall enough
+     that the trail and the action buttons centre against each other. */
+  min-height: 2.5rem;
+  padding: 0.5rem 0;
   border-bottom: 1px solid var(--lantern-border);
   background: var(--lantern-surface);
   box-sizing: border-box;
@@ -748,8 +755,8 @@
 }
 /* Horizontal full-bleed only — keep top flush with main, no negative top margin */
 .lui-app-main > .lui-app-breadcrumb {
-  margin: 0 -1.5rem 0.35rem;
-  padding: 0.15rem 1.5rem;
+  margin: 0 -1.5rem 0.75rem;
+  padding: 0.5rem 1.5rem;
 }
 .lui-app-breadcrumb-trail {
   min-width: 0;
