@@ -44,6 +44,24 @@ defmodule LanternUI.DataTableChromeTest do
     """
   end
 
+  # Same table, but declaring a :list_item slot as converted index pages do.
+  defp table_with_list(assigns) do
+    ~H"""
+    <DataTable.data_table
+      id="t"
+      rows={@rows}
+      meta={@meta}
+      path="/orders"
+      search_field={:search}
+      view={@view}
+    >
+      <:col :let={r} label="Name" field={:name}>{r.name}</:col>
+      <:card :let={r}>CARD-{r.name}</:card>
+      <:list_item :let={r}>LIST-{r.name}</:list_item>
+    </DataTable.data_table>
+    """
+  end
+
   defp base, do: %{rows: [%{id: 1, name: "Ada"}], meta: @meta, view: "table"}
 
   test "stat overview renders with collapse hook and linked/static stats" do
@@ -95,10 +113,40 @@ defmodule LanternUI.DataTableChromeTest do
     html = render(&table/1, %{base() | view: "cards"})
     assert html =~ "CARD-Ada"
     refute html =~ "lui-table-wrap"
-    # view toggle present with patch links carrying view param
-    assert html =~ "view=table"
+    # view toggle present with a patch link carrying the view param
+    assert html =~ "view=cards"
     assert html =~ "lui-vt-active"
   end
+
+  test "the view switcher offers exactly two views, never three" do
+    # This fixture declares only a :card slot, so the grid's counterpart is the
+    # table — otherwise the grid is a dead end with no way back.
+    html = render(&table/1, %{base() | view: "cards"})
+
+    assert html =~ ~s(aria-label="Grid view")
+    assert html =~ ~s(aria-label="Table view")
+    refute html =~ ~s(aria-label="List view")
+    assert count(html, ~s(class="lui-vt)) == 2
+  end
+
+  test "a page with a :list_item slot pairs list with grid and drops table" do
+    html = render(&table_with_list/1, %{base() | view: "list"})
+
+    assert html =~ ~s(aria-label="List view")
+    assert html =~ ~s(aria-label="Grid view")
+    refute html =~ ~s(aria-label="Table view")
+    refute html =~ "view=table"
+    assert count(html, ~s(class="lui-vt)) == 2
+  end
+
+  test "search and filter chrome carries the active view" do
+    # The chrome hook rebuilds the URL from data-params on every search, so a
+    # missing view here silently bounces the user back to the default view.
+    html = render(&table/1, %{base() | view: "cards"})
+    assert html =~ ~s(&quot;view&quot;:&quot;cards&quot;)
+  end
+
+  defp count(h, n), do: length(String.split(h, n)) - 1
 
   test "filters live in the settings popover with active-count badge and clear button" do
     html = render(&table/1, base())

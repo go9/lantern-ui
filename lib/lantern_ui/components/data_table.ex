@@ -87,7 +87,12 @@ defmodule LanternUI.Components.DataTable do
   attr(:view, :string,
     default: "table",
     values: ~w(table cards list),
-    doc: "active view when a :card or :list_item slot is given"
+    doc:
+      "active view when a :card or :list_item slot is given. The switcher always " <>
+        "offers exactly two, never three: `list` + `cards` on a page with a " <>
+        ":list_item slot, and `table` + `cards` on one without (otherwise the " <>
+        "grid would be a dead end). `table` is also the rendering used when a " <>
+        "page supplies neither slot."
   )
 
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
@@ -230,7 +235,7 @@ defmodule LanternUI.Components.DataTable do
         class="lui-dt-chromerow"
         phx-hook="LanternTableChrome"
         data-path={@path}
-        data-params={Jason.encode!(chrome_base_params(@meta))}
+        data-params={Jason.encode!(chrome_base_params(@meta, @view, @card != [] || @list_item != []))}
       >
         <Tabs.tabs_list :if={@tab != []} active_tab={active_tab(@tab, @meta)} size="sm">
           <:tab
@@ -262,22 +267,32 @@ defmodule LanternUI.Components.DataTable do
 
         <div :if={@card != [] || @list_item != []} class="lui-dt-viewtoggle">
           <.link
-            patch={view_path(@path, @meta, "table")}
-            class={["lui-vt", @view == "table" && "lui-vt-active"]}
-            aria-label="Table view"
-          >☰</.link>
-          <.link
-            :if={@card != []}
-            patch={view_path(@path, @meta, "cards")}
-            class={["lui-vt", @view == "cards" && "lui-vt-active"]}
-            aria-label="Card view"
-          >▦</.link>
-          <.link
             :if={@list_item != []}
             patch={view_path(@path, @meta, "list")}
             class={["lui-vt", @view == "list" && "lui-vt-active"]}
             aria-label="List view"
-          >≡</.link>
+          >
+            <Icon.icon name="bars-3" class="lui-vt-icon" />
+          </.link>
+          <%!-- A page with only a :card slot has no list to go back to, so its
+                counterpart is the table. Without this the grid is a dead end:
+                one button in, no way out. --%>
+          <.link
+            :if={@list_item == [] && @card != []}
+            patch={view_path(@path, @meta, "table")}
+            class={["lui-vt", @view == "table" && "lui-vt-active"]}
+            aria-label="Table view"
+          >
+            <Icon.icon name="view-columns" class="lui-vt-icon" />
+          </.link>
+          <.link
+            :if={@card != []}
+            patch={view_path(@path, @meta, "cards")}
+            class={["lui-vt", @view == "cards" && "lui-vt-active"]}
+            aria-label="Grid view"
+          >
+            <Icon.icon name="squares-2x2" class="lui-vt-icon" />
+          </.link>
         </div>
 
         <Dropdown.dropdown :if={@filter != []} id={"#{@id}-filters"} placement="bottom-end">
@@ -609,8 +624,12 @@ defmodule LanternUI.Components.DataTable do
 
   # Params the client-side chrome hook layers filters onto: everything except
   # filters and page (a filter change resets to page 1).
-  defp chrome_base_params(meta) do
-    base_params(meta) |> Map.drop(["filters", "page"])
+  # The chrome hook rebuilds the URL from these on every search/filter/clear, so
+  # anything omitted here is silently dropped. `view` lives outside Flop's params,
+  # which is why searching used to bounce you back to the default view.
+  defp chrome_base_params(meta, view, toggleable?) do
+    base = base_params(meta) |> Map.drop(["filters", "page"])
+    if toggleable?, do: Map.put(base, "view", view), else: base
   end
 
   defp filter_value(meta, field, op \\ nil) do
