@@ -86,8 +86,8 @@ defmodule LanternUI.Components.DataTable do
 
   attr(:view, :string,
     default: "table",
-    values: ~w(table cards),
-    doc: "active view when a :card slot is given"
+    values: ~w(table cards list),
+    doc: "active view when a :card or :list_item slot is given"
   )
 
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
@@ -156,6 +156,8 @@ defmodule LanternUI.Components.DataTable do
 
   slot(:card, doc: "per-row card rendering for the cards view; enables the view toggle")
 
+  slot(:list_item, doc: "per-row simple list rendering; enables the list view")
+
   def data_table(assigns) do
     assigns =
       assigns
@@ -219,7 +221,10 @@ defmodule LanternUI.Components.DataTable do
       </div>
 
       <div
-        :if={@tab != [] || @toolbar != [] || @search_field || @filter != [] || @card != []}
+        :if={
+          @tab != [] || @toolbar != [] || @search_field || @filter != [] || @card != [] ||
+            @list_item != []
+        }
         id={"#{@id}-chrome"}
         class="lui-dt-chromerow"
         phx-hook="LanternTableChrome"
@@ -254,17 +259,24 @@ defmodule LanternUI.Components.DataTable do
           />
         </div>
 
-        <div :if={@card != []} class="lui-dt-viewtoggle">
+        <div :if={@card != [] || @list_item != []} class="lui-dt-viewtoggle">
           <.link
             patch={view_path(@path, @meta, "table")}
             class={["lui-vt", @view == "table" && "lui-vt-active"]}
             aria-label="Table view"
           >☰</.link>
           <.link
+            :if={@card != []}
             patch={view_path(@path, @meta, "cards")}
             class={["lui-vt", @view == "cards" && "lui-vt-active"]}
             aria-label="Card view"
           >▦</.link>
+          <.link
+            :if={@list_item != []}
+            patch={view_path(@path, @meta, "list")}
+            class={["lui-vt", @view == "list" && "lui-vt-active"]}
+            aria-label="List view"
+          >≡</.link>
         </div>
 
         <Dropdown.dropdown :if={@filter != []} id={"#{@id}-filters"} placement="bottom-end">
@@ -410,7 +422,27 @@ defmodule LanternUI.Components.DataTable do
         <% end %>
       </div>
 
-      <div :if={@card == [] || @view == "table"} class="lui-table-wrap">
+      <div :if={@list_item != [] && @view == "list"} class="lui-dt-list">
+        <%= if @rows == [] do %>
+          <%= if @empty != [] do %>
+            {render_slot(@empty)}
+          <% else %>
+            <EmptyState.empty_state icon="inbox" title="Nothing here yet" />
+          <% end %>
+        <% else %>
+          <div :for={row <- @rows} class="lui-dt-list-row">
+            <div class="lui-dt-list-main">{render_slot(@list_item, row)}</div>
+            <div :if={@row_action != []} class="lui-dt-list-actions">
+              {render_slot(@row_action, row)}
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div
+        :if={!(@card != [] && @view == "cards") && !(@list_item != [] && @view == "list")}
+        class="lui-table-wrap"
+      >
         <table class="lui-table">
           <thead class="lui-thead">
             <tr>

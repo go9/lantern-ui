@@ -7,6 +7,14 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **`data_table/1` gains a `list` view (flicker #1202).** Third view alongside
+  `table` and `cards`: a headerless index row for resource lists (projects,
+  apps, databases). Opt-in via a `:list_item` slot (mirrors `:card`); the
+  toolbar, search, filters, sort controls, and pagination stay. Each row
+  places slot content left and optional `:row_action` trailing right without
+  wrapping the row in an anchor so actions stay independently clickable.
+  View toggle shows a list option only when `:list_item` is given. Callers
+  without `:list_item` render as before.
 - **`resource_list/1` + `resource_list_item/1` — simple resource index
   (flicker #1202).** Compound list for pages that show a handful of resources
   (projects, apps, databases, buckets) without data-table machinery. `layout`

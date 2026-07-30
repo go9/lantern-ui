@@ -1174,6 +1174,17 @@
 .lui-dt-card { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
   background: var(--lantern-surface-raised); padding: 0.9rem; box-shadow: var(--lantern-shadow); }
 
+/* List view: headerless index rows (name left, meta/actions right) */
+.lui-dt-list { display: flex; flex-direction: column; }
+/* Separators only between rows (no leading or trailing rule) */
+.lui-dt-list-row + .lui-dt-list-row { border-top: 1px solid var(--lantern-border); }
+.lui-dt-list-row { display: flex; align-items: center; gap: 1rem; min-width: 0;
+  min-height: 3rem; padding: 0.75rem 0.9rem; box-sizing: border-box; }
+.lui-dt-list-row:hover { background: var(--lantern-surface-hover); }
+.lui-dt-list-main { flex: 1; min-width: 0; }
+.lui-dt-list-actions { flex-shrink: 0; display: flex; align-items: center; gap: 0.375rem;
+  position: relative; z-index: 1; }
+
 /* ── Data table toolbar rework ── */
 .lui-dt-toolbar { justify-content: flex-end; }
 .lui-dt-chrome { flex: 0 1 auto; justify-content: flex-end; }
