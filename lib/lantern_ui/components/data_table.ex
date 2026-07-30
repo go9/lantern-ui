@@ -87,7 +87,11 @@ defmodule LanternUI.Components.DataTable do
   attr(:view, :string,
     default: "table",
     values: ~w(table cards list),
-    doc: "active view when a :card or :list_item slot is given"
+    doc:
+      "active view when a :card or :list_item slot is given. The switcher offers " <>
+        "two: `list` and `cards` (grid). `table` stays a valid value and is the " <>
+        "rendering used when a page supplies neither slot, so it is the fallback " <>
+        "rather than a third choice."
   )
 
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
@@ -262,22 +266,21 @@ defmodule LanternUI.Components.DataTable do
 
         <div :if={@card != [] || @list_item != []} class="lui-dt-viewtoggle">
           <.link
-            patch={view_path(@path, @meta, "table")}
-            class={["lui-vt", @view == "table" && "lui-vt-active"]}
-            aria-label="Table view"
-          >☰</.link>
-          <.link
-            :if={@card != []}
-            patch={view_path(@path, @meta, "cards")}
-            class={["lui-vt", @view == "cards" && "lui-vt-active"]}
-            aria-label="Card view"
-          >▦</.link>
-          <.link
             :if={@list_item != []}
             patch={view_path(@path, @meta, "list")}
             class={["lui-vt", @view == "list" && "lui-vt-active"]}
             aria-label="List view"
-          >≡</.link>
+          >
+            <Icon.icon name="bars-3" class="lui-vt-icon" />
+          </.link>
+          <.link
+            :if={@card != []}
+            patch={view_path(@path, @meta, "cards")}
+            class={["lui-vt", @view == "cards" && "lui-vt-active"]}
+            aria-label="Grid view"
+          >
+            <Icon.icon name="squares-2x2" class="lui-vt-icon" />
+          </.link>
         </div>
 
         <Dropdown.dropdown :if={@filter != []} id={"#{@id}-filters"} placement="bottom-end">

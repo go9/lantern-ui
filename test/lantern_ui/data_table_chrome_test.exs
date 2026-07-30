@@ -95,9 +95,23 @@ defmodule LanternUI.DataTableChromeTest do
     html = render(&table/1, %{base() | view: "cards"})
     assert html =~ "CARD-Ada"
     refute html =~ "lui-table-wrap"
-    # view toggle present with patch links carrying view param
-    assert html =~ "view=table"
+    # view toggle present with a patch link carrying the view param
+    assert html =~ "view=cards"
     assert html =~ "lui-vt-active"
+  end
+
+  test "the view switcher offers list and grid, never table" do
+    html = render(&table/1, %{base() | view: "cards"})
+
+    # `table` is the fallback rendering for pages that supply neither slot, not
+    # a third thing to choose — so it must never appear as a toggle entry.
+    refute html =~ "view=table"
+    assert html =~ ~s(aria-label="Grid view")
+    refute html =~ ~s(aria-label="Table view")
+
+    # This fixture declares only a :card slot, so the list entry is absent too:
+    # each entry is gated on the slot that makes it renderable.
+    refute html =~ ~s(aria-label="List view")
   end
 
   test "filters live in the settings popover with active-count badge and clear button" do

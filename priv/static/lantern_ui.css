@@ -1156,7 +1156,9 @@
 .lui-vt { display: inline-flex; align-items: center; justify-content: center; width: 1.9rem;
   height: 1.7rem; color: var(--lantern-fg-muted); text-decoration: none;
   font-size: var(--lantern-text-sm); background: var(--lantern-surface); }
+.lui-vt:hover { color: var(--lantern-fg); background: var(--lantern-surface-hover); }
 .lui-vt-active { background: var(--lantern-surface-sunken); color: var(--lantern-fg); }
+.lui-vt-icon { width: 0.95rem; height: 0.95rem; }
 .lui-dt-chrome { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; flex: 1; }
 .lui-dt-search { display: flex; align-items: center; gap: 0.45rem; height: var(--lantern-control-h);
   padding: 0 var(--lantern-control-px); min-width: 15rem; background: var(--lantern-surface);
@@ -1169,10 +1171,15 @@
 .lui-dt-search input::placeholder { color: var(--lantern-fg-subtle); }
 .lui-dt-filter { width: auto; }
 .lui-dt-filter .lui-select-native { width: auto; }
+/* Grid view: the list's flat language in two dimensions. A hairline card on the
+   base surface — no raised fill and no shadow, which is what made the old cards
+   read as heavier chrome than the index they summarize — and the same hover as
+   a list row, so switching views changes the layout and nothing else. */
 .lui-dt-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  gap: 0.75rem; }
-.lui-dt-card { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
-  background: var(--lantern-surface-raised); padding: 0.9rem; box-shadow: var(--lantern-shadow); }
+  gap: 0.5rem; }
+.lui-dt-card { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-md);
+  background: var(--lantern-surface); padding: 0.75rem; box-sizing: border-box; min-width: 0; }
+.lui-dt-card:hover { background: var(--lantern-surface-hover); }
 
 /* List view: headerless index rows (name left, meta/actions right) */
 /* The list view is not a panel. A bordered, shadowed card around a plain list of
