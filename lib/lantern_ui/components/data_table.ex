@@ -176,6 +176,7 @@ defmodule LanternUI.Components.DataTable do
     <div
       id={@id}
       class={Class.merge(["lui-datatable", @fill && "lui-datatable-fill", @class])}
+      data-view={@view}
       {@rest}
     >
       <section
@@ -506,8 +507,11 @@ defmodule LanternUI.Components.DataTable do
         </table>
       </div>
 
+      <%!-- A single page of results has nothing to paginate: the control is pure
+            chrome there, and it is most conspicuous on the list view, whose whole
+            point is dropping machinery the page does not need. --%>
       <Pagination.pagination
-        :if={Map.get(@meta, :total_pages)}
+        :if={(Map.get(@meta, :total_pages) || 0) > 1}
         id={"#{@id}-pagination"}
         meta={@meta}
         patch_fn={&page_path(@path, @meta, &1)}
