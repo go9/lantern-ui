@@ -1199,7 +1199,10 @@
 .lui-datatable[data-view="list"] .lui-dt-chromerow,
 .lui-datatable[data-view="cards"] .lui-dt-header,
 .lui-datatable[data-view="cards"] .lui-dt-chromerow { padding-inline: 0; }
-.lui-datatable[data-view="cards"] .lui-dt-cards { padding: 0; }
+/* Breathing room under the chrome row's hairline. At padding 0 the first row of
+   tiles butts its border straight into that divider, which reads as a rendering
+   fault rather than a boundary. */
+.lui-datatable[data-view="cards"] .lui-dt-cards { padding: 0.75rem 0 0; }
 
 .lui-dt-list { display: flex; flex-direction: column; }
 /* Separators only between rows (no leading or trailing rule) */
