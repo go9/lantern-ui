@@ -58,6 +58,16 @@ defmodule LanternUI.Components.ResourceList do
     doc: "Optional secondary line (e.g. a slug). Class only; face is CSS-owned."
   )
 
+  attr(:subtitle_mono, :boolean,
+    default: false,
+    doc:
+      "Render the subtitle in the mono face. Set it when the subtitle is a value " <>
+        "the SYSTEM produced (a slug, a domain, a bucket name) rather than language " <>
+        "a human wrote. Surveying the six index pages this component targets, five " <>
+        "carry a machine value there, so an opt-in beats every call site reaching " <>
+        "for an override class."
+  )
+
   attr(:navigate, :string, default: nil, doc: "LiveView navigate target; whole row is a link.")
   attr(:patch, :string, default: nil, doc: "LiveView patch target; whole row is a link.")
   attr(:href, :string, default: nil, doc: "External or full-page href; whole row is a link.")
@@ -79,7 +89,13 @@ defmodule LanternUI.Components.ResourceList do
       >
         <div class="lui-resource-list-main">
           <span class="lui-resource-list-title">{@title}</span>
-          <span :if={@subtitle} class="lui-resource-list-subtitle">{@subtitle}</span>
+          <span
+            :if={@subtitle}
+            class="lui-resource-list-subtitle"
+            data-mono={to_string(@subtitle_mono)}
+          >
+            {@subtitle}
+          </span>
         </div>
         <div :if={@inner_block != []} class="lui-resource-list-meta">
           {render_slot(@inner_block)}
@@ -88,7 +104,13 @@ defmodule LanternUI.Components.ResourceList do
       <div :if={!@link?} class="lui-resource-list-row">
         <div class="lui-resource-list-main">
           <span class="lui-resource-list-title">{@title}</span>
-          <span :if={@subtitle} class="lui-resource-list-subtitle">{@subtitle}</span>
+          <span
+            :if={@subtitle}
+            class="lui-resource-list-subtitle"
+            data-mono={to_string(@subtitle_mono)}
+          >
+            {@subtitle}
+          </span>
         </div>
         <div :if={@inner_block != []} class="lui-resource-list-meta">
           {render_slot(@inner_block)}

@@ -2667,10 +2667,16 @@ a.lui-resource-list-row:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-family: var(--lantern-font-mono);
   font-size: var(--lantern-text-sm);
   color: var(--lantern-fg-muted);
   line-height: 1.35;
+}
+/* Mono is opt-in, not the default: per the Machine-Value Rule the mono face means
+   "the system produced this value". A slug, domain, or bucket name earns it; a
+   human-written subtitle does not, and defaulting to mono would say the wrong
+   thing about the latter. */
+.lui-resource-list-subtitle[data-mono="true"] {
+  font-family: var(--lantern-font-mono);
 }
 
 .lui-resource-list-meta {
