@@ -234,27 +234,49 @@ const LineHover = {
 // "bottom-end" | "top-start" | "top-end"; flips on viewport overflow and
 // shifts horizontally to stay on screen. Returns the chosen placement.
 function position(anchor, floating, { placement = "bottom-start", gap = 4 } = {}) {
+  // Measure the panel in the box it will actually occupy. Two traps, and both
+  // only bite the FIRST open — the inline styles set here persist through
+  // hide(), so every reopen measured a panel that was already fixed and laid
+  // out. That asymmetry is the "wrong the first time, fine if I reopen" bug.
+  //
+  //   1. Fix it before measuring ANYTHING, the anchor included. A panel still
+  //      `static` is in normal flow, so in an action bar it takes space in the
+  //      same flex row as its own trigger and displaces it. Measuring the
+  //      anchor first therefore reads a position the trigger is about to leave:
+  //      in a 3-button bar the panel landed 118px left of the trigger, then
+  //      jumped 124px into place on reopen.
+  //   2. Use offsetWidth/offsetHeight, not the rect. getBoundingClientRect()
+  //      reports the *transformed* box, and the `lui-pop` open animation starts
+  //      at scale(0.97), so mid-animation the rect reads ~3% small.
+  //
+  // Zeroing the offsets first stops a stale one near the viewport edge from
+  // squeezing shrink-to-fit. No flash: this runs in a single task, so only the
+  // final offsets are ever painted.
+  floating.style.position = "fixed"
+  floating.style.top = "0px"
+  floating.style.left = "0px"
+
   const a = anchor.getBoundingClientRect()
-  const f = floating.getBoundingClientRect()
+  const fw = floating.offsetWidth
+  const fh = floating.offsetHeight
   const vw = document.documentElement.clientWidth
   const vh = document.documentElement.clientHeight
 
   let [side, align] = placement.split("-")
 
   // Flip vertically when the preferred side overflows and the other fits.
-  const fitsBelow = a.bottom + gap + f.height <= vh
-  const fitsAbove = a.top - gap - f.height >= 0
+  const fitsBelow = a.bottom + gap + fh <= vh
+  const fitsAbove = a.top - gap - fh >= 0
   if (side === "bottom" && !fitsBelow && fitsAbove) side = "top"
   if (side === "top" && !fitsAbove && fitsBelow) side = "bottom"
 
-  let top = side === "bottom" ? a.bottom + gap : a.top - gap - f.height
-  let left = align === "end" ? a.right - f.width : a.left
+  let top = side === "bottom" ? a.bottom + gap : a.top - gap - fh
+  let left = align === "end" ? a.right - fw : a.left
 
   // Shift into the viewport (8px margin) rather than clipping.
-  left = Math.min(Math.max(left, 8), vw - f.width - 8)
-  top = Math.min(Math.max(top, 8), vh - f.height - 8)
+  left = Math.min(Math.max(left, 8), vw - fw - 8)
+  top = Math.min(Math.max(top, 8), vh - fh - 8)
 
-  floating.style.position = "fixed"
   floating.style.top = `${top}px`
   floating.style.left = `${left}px`
   return `${side}-${align}`
