@@ -1171,24 +1171,35 @@
 .lui-dt-search input::placeholder { color: var(--lantern-fg-subtle); }
 .lui-dt-filter { width: auto; }
 .lui-dt-filter .lui-select-native { width: auto; }
-/* Grid view: the list's flat language in two dimensions. A hairline card on the
-   base surface — no raised fill and no shadow, which is what made the old cards
-   read as heavier chrome than the index they summarize — and the same hover as
-   a list row, so switching views changes the layout and nothing else. */
-.lui-dt-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  gap: 0.5rem; }
+/* Grid view. The tile keeps its border — it is the thing being bounded — but
+   loses the raised fill and shadow so it reads as an index entry rather than
+   a floating panel. The wrapper's own outline is dropped in the [data-view]
+   rules below, so there is one box per item instead of a box around boxes.
+   align-content: start is load-bearing. In fill mode the grid gets a definite
+   height from the page, and grid's default `normal` align-content behaves as
+   `stretch` — which inflates the auto rows to fill it, so a 107px tile became
+   244px and any mt-auto footer floated ~114px below its content. */
+.lui-dt-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 0.5rem; align-content: start; }
 .lui-dt-card { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-md);
-  background: var(--lantern-surface); padding: 0.75rem; box-sizing: border-box; min-width: 0; }
+  background: var(--lantern-surface); padding: 0.625rem 0.75rem; box-sizing: border-box;
+  min-width: 0; }
 .lui-dt-card:hover { background: var(--lantern-surface-hover); }
 
 /* List view: headerless index rows (name left, meta/actions right) */
-/* The list view is not a panel. A bordered, shadowed card around a plain list of
-   names is the table chrome this view exists to remove, so the root sheds it and
-   the rows sit directly on the page separated by hairlines. */
-.lui-datatable[data-view="list"] { border: none; border-radius: 0;
+/* Neither simple index view is a panel. A bordered, shadowed card around a plain
+   list of names is the table chrome this view exists to remove, so the root sheds
+   it and the rows sit directly on the page separated by hairlines. The grid gets
+   the same treatment: its tiles carry their own borders, so a panel around them
+   is a box drawn around boxes. */
+.lui-datatable[data-view="list"],
+.lui-datatable[data-view="cards"] { border: none; border-radius: 0;
   background: transparent; box-shadow: none; overflow: visible; }
 .lui-datatable[data-view="list"] .lui-dt-header,
-.lui-datatable[data-view="list"] .lui-dt-chromerow { padding-inline: 0; }
+.lui-datatable[data-view="list"] .lui-dt-chromerow,
+.lui-datatable[data-view="cards"] .lui-dt-header,
+.lui-datatable[data-view="cards"] .lui-dt-chromerow { padding-inline: 0; }
+.lui-datatable[data-view="cards"] .lui-dt-cards { padding: 0; }
 
 .lui-dt-list { display: flex; flex-direction: column; }
 /* Separators only between rows (no leading or trailing rule) */
