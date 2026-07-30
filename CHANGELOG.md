@@ -7,6 +7,43 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **`data_table/1` gains a `list` view (flicker #1202).** Third view alongside
+  `table` and `cards`: a headerless index row for resource lists (projects,
+  apps, databases). Opt-in via a `:list_item` slot (mirrors `:card`); the
+  toolbar, search, filters, sort controls, and pagination stay. Each row
+  places slot content left and optional `:row_action` trailing right without
+  wrapping the row in an anchor so actions stay independently clickable.
+  View toggle shows a list option only when `:list_item` is given. Callers
+  without `:list_item` render as before.
+- **`resource_list/1` + `resource_list_item/1` — simple resource index
+  (flicker #1202).** Compound list for pages that show a handful of resources
+  (projects, apps, databases, buckets) without data-table machinery. `layout`
+  is `:list` (full-width rows, hairline separators between items) or `:grid`
+  (auto-fill card grid). Optional `navigate`/`patch`/`href` makes the whole
+  row the link hit target; trailing slot holds badges/meta. Host owns any
+  list/grid toggle; no search, sort, pagination, or JS. No Fluxon equivalent.
+- **`timeline/1` + `timeline_item/1` — vertical event sequence with a marker
+  rail (flicker #1202).** Ordered list of steps: status dot (or optional
+  icon), title, state label, preformatted `at` timestamp, and optional body.
+  `status` paints the marker via `data-status` (`done`/`active`/`pending`/
+  `danger`/`neutral`); the state `label` always renders as text so items stay
+  legible in grayscale. Connector lines between markers hide on the last item
+  via CSS `:last-child`. Pure presentational CSS, no JS. No Fluxon equivalent.
+  Additive shapes: `:detail` slot wraps title/label/at in a native
+  `<details>`/`<summary>` disclosure (`open` for initial state); 
+  `label_position={:leading}` (set on `timeline/1`, overridable per item)
+  places `at` in a fixed-width column left of the rail (`--lui-timeline-label-w`);
+  `:marker` slot replaces the dot/icon (e.g. avatar). Unused options leave
+  existing markup unchanged.
+- **`breadcrumb_bar/1` gains an `:actions` slot (Linear action bar, flicker #1202).**
+  Trail left, actions right-aligned on the same sticky chrome. The first
+  `:max_inline` entries (default 2) render as quick buttons; everything after
+  that folds into a More menu built on the existing APG `menu/1` (no new JS).
+  The cap is fixed rather than width-based, because a responsive cap has to hide
+  an inline button that is not in the menu, which makes that action unreachable
+  at narrow widths. Without `:actions`, markup is unchanged. `app_shell/1`
+  exposes the same region through optional `:breadcrumb_actions` so the slot
+  chrome stays consistent with `breadcrumb_bar/1`.
 - **Skeleton variants + labeled status.** `skeleton/1` gains
   `variant="block|text|circle"` (rendered as `data-variant`) and an opt-in
   `label` that wraps the placeholder in a polite `role="status"` region with a

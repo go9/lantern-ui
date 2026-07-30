@@ -485,6 +485,7 @@ defmodule LanternUI.ComponentsTest do
                :popover,
                :progress,
                :radio,
+               :resource_list,
                :scroll_area,
                :select,
                :separator,
@@ -497,6 +498,7 @@ defmodule LanternUI.ComponentsTest do
                :tabs,
                :textarea,
                :theme,
+               :timeline,
                :toast,
                :tooltip
              ]

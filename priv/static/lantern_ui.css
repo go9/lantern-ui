@@ -681,9 +681,13 @@
   line-height: 1.15; }
 .lui-breadcrumb-link:hover { color: var(--lantern-fg);
   background: var(--lantern-surface-sunken); }
-.lui-breadcrumb-current { color: var(--lantern-fg); font-weight: 550; font-size: 0.6875rem;
-  padding: 0.05rem 0.15rem; max-width: 12rem; overflow: hidden; text-overflow: ellipsis;
-  white-space: nowrap; line-height: 1.15; }
+/* The current (last) crumb IS the page title — hosts no longer render a separate
+   heading — so it reads as one: bold, a step up in size from the trail links,
+   full foreground. The width cap is generous because a title should not ellipsis
+   at a name length that a heading would have shown in full. */
+.lui-breadcrumb-current { color: var(--lantern-fg); font-weight: 600; font-size: 0.8125rem;
+  padding: 0.05rem 0.15rem; max-width: 24rem; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; line-height: 1.25; letter-spacing: -0.006em; }
 
 /* ── Empty state ── */
 .lui-empty { display: flex; flex-direction: column; align-items: center; gap: 0.375rem;
@@ -725,7 +729,9 @@
 
 /* Compact sticky breadcrumb region under the appbar (layout chrome).
    Full-width sticky strip; inside app_shell it only bleeds horizontally so it
-   never slides under the fixed appbar (that was clipping titles/crumbs). */
+   never slides under the fixed appbar (that was clipping titles/crumbs).
+   With :actions, trail left + actions right (Linear action bar). Multi-entry
+   actions past the first collapse into a More menu when the bar is narrow. */
 .lui-app-breadcrumb {
   flex: none;
   position: sticky;
@@ -733,18 +739,67 @@
   z-index: 10;
   display: flex;
   align-items: center;
+  gap: 0.5rem 0.75rem;
   width: 100%;
-  min-height: 1.35rem;
-  padding: 0.1rem 0;
+  /* The bar carries the page title now (the last crumb), so it is the page's
+     header chrome rather than a thin trail: room to breathe, and tall enough
+     that the trail and the action buttons centre against each other. */
+  min-height: 2.5rem;
+  padding: 0.5rem 0;
   border-bottom: 1px solid var(--lantern-border);
   background: var(--lantern-surface);
   box-sizing: border-box;
   overflow: visible;
+  container-type: inline-size;
+  container-name: lui-breadcrumb;
 }
 /* Horizontal full-bleed only — keep top flush with main, no negative top margin */
 .lui-app-main > .lui-app-breadcrumb {
-  margin: 0 -1.5rem 0.35rem;
-  padding: 0.15rem 1.5rem;
+  margin: 0 -1.5rem 0.75rem;
+  padding: 0.5rem 1.5rem;
+}
+.lui-app-breadcrumb-trail {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+}
+.lui-app-breadcrumb-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  flex: none;
+  margin-left: auto;
+  min-width: 0;
+}
+.lui-app-breadcrumb-action {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+/* Overflow menu hidden while the bar is wide enough for every action entry. */
+/* Two-stage action bar. At normal width: up to :max_inline quick buttons, and
+   the More menu holds only what is past the cap. As the bar narrows, the quick
+   buttons hide and their menu entries reveal, so every action stays reachable
+   and none is ever visible in both places at once. The menu always renders all
+   entries; visibility is decided here. */
+.lui-app-breadcrumb-overflow { display: inline-flex; }
+.lui-app-breadcrumb-overflow[data-has-folded="false"] { display: none; }
+.lui-app-breadcrumb-more-item[data-inline="true"] { display: none; }
+.lui-app-breadcrumb-more { display: inline-flex; }
+.lui-app-breadcrumb-more-trigger {
+  min-width: 1.75rem;
+  padding-inline: 0.35rem;
+}
+/* Narrow bar: quick buttons collapse into the menu, which now shows every
+   entry. Keyed off the bar's own inline size, not the viewport, so the same
+   component behaves correctly inside a rail or a split pane. */
+@container lui-breadcrumb (max-width: 34rem) {
+  .lui-app-breadcrumb-action { display: none; }
+  .lui-app-breadcrumb-overflow,
+  .lui-app-breadcrumb-overflow[data-has-folded="false"] { display: inline-flex; }
+  .lui-app-breadcrumb-more-item[data-inline="true"] { display: flex; }
 }
 
 /* Page title row — dense, not a marketing hero */
@@ -1118,6 +1173,25 @@
   gap: 0.75rem; }
 .lui-dt-card { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
   background: var(--lantern-surface-raised); padding: 0.9rem; box-shadow: var(--lantern-shadow); }
+
+/* List view: headerless index rows (name left, meta/actions right) */
+/* The list view is not a panel. A bordered, shadowed card around a plain list of
+   names is the table chrome this view exists to remove, so the root sheds it and
+   the rows sit directly on the page separated by hairlines. */
+.lui-datatable[data-view="list"] { border: none; border-radius: 0;
+  background: transparent; box-shadow: none; overflow: visible; }
+.lui-datatable[data-view="list"] .lui-dt-header,
+.lui-datatable[data-view="list"] .lui-dt-chromerow { padding-inline: 0; }
+
+.lui-dt-list { display: flex; flex-direction: column; }
+/* Separators only between rows (no leading or trailing rule) */
+.lui-dt-list-row + .lui-dt-list-row { border-top: 1px solid var(--lantern-border); }
+.lui-dt-list-row { display: flex; align-items: center; gap: 1rem; min-width: 0;
+  min-height: 2.5rem; padding: 0.45rem 0.15rem; box-sizing: border-box; }
+.lui-dt-list-row:hover { background: var(--lantern-surface-hover); }
+.lui-dt-list-main { flex: 1; min-width: 0; }
+.lui-dt-list-actions { flex-shrink: 0; display: flex; align-items: center; gap: 0.375rem;
+  position: relative; z-index: 1; }
 
 /* ── Data table toolbar rework ── */
 .lui-dt-toolbar { justify-content: flex-end; }
@@ -2237,3 +2311,408 @@
   background: var(--lui-sb-thumb);
   border-radius: 9999px;
 }
+
+/* ── Timeline ──
+ * Vertical event sequence: fixed marker rail on the left, content column with
+ * min-width: 0 so long titles truncate. Connector is a real element; CSS hides
+ * it on the last item (no caller flag). Status colors the marker only; the
+ * label text carries state for grayscale legibility. Optional leading `at`
+ * column, custom marker slot, and native details disclosure for :detail. */
+.lui-timeline {
+  --lui-timeline-label-w: 4.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lui-timeline-item {
+  --lui-timeline-marker-col: 1.25rem;
+  --lui-timeline-dot-size: 0.5rem;
+  display: grid;
+  grid-template-columns: var(--lui-timeline-marker-col) minmax(0, 1fr);
+  column-gap: 0.625rem;
+  position: relative;
+}
+
+/* Leading timestamps: fixed-width column left of the marker rail */
+.lui-timeline-item[data-label-position="leading"] {
+  grid-template-columns:
+    var(--lui-timeline-label-w) var(--lui-timeline-marker-col) minmax(0, 1fr);
+}
+
+.lui-timeline-item[data-label-position="leading"] > .lui-timeline-at {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: end;
+  align-self: start;
+  padding-right: 0.25rem;
+  margin-top: 0.2rem;
+}
+
+.lui-timeline-item[data-label-position="leading"] > .lui-timeline-marker {
+  grid-column: 2;
+}
+
+.lui-timeline-item[data-label-position="leading"] > .lui-timeline-content {
+  grid-column: 3;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "title"
+    "label"
+    "body";
+}
+
+.lui-timeline-marker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: var(--lui-timeline-marker-col);
+  min-height: 100%;
+}
+
+.lui-timeline-dot {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--lui-timeline-dot-size);
+  height: var(--lui-timeline-dot-size);
+  margin-top: 0.35rem;
+  border-radius: 9999px;
+  background: var(--lantern-border);
+  color: var(--lantern-fg-muted);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.lui-timeline-dot .lui-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* Icon markers need a bit more room than the plain dot */
+.lui-timeline-dot:has(.lui-icon) {
+  width: 1rem;
+  height: 1rem;
+  background: transparent;
+  color: var(--lantern-border);
+}
+
+/* Custom :marker slot (e.g. avatar): CSS owns size so rail alignment holds */
+.lui-timeline-dot[data-slot="marker"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.15rem;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+}
+
+.lui-timeline-dot[data-slot="marker"] > * {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.lui-timeline-item[data-status="done"] .lui-timeline-dot {
+  background: var(--lantern-success);
+  color: var(--lantern-success);
+}
+.lui-timeline-item[data-status="active"] .lui-timeline-dot {
+  background: var(--lantern-accent);
+  color: var(--lantern-accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--lantern-accent) 28%, transparent);
+}
+.lui-timeline-item[data-status="pending"] .lui-timeline-dot {
+  background: var(--lantern-fg-muted);
+  color: var(--lantern-fg-muted);
+}
+.lui-timeline-item[data-status="danger"] .lui-timeline-dot {
+  background: var(--lantern-danger);
+  color: var(--lantern-danger);
+}
+.lui-timeline-item[data-status="neutral"] .lui-timeline-dot {
+  background: var(--lantern-border);
+  color: var(--lantern-border);
+}
+
+.lui-timeline-item[data-status="done"] .lui-timeline-dot:has(.lui-icon),
+.lui-timeline-item[data-status="active"] .lui-timeline-dot:has(.lui-icon),
+.lui-timeline-item[data-status="pending"] .lui-timeline-dot:has(.lui-icon),
+.lui-timeline-item[data-status="danger"] .lui-timeline-dot:has(.lui-icon),
+.lui-timeline-item[data-status="neutral"] .lui-timeline-dot:has(.lui-icon),
+.lui-timeline-item[data-status="done"] .lui-timeline-dot[data-slot="marker"],
+.lui-timeline-item[data-status="active"] .lui-timeline-dot[data-slot="marker"],
+.lui-timeline-item[data-status="pending"] .lui-timeline-dot[data-slot="marker"],
+.lui-timeline-item[data-status="danger"] .lui-timeline-dot[data-slot="marker"],
+.lui-timeline-item[data-status="neutral"] .lui-timeline-dot[data-slot="marker"] {
+  background: transparent;
+}
+
+.lui-timeline-item[data-status="active"] .lui-timeline-dot[data-slot="marker"] {
+  box-shadow: none;
+}
+
+.lui-timeline-connector {
+  flex: 1 1 auto;
+  width: 1px;
+  min-height: 0.5rem;
+  margin: 0.25rem 0 0;
+  background: var(--lantern-border);
+}
+
+.lui-timeline-item:last-child .lui-timeline-connector {
+  display: none;
+}
+
+.lui-timeline-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title at"
+    "label at"
+    "body  body";
+  column-gap: 0.75rem;
+  row-gap: 0.125rem;
+  min-width: 0;
+  padding-bottom: 0.875rem;
+}
+
+.lui-timeline-item:last-child .lui-timeline-content {
+  padding-bottom: 0;
+}
+
+/* Collapsible entry: details fills the content grid; summary reuses title/at areas */
+.lui-timeline-details {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.lui-timeline-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title at"
+    "label at";
+  column-gap: 0.75rem;
+  row-gap: 0.125rem;
+  cursor: pointer;
+  list-style: none;
+  min-width: 0;
+}
+
+.lui-timeline-summary::-webkit-details-marker {
+  display: none;
+}
+
+.lui-timeline-item[data-label-position="leading"] .lui-timeline-summary {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "title"
+    "label";
+}
+
+.lui-timeline-detail {
+  min-width: 0;
+  margin-top: 0.375rem;
+}
+
+.lui-timeline-title {
+  grid-area: title;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--lantern-text-sm);
+  font-weight: 600;
+  color: var(--lantern-fg);
+  line-height: 1.35;
+}
+
+.lui-timeline-label {
+  grid-area: label;
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted);
+  line-height: 1.35;
+}
+
+.lui-timeline-at {
+  grid-area: at;
+  align-self: start;
+  font-family: var(--lantern-font-mono);
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted);
+  white-space: nowrap;
+  line-height: 1.35;
+}
+
+.lui-timeline-body {
+  grid-area: body;
+  min-width: 0;
+  margin-top: 0.125rem;
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted);
+  line-height: 1.45;
+}
+
+/* When details is present, body sits under the disclosure */
+.lui-timeline-content:has(> .lui-timeline-details) {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "details"
+    "body";
+}
+
+.lui-timeline-content:has(> .lui-timeline-details) > .lui-timeline-details {
+  grid-area: details;
+}
+
+.lui-timeline-content:has(> .lui-timeline-details) > .lui-timeline-body {
+  grid-area: body;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lui-timeline-dot {
+    transition: none;
+  }
+}
+
+/* ── Resource list ──
+ * Simple resource index (projects, apps, buckets). List layout: full-width
+ * rows with hairline separators BETWEEN items only. Grid layout: auto-fill
+ * card grid. Whole row is the hit target when linked. No JS. */
+.lui-resource-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lui-resource-list[data-layout="list"] {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Separators only between rows (no leading or trailing rule) */
+.lui-resource-list[data-layout="list"] > .lui-resource-list-item + .lui-resource-list-item {
+  border-top: 1px solid var(--lantern-border);
+}
+
+.lui-resource-list[data-layout="grid"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 0.75rem;
+}
+
+.lui-resource-list[data-layout="grid"] > .lui-resource-list-item {
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius);
+  background: var(--lantern-surface-raised, var(--lantern-surface));
+  min-width: 0;
+}
+
+.lui-resource-list-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+  box-sizing: border-box;
+  color: inherit;
+  text-decoration: none;
+  font-family: inherit;
+}
+
+.lui-resource-list[data-layout="list"] .lui-resource-list-row {
+  padding: 0.75rem 0.5rem;
+  min-height: 3rem;
+}
+
+.lui-resource-list[data-layout="list"] .lui-resource-list-row:hover {
+  background: var(--lantern-surface-hover);
+}
+
+.lui-resource-list[data-layout="grid"] .lui-resource-list-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.625rem;
+  padding: 1rem;
+  height: 100%;
+}
+
+.lui-resource-list[data-layout="grid"] .lui-resource-list-row:hover {
+  background: var(--lantern-surface-hover);
+}
+
+a.lui-resource-list-row:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft);
+  border-radius: var(--lantern-radius-sm);
+}
+
+.lui-resource-list[data-layout="grid"] a.lui-resource-list-row:focus-visible {
+  border-radius: var(--lantern-radius);
+}
+
+.lui-resource-list-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.lui-resource-list-title {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--lantern-text);
+  font-weight: 600;
+  color: var(--lantern-fg);
+  line-height: 1.35;
+}
+
+.lui-resource-list-subtitle {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted);
+  line-height: 1.35;
+}
+/* Mono is opt-in, not the default: per the Machine-Value Rule the mono face means
+   "the system produced this value". A slug, domain, or bucket name earns it; a
+   human-written subtitle does not, and defaulting to mono would say the wrong
+   thing about the latter. */
+.lui-resource-list-subtitle[data-mono="true"] {
+  font-family: var(--lantern-font-mono);
+}
+
+.lui-resource-list-meta {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* List: title/meta on one line, meta right-aligned */
+.lui-resource-list[data-layout="list"] .lui-resource-list-meta {
+  margin-left: auto;
+}
+
+/* Grid: meta stacks under the title block */
+.lui-resource-list[data-layout="grid"] .lui-resource-list-meta {
+  margin-left: 0;
+}
+

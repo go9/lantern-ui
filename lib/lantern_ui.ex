@@ -68,6 +68,8 @@ defmodule LanternUI do
     tooltip: LanternUI.Components.Tooltip,
     toast: LanternUI.Components.Toast,
     theme: LanternUI.Components.Theme,
+    timeline: LanternUI.Components.Timeline,
+    resource_list: LanternUI.Components.ResourceList,
     sheet: LanternUI.Components.Sheet,
     navlist: LanternUI.Components.Navlist,
     loading: LanternUI.Components.Loading,

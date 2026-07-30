@@ -174,4 +174,202 @@ defmodule LanternUI.DataTableTest do
     assert html =~ "lui-datatable"
     assert DataTable.sort_path("/x", meta, :name) =~ "order_by[]=name"
   end
+
+  # Frozen baseline for the no-:list_item path. Captured from the pre-list-view
+  # markup so additive list work cannot change default table rendering.
+  @baseline_meta %{
+    flop: %{page_size: 25, order_by: [:name], order_directions: [:asc]},
+    params: %{},
+    current_page: 1,
+    total_pages: 1,
+    page_size: 25,
+    total_count: 2
+  }
+
+  defp baseline_table(assigns) do
+    ~H"""
+    <DataTable.data_table
+      id="baseline"
+      rows={@rows}
+      meta={@meta}
+      path="/orders"
+      selected_ids={@selected}
+      show_checkboxes={false}
+    >
+      <:col :let={r} label="Name" field={:name} sortable>{r.name}</:col>
+      <:col :let={r} label="ID">{r.id}</:col>
+      <:row_action :let={r}>ACT-{r.id}</:row_action>
+    </DataTable.data_table>
+    """
+  end
+
+  # Whitespace-normalized freeze of the default table body. Captured from the
+  # pre-list-view path; any change to headers/rows/actions without :list_item
+  # fails this test.
+  @baseline_table_html """
+  <table class="lui-table"><thead class="lui-thead"><tr><th class="lui-th" scope="col"><a href="/orders?order_by[]=name&amp;order_directions[]=desc" data-phx-link="patch" data-phx-link-state="push" class="lui-th-sort">Name<span class="lui-th-sort-icon">↑</span></a></th><th class="lui-th" scope="col"><span>ID</span></th><th class="lui-th lui-th-actions" scope="col"></th></tr></thead><tbody class="lui-tbody"><tr class="lui-tr"><td class="lui-td">Ada</td><td class="lui-td">1</td><td class="lui-td lui-td-actions">ACT-1</td></tr><tr class="lui-tr"><td class="lui-td">Alan</td><td class="lui-td">2</td><td class="lui-td lui-td-actions">ACT-2</td></tr></tbody></table>
+  """
+
+  defp squash_html(html) do
+    html
+    |> String.replace(~r/\s+/, " ")
+    |> String.replace(~r" (?=<)", "")
+    |> String.replace(~r"(?<=>) ", "")
+    |> String.trim()
+  end
+
+  test "without :list_item the table path is unchanged (baseline freeze)" do
+    html =
+      render(&baseline_table/1, %{
+        rows: rows(),
+        meta: @baseline_meta,
+        selected: MapSet.new()
+      })
+
+    # No list chrome or list body
+    refute html =~ "lui-dt-list"
+    refute html =~ "List view"
+    refute html =~ "view=list"
+    refute html =~ "lui-dt-viewtoggle"
+
+    # Classic table chrome only
+    assert html =~ ~s(class="lui-table-wrap")
+    assert html =~ ~s(class="lui-thead")
+    assert html =~ ~s(class="lui-tbody")
+    assert html =~ "Ada"
+    assert html =~ "ACT-1"
+    assert html =~ "ACT-2"
+
+    # Byte-identical freeze of the table markup (whitespace-normalized so HEEx
+    # indentation noise does not mask real structure changes).
+    [_, table_inner] = Regex.run(~r/<table class="lui-table">(.*?)<\/table>/s, html)
+    table = squash_html(~s(<table class="lui-table">#{table_inner}</table>))
+    assert table == squash_html(@baseline_table_html)
+  end
+
+  defp list_table(assigns) do
+    ~H"""
+    <DataTable.data_table
+      id="list"
+      rows={@rows}
+      meta={@meta}
+      path="/orders"
+      selected_ids={@selected}
+      view={@view}
+      search_field={:search}
+    >
+      <:col :let={r} label="Name">{r.name}</:col>
+      <:list_item :let={r}>
+        <span class="name">{r.name}</span>
+      </:list_item>
+      <:row_action :let={r}>
+        <button type="button" phx-click="delete" phx-value-id={r.id}>Del-{r.id}</button>
+      </:row_action>
+      <:empty>NOTHING</:empty>
+    </DataTable.data_table>
+    """
+  end
+
+  test "view=list with :list_item renders lui-dt-list and no thead" do
+    html =
+      render(&list_table/1, %{
+        rows: rows(),
+        meta: @meta,
+        selected: MapSet.new(),
+        view: "list"
+      })
+
+    assert html =~ "lui-dt-list"
+    assert html =~ "lui-dt-list-row"
+    assert html =~ ~s(class="name")
+    assert html =~ "Ada"
+    assert html =~ "Alan"
+    refute html =~ "lui-thead"
+    refute html =~ "lui-table-wrap"
+    refute html =~ "lui-dt-cards"
+    # toolbar chrome still present in list view
+    assert html =~ "lui-dt-search"
+    assert html =~ "lui-dt-pagination"
+  end
+
+  test ":row_action content still renders in list view" do
+    html =
+      render(&list_table/1, %{
+        rows: rows(),
+        meta: @meta,
+        selected: MapSet.new(),
+        view: "list"
+      })
+
+    assert html =~ "lui-dt-list-actions"
+    assert html =~ "Del-1"
+    assert html =~ "Del-2"
+    assert html =~ ~s(phx-click="delete")
+    # actions sit in their own container, not nested under a row-level anchor
+    refute html =~ ~r/lui-dt-list-row[^>]*>\s*<a/
+  end
+
+  test "list toggle is absent when no :list_item is given" do
+    html = render(&table/1, %{rows: rows(), meta: @meta, selected: MapSet.new()})
+    refute html =~ "List view"
+    refute html =~ "view=list"
+    refute html =~ "lui-dt-viewtoggle"
+  end
+
+  test "list toggle appears only when :list_item is given" do
+    html =
+      render(&list_table/1, %{
+        rows: rows(),
+        meta: @meta,
+        selected: MapSet.new(),
+        view: "table"
+      })
+
+    assert html =~ "lui-dt-viewtoggle"
+    assert html =~ ~s(aria-label="List view")
+    assert html =~ "view=list"
+    # cards toggle stays absent without :card
+    refute html =~ ~s(aria-label="Card view")
+  end
+
+  test "exactly one view renders at a time" do
+    base = %{rows: rows(), meta: @meta, selected: MapSet.new()}
+
+    list_html = render(&list_table/1, Map.put(base, :view, "list"))
+    assert list_html =~ "lui-dt-list"
+    refute list_html =~ "lui-table-wrap"
+    refute list_html =~ "lui-dt-cards"
+
+    table_html = render(&list_table/1, Map.put(base, :view, "table"))
+    assert table_html =~ "lui-table-wrap"
+    refute table_html =~ "lui-dt-list"
+    refute table_html =~ "lui-dt-cards"
+
+    both =
+      render(
+        fn assigns ->
+          ~H"""
+          <DataTable.data_table
+            id="both"
+            rows={@rows}
+            meta={@meta}
+            path="/orders"
+            selected_ids={@selected}
+            view={@view}
+          >
+            <:col :let={r} label="Name">{r.name}</:col>
+            <:card :let={r}>CARD-{r.name}</:card>
+            <:list_item :let={r}>LIST-{r.name}</:list_item>
+          </DataTable.data_table>
+          """
+        end,
+        Map.put(base, :view, "cards")
+      )
+
+    assert both =~ "CARD-Ada"
+    assert both =~ "lui-dt-cards"
+    refute both =~ "lui-dt-list"
+    refute both =~ "lui-table-wrap"
+    refute both =~ "LIST-Ada"
+  end
 end
