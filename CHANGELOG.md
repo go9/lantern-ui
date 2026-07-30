@@ -7,6 +7,13 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **`resource_list/1` + `resource_list_item/1` — simple resource index
+  (flicker #1202).** Compound list for pages that show a handful of resources
+  (projects, apps, databases, buckets) without data-table machinery. `layout`
+  is `:list` (full-width rows, hairline separators between items) or `:grid`
+  (auto-fill card grid). Optional `navigate`/`patch`/`href` makes the whole
+  row the link hit target; trailing slot holds badges/meta. Host owns any
+  list/grid toggle; no search, sort, pagination, or JS. No Fluxon equivalent.
 - **`timeline/1` + `timeline_item/1` — vertical event sequence with a marker
   rail (flicker #1202).** Ordered list of steps: status dot (or optional
   icon), title, state label, preformatted `at` timestamp, and optional body.
