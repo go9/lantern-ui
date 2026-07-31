@@ -62,6 +62,16 @@ defmodule LanternUI.DataTableChromeTest do
     """
   end
 
+  # An index that offers a list but no grid — admin organizations' shape.
+  defp table_list_only(assigns) do
+    ~H"""
+    <DataTable.data_table id="t" rows={@rows} meta={@meta} path="/orders" view={@view}>
+      <:col :let={r} label="Name" field={:name}>{r.name}</:col>
+      <:list_item :let={r}>LIST-{r.name}</:list_item>
+    </DataTable.data_table>
+    """
+  end
+
   defp base, do: %{rows: [%{id: 1, name: "Ada"}], meta: @meta, view: "table"}
 
   test "stat overview renders with collapse hook and linked/static stats" do
@@ -144,6 +154,15 @@ defmodule LanternUI.DataTableChromeTest do
     # missing view here silently bounces the user back to the default view.
     html = render(&table/1, %{base() | view: "cards"})
     assert html =~ ~s(&quot;view&quot;:&quot;cards&quot;)
+  end
+
+  test "a page with only a :list_item slot pairs list with table, not one button" do
+    html = render(&table_list_only/1, %{base() | view: "list"})
+
+    assert html =~ ~s(aria-label="List view")
+    assert html =~ ~s(aria-label="Table view")
+    refute html =~ ~s(aria-label="Grid view")
+    assert count(html, ~s(class="lui-vt)) == 2
   end
 
   defp count(h, n), do: length(String.split(h, n)) - 1

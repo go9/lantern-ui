@@ -274,11 +274,13 @@ defmodule LanternUI.Components.DataTable do
           >
             <Icon.icon name="bars-3" class="lui-vt-icon" />
           </.link>
-          <%!-- A page with only a :card slot has no list to go back to, so its
-                counterpart is the table. Without this the grid is a dead end:
-                one button in, no way out. --%>
+          <%!-- The table is the counterpart whenever a page declares only ONE of
+                the two simple views: a :card-only page has no list to go back
+                to, a :list_item-only page (admin organizations) has no grid.
+                Without it that page renders a single button — one view in, no
+                way out. Only when both slots exist does the table drop out. --%>
           <.link
-            :if={@list_item == [] && @card != []}
+            :if={@list_item == [] || @card == []}
             patch={view_path(@path, @meta, "table")}
             class={["lui-vt", @view == "table" && "lui-vt-active"]}
             aria-label="Table view"
