@@ -330,6 +330,23 @@ Pick per host:
 Any other value is treated as `:number`. Custom-function output is rendered as
 plain text — it is HTML-escaped before it reaches the tooltip.
 
+## Development
+
+```bash
+mix test    # Elixir: rendering, ARIA conformance, class merging
+npm test    # JavaScript: the hooks in priv/static/lantern_ui_hooks.js
+```
+
+`npm test` needs `npm install` once; it runs `node --test test/js/*.mjs`, which
+mounts each hook against a jsdom document and drives it the way a user would.
+Two `command` bugs — the palette vanishing on the first keystroke, and events
+never reaching a LiveComponent — were invisible to the Elixir suite because both
+lived entirely in the hook, so interactive behaviour belongs in `test/js/`.
+
+jsdom is a devDependency of a private `package.json` used only by this repo.
+Nothing JavaScript-related ships in the Hex package beyond the dependency-free
+hooks module itself, so consumers never need a JS toolchain.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
