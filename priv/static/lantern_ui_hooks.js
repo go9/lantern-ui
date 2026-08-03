@@ -1943,6 +1943,216 @@ const LanternModal = {
   },
 }
 
+// ── Command palette ──────────────────────────────────────────────────────────
+//
+// Modal combobox over a listbox. Same dialog runtime as the modal (focus trap,
+// scroll lock, Escape/backdrop dismissal) plus a global Meta/Ctrl+<hotkey>.
+//
+// The hook NEVER filters items — the server renders exactly what it wants
+// shown. The hook owns: the query push (debounced), the highlight, and
+// aria-activedescendant. It also pushes selection, so the component carries no
+// phx-change/phx-submit and no <form> that could collide with a host app's own
+// test selectors.
+const LanternCommand = {
+  mounted() {
+    this.open = false
+    this.activeIndex = -1
+    this.cleanup = []
+    this.capture()
+
+    this.onClick = (e) => {
+      const item = e.target.closest('[data-part="item"]')
+      if (item && !item.disabled && this.el.contains(item)) this.select(item)
+    }
+    this.onInput = (e) => {
+      if (e.target !== this.input) return
+      this.activeIndex = -1
+      this.search()
+    }
+    this.onKeydown = (e) => this.onKey(e)
+    this.onHotkey = (e) => {
+      const key = this.el.dataset.hotkey
+      if (!key || e.key.toLowerCase() !== key.toLowerCase()) return
+      if (!e.metaKey && !e.ctrlKey) return
+      e.preventDefault()
+      this.open ? this.hide() : this.show()
+    }
+
+    this.el.addEventListener("click", this.onClick)
+    this.el.addEventListener("input", this.onInput)
+    this.el.addEventListener("keydown", this.onKeydown)
+    document.addEventListener("keydown", this.onHotkey)
+
+    this.el.addEventListener("lantern:dialog:open", () => this.show())
+    this.el.addEventListener("lantern:dialog:close", () => this.hide())
+    this.handleEvent("lantern:dialog:open", ({ id }) => id === this.el.id && this.show())
+    this.handleEvent("lantern:dialog:close", ({ id }) => id === this.el.id && this.hide())
+
+    this.el.querySelectorAll('[data-part="close"]').forEach((btn) =>
+      btn.addEventListener("click", () => this.hide())
+    )
+
+    this.syncEmpty()
+    if (this.el.dataset.open != null) this.show()
+  },
+
+  capture() {
+    this.panel = this.el.querySelector('[data-part="panel"]')
+    this.input = this.el.querySelector('[data-part="input"]')
+    this.list = this.el.querySelector('[data-part="list"]')
+    this.emptyEl = this.el.querySelector('[data-part="empty"]')
+  },
+
+  beforeUpdate() {
+    this.patchState = {
+      activeValue: this.items()[this.activeIndex]?.dataset.value,
+      focused: document.activeElement === this.input,
+      query: this.input?.value || "",
+    }
+  },
+
+  updated() {
+    const state = this.patchState || {}
+    this.capture()
+    // Re-assert visibility. The server renders `hidden={!@open}` and @open
+    // defaults to false, so EVERY patch caused by on_search re-adds the
+    // attribute and the palette disappears mid-typing — while the hook still
+    // believes it is open, so the next hotkey press "closes" an already
+    // invisible palette and you have to press it twice.
+    //
+    // Other overlay hooks omit this safely because their contents are rarely
+    // server-patched while open. A search palette's contents are patched on
+    // every keystroke, so here it is the normal case rather than an edge one.
+    this.el.hidden = !this.open
+    // The server re-renders the input without a value attribute; morphdom can
+    // still drop the live value when the node is replaced outright.
+    if (this.input && this.input.value !== state.query) this.input.value = state.query
+    this.syncEmpty()
+    const byValue = this.items().findIndex((i) => i.dataset.value === state.activeValue)
+    this.setActive(byValue >= 0 ? byValue : Math.min(this.activeIndex, this.items().length - 1))
+    if (state.focused && this.open) this.input?.focus()
+  },
+
+  items() {
+    return [...this.el.querySelectorAll('[data-part="item"]')].filter((i) => !i.disabled)
+  },
+
+  // Visibility only, never filtering: an explicit empty state must not sit
+  // alongside results when a patch races the consumer's own `:if`.
+  syncEmpty() {
+    if (this.emptyEl) this.emptyEl.hidden = this.items().length > 0
+  },
+
+  show() {
+    if (this.open) return
+    this.open = true
+    this.el.hidden = false
+    document.body.style.overflow = "hidden"
+    if (this.input) this.input.value = ""
+    this.setActive(-1)
+    this.cleanup.push(trapFocus(this.panel, '[data-part="input"]'))
+    const esc = this.el.dataset.closeOnEsc === "true"
+    const outside = this.el.dataset.closeOnOutside === "true"
+    this.cleanup.push(
+      onDismiss(this.panel, (reason) => {
+        if (reason === "escape" && !esc) return
+        if (reason === "outside" && !outside) return
+        this.hide()
+      })
+    )
+    if (this.el.dataset.searchOnOpen === "true") this.push()
+  },
+
+  hide() {
+    if (!this.open) return
+    this.open = false
+    clearTimeout(this.searchTimer)
+    this.cleanup.forEach((fn) => fn())
+    this.cleanup = []
+    this.setActive(-1)
+    this.el.hidden = true
+    document.body.style.overflow = ""
+  },
+
+  search() {
+    clearTimeout(this.searchTimer)
+    const debounce = Math.max(0, parseInt(this.el.dataset.debounce || "200", 10))
+    this.searchTimer = setTimeout(() => this.push(), debounce)
+  },
+
+  push() {
+    const event = this.el.dataset.onSearch
+    if (!event) return
+    this.pushEvent(event, { query: (this.input?.value || "").trim() })
+  },
+
+  select(item) {
+    // An item carrying its own phx-click is already handled by LiveView —
+    // pushing on_select too would fire the consumer's handler twice.
+    const event = this.el.dataset.onSelect
+    if (event && !item.hasAttribute("phx-click")) {
+      this.pushEvent(event, { value: item.dataset.value ?? null })
+    }
+    if (this.el.dataset.closeOnSelect === "true") this.hide()
+  },
+
+  setActive(index) {
+    const items = this.items()
+    this.activeIndex = items.length === 0 ? -1 : Math.max(-1, Math.min(index, items.length - 1))
+    items.forEach((item, i) => {
+      const active = i === this.activeIndex
+      item.toggleAttribute("data-active", active)
+      item.setAttribute("aria-selected", active ? "true" : "false")
+    })
+    const active = items[this.activeIndex]
+    if (active) {
+      this.input?.setAttribute("aria-activedescendant", active.id)
+      active.scrollIntoView({ block: "nearest" })
+    } else {
+      this.input?.removeAttribute("aria-activedescendant")
+    }
+  },
+
+  onKey(e) {
+    if (!this.open) return
+    const items = this.items()
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault()
+        this.setActive(this.activeIndex + 1 >= items.length ? 0 : this.activeIndex + 1)
+        break
+      case "ArrowUp":
+        e.preventDefault()
+        this.setActive(this.activeIndex <= 0 ? items.length - 1 : this.activeIndex - 1)
+        break
+      case "Home":
+        e.preventDefault()
+        this.setActive(0)
+        break
+      case "End":
+        e.preventDefault()
+        this.setActive(items.length - 1)
+        break
+      case "Enter": {
+        const active = items[this.activeIndex]
+        if (!active) return
+        e.preventDefault()
+        // Dispatch a real click so a per-item phx-click binding still fires;
+        // the delegated listener above turns it into select().
+        active.click()
+        break
+      }
+    }
+  },
+
+  destroyed() {
+    clearTimeout(this.searchTimer)
+    this.cleanup.forEach((fn) => fn())
+    document.removeEventListener("keydown", this.onHotkey)
+    document.body.style.overflow = ""
+  },
+}
+
 // Sheet: same dialog runtime as the modal, but the panel slides from an edge.
 // Exit plays the slide-out keyframe (data-closing) before hiding.
 const LanternSheet = {
@@ -2710,6 +2920,7 @@ export const Hooks = {
   LanternDatetimeField,
   LanternPicker,
   LanternModal,
+  LanternCommand,
   LanternSheet,
   LanternDropdown,
   LanternMenu,
@@ -2733,6 +2944,7 @@ export {
   LanternDatetimeField,
   LanternPicker,
   LanternModal,
+  LanternCommand,
   LanternSheet,
   LanternDropdown,
   LanternMenu,

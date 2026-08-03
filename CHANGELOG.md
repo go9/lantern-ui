@@ -44,6 +44,29 @@ All notable changes to this project are documented here. The format follows
   at narrow widths. Without `:actions`, markup is unchanged. `app_shell/1`
   exposes the same region through optional `:breadcrumb_actions` so the slot
   chrome stays consistent with `breadcrumb_bar/1`.
+- **`command/1` — command palette (⌘K dialog).** Modal combobox over a listbox,
+  modelled on shadcn's Base UI `command` and built on the same dialog runtime as
+  `modal/1` (`LanternUI.open_dialog/1` / `close_dialog/1`, focus trap, scroll
+  lock, Escape/backdrop dismissal), plus a global Meta/Ctrl+`hotkey`. Parts:
+  `command_group/1`, `command_item/1` (with `:icon` / `:description` /
+  `:shortcut` slots), `command_empty/1`, `command_separator/1`,
+  `command_shortcut/1`. Keyboard: ↑/↓/Home/End move the highlight, Enter
+  activates, Escape closes; focus stays in the input and the highlight is
+  published with `aria-activedescendant`.
+
+  **Filtering is the consumer's.** The component renders exactly the items it is
+  handed and pushes the query upward, so a LiveView can answer from a database
+  or a search index — there are no client-side match knobs.
+
+  **Safe to mount globally.** The `LanternCommand` hook pushes `on_search`
+  (`%{"query" => query}`, debounced) and `on_select` (`%{"value" => value}`)
+  itself, so the palette renders no `<form>` and carries no `phx-change` /
+  `phx-submit`; event names default to the `command_*` namespace. A global
+  component with a generic `phx-change="search"` makes a host app's own
+  `element("form")` and `form[phx-change="search"]` test selectors ambiguous —
+  this one cannot. An item that carries its own `phx-click` does not also push
+  `on_select`, so per-item bindings are never double-fired. No Fluxon
+  equivalent.
 - **Skeleton variants + labeled status.** `skeleton/1` gains
   `variant="block|text|circle"` (rendered as `data-variant`) and an opt-in
   `label` that wraps the placeholder in a polite `role="status"` region with a

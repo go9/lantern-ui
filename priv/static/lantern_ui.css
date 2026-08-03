@@ -586,6 +586,81 @@
   border-radius: var(--lantern-radius-sm); line-height: 0; }
 .lui-modal-close:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
 
+/* ── Command palette ──
+ * Dialog chrome on the modal runtime; the panel is a search header over a
+ * scrollable listbox. `data-active` is the keyboard highlight (the hook sets
+ * it), :hover is the pointer highlight — deliberately the same surface. */
+.lui-command { position: fixed; inset: 0; z-index: 60; display: flex;
+  align-items: flex-start; justify-content: center; padding: 1.5rem; }
+/* Same reason as .lui-modal[hidden]: an author `display` beats the UA rule,
+   so without this the palette is always open and cannot be closed. */
+.lui-command[hidden] { display: none; }
+@media (min-width: 640px) { .lui-command { padding-top: 12vh; } }
+.lui-command-backdrop { position: absolute; inset: 0;
+  background: color-mix(in oklab, #000 45%, transparent);
+  animation: lui-fade var(--lantern-duration) var(--lantern-ease); }
+.lui-command-panel { position: relative; display: flex; flex-direction: column;
+  width: 100%; max-width: 34rem; max-height: min(28rem, calc(100vh - 6rem));
+  overflow: hidden; background: var(--lantern-surface-raised); color: var(--lantern-fg);
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
+  box-shadow: var(--lantern-shadow-md); font-family: var(--lantern-font);
+  animation: lui-pop var(--lantern-duration) var(--lantern-ease); }
+.lui-command-header { display: flex; align-items: center; gap: 0.6rem; flex: none;
+  padding: 0 0.85rem; height: 3rem; border-bottom: 1px solid var(--lantern-border); }
+.lui-command-search-icon { color: var(--lantern-fg-subtle); flex-shrink: 0; font-size: 1.05em; }
+.lui-command-input { flex: 1; min-width: 0; height: 100%; padding: 0; border: none;
+  background: none; outline: none; color: var(--lantern-fg); font-family: inherit;
+  font-size: var(--lantern-text); }
+.lui-command-input::placeholder { color: var(--lantern-fg-subtle); }
+.lui-command-esc { flex: none; padding: 0.1rem 0.35rem; border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-sm); background: var(--lantern-surface-sunken);
+  color: var(--lantern-fg-subtle); font-family: var(--lantern-font-mono);
+  font-size: 0.7rem; line-height: 1.4; }
+.lui-command-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0.35rem; }
+.lui-command-list:empty { display: none; }
+.lui-command-group { display: block; }
+.lui-command-group + .lui-command-group { margin-top: 0.25rem; }
+.lui-command-group-label { padding: 0.45rem 0.6rem 0.25rem; color: var(--lantern-fg-subtle);
+  font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.lui-command-item { display: flex; align-items: center; gap: 0.6rem; width: 100%;
+  padding: 0.45rem 0.6rem; border: none; background: none; border-radius: var(--lantern-radius-sm);
+  color: var(--lantern-fg); font-family: inherit; font-size: var(--lantern-text);
+  text-align: left; cursor: pointer; }
+.lui-command-item[hidden] { display: none; }
+.lui-command-item:hover, .lui-command-item[data-active] { outline: none;
+  background: var(--lantern-surface-sunken); }
+.lui-command-item[disabled] { opacity: 0.5; cursor: not-allowed; }
+.lui-command-item[disabled]:hover { background: none; }
+.lui-command-item-icon { display: inline-flex; align-items: center; flex: none;
+  color: var(--lantern-fg-muted); }
+.lui-command-item-body { display: flex; flex-direction: column; gap: 0.1rem;
+  flex: 1; min-width: 0; }
+.lui-command-item-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lui-command-item-description { color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lui-command-shortcut { flex: none; margin-left: auto; padding: 0.1rem 0.35rem;
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm);
+  background: var(--lantern-surface-sunken); color: var(--lantern-fg-subtle);
+  font-family: var(--lantern-font-mono); font-size: 0.7rem; line-height: 1.4; }
+.lui-command-separator { height: 1px; margin: 0.3rem -0.35rem;
+  background: var(--lantern-border); }
+.lui-command-empty { padding: 1.75rem 0.6rem; color: var(--lantern-fg-muted);
+  font-size: var(--lantern-text-sm); text-align: center; }
+.lui-command-empty[hidden] { display: none; }
+.lui-command-loading { display: flex; align-items: center; justify-content: center; flex: none;
+  padding: 0.5rem; }
+.lui-command-loading[hidden] { display: none; }
+.lui-command-spinner { width: 0.9rem; height: 0.9rem; border: 2px solid var(--lantern-border);
+  border-top-color: var(--lantern-accent); border-radius: 999px;
+  animation: lui-spin 0.7s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .lui-command-spinner { animation-duration: 1.5s; }
+  .lui-command-panel, .lui-command-backdrop { animation: none; }
+}
+.lui-command-footer { flex: none; display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.5rem 0.85rem; border-top: 1px solid var(--lantern-border);
+  color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
+
 /* Alert dialog: semantic confirmation anatomy on the modal runtime. */
 .lui-alert-dialog { max-width: 26rem; }
 .lui-alert-dialog-title { margin: 0; color: var(--lantern-fg);

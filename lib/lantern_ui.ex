@@ -44,6 +44,7 @@ defmodule LanternUI do
     date_picker: LanternUI.Components.DatePicker,
     checkbox: LanternUI.Components.Checkbox,
     modal: LanternUI.Components.Modal,
+    command: LanternUI.Components.Command,
     alert_dialog: LanternUI.Components.AlertDialog,
     dropdown: LanternUI.Components.Dropdown,
     menu: LanternUI.Components.Menu,
