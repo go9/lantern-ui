@@ -2014,6 +2014,16 @@ const LanternCommand = {
   updated() {
     const state = this.patchState || {}
     this.capture()
+    // Re-assert visibility. The server renders `hidden={!@open}` and @open
+    // defaults to false, so EVERY patch caused by on_search re-adds the
+    // attribute and the palette disappears mid-typing — while the hook still
+    // believes it is open, so the next hotkey press "closes" an already
+    // invisible palette and you have to press it twice.
+    //
+    // Other overlay hooks omit this safely because their contents are rarely
+    // server-patched while open. A search palette's contents are patched on
+    // every keystroke, so here it is the normal case rather than an edge one.
+    this.el.hidden = !this.open
     // The server re-renders the input without a value attribute; morphdom can
     // still drop the live value when the node is replaced outright.
     if (this.input && this.input.value !== state.query) this.input.value = state.query

@@ -401,6 +401,29 @@ defmodule LanternUI.CommandTest do
       assert js |> String.split("\n  LanternCommand,") |> length() == 3
     end
 
+    test "updated/0 re-asserts hidden, or the palette vanishes while you type" do
+      js = File.read!("priv/static/lantern_ui_hooks.js")
+
+      updated =
+        js
+        |> String.split("const LanternCommand = {")
+        |> Enum.at(1)
+        |> String.split("\n// ── ")
+        |> hd()
+        |> String.split("updated() {")
+        |> Enum.at(1)
+        |> String.split("\n  },")
+        |> hd()
+
+      # The render carries `hidden={!@open}` and @open defaults to false, so
+      # EVERY server patch caused by on_search re-adds the attribute. Without
+      # this line the palette disappears on the first keystroke while the hook
+      # still believes it is open — found by driving it in a real browser,
+      # invisible to every render-level test in this file.
+      assert updated =~ "this.el.hidden = !this.open",
+             "LanternCommand.updated() must re-assert visibility after a patch"
+    end
+
     test "every data-part the hook queries exists in the render" do
       js = File.read!("priv/static/lantern_ui_hooks.js")
 
