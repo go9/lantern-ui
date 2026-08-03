@@ -414,6 +414,24 @@ defmodule LanternUI.CommandTest do
       assert html =~ ~s(data-target="#my-component")
     end
 
+    test "a target also emits phx-target so LiveView and its test harness route correctly" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Command.command id="cmd" target="#my-component">
+            <Command.command_empty>none</Command.command_empty>
+          </Command.command>
+          """
+        end)
+
+      # data-target drives the hook's own pushEventTo. phx-target is what
+      # LiveView and LiveViewTest understand — without it a consumer cannot
+      # test its own palette, because events route to the parent LiveView and
+      # the component's handlers never run.
+      assert html =~ ~s(data-target="#my-component")
+      assert html =~ ~s(phx-target="#my-component")
+    end
+
     test "the hook pushes to the target when one is given" do
       js = File.read!("priv/static/lantern_ui_hooks.js")
 

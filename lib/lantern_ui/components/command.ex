@@ -148,6 +148,7 @@ defmodule LanternUI.Components.Command do
       data-hotkey={@hotkey}
       data-debounce={@debounce}
       data-target={command_target(@target)}
+      {phx_target_attr(@target)}
       data-on-search={@on_search}
       data-on-select={@on_select}
       data-search-on-open={to_string(@search_on_open)}
@@ -332,6 +333,13 @@ defmodule LanternUI.Components.Command do
 
   # LiveView renders `@myself` as a CID struct; its string form is what
   # pushEventTo accepts. A plain selector string passes through unchanged.
+  # Also emit a real `phx-target`. `data-target` drives the hook's own
+  # pushEventTo, but LiveView — and LiveViewTest — only understand phx-target,
+  # so without it a consumer cannot test its own palette: events route to the
+  # parent LiveView and the component's handlers never run.
+  defp phx_target_attr(nil), do: %{}
+  defp phx_target_attr(target), do: %{"phx-target" => target}
+
   defp command_target(nil), do: nil
   defp command_target(target), do: to_string(target)
 
