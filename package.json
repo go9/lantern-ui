@@ -1,0 +1,13 @@
+{
+  "name": "lantern-ui-dev",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Development-only harness for testing priv/static/lantern_ui_hooks.js. NOT published to npm and NOT part of the Hex package (see the `files:` whitelist in mix.exs) — consumers get the hooks as a plain ES module with zero JS dependencies.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/js/*.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  }
+}

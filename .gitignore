@@ -7,6 +7,10 @@
 *.ez
 lantern_ui-*.tar
 
+# jsdom for the hook tests. package-lock.json IS committed so `npm ci` in CI
+# resolves the same tree; node_modules is not.
+/node_modules/
+
 # Crash dumps
 erl_crash.dump
 
