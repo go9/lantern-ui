@@ -16,6 +16,7 @@ defmodule LanternUI.ARIAConformanceTest do
   alias LanternUI.ARIAConformance
   alias LanternUI.Components.Accordion
   alias LanternUI.Components.Autocomplete
+  alias LanternUI.Components.Command
   alias LanternUI.Components.Menu
   alias LanternUI.Components.Modal
   alias LanternUI.Components.ScrollArea
@@ -60,6 +61,27 @@ defmodule LanternUI.ARIAConformanceTest do
         """
       end)
       |> assert_conformant(hook_owned: ["aria-expanded", "aria-activedescendant"])
+    end
+
+    test "command: named dialog + combobox controlling a named listbox of options" do
+      # `aria-activedescendant` is exempt for the opposite reason to menu/select:
+      # the command palette keeps DOM focus in the input (it is a combobox, per
+      # APG), so the hook publishes the highlight by idref rather than moving
+      # focus. `aria-selected` is a server-rendered literal the hook flips with
+      # that highlight.
+      render(fn assigns ->
+        ~H"""
+        <Command.command id="cmd-k" label="Search flicker">
+          <Command.command_group label="Tickets">
+            <Command.command_item value="t-1">Fix the proxy</Command.command_item>
+            <Command.command_item value="t-2">Rotate the key</Command.command_item>
+          </Command.command_group>
+          <Command.command_separator />
+          <Command.command_empty>No results</Command.command_empty>
+        </Command.command>
+        """
+      end)
+      |> assert_conformant(hook_owned: ["aria-activedescendant", "aria-selected"])
     end
 
     test "sheet: dialog has an accessible name and no dangling idrefs" do

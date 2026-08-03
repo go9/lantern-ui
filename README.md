@@ -236,6 +236,59 @@ The `animation`, `animation_enter`, and `animation_leave` attrs are accepted as
 Fluxon compatibility no-ops. Like Lantern's modal, autocomplete motion is
 controlled by the bundled CSS and duration tokens.
 
+## Command palette
+
+`command` is a ⌘K dialog: a modal combobox over a listbox of actions. It opens
+and closes through the same contract as `modal` — `LanternUI.open_dialog/1` /
+`close_dialog/1` (or the socket forms) — plus a global Meta/Ctrl+`hotkey`.
+
+**The component never filters.** It renders exactly the items you give it and
+pushes the query upward, so the LiveView can answer from a database, a search
+index, or anything else:
+
+```heex
+<.command id="cmd-k" on_search="command_search" on_select="command_select">
+  <.command_group label="Tickets">
+    <.command_item :for={t <- @results} value={t.id}>
+      {t.title}
+      <:icon><.icon name="inbox" /></:icon>
+      <:description>{t.project}</:description>
+      <:shortcut>⏎</:shortcut>
+    </.command_item>
+  </.command_group>
+  <.command_empty :if={@results == []}>No matches for “{@query}”</.command_empty>
+  <:footer>↑↓ to navigate · ⏎ to select</:footer>
+</.command>
+```
+
+```elixir
+def handle_event("command_search", %{"query" => query}, socket) do
+  {:noreply, assign(socket, query: query, results: MyApp.Search.run(query))}
+end
+
+def handle_event("command_select", %{"value" => id}, socket) do
+  {:noreply, push_navigate(socket, to: ~p"/tickets/#{id}")}
+end
+```
+
+The `LanternCommand` hook pushes both events itself, so the palette renders **no
+`<form>` and no `phx-change` / `phx-submit`**, and its event names default to the
+`command_*` namespace. That matters when the palette is mounted in an app shell
+on every page: a global component with a generic `phx-change="search"` makes a
+host app's own `element("form")` and `form[phx-change="search"]` test selectors
+ambiguous. An item that carries its own `phx-click` is left alone — the hook does
+not also push `on_select`, so per-item bindings are never double-fired.
+
+Keyboard: `↑`/`↓` move the highlight, `Home`/`End` jump, `Enter` activates,
+`Escape` closes. Focus is trapped in the panel while open and restored on close.
+Focus stays in the input (this is an APG combobox), so the highlighted item is
+published with `aria-activedescendant` rather than by moving DOM focus.
+
+`command_separator`, `command_shortcut`, and a `loading` attr round out the
+anatomy. Set `hotkey={nil}` to drop the global shortcut, `on_search={nil}` /
+`on_select={nil}` to drop an event, and `close_on_select={false}` to keep the
+palette open after a choice.
+
 ## Theming
 
 Components read colors from CSS variables with chained fallbacks:

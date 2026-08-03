@@ -202,7 +202,9 @@ defmodule LanternUI.Components.Command do
   slot(:inner_block, required: true, doc: "Items belonging to this group.")
 
   def command_group(assigns) do
-    assigns = assign_new(assigns, :id, fn -> unique_id("group") end)
+    # Not assign_new/3: the attr default already puts :id in assigns as nil,
+    # so assign_new would never fire and the label idref would dangle.
+    assigns = assign(assigns, :id, assigns.id || unique_id("group"))
 
     ~H"""
     <div
@@ -242,7 +244,7 @@ defmodule LanternUI.Components.Command do
   slot(:inner_block, required: true, doc: "Item label.")
 
   def command_item(assigns) do
-    assigns = assign_new(assigns, :id, fn -> unique_id("item") end)
+    assigns = assign(assigns, :id, assigns.id || unique_id("item"))
 
     ~H"""
     <button
