@@ -2037,7 +2037,13 @@ const LanternCommand = {
   // LiveComponent that is the wrong target — the parent would have to define
   // handlers it does not own — so route to the component when data-target is
   // present.
-  push(event, payload) {
+  //
+  // Keep this name distinct from every other method on the hook. An object
+  // literal silently keeps only the LAST definition of a duplicated key, so a
+  // second `push` further down shadowed this router entirely: the LiveComponent
+  // routing became dead code and the surviving method recursed into itself on
+  // every keystroke.
+  pushTo(event, payload) {
     const target = this.el.dataset.target
     if (target) {
       this.pushEventTo(target, event, payload)
@@ -2073,7 +2079,7 @@ const LanternCommand = {
         this.hide()
       })
     )
-    if (this.el.dataset.searchOnOpen === "true") this.push()
+    if (this.el.dataset.searchOnOpen === "true") this.pushSearch()
   },
 
   hide() {
@@ -2090,13 +2096,13 @@ const LanternCommand = {
   search() {
     clearTimeout(this.searchTimer)
     const debounce = Math.max(0, parseInt(this.el.dataset.debounce || "200", 10))
-    this.searchTimer = setTimeout(() => this.push(), debounce)
+    this.searchTimer = setTimeout(() => this.pushSearch(), debounce)
   },
 
-  push() {
+  pushSearch() {
     const event = this.el.dataset.onSearch
     if (!event) return
-    this.push(event, { query: (this.input?.value || "").trim() })
+    this.pushTo(event, { query: (this.input?.value || "").trim() })
   },
 
   select(item) {
@@ -2104,7 +2110,7 @@ const LanternCommand = {
     // pushing on_select too would fire the consumer's handler twice.
     const event = this.el.dataset.onSelect
     if (event && !item.hasAttribute("phx-click")) {
-      this.push(event, { value: item.dataset.value ?? null })
+      this.pushTo(event, { value: item.dataset.value ?? null })
     }
     if (this.el.dataset.closeOnSelect === "true") this.hide()
   },
