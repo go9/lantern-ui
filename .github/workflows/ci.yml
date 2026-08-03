@@ -39,5 +39,15 @@ jobs:
       - run: mix format --check-formatted
       - run: mix compile --warnings-as-errors
       - run: mix test
+
+      # The hook tests mount the real hooks against jsdom, so they need the
+      # repo's dev-only package.json. It is never published — neither to npm
+      # (private) nor to Hex (see the `files:` whitelist in mix.exs).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
       - run: node --check priv/static/lantern_ui_hooks.js
-      - run: node --test test/js/*.mjs
+      - run: npm test

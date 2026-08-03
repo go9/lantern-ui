@@ -93,6 +93,27 @@ All notable changes to this project are documented here. The format follows
   primitives — wrapping ArrowUp/Down, Home/End, roving tabindex, Escape back
   to the trigger, and horizontal ArrowLeft/Right across menubar entries that
   carries an open submenu along.
+- **jsdom-backed hook tests (`npm test`).** `test/js/helpers/dom.mjs` mounts a
+  hook from `priv/static/lantern_ui_hooks.js` against a real DOM with spies for
+  `pushEvent`/`pushEventTo`, so client behaviour can be asserted directly
+  instead of inferred from rendered HTML. `test/js/command_hook_test.mjs` covers
+  the palette end to end: visibility across LiveView patches, event targeting,
+  the keyboard model, the debounce, and the empty state. `mix test` and
+  `npm test` are both run by CI. jsdom is a devDependency of a private
+  `package.json`; the Hex package is unchanged and still ships a
+  dependency-free hooks module.
+
+### Fixed
+- **`command`: search and selection were completely broken (stack overflow).**
+  `LanternCommand` defined `push` twice. JavaScript keeps only the last
+  definition in an object literal, so the `pushEvent`/`pushEventTo` router added
+  for LiveComponent support was silently unreachable and the surviving method
+  recursed into itself — every keystroke past the debounce threw
+  `RangeError: Maximum call stack size exceeded`, and `on_select` never
+  reached the server either. The router is now `pushTo/2` and the search push
+  is `pushSearch/0`. A bundle-wide test fails on any duplicated hook method,
+  since nothing else — not `node --check`, not the compiler, not a render
+  test — reports one.
 
 ### Changed
 - **Breadcrumb + page_header density cut ~3×.** Trail is 0.6875rem with 0.75rem

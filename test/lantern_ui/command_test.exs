@@ -393,14 +393,6 @@ defmodule LanternUI.CommandTest do
       assert LanternUI.__components__()[:command] == Command
     end
 
-    test "the LanternCommand hook is exported from the hooks bundle" do
-      js = File.read!("priv/static/lantern_ui_hooks.js")
-
-      assert js =~ "const LanternCommand = {"
-      # once in the Hooks map, once in the named export block
-      assert js |> String.split("\n  LanternCommand,") |> length() == 3
-    end
-
     test "a LiveComponent target routes events to the component, not the parent" do
       html =
         render(fn assigns ->
@@ -424,52 +416,12 @@ defmodule LanternUI.CommandTest do
           """
         end)
 
-      # data-target drives the hook's own pushEventTo. phx-target is what
-      # LiveView and LiveViewTest understand — without it a consumer cannot
-      # test its own palette, because events route to the parent LiveView and
-      # the component's handlers never run.
+      # data-target drives the hook's own pushEventTo; phx-target is what
+      # LiveView and LiveViewTest understand. This is a RENDER assertion, so it
+      # survived the cull of the source-string tests — it checks output, not
+      # that a string appears somewhere in a JS file.
       assert html =~ ~s(data-target="#my-component")
       assert html =~ ~s(phx-target="#my-component")
-    end
-
-    test "the hook pushes to the target when one is given" do
-      js = File.read!("priv/static/lantern_ui_hooks.js")
-
-      hook =
-        js
-        |> String.split("const LanternCommand = {")
-        |> Enum.at(1)
-        |> String.split("\n// ── ")
-        |> hd()
-
-      # Without this the palette cannot be used from a LiveComponent at all —
-      # events reach the parent LiveView, which then has to define handlers it
-      # does not own. A global app-shell palette is always a LiveComponent.
-      assert hook =~ "pushEventTo(target, event, payload)"
-      refute hook =~ "this.pushEvent(event, { query:"
-    end
-
-    test "updated/0 re-asserts hidden, or the palette vanishes while you type" do
-      js = File.read!("priv/static/lantern_ui_hooks.js")
-
-      updated =
-        js
-        |> String.split("const LanternCommand = {")
-        |> Enum.at(1)
-        |> String.split("\n// ── ")
-        |> hd()
-        |> String.split("updated() {")
-        |> Enum.at(1)
-        |> String.split("\n  },")
-        |> hd()
-
-      # The render carries `hidden={!@open}` and @open defaults to false, so
-      # EVERY server patch caused by on_search re-adds the attribute. Without
-      # this line the palette disappears on the first keystroke while the hook
-      # still believes it is open — found by driving it in a real browser,
-      # invisible to every render-level test in this file.
-      assert updated =~ "this.el.hidden = !this.open",
-             "LanternCommand.updated() must re-assert visibility after a patch"
     end
 
     test "every data-part the hook queries exists in the render" do
