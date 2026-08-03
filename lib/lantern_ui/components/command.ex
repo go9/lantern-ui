@@ -75,6 +75,19 @@ defmodule LanternUI.Components.Command do
     doc: "Search input placeholder."
   )
 
+  attr(:target, :any,
+    default: nil,
+    doc: """
+    LiveComponent to send `on_search`/`on_select` to, as `@myself`.
+
+    Required when the palette is rendered from INSIDE a LiveComponent: without
+    it the hook pushes to the parent LiveView, which then has to define
+    handlers it has no business owning. A global palette in an app shell is
+    almost always a LiveComponent, so this is the normal case rather than an
+    edge one.
+    """
+  )
+
   attr(:on_search, :string,
     default: "command_search",
     doc: "LiveView event pushed with `%{\"query\" => query}`. `nil` disables searching."
@@ -134,6 +147,7 @@ defmodule LanternUI.Components.Command do
       data-open={@open || nil}
       data-hotkey={@hotkey}
       data-debounce={@debounce}
+      data-target={command_target(@target)}
       data-on-search={@on_search}
       data-on-select={@on_select}
       data-search-on-open={to_string(@search_on_open)}
@@ -315,6 +329,11 @@ defmodule LanternUI.Components.Command do
     </kbd>
     """
   end
+
+  # LiveView renders `@myself` as a CID struct; its string form is what
+  # pushEventTo accepts. A plain selector string passes through unchanged.
+  defp command_target(nil), do: nil
+  defp command_target(target), do: to_string(target)
 
   defp unique_id(part), do: "lui-cmd-#{part}-#{System.unique_integer([:positive])}"
 end
