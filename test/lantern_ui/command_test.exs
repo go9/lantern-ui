@@ -401,6 +401,36 @@ defmodule LanternUI.CommandTest do
       assert js |> String.split("\n  LanternCommand,") |> length() == 3
     end
 
+    test "a LiveComponent target routes events to the component, not the parent" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Command.command id="cmd" target="#my-component">
+            <Command.command_empty>none</Command.command_empty>
+          </Command.command>
+          """
+        end)
+
+      assert html =~ ~s(data-target="#my-component")
+    end
+
+    test "the hook pushes to the target when one is given" do
+      js = File.read!("priv/static/lantern_ui_hooks.js")
+
+      hook =
+        js
+        |> String.split("const LanternCommand = {")
+        |> Enum.at(1)
+        |> String.split("\n// ── ")
+        |> hd()
+
+      # Without this the palette cannot be used from a LiveComponent at all —
+      # events reach the parent LiveView, which then has to define handlers it
+      # does not own. A global app-shell palette is always a LiveComponent.
+      assert hook =~ "pushEventTo(target, event, payload)"
+      refute hook =~ "this.pushEvent(event, { query:"
+    end
+
     test "updated/0 re-asserts hidden, or the palette vanishes while you type" do
       js = File.read!("priv/static/lantern_ui_hooks.js")
 

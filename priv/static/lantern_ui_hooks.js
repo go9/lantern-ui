@@ -2033,6 +2033,19 @@ const LanternCommand = {
     if (state.focused && this.open) this.input?.focus()
   },
 
+  // pushEvent goes to the parent LiveView. When the palette is rendered from a
+  // LiveComponent that is the wrong target — the parent would have to define
+  // handlers it does not own — so route to the component when data-target is
+  // present.
+  push(event, payload) {
+    const target = this.el.dataset.target
+    if (target) {
+      this.pushEventTo(target, event, payload)
+    } else {
+      this.pushEvent(event, payload)
+    }
+  },
+
   items() {
     return [...this.el.querySelectorAll('[data-part="item"]')].filter((i) => !i.disabled)
   },
@@ -2083,7 +2096,7 @@ const LanternCommand = {
   push() {
     const event = this.el.dataset.onSearch
     if (!event) return
-    this.pushEvent(event, { query: (this.input?.value || "").trim() })
+    this.push(event, { query: (this.input?.value || "").trim() })
   },
 
   select(item) {
@@ -2091,7 +2104,7 @@ const LanternCommand = {
     // pushing on_select too would fire the consumer's handler twice.
     const event = this.el.dataset.onSelect
     if (event && !item.hasAttribute("phx-click")) {
-      this.pushEvent(event, { value: item.dataset.value ?? null })
+      this.push(event, { value: item.dataset.value ?? null })
     }
     if (this.el.dataset.closeOnSelect === "true") this.hide()
   },
