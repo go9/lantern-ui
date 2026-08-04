@@ -917,8 +917,10 @@
 /* Main (cleared past the fixed sidebar) */
 .lui-app-main { margin-left: var(--lui-sidebar-w); padding: 1.5rem 1.5rem 4rem; min-width: 0;
   transition: margin-left var(--lantern-duration) var(--lantern-ease); }
-/* When the dense breadcrumb strip is first, don't also pay full top padding */
-.lui-app-main:has(> .lui-app-breadcrumb) { padding-top: 0.5rem; }
+/* When the dense breadcrumb strip is first, don't also pay top padding: the
+   strip's own 0.5rem padding is the breathing room, and it sits flush under the
+   fixed appbar. */
+.lui-app-main:has(> .lui-app-breadcrumb) { padding-top: 0; }
 
 /* Desktop: bound the shell to the viewport and make MAIN the scroll region — a
    flex column whose height is the space below the fixed bar. Normal pages scroll
