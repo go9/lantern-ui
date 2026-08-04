@@ -1,5 +1,27 @@
 defmodule LanternUI.Components.MessageScroller do
-  @moduledoc "Accessible, follow-aware transcript viewport for chat messages. No Fluxon equivalent."
+  @moduledoc """
+  Accessible, follow-aware transcript viewport for chat messages. No Fluxon
+  equivalent.
+
+  Compose it with `message_scroller_item/1` and `message/1`:
+
+      <.message_scroller id="conversation" label="Conversation" follow={true}>
+        <.message_scroller_item id="message-1">
+          <.message>Welcome.</.message>
+        </.message_scroller_item>
+      </.message_scroller>
+
+  `follow` starts at the bottom and follows appended content while the user is
+  at the bottom. `peek` controls the context left above a newly appended item
+  marked with `scroll_anchor`. `busy` sets `aria-busy` on the log. The
+  `LanternMessageScroller` hook observes appended nodes and streamed text
+  patches, so the host updates content instead of issuing manual scroll
+  commands. The viewport is labelled and the jump-to-latest button becomes
+  keyboard reachable when the user scrolls away.
+
+  See the [Chat Kit guide](chat-kit.html) for the composed API and accessibility
+  behavior.
+  """
 
   use Phoenix.Component
   alias LanternUI.Class

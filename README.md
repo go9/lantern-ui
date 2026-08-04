@@ -8,6 +8,8 @@ embeddable Postgres table viewer; `lantern_ui` is the UI component set.
 
 ## What's here
 
+Chat components are documented in the [Chat Kit guide](docs/chat-kit.md).
+
 - `LanternUI.Charts.area_chart/1` — time-series area + line with an interactive
   crosshair/tooltip.
 - `LanternUI.Charts.sparkline/1` — compact trend, no axes.
@@ -313,8 +315,8 @@ Pick per host:
 
   ```css
   /* assets/css/app.css */
-  @import "../../deps/lantern_ui/priv/static/lantern_ui.css";
   @import "../../deps/lantern_ui/priv/static/lantern_ui_theme.css";
+  @import "../../deps/lantern_ui/priv/static/lantern_ui.css";
   ```
 
 - **Using Fluxon** (or any system defining design tokens)? Import only the

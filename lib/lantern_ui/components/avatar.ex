@@ -1,5 +1,18 @@
 defmodule LanternUI.Components.Avatar do
-  @moduledoc "Compact initials or fallback-content avatar. No Fluxon equivalent."
+  @moduledoc """
+  Compact initials or fallback-content avatar. No Fluxon equivalent.
+
+  The avatar renders `initials` when no inner content is supplied. Use the inner
+  block for an image or other host-provided content:
+
+      <.avatar initials="AL" />
+
+      <.avatar size="lg" shape="square">
+        <img src={@profile_image_url} alt="" />
+      </.avatar>
+
+  `size` accepts `xs`, `sm`, `md`, or `lg`; `shape` accepts `circle` or `square`.
+  """
 
   use Phoenix.Component
   alias LanternUI.Class
