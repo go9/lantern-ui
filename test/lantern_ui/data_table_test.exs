@@ -57,6 +57,63 @@ defmodule LanternUI.DataTableTest do
     assert html =~ "page=3"
   end
 
+  # ── aria-sort contract ────────────────────────────────────────────────────
+  # ARIA puts the sort state on the header *cell*, not on the inner control, and
+  # only on columns that actually sort. The glyph alone told a sighted user which
+  # column was sorted and told a screen-reader user nothing.
+
+  defp sorted_table(assigns) do
+    ~H"""
+    <DataTable.data_table
+      id="s"
+      rows={@rows}
+      meta={@meta}
+      path="/orders"
+      selected_ids={@selected}
+      show_checkboxes={false}
+    >
+      <:col :let={r} label="Name" field={:name} sortable>{r.name}</:col>
+      <:col :let={r} label="ID" field={:id} sortable>{r.id}</:col>
+      <:col :let={r} label="Plain">{r.name}</:col>
+    </DataTable.data_table>
+    """
+  end
+
+  defp header_aria_sorts(meta) do
+    render(&sorted_table/1, %{rows: rows(), meta: meta, selected: MapSet.new()})
+    |> Floki.parse_fragment!()
+    |> Floki.find("th.lui-th")
+    |> Enum.map(&(Floki.attribute(&1, "aria-sort") |> List.first()))
+  end
+
+  defp meta_ordered(dirs) do
+    %{@meta | flop: %{page_size: 25, order_by: [:name], order_directions: dirs}}
+  end
+
+  test "sortable headers expose aria-sort; plain headers expose none at all" do
+    # Name is the active asc sort, ID is sortable but inactive, Plain is not sortable.
+    assert header_aria_sorts(meta_ordered([:asc])) == ["ascending", "none", nil]
+    assert header_aria_sorts(meta_ordered([:desc])) == ["descending", "none", nil]
+  end
+
+  test "aria-sort lives on the th, never on the inner sort link" do
+    html = render(&sorted_table/1, %{rows: rows(), meta: @meta, selected: MapSet.new()})
+    doc = Floki.parse_fragment!(html)
+
+    assert Floki.find(doc, "a.lui-th-sort[aria-sort]") == []
+    assert Floki.find(doc, "th[aria-sort]") != []
+  end
+
+  test "sort_direction/2 is the single source the glyph indicator derives from" do
+    assert DataTable.sort_direction(meta_ordered([:asc]), :name) == "ascending"
+    assert DataTable.sort_direction(meta_ordered([:desc]), :name) == "descending"
+    assert DataTable.sort_direction(meta_ordered([:asc]), :id) == "none"
+
+    assert DataTable.sort_indicator(meta_ordered([:asc]), :name) == "↑"
+    assert DataTable.sort_indicator(meta_ordered([:desc]), :name) == "↓"
+    assert DataTable.sort_indicator(meta_ordered([:asc]), :id) == ""
+  end
+
   test "fill mode adds lui-datatable-fill; default does not" do
     off = render(&table/1, %{rows: rows(), meta: @meta, selected: MapSet.new()})
     refute off =~ "lui-datatable-fill"
@@ -207,7 +264,7 @@ defmodule LanternUI.DataTableTest do
   # pre-list-view path; any change to headers/rows/actions without :list_item
   # fails this test.
   @baseline_table_html """
-  <table class="lui-table"><thead class="lui-thead"><tr><th class="lui-th" scope="col"><a href="/orders?order_by[]=name&amp;order_directions[]=desc" data-phx-link="patch" data-phx-link-state="push" class="lui-th-sort">Name<span class="lui-th-sort-icon">↑</span></a></th><th class="lui-th" scope="col"><span>ID</span></th><th class="lui-th lui-th-actions" scope="col"></th></tr></thead><tbody class="lui-tbody"><tr class="lui-tr"><td class="lui-td">Ada</td><td class="lui-td">1</td><td class="lui-td lui-td-actions">ACT-1</td></tr><tr class="lui-tr"><td class="lui-td">Alan</td><td class="lui-td">2</td><td class="lui-td lui-td-actions">ACT-2</td></tr></tbody></table>
+  <table class="lui-table"><thead class="lui-thead"><tr><th class="lui-th" scope="col" aria-sort="ascending"><a href="/orders?order_by[]=name&amp;order_directions[]=desc" data-phx-link="patch" data-phx-link-state="push" class="lui-th-sort">Name<span class="lui-th-sort-icon">↑</span></a></th><th class="lui-th" scope="col"><span>ID</span></th><th class="lui-th lui-th-actions" scope="col"></th></tr></thead><tbody class="lui-tbody"><tr class="lui-tr"><td class="lui-td">Ada</td><td class="lui-td">1</td><td class="lui-td lui-td-actions">ACT-1</td></tr><tr class="lui-tr"><td class="lui-td">Alan</td><td class="lui-td">2</td><td class="lui-td lui-td-actions">ACT-2</td></tr></tbody></table>
   """
 
   defp squash_html(html) do

@@ -7,6 +7,12 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Fixed
+- **Sortable data-table headers now expose `aria-sort`.** The sort state was
+  carried only by a `↑`/`↓` glyph, so a screen-reader user could not tell which
+  column was sorted or in which direction. The `<th>` — the cell, as ARIA
+  requires, not the inner sort link — now carries `aria-sort="ascending"`,
+  `"descending"`, or `"none"`, derived from the component's existing sort state.
+  Non-sortable columns carry no `aria-sort` at all.
 - **Sheet dismissal now runs `on_close` JS commands (flicker #1357).** Close
   button, backdrop, Escape, and programmatic dismissal all execute the command.
 - **The app shell breadcrumb bar now sits flush under the appbar.** Removed

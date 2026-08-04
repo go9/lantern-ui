@@ -474,7 +474,12 @@ defmodule LanternUI.Components.DataTable do
                   aria-label="Select all on page"
                 />
               </th>
-              <th :for={col <- @col} class={Class.merge(["lui-th", col[:class]])} scope="col">
+              <th
+                :for={col <- @col}
+                class={Class.merge(["lui-th", col[:class]])}
+                scope="col"
+                aria-sort={col[:sortable] && col[:field] && sort_direction(@meta, col.field)}
+              >
                 <.link
                   :if={col[:sortable] && col[:field]}
                   patch={sort_path(@path, @meta, col.field)}
@@ -580,15 +585,32 @@ defmodule LanternUI.Components.DataTable do
     path <> "?" <> Plug.Conn.Query.encode(params)
   end
 
-  @doc false
-  def sort_indicator(meta, field) do
+  @doc """
+  The `aria-sort` value for a sortable column: `"ascending"`, `"descending"`, or
+  `"none"`.
+
+  ARIA requires this on the header *cell* (the `<th>`), not on the inner sort
+  link, and only on columns that are actually sortable — `"none"` means "sortable
+  but not the current sort key", which is a different claim from a plain column
+  with no sort affordance at all.
+  """
+  def sort_direction(meta, field) do
     field_s = to_string(field)
     {current_by, current_dirs} = current_order(meta)
 
     if current_by == [field_s] do
-      if to_string(List.first(current_dirs)) == "desc", do: "↓", else: "↑"
+      if to_string(List.first(current_dirs)) == "desc", do: "descending", else: "ascending"
     else
-      ""
+      "none"
+    end
+  end
+
+  @doc false
+  def sort_indicator(meta, field) do
+    case sort_direction(meta, field) do
+      "ascending" -> "↑"
+      "descending" -> "↓"
+      "none" -> ""
     end
   end
 
