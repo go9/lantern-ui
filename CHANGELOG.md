@@ -13,6 +13,12 @@ All notable changes to this project are documented here. The format follows
   requires, not the inner sort link — now carries `aria-sort="ascending"`,
   `"descending"`, or `"none"`, derived from the component's existing sort state.
   Non-sortable columns carry no `aria-sort` at all.
+- **`<.button navigate={...} disabled>` is now actually disabled.** An `<a>` has
+  no `disabled` attribute, so the link branch rendered a `data-disabled` that
+  nothing consumed: the control stayed clickable, focusable, and announced as a
+  perfectly ordinary link. It now also carries `aria-disabled="true"` and
+  `tabindex="-1"`, and `.lui-btn[data-disabled]` gets the same dimming plus
+  `pointer-events: none` as `.lui-btn[disabled]`.
 - **Sheet dismissal now runs `on_close` JS commands (flicker #1357).** Close
   button, backdrop, Escape, and programmatic dismissal all execute the command.
 - **The app shell breadcrumb bar now sits flush under the appbar.** Removed

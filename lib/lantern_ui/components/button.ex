@@ -42,7 +42,16 @@ defmodule LanternUI.Components.Button do
     doc: "Control height; icon-* sizes are square."
   )
 
-  attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
+  attr(:disabled, :boolean,
+    default: false,
+    doc: """
+    Render disabled and non-interactive. A `<button>` gets the real `disabled`
+    attribute; a link (`navigate`/`patch`/`href`) has no such attribute, so it
+    gets `data-disabled` + `aria-disabled="true"` + `tabindex="-1"` — CSS then
+    removes pointer events, matching the `<button>` behavior.
+    """
+  )
+
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
 
   attr(:navigate, :string, default: nil, doc: "LiveView navigate target; renders as a link.")
@@ -71,6 +80,8 @@ defmodule LanternUI.Components.Button do
       data-color={@color}
       data-size={@size}
       data-disabled={@disabled || nil}
+      aria-disabled={@disabled && "true"}
+      tabindex={@disabled && "-1"}
       navigate={@navigate}
       patch={@patch}
       href={@href}

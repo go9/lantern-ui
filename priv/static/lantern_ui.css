@@ -119,7 +119,11 @@
   box-shadow: 0 0 0 3px var(--lantern-ring-soft);
 }
 
-.lui-btn[disabled] {
+/* A link-rendered button (navigate/patch/href) can't carry the real `disabled`
+   attribute, so it declares `data-disabled` instead. Same treatment, or a
+   `<.button navigate={...} disabled>` looks and clicks as fully enabled. */
+.lui-btn[disabled],
+.lui-btn[data-disabled] {
   opacity: 0.5;
   pointer-events: none;
 }

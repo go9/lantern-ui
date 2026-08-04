@@ -106,6 +106,37 @@ defmodule LanternUI.ComponentsTest do
       assert html =~ "<button"
       refute html =~ "<a "
     end
+
+    # An <a> has no `disabled` attribute, so a disabled link-button was fully
+    # live: clickable, focusable, announced as a normal link. `data-disabled`
+    # alone only reaches CSS — the assistive-tech and focus halves need these.
+    test "a disabled link-button is announced and de-focused, not just dimmed" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.Button.button navigate="/dashboard" disabled>
+            Go
+          </LanternUI.Components.Button.button>
+          """
+        end)
+
+      assert html =~ ~s(data-disabled)
+      assert html =~ ~s(aria-disabled="true")
+      assert html =~ ~s(tabindex="-1")
+    end
+
+    test "an enabled link-button carries none of the disabled attributes" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.Button.button navigate="/dashboard">Go</LanternUI.Components.Button.button>
+          """
+        end)
+
+      refute html =~ "data-disabled"
+      refute html =~ "aria-disabled"
+      refute html =~ "tabindex"
+    end
   end
 
   describe "input/1" do
