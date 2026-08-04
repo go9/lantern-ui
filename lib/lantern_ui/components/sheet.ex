@@ -69,6 +69,7 @@ defmodule LanternUI.Components.Sheet do
       data-placement={@placement}
       data-close-on-esc={to_string(@close_on_esc and not @prevent_closing)}
       data-close-on-outside={to_string(@close_on_outside_click and not @prevent_closing)}
+      data-on-close={@on_close}
       hidden={!@open}
       {@rest}
     >

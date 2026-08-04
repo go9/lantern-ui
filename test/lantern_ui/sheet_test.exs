@@ -51,6 +51,25 @@ defmodule LanternUI.SheetTest do
     assert html =~ ~s(data-close-on-outside="false")
   end
 
+  test "on_close renders a JS command marker and nil on_close renders nothing" do
+    with_close =
+      render(fn assigns ->
+        ~H"""
+        <Sheet.sheet id="s" on_close={Phoenix.LiveView.JS.push("close_settings")}>X</Sheet.sheet>
+        """
+      end)
+
+    without_close =
+      render(fn assigns ->
+        ~H"""
+        <Sheet.sheet id="s">X</Sheet.sheet>
+        """
+      end)
+
+    assert with_close =~ ~s(data-on-close=)
+    refute without_close =~ ~s(data-on-close=)
+  end
+
   test "custom header slot replaces the title" do
     html =
       render(fn assigns ->
