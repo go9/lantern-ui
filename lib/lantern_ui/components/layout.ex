@@ -66,6 +66,17 @@ defmodule LanternUI.Components.Layout do
     attr(:"phx-target", :any, doc: "LiveView target for the overflow menu item.")
     attr(:disabled, :boolean, doc: "Disable the overflow menu item.")
 
+    attr(:navigate, :string,
+      doc:
+        "Destination for a NAVIGATING entry. REQUIRED on any entry whose inline " <>
+          "button navigates: a folded item renders from these attrs, not from the " <>
+          "slot body, so an entry carrying a path only on its inner button becomes " <>
+          "a menu item with no click target and silently does nothing."
+    )
+
+    attr(:patch, :string, doc: "Live-patch destination for a folded navigating entry.")
+    attr(:href, :any, doc: "Plain href for a folded navigating entry.")
+
     attr(:"data-confirm", :string,
       doc:
         "Confirmation prompt for the folded menu item. REQUIRED on destructive " <>
@@ -126,6 +137,9 @@ defmodule LanternUI.Components.Layout do
             <:actions
               :for={action <- @breadcrumb_actions}
               label={action[:label]}
+              navigate={action[:navigate]}
+              patch={action[:patch]}
+              href={action[:href]}
               phx-click={action[:"phx-click"]}
               phx-value-id={action[:"phx-value-id"]}
               phx-target={action[:"phx-target"]}
@@ -323,6 +337,17 @@ defmodule LanternUI.Components.Layout do
     attr(:"phx-target", :any, doc: "LiveView target for the overflow menu item.")
     attr(:disabled, :boolean, doc: "Disable the overflow menu item.")
 
+    attr(:navigate, :string,
+      doc:
+        "Destination for a NAVIGATING entry. REQUIRED on any entry whose inline " <>
+          "button navigates: a folded item renders from these attrs, not from the " <>
+          "slot body, so an entry carrying a path only on its inner button becomes " <>
+          "a menu item with no click target and silently does nothing."
+    )
+
+    attr(:patch, :string, doc: "Live-patch destination for a folded navigating entry.")
+    attr(:href, :any, doc: "Plain href for a folded navigating entry.")
+
     attr(:"data-confirm", :string,
       doc:
         "Confirmation prompt for the folded menu item. REQUIRED on destructive " <>
@@ -382,6 +407,9 @@ defmodule LanternUI.Components.Layout do
               :for={{action, i} <- Enum.with_index(@actions)}
               class="lui-app-breadcrumb-more-item"
               data-inline={to_string(i < @inline_count)}
+              navigate={action[:navigate]}
+              patch={action[:patch]}
+              href={action[:href]}
               phx-click={action[:"phx-click"]}
               phx-value-id={action[:"phx-value-id"]}
               phx-target={action[:"phx-target"]}

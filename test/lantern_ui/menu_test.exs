@@ -41,6 +41,16 @@ defmodule LanternUI.MenuTest do
     """
   end
 
+  defp link_menu(assigns) do
+    ~H"""
+    <Menu.menu id="actions" label="Actions">
+      <Menu.menu_item phx-click="new">New</Menu.menu_item>
+      <Menu.menu_item navigate="/projects/demo/suggestions">Suggestions</Menu.menu_item>
+      <Menu.menu_item navigate="/nowhere" disabled>Unavailable</Menu.menu_item>
+    </Menu.menu>
+    """
+  end
+
   defp basic_menubar(assigns) do
     ~H"""
     <Menu.menubar id="editor" label="Editor">
@@ -109,6 +119,34 @@ defmodule LanternUI.MenuTest do
     test "disabled items render the disabled attribute the hooks skip" do
       doc = Floki.parse_fragment!(render(&basic_menu/1))
       assert length(Floki.find(doc, ~s([role="menuitem"][disabled]))) == 1
+    end
+
+    # A menu that cannot contain a link forces every caller with a navigating
+    # entry to fake one. Found in flicker: overflow-menu entries carrying only
+    # a path rendered as buttons with no click target, so the whole dropdown
+    # silently did nothing when clicked.
+    test "an item given a destination renders a link, keeping the menuitem contract" do
+      doc = Floki.parse_fragment!(render(&link_menu/1))
+
+      links = Floki.find(doc, ~s(a[role="menuitem"][href="/projects/demo/suggestions"]))
+      assert length(links) == 1
+      assert Floki.attribute(links, "tabindex") == ["-1"]
+      assert Floki.attribute(links, "data-phx-link") == ["redirect"]
+      assert Floki.attribute(links, "class") |> hd() =~ "lui-menu-item"
+
+      # The button variant is untouched.
+      assert Floki.find(doc, ~s(button[role="menuitem"][phx-click="new"])) != []
+    end
+
+    test "a disabled link item is skipped via data-disabled, since anchors have no disabled" do
+      doc = Floki.parse_fragment!(render(&link_menu/1))
+      link = Floki.find(doc, ~s(a[href="/nowhere"]))
+
+      # The hooks' item query skips [disabled] and [data-disabled]; an anchor
+      # can only carry the latter, so without it a disabled link stays focusable.
+      assert length(link) == 1
+      assert Floki.attribute(link, "data-disabled") == ["true"]
+      assert Floki.attribute(link, "aria-disabled") == ["true"]
     end
 
     test "auto-generates an id when omitted" do

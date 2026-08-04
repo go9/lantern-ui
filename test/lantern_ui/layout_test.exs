@@ -269,6 +269,32 @@ defmodule LanternUI.LayoutTest do
       assert html =~ ~s(data-has-folded="false")
     end
 
+    # The folded item renders from the SLOT ATTRS, not the slot body, so an
+    # entry whose inner button navigates needs the destination on the slot too.
+    # Without forwarding it, such an entry became a menu item with no click
+    # target — it rendered, it was clickable, and nothing happened.
+    test "a folded navigating action reaches the overflow menu as a real link" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.breadcrumb_bar>
+            TRAIL
+            <:actions label="One" navigate="/one">One</:actions>
+            <:actions label="Two" navigate="/two">Two</:actions>
+            <:actions label="Folded" navigate="/folded/target">Folded</:actions>
+            <:actions label="Evented" phx-click="do_thing">Evented</:actions>
+          </Layout.breadcrumb_bar>
+          """
+        end)
+
+      # Past :max_inline, so this one is only reachable through the menu.
+      assert html =~ ~s(href="/folded/target")
+      assert html =~ ~s(data-has-folded="true")
+
+      # Event-based entries still work the way they always did.
+      assert html =~ ~s(phx-click="do_thing")
+    end
+
     test "breadcrumb_bar/1 wraps its contents in the same chrome class" do
       html =
         render(fn assigns ->

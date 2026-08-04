@@ -107,12 +107,61 @@ defmodule LanternUI.Components.Menu do
 
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
   attr(:disabled, :boolean, default: false, doc: "Render disabled and skipped by arrow keys.")
+
+  attr(:navigate, :string,
+    default: nil,
+    doc: "Live-navigate here on activation. Renders the item as a link, not a button."
+  )
+
+  attr(:patch, :string,
+    default: nil,
+    doc: "Live-patch here on activation. Renders the item as a link, not a button."
+  )
+
+  attr(:href, :any,
+    default: nil,
+    doc: "Plain href. Renders the item as a link, not a button."
+  )
+
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
   slot(:inner_block, required: true, doc: "Menu item label.")
 
+  @doc """
+  A menu item.
+
+  Renders a `<button>` by default. Given `navigate`, `patch` or `href` it
+  renders a `<.link>` instead, because a menu that cannot contain a link forces
+  every caller with a navigating entry to fake one — and a menu item with
+  neither a click handler nor an href is a dead control that fails silently.
+  (Found in flicker: overflow-menu entries that only carried a path rendered as
+  buttons with no target, so the whole dropdown looked broken.)
+
+  Both variants keep `role="menuitem"` and `tabindex="-1"`, which is what the
+  hooks' roving-focus model selects on — so the keyboard contract is identical
+  either way. `disabled` on a link becomes `data-disabled` + `aria-disabled`,
+  since anchors have no `disabled` attribute; the hooks' item query already
+  skips both.
+  """
   def menu_item(assigns) do
+    assigns = assign(assigns, :link?, assigns.navigate || assigns.patch || assigns.href)
+
     ~H"""
+    <.link
+      :if={@link?}
+      navigate={@navigate}
+      patch={@patch}
+      href={@href}
+      class={Class.merge(["lui-menu-item", @class])}
+      role="menuitem"
+      tabindex="-1"
+      data-disabled={@disabled && "true"}
+      aria-disabled={@disabled && "true"}
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </.link>
     <button
+      :if={!@link?}
       type="button"
       class={Class.merge(["lui-menu-item", @class])}
       role="menuitem"

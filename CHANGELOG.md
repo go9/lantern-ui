@@ -6,6 +6,23 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- **A menu item can now be a link (flicker #1331).** `menu_item/1` renders a
+  `<button>` unless given `navigate`, `patch` or `href`, in which case it
+  renders a `<.link>`. Both keep `role="menuitem"` and `tabindex="-1"`, which is
+  what the hooks' roving-focus model selects on, so the keyboard contract is
+  unchanged. `disabled` on the link variant becomes `data-disabled` +
+  `aria-disabled`, since anchors have no `disabled` attribute — the hooks' item
+  query already skips both.
+
+  `breadcrumb_bar/1` and `app_shell/1`'s action slots forward `navigate` /
+  `patch` / `href` to the folded item. **This closes a silent failure:** a
+  folded entry renders from the slot ATTRS, not the slot body, and the slot
+  carried no destination — so an action whose inline button navigated became a
+  menu item with no click target. It rendered, it was clickable, and nothing
+  happened. Reported in flicker as "none of the items in the action dropdown are
+  opening"; it affected every navigating entry past `:max_inline`.
+
 ### Added
 - **`data_table/1` gains a `list` view (flicker #1202).** Third view alongside
   `table` and `cards`: a headerless index row for resource lists (projects,
