@@ -2213,6 +2213,8 @@ const LanternSheet = {
     this.cleanup.forEach((fn) => fn())
     this.cleanup = []
     document.body.style.overflow = ""
+    // Execute the consumer command immediately, while the exit animation runs.
+    if (this.el.dataset.onClose) this.liveSocket.execJS(this.el, this.el.dataset.onClose)
     // Play the slide-out, then hide. Reduced-motion users get the 0ms path.
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     if (reduce) {

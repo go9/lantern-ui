@@ -7,6 +7,8 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Fixed
+- **Sheet dismissal now runs `on_close` JS commands (flicker #1357).** Close
+  button, backdrop, Escape, and programmatic dismissal all execute the command.
 - **The app shell breadcrumb bar now sits flush under the appbar.** Removed
   extra top padding above the sticky breadcrumb bar when it is the first element
   of the main column; the bar's own padding is retained.
