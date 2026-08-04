@@ -56,6 +56,17 @@ defmodule LanternUI.Components.Command do
   highlighted item, `Escape` closes. Focus stays in the input; the active item
   is published with `aria-activedescendant` (this is a combobox, not the roving
   DOM focus used by `menu`/`select`).
+
+  ## Supporting parts
+
+  Use `command_separator/1` between groups or related results. Use
+  `command_shortcut/1` for a standalone keyboard hint; an item's `:shortcut`
+  slot is the usual choice for a hint attached to one item. `command_group/1`,
+  `command_item/1`, and `command_empty/1` cover grouped results, selectable
+  rows, and the empty state.
+
+      <.command_separator />
+      <.command_shortcut>Ctrl+K</.command_shortcut>
   """
   use Phoenix.Component
 

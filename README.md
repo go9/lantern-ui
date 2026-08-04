@@ -8,18 +8,45 @@ embeddable Postgres table viewer; `lantern_ui` is the UI component set.
 
 ## What's here
 
-Chat components are documented in the [Chat Kit guide](docs/chat-kit.md).
+Public component families are grouped below. Each module's generated docs list
+the complete function and attribute surface.
 
-- `LanternUI.Charts.area_chart/1` — time-series area + line with an interactive
-  crosshair/tooltip.
-- `LanternUI.Charts.sparkline/1` — compact trend, no axes.
-- `LanternUI.Charts.bar_chart/1` — categorical bars.
-- `LanternUI.Charts.line_chart/1` — multi-series time-series lines with a legend
-  and a shared crosshair tooltip (built for resource/monitoring metrics).
-- `LanternUI.Components.Accordion.accordion/1` + `accordion_item/1` — a
-  Fluxon-compatible, WAI-ARIA accordion with single/multiple-open behavior.
-- `LanternUI.Charts.Geometry` — pure scaling / "nice" ticks / SVG path helpers.
-- `LanternUI.Components.Skeleton.skeleton/1` — decorative CSS-only loading placeholder.
+- **Forms and input:** `LanternUI.Components.Form`, `LanternUI.Components.Button`,
+  `LanternUI.Components.Autocomplete`, `LanternUI.Components.Select`,
+  `LanternUI.Components.Checkbox`, `LanternUI.Components.Radio`,
+  `LanternUI.Components.Switch`, `LanternUI.Components.Slider`,
+  `LanternUI.Components.Textarea`, `LanternUI.Components.ColorInput`,
+  `LanternUI.Components.DatePicker`, `LanternUI.Components.DatetimeField`, and
+  `LanternUI.Components.Calendar`.
+- **Overlays and navigation:** `LanternUI.Components.Modal`,
+  `LanternUI.Components.AlertDialog`, `LanternUI.Components.Sheet`,
+  `LanternUI.Components.Popover`, `LanternUI.Components.Tooltip`,
+  `LanternUI.Components.Dropdown`, `LanternUI.Components.Menu`,
+  `LanternUI.Components.Tabs`, `LanternUI.Components.Accordion`,
+  `LanternUI.Components.Command`, `LanternUI.Components.Layout`,
+  `LanternUI.Components.Breadcrumb`, `LanternUI.Components.Navlist`, and
+  `LanternUI.Components.Pagination`.
+- **Data and display:** `LanternUI.Components.Table`,
+  `LanternUI.Components.DataTable`, `LanternUI.Components.ResourceList`,
+  `LanternUI.Components.Stat`, `LanternUI.Components.Badge`,
+  `LanternUI.Components.Avatar`, `LanternUI.Components.Icon`,
+  `LanternUI.Components.Separator`, and `LanternUI.Components.Timeline`.
+- **Feedback and status:** `LanternUI.Components.Alert`,
+  `LanternUI.Components.Toast`, `LanternUI.Components.EmptyState`,
+  `LanternUI.Components.Progress`, `LanternUI.Components.Meter`,
+  `LanternUI.Components.Loading`, `LanternUI.Components.Skeleton`, and
+  `LanternUI.Components.ScrollArea`.
+- **Theming and layout:** `LanternUI.Components.Theme` supplies the theme
+  component and tokens used by the component families.
+- **Charts:** `LanternUI.Charts` provides area, bar, line, and
+  sparkline components; `LanternUI.Charts.Geometry` provides
+  pure chart calculation helpers.
+- **Chat:** [Chat Kit guide](https://github.com/go9/lantern-ui/blob/main/docs/chat-kit.md) covers
+  `LanternUI.Components.Avatar`, `LanternUI.Components.Message`, and
+  `LanternUI.Components.MessageScroller` composition.
+
+See the [latest published HexDocs](https://hexdocs.pm/lantern_ui) for the
+released 0.5.x API. The current 0.7.0 main branch is not published there.
 
 Geometry is computed in Elixir, so charts re-render through normal LiveView
 assigns. The only client JS is one small hook (`ChartHover`) for the area chart's
@@ -27,20 +54,20 @@ tooltip.
 
 ## Installation
 
-From Hex (once published):
+For the latest published Hex release (0.5.x):
 
 ```elixir
 def deps do
-  [{:lantern_ui, "~> 0.1"}]
+  [{:lantern_ui, "~> 0.5"}]
 end
 ```
 
-Or from git while iterating:
+The main branch currently targets version 0.7.0. Command and Chat Kit are newer
+components in that unreleased line, so use this reproducible git pin until 0.7
+is published:
 
 ```elixir
-{:lantern_ui, "~> 0.3"}
-# or track main:
-# {:lantern_ui, github: "go9/lantern-ui"}
+{:lantern_ui, git: "https://github.com/go9/lantern-ui.git", ref: "0ad0627054ee6765c81eceace58ad316959565bb"}
 ```
 
 ## Usage

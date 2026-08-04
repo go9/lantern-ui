@@ -1,5 +1,13 @@
 # Chat Kit
 
+Chat Kit is present on the main branch, which currently targets LanternUI 0.7.0.
+Hex 0.7 is not published yet. Install the reproducible git revision below until
+that release is available:
+
+```elixir
+{:lantern_ui, git: "https://github.com/go9/lantern-ui.git", ref: "0ad0627054ee6765c81eceace58ad316959565bb"}
+```
+
 Chat Kit is a composed model for conversations. `Avatar`, `Message`, and
 `MessageScroller` are designed to work together: avatars provide identity,
 messages provide visual alignment and tone, and the scroller provides the
