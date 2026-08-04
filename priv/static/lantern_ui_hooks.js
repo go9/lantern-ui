@@ -1895,6 +1895,35 @@ export const runtime = { position, trapFocus, onDismiss }
 // LanternUI.open_dialog/close_dialog (JS commands target the element; server
 // pushes arrive as LiveView events carrying the id).
 const LanternModal = {
+  // The SERVER owns `open` for this overlay: the component renders
+  // `data-open={@open || nil}` and `hidden={!@open}` from an assign. Without
+  // this, the hook only ever learns about opening in `mounted()`, so a sheet
+  // opened by a LiveView patch leaves `this.open === false` — and `hide()`
+  // starts with `if (!this.open) return`, so the close button, Escape, and the
+  // backdrop ALL silently no-op. The overlay is visible and unclosable.
+  //
+  // Follow the DOM rather than assert over it (the opposite of LanternCommand,
+  // where the hook owns the state and re-asserts `hidden`).
+  updated() {
+    const wantOpen = this.el.dataset.open != null
+    if (wantOpen === this.open) return
+
+    if (wantOpen) {
+      this.show()
+      return
+    }
+
+    // Server closed it. Reconcile WITHOUT running `data-on-close`: the server
+    // already knows, so firing it again is an echo back to the process that
+    // just told us.
+    this.open = false
+    this.cleanup.forEach((fn) => fn())
+    this.cleanup = []
+    document.body.style.overflow = ""
+    clearTimeout(this.closeTimer)
+    this.el.hidden = true
+    this.el.removeAttribute("data-closing")
+  },
   mounted() {
     this.panel = this.el.querySelector('[data-part="panel"]')
     this.cleanup = []
@@ -2175,6 +2204,35 @@ const LanternCommand = {
 // Sheet: same dialog runtime as the modal, but the panel slides from an edge.
 // Exit plays the slide-out keyframe (data-closing) before hiding.
 const LanternSheet = {
+  // The SERVER owns `open` for this overlay: the component renders
+  // `data-open={@open || nil}` and `hidden={!@open}` from an assign. Without
+  // this, the hook only ever learns about opening in `mounted()`, so a sheet
+  // opened by a LiveView patch leaves `this.open === false` — and `hide()`
+  // starts with `if (!this.open) return`, so the close button, Escape, and the
+  // backdrop ALL silently no-op. The overlay is visible and unclosable.
+  //
+  // Follow the DOM rather than assert over it (the opposite of LanternCommand,
+  // where the hook owns the state and re-asserts `hidden`).
+  updated() {
+    const wantOpen = this.el.dataset.open != null
+    if (wantOpen === this.open) return
+
+    if (wantOpen) {
+      this.show()
+      return
+    }
+
+    // Server closed it. Reconcile WITHOUT running `data-on-close`: the server
+    // already knows, so firing it again is an echo back to the process that
+    // just told us.
+    this.open = false
+    this.cleanup.forEach((fn) => fn())
+    this.cleanup = []
+    document.body.style.overflow = ""
+    clearTimeout(this.closeTimer)
+    this.el.hidden = true
+    this.el.removeAttribute("data-closing")
+  },
   mounted() {
     this.panel = this.el.querySelector('[data-part="panel"]')
     this.cleanup = []
