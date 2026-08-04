@@ -78,7 +78,11 @@ defmodule LanternUI do
     meter: LanternUI.Components.Meter,
     accordion: LanternUI.Components.Accordion,
     skeleton: LanternUI.Components.Skeleton,
-    scroll_area: LanternUI.Components.ScrollArea
+    scroll_area: LanternUI.Components.ScrollArea,
+    avatar: LanternUI.Components.Avatar,
+    message: LanternUI.Components.Message,
+    message_scroller: LanternUI.Components.MessageScroller,
+    message_scroller_item: LanternUI.Components.MessageScroller
   }
 
   @doc false

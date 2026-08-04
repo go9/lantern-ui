@@ -18,6 +18,7 @@ defmodule LanternUI.ARIAConformanceTest do
   alias LanternUI.Components.Autocomplete
   alias LanternUI.Components.Command
   alias LanternUI.Components.Menu
+  alias LanternUI.Components.MessageScroller
   alias LanternUI.Components.Modal
   alias LanternUI.Components.ScrollArea
   alias LanternUI.Components.Select
@@ -130,6 +131,17 @@ defmodule LanternUI.ARIAConformanceTest do
       render(fn assigns ->
         ~H"""
         <ScrollArea.scroll_area label="Recent activity">Feed</ScrollArea.scroll_area>
+        """
+      end)
+      |> assert_conformant()
+    end
+
+    test "message_scroller: named region and log expose their required relationships" do
+      render(fn assigns ->
+        ~H"""
+        <MessageScroller.message_scroller id="messages">
+          Transcript
+        </MessageScroller.message_scroller>
         """
       end)
       |> assert_conformant()

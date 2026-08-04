@@ -2980,3 +2980,56 @@ export {
   LanternTheme,
 }
 export default Hooks
+
+const LanternMessageScroller = {
+  mounted() {
+    this.viewport = this.el.querySelector('[data-part="viewport"]')
+    this.content = this.el.querySelector('[data-part="content"]')
+    this.button = this.el.querySelector('[data-part="jump-latest"]')
+    this.following = this.el.dataset.follow === "true"
+    this.atBottom = true
+    this.updateState = () => {
+      this.atBottom = this.viewport.scrollHeight - this.viewport.scrollTop - this.viewport.clientHeight <= 32
+      this.el.dataset.scrollable = this.atBottom ? "false" : "true"
+      this.button.dataset.active = String(!this.atBottom)
+    }
+    this.scroll = () => {
+      this.updateState()
+      if (!this.atBottom && this.following) this.following = false
+    }
+    this.viewport.addEventListener("scroll", this.scroll)
+    this.el.addEventListener("click", (event) => {
+      if (!event.target.closest('[data-part="jump-latest"]')) return
+      this.following = true
+      this.scrollToBottom()
+    })
+    this.observer = new MutationObserver((records) => {
+      const anchor = records.flatMap((record) => [...record.addedNodes]).flatMap((node) => {
+        if (node.nodeType !== 1) return []
+        return [node, ...(node.querySelectorAll?.('[data-scroll-anchor]') || [])]
+      }).find((node) => node.hasAttribute?.("data-scroll-anchor"))
+      if (anchor && (this.following || this.atBottom)) {
+        this.viewport.scrollTop = Math.max(0, (anchor.offsetTop || 0) - Number(this.el.dataset.peek || 40))
+        this.updateState()
+      } else if (this.following || this.atBottom) this.scrollToBottom()
+    })
+    this.observer.observe(this.content, { childList: true, subtree: true, characterData: true })
+    this.resize = () => { if (this.following) this.scrollToBottom() }
+    window.addEventListener("resize", this.resize)
+    requestAnimationFrame(() => { if (this.following) this.scrollToBottom(); else this.updateState() })
+  },
+  scrollToBottom() {
+    this.el.dataset.autoscrolling = "true"
+    this.viewport.scrollTop = this.viewport.scrollHeight
+    this.updateState()
+    requestAnimationFrame(() => this.el.removeAttribute("data-autoscrolling"))
+  },
+  destroyed() {
+    this.viewport?.removeEventListener("scroll", this.scroll)
+    this.observer?.disconnect()
+    window.removeEventListener("resize", this.resize)
+  },
+}
+
+Hooks.LanternMessageScroller = LanternMessageScroller
+export { LanternMessageScroller }
