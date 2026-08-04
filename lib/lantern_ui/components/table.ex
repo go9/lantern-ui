@@ -16,6 +16,9 @@ defmodule LanternUI.Components.Table do
         </.table_body>
       </.table>
 
+  `table_body/1` is the body wrapper in the anatomy above. It accepts
+  `table_row/1` children and keeps row rendering separate from the header.
+
   Sort affordances, pagination, selection state, and Flop wiring live in
   `data_table`; this family is pure markup + tokens.
   """

@@ -16,6 +16,9 @@ defmodule LanternUI.Components.Dropdown do
 
   The API mirrors Fluxon's dropdown family (`dropdown`, `dropdown_header`,
   `dropdown_separator`, `dropdown_link`, `dropdown_button`, `dropdown_custom`).
+  `dropdown_header/1` labels a section, `dropdown_separator/1` divides sections,
+  and `dropdown_custom/1` provides non-item content. Use `dropdown_link/1` for
+  navigation and `dropdown_button/1` for actions.
   Hover-open and animation-tuning attrs are accepted for Fluxon compatibility;
   open/close is click/keyboard-driven and the fade is token-driven.
   """

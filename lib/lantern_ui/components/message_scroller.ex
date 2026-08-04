@@ -19,8 +19,8 @@ defmodule LanternUI.Components.MessageScroller do
   commands. The viewport is labelled and the jump-to-latest button becomes
   keyboard reachable when the user scrolls away.
 
-  See the [Chat Kit guide](chat-kit.html) for the composed API and accessibility
-  behavior.
+  See the [Chat Kit guide](https://github.com/go9/lantern-ui/blob/main/docs/chat-kit.md)
+  for the composed API and accessibility behavior.
   """
 
   use Phoenix.Component
@@ -112,6 +112,7 @@ defmodule LanternUI.Components.MessageScroller do
     """
   end
 
+  @doc false
   def message_scroller_button(assigns) do
     ~H"""
     <button

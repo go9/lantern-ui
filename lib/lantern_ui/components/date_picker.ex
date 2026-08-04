@@ -5,6 +5,13 @@ defmodule LanternUI.Components.DatePicker do
       <.date_picker field={@form[:due]} label="Due date" />
       <.date_time_picker field={@form[:starts_at]} precision={:millisecond} />
       <.time_picker name="alarm" value="08:45:00.000" />
+      <.date_range_picker start_field={@form[:from]} end_field={@form[:to]} />
+
+  The public picker functions are `date_picker/1` for a date,
+  `date_time_picker/1` for a date and time, `time_picker/1` for a time-only
+  field, and `date_range_picker/1` for two date fields. `canonical/2` is a
+  support helper used to normalize picker values before rendering; it is not a
+  component API.
 
   The trigger is a segmented, directly-editable `datetime_field` (keyboard-first:
   type straight into the segments); the calendar popover is for mouse users and

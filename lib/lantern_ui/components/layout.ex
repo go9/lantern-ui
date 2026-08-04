@@ -25,6 +25,10 @@ defmodule LanternUI.Components.Layout do
         main content…
       </.app_shell>
 
+  `page_header/1` can also be used on its own. `breadcrumb_bar/1` is the
+  standalone breadcrumb region used by `app_shell/1` and can wrap a
+  `breadcrumb/1` plus an optional actions slot.
+
   The brand sits top-left; `:header` is inline context in the appbar (switchers);
   `:breadcrumb` is the compact sticky trail under the appbar; optional
   `:breadcrumb_actions` are right-aligned on that same bar (Linear pattern);

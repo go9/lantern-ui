@@ -2,7 +2,7 @@ defmodule LanternUI.Components.Form do
   @moduledoc """
   Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
 
-      <.input field={@form[:email]} label="Email" help_text="Used for billing." />
+      <.input name="email" value="" label="Email" help_text="Used for billing." errors={["is required"]} />
       <.input name="q" value="" placeholder="Search…">
         <:inner_prefix><.icon name="magnifying-glass" /></:inner_prefix>
       </.input>
@@ -153,7 +153,7 @@ defmodule LanternUI.Components.Form do
   # carry values that cannot be stringified — a unique-constraint error ships
   # `[:email]`, and `to_string([:email])` raises ArgumentError. That crashed
   # every "email has already been taken" render.
-  @doc "Interpolate a changeset error tuple into a message string."
+  @doc "Interpolate a changeset error tuple into a message string for host-owned forms."
   def translate_error({msg, opts}) do
     Enum.reduce(opts, msg, fn {key, value}, acc ->
       String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
