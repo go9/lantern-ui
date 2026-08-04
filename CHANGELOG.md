@@ -7,6 +7,9 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Fixed
+- **The app shell breadcrumb bar now sits flush under the appbar.** Removed
+  extra top padding above the sticky breadcrumb bar when it is the first element
+  of the main column; the bar's own padding is retained.
 - **A menu item can now be a link (flicker #1331).** `menu_item/1` renders a
   `<button>` unless given `navigate`, `patch` or `href`, in which case it
   renders a `<.link>`. Both keep `role="menuitem"` and `tabindex="-1"`, which is
