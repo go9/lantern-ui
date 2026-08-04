@@ -84,6 +84,13 @@
   --lantern-space-md: 0.75rem;
   --lantern-space-lg: 1rem;
 
+  /* ── Chat kit ── */
+  --lantern-chat-avatar-xs: 1.5rem;
+  --lantern-chat-message-max-width: 85%;
+  --lantern-chat-scroller-padding-bottom: 4rem;
+  --lantern-chat-item-intrinsic-height: 96px;
+  --lantern-chat-button-offset: 0.25rem;
+
   /* ── Shadows ── */
   --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
@@ -117,6 +124,11 @@
   --lantern-space-sm: 0.5rem;
   --lantern-space-md: 0.75rem;
   --lantern-space-lg: 1rem;
+  --lantern-chat-avatar-xs: 1.5rem;
+  --lantern-chat-message-max-width: 85%;
+  --lantern-chat-scroller-padding-bottom: 4rem;
+  --lantern-chat-item-intrinsic-height: 96px;
+  --lantern-chat-button-offset: 0.25rem;
 }
 
 /* Light theme — explicit opt-in via `.light`, re-asserting the chain so a
@@ -152,6 +164,11 @@
   --lantern-space-sm: 0.5rem;
   --lantern-space-md: 0.75rem;
   --lantern-space-lg: 1rem;
+  --lantern-chat-avatar-xs: 1.5rem;
+  --lantern-chat-message-max-width: 85%;
+  --lantern-chat-scroller-padding-bottom: 4rem;
+  --lantern-chat-item-intrinsic-height: 96px;
+  --lantern-chat-button-offset: 0.25rem;
 
   --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
@@ -229,6 +246,11 @@
     --lantern-space-sm: 0.5rem;
     --lantern-space-md: 0.75rem;
     --lantern-space-lg: 1rem;
+    --lantern-chat-avatar-xs: 1.5rem;
+    --lantern-chat-message-max-width: 85%;
+    --lantern-chat-scroller-padding-bottom: 4rem;
+    --lantern-chat-item-intrinsic-height: 96px;
+    --lantern-chat-button-offset: 0.25rem;
 
     --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.4);
     --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);

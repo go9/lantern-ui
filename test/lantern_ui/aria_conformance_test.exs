@@ -137,14 +137,17 @@ defmodule LanternUI.ARIAConformanceTest do
     end
 
     test "message_scroller: named region and log expose their required relationships" do
-      render(fn assigns ->
-        ~H"""
-        <MessageScroller.message_scroller id="messages">
-          Transcript
-        </MessageScroller.message_scroller>
-        """
-      end)
-      |> assert_conformant()
+      html =
+        render(fn assigns ->
+          ~H"""
+          <MessageScroller.message_scroller id="messages">
+            Transcript
+          </MessageScroller.message_scroller>
+          """
+        end)
+
+      assert html =~ ~s(aria-live="polite")
+      assert_conformant(html)
     end
 
     test "menu: trigger controls a trigger-labelled role=menu with resolvable idrefs" do

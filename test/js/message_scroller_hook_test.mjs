@@ -103,7 +103,7 @@ class Observer {
   disconnect() {}
 }
 
-function setup({ follow = true, peek = 40 } = {}) {
+function setup({ follow = true, peek = 40, reducedMotion = false } = {}) {
   const document = new Document()
   const root = new Element(document)
   root.setAttribute("phx-hook", "LanternMessageScroller")
@@ -118,13 +118,22 @@ function setup({ follow = true, peek = 40 } = {}) {
   root.append(viewport, button)
   viewport.append(content)
   globalThis.document = document
-  globalThis.window = { addEventListener() {}, removeEventListener() {} }
+  const windowListeners = new Map()
+  globalThis.window = {
+    addEventListener(type, listener) {
+      windowListeners.set(type, [...(windowListeners.get(type) ?? []), listener])
+    },
+    removeEventListener(type, listener) {
+      windowListeners.set(type, (windowListeners.get(type) ?? []).filter((item) => item !== listener))
+    },
+    matchMedia() { return { matches: reducedMotion } },
+  }
   globalThis.MutationObserver = Observer
   globalThis.requestAnimationFrame = (callback) => callback()
   const hook = Object.create(LanternMessageScroller)
   hook.el = root
   hook.mounted()
-  return { hook, root, viewport, content, button, document }
+  return { hook, root, viewport, content, button, document, windowListeners }
 }
 
 afterEach(() => {
@@ -136,12 +145,15 @@ afterEach(() => {
 })
 
 test("follow mode scrolls to the bottom on mount", () => {
-  const { viewport } = setup()
+  const { hook, viewport, button } = setup()
   viewport.scrollHeight = 800
   // The mount callback runs immediately in this harness; changing dimensions
   // and invoking the observer models the first server-rendered content batch.
   observerCallback([{ addedNodes: [] }])
+  assert.equal(hook.following, true)
   assert.equal(viewport.scrollTop, 800)
+  assert.equal(button.getAttribute("aria-hidden"), "true")
+  assert.equal(button.getAttribute("tabindex"), "-1")
 })
 
 test("content growth while following stays pinned to the bottom", () => {
@@ -162,6 +174,20 @@ test("scrolling away disables following and marks the jump button active", () =>
   assert.equal(root.dataset.scrollable, "true")
   assert.equal(hook.following, false)
   assert.equal(button.dataset.active, "true")
+  assert.equal(button.getAttribute("aria-hidden"), "false")
+  assert.equal(button.getAttribute("tabindex"), "0")
+})
+
+test("scrolling back down resumes following", () => {
+  const { hook, viewport } = setup()
+  viewport.scrollHeight = 900
+  hook.scrollToBottom()
+  viewport.scrollTop = 200
+  viewport.dispatchEvent({ type: "scroll", bubbles: false, target: null })
+  assert.equal(hook.following, false)
+  viewport.scrollTop = 800
+  viewport.dispatchEvent({ type: "scroll", bubbles: false, target: null })
+  assert.equal(hook.following, true)
 })
 
 test("jump button re-follows and scrolls to the bottom", () => {
@@ -182,4 +208,21 @@ test("a new scroll anchor lands near the top using the peek offset", () => {
   content.append(anchor)
   observerCallback([{ addedNodes: [anchor] }])
   assert.equal(viewport.scrollTop, 360)
+})
+
+test("destroyed removes all registered listeners and supports re-mounting", () => {
+  const { hook, root, viewport, windowListeners } = setup()
+  hook.destroyed()
+  assert.equal(root.listeners.get("click")?.length ?? 0, 0)
+  assert.equal(viewport.listeners.get("scroll")?.length ?? 0, 0)
+  assert.equal(windowListeners.get("resize")?.length ?? 0, 0)
+  assert.doesNotThrow(() => setup())
+})
+
+test("reduced motion removes the autoscrolling marker without waiting for animation", () => {
+  const { hook, viewport, root } = setup({ reducedMotion: true })
+  viewport.scrollHeight = 700
+  hook.scrollToBottom()
+  assert.equal(viewport.scrollTop, 700)
+  assert.equal(root.hasAttribute("data-autoscrolling"), false)
 })

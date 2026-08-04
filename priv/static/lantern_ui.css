@@ -2345,13 +2345,13 @@
 .lui-avatar { display: inline-flex; align-items: center; justify-content: center; flex: none; overflow: hidden; background: var(--lantern-surface-raised); color: var(--lantern-fg-muted); border: 1px solid var(--lantern-border); font-weight: 600; line-height: 1; }
 .lui-avatar[data-shape="circle"] { border-radius: 999px; }
 .lui-avatar[data-shape="square"] { border-radius: var(--lantern-radius-sm); }
-.lui-avatar[data-size="xs"] { width: 1.5rem; height: 1.5rem; font-size: 0.625rem; }
+.lui-avatar[data-size="xs"] { width: var(--lantern-chat-avatar-xs); height: var(--lantern-chat-avatar-xs); font-size: 0.625rem; }
 .lui-avatar[data-size="sm"] { width: 2rem; height: 2rem; font-size: 0.75rem; }
 .lui-avatar[data-size="md"] { width: 2.5rem; height: 2.5rem; font-size: 0.875rem; }
 .lui-avatar[data-size="lg"] { width: 3rem; height: 3rem; font-size: 1rem; }
 .lui-message { display: flex; gap: var(--lantern-space-md, 0.75rem); align-items: flex-end; }
 .lui-message[data-align="end"] { flex-direction: row-reverse; }
-.lui-message-body { display: flex; flex-direction: column; gap: var(--lantern-space-xs, 0.25rem); max-width: 85%; align-items: flex-start; }
+.lui-message-body { display: flex; flex-direction: column; gap: var(--lantern-space-xs, 0.25rem); max-width: var(--lantern-chat-message-max-width); align-items: flex-start; }
 .lui-message[data-align="end"] .lui-message-body { align-items: flex-end; }
 .lui-message-bubble { padding: var(--lantern-space-sm, 0.5rem) var(--lantern-space-md, 0.75rem); border: 1px solid var(--lantern-border); background: var(--lantern-surface-raised); color: var(--lantern-fg); border-radius: var(--lantern-radius); border-bottom-left-radius: var(--lantern-radius-sm); box-shadow: var(--lantern-shadow); }
 .lui-message[data-align="end"] .lui-message-bubble { border-bottom-left-radius: var(--lantern-radius); border-bottom-right-radius: var(--lantern-radius-sm); }
@@ -2363,11 +2363,15 @@
 .lui-message-scroller-viewport { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--lantern-border) transparent; }
 .lui-message-scroller-viewport::-webkit-scrollbar { width: 0.5rem; }
 .lui-message-scroller-viewport::-webkit-scrollbar-thumb { background: var(--lantern-border); border-radius: 999px; }
-.lui-message-scroller-content { display: flex; flex-direction: column; gap: var(--lantern-space-md, 0.75rem); padding: var(--lantern-space-md, 0.75rem) var(--lantern-space-md, 0.75rem) 4rem; }
-.lui-message-scroller-item { content-visibility: auto; contain-intrinsic-size: auto 96px; }
+.lui-message-scroller-content { display: flex; flex-direction: column; gap: var(--lantern-space-md, 0.75rem); padding: var(--lantern-space-md, 0.75rem) var(--lantern-space-md, 0.75rem) var(--lantern-chat-scroller-padding-bottom); }
+.lui-message-scroller-item { content-visibility: auto; contain-intrinsic-size: auto var(--lantern-chat-item-intrinsic-height); }
 .lui-message-scroller-raft { position: absolute; inset-inline: 0; bottom: var(--lantern-space-md, 0.75rem); display: flex; justify-content: center; pointer-events: none; }
-.lui-message-scroller-button { pointer-events: auto; display: inline-flex; align-items: center; gap: var(--lantern-space-xs, 0.25rem); padding: var(--lantern-space-xs, 0.25rem) var(--lantern-space-sm, 0.5rem); background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border); color: var(--lantern-fg); box-shadow: var(--lantern-shadow); border-radius: 999px; opacity: 0; visibility: hidden; transform: translateY(4px); transition: opacity 120ms ease, transform 120ms ease, visibility 120ms; }
+.lui-message-scroller-button { pointer-events: auto; display: inline-flex; align-items: center; gap: var(--lantern-space-xs, 0.25rem); padding: var(--lantern-space-xs, 0.25rem) var(--lantern-space-sm, 0.5rem); background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border); color: var(--lantern-fg); box-shadow: var(--lantern-shadow); border-radius: 999px; opacity: 0; visibility: hidden; transform: translateY(var(--lantern-chat-button-offset)); transition: opacity var(--lantern-duration) var(--lantern-ease), transform var(--lantern-duration) var(--lantern-ease), visibility 0s linear var(--lantern-duration); }
 .lui-message-scroller-button[data-active="true"] { opacity: 1; visibility: visible; transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lui-message-scroller-button { transition: none; }
+}
 
 /* ── Skeleton ── */
 .lui-skeleton {

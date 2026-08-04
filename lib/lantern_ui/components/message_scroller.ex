@@ -6,7 +6,7 @@ defmodule LanternUI.Components.MessageScroller do
 
   attr(:id, :string, required: true)
   attr(:label, :string, default: "Messages")
-  attr(:follow, :boolean, default: false)
+  attr(:follow, :boolean, default: true, doc: "Follow the latest message and mount at the bottom")
   attr(:peek, :integer, default: 40)
   attr(:busy, :boolean, default: false)
   attr(:class, :any, default: nil)
@@ -35,6 +35,7 @@ defmodule LanternUI.Components.MessageScroller do
           class="lui-message-scroller-content"
           data-part="content"
           role="log"
+          aria-live="polite"
           aria-relevant="additions"
           aria-busy={to_string(@busy)}
         >
@@ -47,6 +48,7 @@ defmodule LanternUI.Components.MessageScroller do
           data-part="jump-latest"
           type="button"
           aria-label="Jump to latest"
+          aria-hidden="true"
           tabindex="-1"
           data-active="false"
         >
@@ -95,6 +97,7 @@ defmodule LanternUI.Components.MessageScroller do
       data-part="jump-latest"
       type="button"
       aria-label="Jump to latest"
+      aria-hidden="true"
       tabindex="-1"
       data-active="false"
     >Jump to latest</button>

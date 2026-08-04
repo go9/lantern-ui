@@ -22,9 +22,12 @@ defmodule LanternUI.MessageScrollerTest do
     assert html =~ ~s(aria-label="Messages")
     assert html =~ ~s(tabindex="0")
     assert html =~ ~s(role="log")
+    assert html =~ ~s(aria-live="polite")
     assert html =~ ~s(aria-relevant="additions")
     assert html =~ ~s(aria-busy="false")
+    assert html =~ ~s(data-follow="true")
     assert html =~ ~s(aria-label="Jump to latest")
+    assert html =~ ~s(aria-hidden="true")
     assert html =~ ~s(tabindex="-1")
     assert html =~ ~s(data-active="false")
   end

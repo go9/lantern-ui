@@ -2987,22 +2987,27 @@ const LanternMessageScroller = {
     this.content = this.el.querySelector('[data-part="content"]')
     this.button = this.el.querySelector('[data-part="jump-latest"]')
     this.following = this.el.dataset.follow === "true"
+    this.reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false
     this.atBottom = true
     this.updateState = () => {
       this.atBottom = this.viewport.scrollHeight - this.viewport.scrollTop - this.viewport.clientHeight <= 32
       this.el.dataset.scrollable = this.atBottom ? "false" : "true"
       this.button.dataset.active = String(!this.atBottom)
+      this.button.setAttribute("aria-hidden", this.atBottom ? "true" : "false")
+      this.button.setAttribute("tabindex", this.atBottom ? "-1" : "0")
     }
     this.scroll = () => {
       this.updateState()
-      if (!this.atBottom && this.following) this.following = false
+      if (this.atBottom) this.following = true
+      else if (this.following) this.following = false
     }
     this.viewport.addEventListener("scroll", this.scroll)
-    this.el.addEventListener("click", (event) => {
+    this._onRootClick = (event) => {
       if (!event.target.closest('[data-part="jump-latest"]')) return
       this.following = true
       this.scrollToBottom()
-    })
+    }
+    this.el.addEventListener("click", this._onRootClick)
     this.observer = new MutationObserver((records) => {
       const anchor = records.flatMap((record) => [...record.addedNodes]).flatMap((node) => {
         if (node.nodeType !== 1) return []
@@ -3022,10 +3027,12 @@ const LanternMessageScroller = {
     this.el.dataset.autoscrolling = "true"
     this.viewport.scrollTop = this.viewport.scrollHeight
     this.updateState()
-    requestAnimationFrame(() => this.el.removeAttribute("data-autoscrolling"))
+    if (this.reducedMotion) this.el.removeAttribute("data-autoscrolling")
+    else requestAnimationFrame(() => this.el.removeAttribute("data-autoscrolling"))
   },
   destroyed() {
     this.viewport?.removeEventListener("scroll", this.scroll)
+    this.el.removeEventListener("click", this._onRootClick)
     this.observer?.disconnect()
     window.removeEventListener("resize", this.resize)
   },
