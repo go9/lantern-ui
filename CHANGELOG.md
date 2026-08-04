@@ -29,6 +29,9 @@ All notable changes to this project are documented here. The format follows
   opening"; it affected every navigating entry past `:max_inline`.
 
 ### Added
+- **Chat kit components (flicker #1358).** Added `avatar/1`, `message/1`, and
+  follow-aware `message_scroller/1` with `message_scroller_item/1`, including
+  token-only styling and the `LanternMessageScroller` hook.
 - **`data_table/1` gains a `list` view (flicker #1202).** Third view alongside
   `table` and `cards`: a headerless index row for resource lists (projects,
   apps, databases). Opt-in via a `:list_item` slot (mirrors `:card`); the

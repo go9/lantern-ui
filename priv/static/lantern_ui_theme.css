@@ -78,6 +78,19 @@
   --lantern-radius-md: 0.5rem;
   --lantern-radius-lg: 0.625rem;
 
+  /* ── Spacing ── */
+  --lantern-space-xs: 0.25rem;
+  --lantern-space-sm: 0.5rem;
+  --lantern-space-md: 0.75rem;
+  --lantern-space-lg: 1rem;
+
+  /* ── Chat kit ── */
+  --lantern-chat-avatar-xs: 1.5rem;
+  --lantern-chat-message-max-width: 85%;
+  --lantern-chat-scroller-padding-bottom: 4rem;
+  --lantern-chat-item-intrinsic-height: 96px;
+  --lantern-chat-button-offset: 0.25rem;
+
   /* ── Shadows ── */
   --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
@@ -89,6 +102,7 @@
 
   /* ── Motion ── */
   --lantern-duration: 150ms;
+  --lantern-chat-button-visibility-duration: 0s;
   --lantern-ease: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* ── Density (default = shadcn-compact) ── */
@@ -107,6 +121,15 @@
   --lantern-text: 0.875rem;
   --lantern-text-sm: 0.8125rem;
   --lantern-gap: 0.5rem;
+  --lantern-space-xs: 0.25rem;
+  --lantern-space-sm: 0.5rem;
+  --lantern-space-md: 0.75rem;
+  --lantern-space-lg: 1rem;
+  --lantern-chat-avatar-xs: 1.5rem;
+  --lantern-chat-message-max-width: 85%;
+  --lantern-chat-scroller-padding-bottom: 4rem;
+  --lantern-chat-item-intrinsic-height: 96px;
+  --lantern-chat-button-offset: 0.25rem;
 }
 
 /* Light theme — explicit opt-in via `.light`, re-asserting the chain so a
@@ -136,6 +159,17 @@
   --lantern-danger: var(--danger, #dc2626);
   --lantern-success: var(--success, #16a34a);
   --lantern-warning: var(--warning, #d97706);
+
+  /* ── Spacing ── */
+  --lantern-space-xs: 0.25rem;
+  --lantern-space-sm: 0.5rem;
+  --lantern-space-md: 0.75rem;
+  --lantern-space-lg: 1rem;
+  --lantern-chat-avatar-xs: 1.5rem;
+  --lantern-chat-message-max-width: 85%;
+  --lantern-chat-scroller-padding-bottom: 4rem;
+  --lantern-chat-item-intrinsic-height: 96px;
+  --lantern-chat-button-offset: 0.25rem;
 
   --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
@@ -170,6 +204,12 @@
   --lantern-success: var(--success, #22c55e);
   --lantern-warning: var(--warning, #f59e0b);
 
+  /* ── Spacing ── */
+  --lantern-space-xs: 0.25rem;
+  --lantern-space-sm: 0.5rem;
+  --lantern-space-md: 0.75rem;
+  --lantern-space-lg: 1rem;
+
   --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.4);
   --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
 }
@@ -201,6 +241,17 @@
     --lantern-danger: var(--danger, #ef4444);
     --lantern-success: var(--success, #22c55e);
     --lantern-warning: var(--warning, #f59e0b);
+
+    /* ── Spacing ── */
+    --lantern-space-xs: 0.25rem;
+    --lantern-space-sm: 0.5rem;
+    --lantern-space-md: 0.75rem;
+    --lantern-space-lg: 1rem;
+    --lantern-chat-avatar-xs: 1.5rem;
+    --lantern-chat-message-max-width: 85%;
+    --lantern-chat-scroller-padding-bottom: 4rem;
+    --lantern-chat-item-intrinsic-height: 96px;
+    --lantern-chat-button-offset: 0.25rem;
 
     --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.4);
     --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
