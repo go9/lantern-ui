@@ -1905,6 +1905,24 @@ const LanternModal = {
   // Follow the DOM rather than assert over it (the opposite of LanternCommand,
   // where the hook owns the state and re-asserts `hidden`).
   updated() {
+    // WHO OWNS `open` decides what this does, and the two cases are opposite.
+    //
+    //   * SERVER-driven (`open={@assign}`): `data-open` reflects the truth, so
+    //     follow it. Without this the hook never learns about an open it did
+    //     not perform, `hide()` bails on `if (!this.open) return`, and the
+    //     overlay is visible and unclosable.
+    //
+    //   * JS-driven (`LanternUI.open_dialog(id)`): `@open` stays false, so
+    //     `data-open` is NEVER set and `hidden` is re-rendered true on EVERY
+    //     patch. Following `data-open` here would slam the overlay shut on any
+    //     server round trip — a checkbox inside it would close it on click.
+    //     So re-assert our own state over the markup instead, exactly as
+    //     LanternCommand does.
+    if (this.jsDriven) {
+      this.el.hidden = !this.open
+      return
+    }
+
     const wantOpen = this.el.dataset.open != null
     if (wantOpen === this.open) return
 
@@ -1928,9 +1946,18 @@ const LanternModal = {
     this.panel = this.el.querySelector('[data-part="panel"]')
     this.cleanup = []
 
-    this.el.addEventListener("lantern:dialog:open", () => this.show())
+    // Opened by a JS command rather than an assign: the server will keep
+    // re-rendering `hidden` as true, so `updated()` must not trust it.
+    this.el.addEventListener("lantern:dialog:open", () => {
+      this.jsDriven = true
+      this.show()
+    })
     this.el.addEventListener("lantern:dialog:close", () => this.hide())
-    this.handleEvent("lantern:dialog:open", ({ id }) => id === this.el.id && this.show())
+    this.handleEvent("lantern:dialog:open", ({ id }) => {
+      if (id !== this.el.id) return
+      this.jsDriven = true
+      this.show()
+    })
     this.handleEvent("lantern:dialog:close", ({ id }) => id === this.el.id && this.hide())
 
     this.el.querySelectorAll('[data-part="close"]').forEach((btn) =>
@@ -2214,6 +2241,24 @@ const LanternSheet = {
   // Follow the DOM rather than assert over it (the opposite of LanternCommand,
   // where the hook owns the state and re-asserts `hidden`).
   updated() {
+    // WHO OWNS `open` decides what this does, and the two cases are opposite.
+    //
+    //   * SERVER-driven (`open={@assign}`): `data-open` reflects the truth, so
+    //     follow it. Without this the hook never learns about an open it did
+    //     not perform, `hide()` bails on `if (!this.open) return`, and the
+    //     overlay is visible and unclosable.
+    //
+    //   * JS-driven (`LanternUI.open_dialog(id)`): `@open` stays false, so
+    //     `data-open` is NEVER set and `hidden` is re-rendered true on EVERY
+    //     patch. Following `data-open` here would slam the overlay shut on any
+    //     server round trip — a checkbox inside it would close it on click.
+    //     So re-assert our own state over the markup instead, exactly as
+    //     LanternCommand does.
+    if (this.jsDriven) {
+      this.el.hidden = !this.open
+      return
+    }
+
     const wantOpen = this.el.dataset.open != null
     if (wantOpen === this.open) return
 
@@ -2236,9 +2281,18 @@ const LanternSheet = {
   mounted() {
     this.panel = this.el.querySelector('[data-part="panel"]')
     this.cleanup = []
-    this.el.addEventListener("lantern:dialog:open", () => this.show())
+    // Opened by a JS command rather than an assign: the server will keep
+    // re-rendering `hidden` as true, so `updated()` must not trust it.
+    this.el.addEventListener("lantern:dialog:open", () => {
+      this.jsDriven = true
+      this.show()
+    })
     this.el.addEventListener("lantern:dialog:close", () => this.hide())
-    this.handleEvent("lantern:dialog:open", ({ id }) => id === this.el.id && this.show())
+    this.handleEvent("lantern:dialog:open", ({ id }) => {
+      if (id !== this.el.id) return
+      this.jsDriven = true
+      this.show()
+    })
     this.handleEvent("lantern:dialog:close", ({ id }) => id === this.el.id && this.hide())
     this.el.querySelectorAll('[data-part="close"]').forEach((btn) =>
       btn.addEventListener("click", () => this.hide())
