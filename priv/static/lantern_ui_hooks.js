@@ -3013,10 +3013,12 @@ const LanternMessageScroller = {
         if (node.nodeType !== 1) return []
         return [node, ...(node.querySelectorAll?.('[data-scroll-anchor]') || [])]
       }).find((node) => node.hasAttribute?.("data-scroll-anchor"))
-      if (anchor && (this.following || this.atBottom)) {
+      const following = this.following
+      if (anchor && following) {
         this.viewport.scrollTop = Math.max(0, (anchor.offsetTop || 0) - Number(this.el.dataset.peek || 40))
         this.updateState()
-      } else if (this.following || this.atBottom) this.scrollToBottom()
+      } else if (following) this.scrollToBottom()
+      else this.updateState()
     })
     this.observer.observe(this.content, { childList: true, subtree: true, characterData: true })
     this.resize = () => { if (this.following) this.scrollToBottom() }

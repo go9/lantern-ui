@@ -97,10 +97,15 @@ class Document {
 }
 
 let observerCallback
+let observerInstance
 class Observer {
-  constructor(callback) { observerCallback = callback }
+  constructor(callback) {
+    observerCallback = callback
+    observerInstance = this
+    this.disconnected = false
+  }
   observe() {}
-  disconnect() {}
+  disconnect() { this.disconnected = true }
 }
 
 function setup({ follow = true, peek = 40, reducedMotion = false } = {}) {
@@ -133,7 +138,7 @@ function setup({ follow = true, peek = 40, reducedMotion = false } = {}) {
   const hook = Object.create(LanternMessageScroller)
   hook.el = root
   hook.mounted()
-  return { hook, root, viewport, content, button, document, windowListeners }
+  return { hook, root, viewport, content, button, document, windowListeners, observer: observerInstance }
 }
 
 afterEach(() => {
@@ -142,6 +147,7 @@ afterEach(() => {
   delete globalThis.MutationObserver
   delete globalThis.requestAnimationFrame
   observerCallback = null
+  observerInstance = null
 })
 
 test("follow mode scrolls to the bottom on mount", () => {
@@ -166,7 +172,7 @@ test("content growth while following stays pinned to the bottom", () => {
 })
 
 test("scrolling away disables following and marks the jump button active", () => {
-  const { hook, viewport, button, root } = setup()
+  const { hook, viewport, content, button, root } = setup()
   viewport.scrollHeight = 900
   hook.scrollToBottom()
   viewport.scrollTop = 200
@@ -176,6 +182,12 @@ test("scrolling away disables following and marks the jump button active", () =>
   assert.equal(button.dataset.active, "true")
   assert.equal(button.getAttribute("aria-hidden"), "false")
   assert.equal(button.getAttribute("tabindex"), "0")
+
+  const scrollTop = viewport.scrollTop
+  hook.atBottom = true
+  viewport.scrollHeight = 1_100
+  observerCallback([{ addedNodes: [content.ownerDocument.createElement("div")] }])
+  assert.equal(viewport.scrollTop, scrollTop)
 })
 
 test("scrolling back down resumes following", () => {
@@ -191,11 +203,16 @@ test("scrolling back down resumes following", () => {
 })
 
 test("jump button re-follows and scrolls to the bottom", () => {
-  const { hook, viewport, button } = setup({ follow: false })
+  const { hook, viewport, button, content } = setup({ follow: false })
   viewport.scrollHeight = 700
+  viewport.scrollTop = 200
   button.click()
   assert.equal(hook.following, true)
   assert.equal(viewport.scrollTop, 700)
+
+  viewport.scrollHeight = 900
+  observerCallback([{ addedNodes: [content.ownerDocument.createElement("div")] }])
+  assert.equal(viewport.scrollTop, 900)
 })
 
 test("a new scroll anchor lands near the top using the peek offset", () => {
@@ -211,11 +228,15 @@ test("a new scroll anchor lands near the top using the peek offset", () => {
 })
 
 test("destroyed removes all registered listeners and supports re-mounting", () => {
-  const { hook, root, viewport, windowListeners } = setup()
+  const { hook, root, viewport, button, windowListeners, observer } = setup()
+  hook.following = false
   hook.destroyed()
+  assert.equal(observer.disconnected, true)
   assert.equal(root.listeners.get("click")?.length ?? 0, 0)
   assert.equal(viewport.listeners.get("scroll")?.length ?? 0, 0)
   assert.equal(windowListeners.get("resize")?.length ?? 0, 0)
+  button.click()
+  assert.equal(hook.following, false)
   assert.doesNotThrow(() => setup())
 })
 
