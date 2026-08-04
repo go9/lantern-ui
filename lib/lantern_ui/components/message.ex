@@ -1,5 +1,20 @@
 defmodule LanternUI.Components.Message do
-  @moduledoc "Chat message rows with optional avatar, metadata, and footer. No Fluxon equivalent."
+  @moduledoc """
+  Chat message rows with optional avatar, metadata, and footer. No Fluxon
+  equivalent.
+
+  The component provides visual alignment and tone. The host owns the semantic
+  author label and the message content:
+
+      <.message align="end" tone="primary">
+        <:avatar><.avatar initials="AL" /></:avatar>
+        <:header>You</:header>
+        Your message text.
+        <:footer>Just now</:footer>
+      </.message>
+
+  `align` accepts `start` or `end`, and `tone` accepts `surface` or `primary`.
+  """
 
   use Phoenix.Component
   alias LanternUI.Class
