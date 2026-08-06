@@ -5,21 +5,16 @@ name: PR-Agent
 # below so the FIRST PR gets a review before that file lands on the default
 # branch. The OpenRouter key is the `OPENROUTER_KEY` repo secret.
 #
-# Triggered on `pull_request` (never `pull_request_target`) plus `issue_comment`
-# so `/ask` commands work. No checkout and no untrusted code execution:
-# PR-Agent talks to the GitHub API straight from the event payload.
+# Triggered on `pull_request` only (never `pull_request_target`), review-only:
+# no slash commands. No checkout and no untrusted code execution: PR-Agent
+# talks to the GitHub API straight from the event payload.
 #
-# The concurrency group MUST include `github.event_name`: without it the first
-# bot comment on a new PR (issue_comment event) resolves to the same PR number
-# as the still-running review and cancels it. Splitting by event keeps pushes
-# superseding themselves (`synchronize` in one group) while comments never
-# kill a running review.
+# One review per PR: a new lifecycle event or push cancels an older review
+# for the same pull request, so only the current head can finish.
 
 on:
   pull_request:
     types: [opened, reopened, ready_for_review, synchronize]
-  issue_comment:
-    types: [created]
 
 permissions:
   contents: read
@@ -27,7 +22,7 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: pr-agent-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number }}
+  group: pr-agent-${{ github.event_name }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
@@ -37,9 +32,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: PR-Agent review
-        # Pinned tag (no @main drift). Repo renamed qodo-ai/pr-agent ->
-        # The-PR-Agent/pr-agent (2026-06-26).
-        uses: The-PR-Agent/pr-agent@v0.41.1
+        # Immutable SHA pin of tag v0.41.1 (no @main drift). Repo renamed
+        # qodo-ai/pr-agent -> The-PR-Agent/pr-agent (2026-06-26).
+        uses: The-PR-Agent/pr-agent@743f52d80f3513193dfc7626f778c73478df6d0a
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENROUTER__KEY: ${{ secrets.OPENROUTER_KEY }}
