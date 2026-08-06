@@ -1,0 +1,22 @@
+# Qodo PR-Agent repo config - AI PR review via OpenRouter (flicker #1466).
+# Review-only: no description edits, no /improve suggestions.
+#
+# Model: gpt-5.6-luna via OpenRouter, gpt-5.6-terra as fallback. The same
+# values are mirrored as env overrides in .github/workflows/pr-agent.yml so
+# the first PR is reviewed before this file exists on the default branch.
+# The env overrides stay authoritative; keep both copies in sync.
+
+[config]
+model = "openrouter/openai/gpt-5.6-luna"
+fallback_models = ["openrouter/openai/gpt-5.6-terra"]
+custom_model_max_tokens = 1050000
+max_model_tokens = 1050000
+
+[openrouter]
+api_base = "https://openrouter.ai/api/v1"
+
+[github_action_config]
+auto_review = true
+auto_describe = false
+auto_improve = false
+pr_actions = ['opened', 'reopened', 'ready_for_review', 'synchronize']

@@ -1,0 +1,53 @@
+name: PR-Agent
+
+# AI PR review (PR-Agent v0.41.1) via OpenRouter, review-only. Model + behavior
+# live in `.pr_agent.toml` at the repo root and are mirrored as env overrides
+# below so the FIRST PR gets a review before that file lands on the default
+# branch. The OpenRouter key is the `OPENROUTER_KEY` repo secret.
+#
+# Triggered on `pull_request` only (never `pull_request_target`), review-only:
+# no slash commands. No checkout and no untrusted code execution: PR-Agent
+# talks to the GitHub API straight from the event payload.
+#
+# One review per PR: a new lifecycle event or push cancels an older review
+# for the same pull request, so only the current head can finish.
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: pr-agent-${{ github.event_name }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr_agent:
+    # Don't react to bot comments (PR-Agent itself, other bots) - avoids loops.
+    if: ${{ github.event.sender.type != 'Bot' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR-Agent review
+        # Immutable SHA pin of tag v0.41.1 (no @main drift). Repo renamed
+        # qodo-ai/pr-agent -> The-PR-Agent/pr-agent (2026-06-26).
+        uses: The-PR-Agent/pr-agent@743f52d80f3513193dfc7626f778c73478df6d0a
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENROUTER__KEY: ${{ secrets.OPENROUTER_KEY }}
+          # First-PR config: env overrides of `.pr_agent.toml`, active before
+          # the file exists on the default branch. v0.41.1 accepts dotted or
+          # double-underscore names; booleans as strings, arrays as JSON
+          # strings.
+          GITHUB_ACTION_CONFIG__AUTO_REVIEW: "true"
+          GITHUB_ACTION_CONFIG__AUTO_DESCRIBE: "false"
+          GITHUB_ACTION_CONFIG__AUTO_IMPROVE: "false"
+          GITHUB_ACTION_CONFIG__PR_ACTIONS: '["opened", "reopened", "ready_for_review", "synchronize"]'
+          CONFIG__MODEL: "openrouter/openai/gpt-5.6-luna"
+          CONFIG__FALLBACK_MODELS: '["openrouter/openai/gpt-5.6-terra"]'
+          CONFIG__CUSTOM_MODEL_MAX_TOKENS: "1050000"
+          CONFIG__MAX_MODEL_TOKENS: "1050000"
+          OPENROUTER__API_BASE: "https://openrouter.ai/api/v1"
