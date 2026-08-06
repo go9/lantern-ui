@@ -1970,9 +1970,9 @@
   overflow: hidden; }
 /* Edge anchoring + size per placement. */
 .lui-sheet[data-placement="right"] .lui-sheet-panel { top: 0; right: 0; height: 100%;
-  width: min(28rem, 100vw); border-left: 1px solid var(--lantern-border); animation: lui-sheet-in-right var(--lantern-duration) var(--lantern-ease); }
+  width: min(28rem, 100%); border-left: 1px solid var(--lantern-border); animation: lui-sheet-in-right var(--lantern-duration) var(--lantern-ease); }
 .lui-sheet[data-placement="left"] .lui-sheet-panel { top: 0; left: 0; height: 100%;
-  width: min(28rem, 100vw); border-right: 1px solid var(--lantern-border); animation: lui-sheet-in-left var(--lantern-duration) var(--lantern-ease); }
+  width: min(28rem, 100%); border-right: 1px solid var(--lantern-border); animation: lui-sheet-in-left var(--lantern-duration) var(--lantern-ease); }
 .lui-sheet[data-placement="top"] .lui-sheet-panel { top: 0; left: 0; width: 100%;
   max-height: 85vh; border-bottom: 1px solid var(--lantern-border); animation: lui-sheet-in-top var(--lantern-duration) var(--lantern-ease); }
 .lui-sheet[data-placement="bottom"] .lui-sheet-panel { bottom: 0; left: 0; width: 100%;
