@@ -84,4 +84,16 @@ defmodule LanternUI.SheetTest do
     assert html =~ "CUSTOM"
     refute html =~ "lui-sheet-title"
   end
+
+  test "left/right sheet panels size against the containing block, not the viewport" do
+    css = File.read!("priv/static/lantern_ui.css")
+
+    assert css =~
+             ~r/\.lui-sheet\[data-placement="right"\] \.lui-sheet-panel \{[^}]*width: min\(28rem, 100%\);/
+
+    assert css =~
+             ~r/\.lui-sheet\[data-placement="left"\] \.lui-sheet-panel \{[^}]*width: min\(28rem, 100%\);/
+
+    refute css =~ ~r/width: min\(28rem, 100vw\)/
+  end
 end
