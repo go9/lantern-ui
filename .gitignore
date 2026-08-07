@@ -26,3 +26,7 @@ flicker.toml
 # not a symlink, so these need bare entries too.
 /deps
 /_build
+
+# agent session scratch (pi-subagents, impeccable critique)
+.pi-subagents/
+.impeccable/
