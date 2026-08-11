@@ -30,3 +30,7 @@ flicker.toml
 # agent session scratch (pi-subagents, impeccable critique)
 .pi-subagents/
 .impeccable/
+
+# flicker harness sync output (source of truth is flicker Agent Config)
+.claude/
+.flicker-agent/
