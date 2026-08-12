@@ -34,3 +34,7 @@ flicker.toml
 # flicker harness sync output (source of truth is flicker Agent Config)
 .claude/
 .flicker-agent/
+.flicker/
+.pi/skills/
+.pi/
+.opencode/
