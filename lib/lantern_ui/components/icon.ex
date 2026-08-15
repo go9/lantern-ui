@@ -12,9 +12,14 @@ defmodule LanternUI.Components.Icon do
   The set is deliberately minimal: what LanternUI's own components need plus
   the everyday few. It is not a general icon system — for that, use your
   host's icon setup.
+
+  An unknown name renders an empty glyph and warns rather than raising — see
+  `icon/1`.
   """
 
   use Phoenix.Component
+
+  require Logger
 
   # Heroicons v2 outline (24×24, stroke 1.5) path data.
   @paths %{
@@ -139,7 +144,7 @@ defmodule LanternUI.Components.Icon do
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
   def icon(assigns) do
-    assigns = assign(assigns, :paths, Map.fetch!(@paths, assigns.name))
+    assigns = assign(assigns, :paths, paths_for(assigns.name))
 
     ~H"""
     <svg
@@ -156,6 +161,32 @@ defmodule LanternUI.Components.Icon do
       <path :for={d <- @paths} d={d} />
     </svg>
     """
+  end
+
+  # An unknown icon name is a CONTENT mistake — a typo, a renamed key — not a
+  # structural one. This was `Map.fetch!/2`, so it raised a KeyError and 500'd
+  # the entire page: one wrong string in a rarely-rendered branch (an error
+  # state, an empty state, an admin-only panel) could pass review and then take
+  # the page down in production.
+  #
+  # The `values: @names` attr check does NOT cover this. It is a compile-time
+  # check on LITERAL names; a dynamic `name={@some_var}` reaches here unchecked,
+  # which is exactly the case that matters.
+  #
+  # Degrade instead: keep the svg (so the layout keeps its box) with no path,
+  # and warn so the mistake stays visible rather than becoming invisible.
+  defp paths_for(name) do
+    case Map.fetch(@paths, name) do
+      {:ok, paths} ->
+        paths
+
+      :error ->
+        Logger.warning(
+          "LanternUI.icon: unknown icon name #{inspect(name)} — rendering an empty glyph"
+        )
+
+        []
+    end
   end
 
   @doc false
