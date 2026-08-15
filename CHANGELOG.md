@@ -7,6 +7,13 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Fixed
+- **An unknown `<.icon>` name no longer 500s the page.** `icon/1` used
+  `Map.fetch!/2`, so a typo'd or renamed key raised a `KeyError` and took the
+  whole page down. The `values:` attr check does not cover this — it is a
+  compile-time check on literal names, and a dynamic `name={@var}` reached the
+  lookup unchecked. It now renders the `<svg>` with no path (the layout keeps
+  its box) and logs a warning naming the offending key, so a content mistake
+  degrades instead of becoming an outage. (flicker #1345)
 - **Sortable data-table headers now expose `aria-sort`.** The sort state was
   carried only by a `↑`/`↓` glyph, so a screen-reader user could not tell which
   column was sorted or in which direction. The `<th>` — the cell, as ARIA
