@@ -6,6 +6,31 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **`waterfall/1` + `waterfall_lane/1` — horizontal spans on one shared axis.**
+  Rail column, a ruler drawn once, and lanes whose bars are positioned by
+  caller-supplied percentages of a common axis. This is deliberately NOT a mode
+  of `timeline/1`: that component is a vertical sequence sized by content, and
+  a waterfall is horizontal and sized by duration, so one component holding
+  both would have to choose which of the two its status, spacing and rail
+  meant. Gridlines are one layer under the lanes rather than per-lane copies —
+  an earlier cut inherited ticks through process state and, because HEEx defers
+  slot evaluation, a second waterfall on the same page drew its axis over the
+  first one's lanes. A lane with no position on the axis is `queued` and
+  renders dashed at the right edge; it is never given a fabricated `left`.
+- **`log_view/1` + `log_line/1` — command output with a timestamp gutter.**
+  Monospace lines with a `channel`, per-line severity banding on a colored left
+  edge, trailing `meta`, and an optional `:detail` disclosure. The scroll box is
+  the root, so a long line scrolls inside the component instead of pushing the
+  document sideways, and cells are placed by explicit `grid-column` so a line
+  missing its timestamp does not slide its body out of the column. Severity is
+  also announced via an sr-only word, so it is never carried by color alone;
+  `:neutral` announces nothing, because labelling every ordinary line is noise
+  in a 400-line log. This exists because build and job output kept landing in
+  read-only code *editors* across the portfolio, which offer a caret and a
+  selection model for content nobody can edit.
+
+
 ### Fixed
 - **An unknown `<.icon>` name no longer 500s the page.** `icon/1` used
   `Map.fetch!/2`, so a typo'd or renamed key raised a `KeyError` and took the

@@ -70,6 +70,8 @@ defmodule LanternUI do
     toast: LanternUI.Components.Toast,
     theme: LanternUI.Components.Theme,
     timeline: LanternUI.Components.Timeline,
+    waterfall: LanternUI.Components.Waterfall,
+    log_view: LanternUI.Components.LogView,
     resource_list: LanternUI.Components.ResourceList,
     sheet: LanternUI.Components.Sheet,
     navlist: LanternUI.Components.Navlist,

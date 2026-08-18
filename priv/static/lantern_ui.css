@@ -2850,3 +2850,438 @@ a.lui-resource-list-row:focus-visible {
 .lui-resource-list[data-layout="grid"] .lui-resource-list-meta {
   margin-left: 0;
 }
+
+/* ── Waterfall ──
+ * Horizontal spans on ONE shared axis. Two columns: a fixed label column and a
+ * track column whose width is identical on the ruler, on the gridline layer,
+ * and on every lane — that identity is the component's whole claim, so all
+ * three use the same grid template. Gridlines are ONE layer stacked under the
+ * lanes (same grid cell, lower z-index), not per-lane copies: copies can drift,
+ * a shared layer cannot. Percentages come from the caller; this file never does
+ * time math. Queued lanes are pinned right and dashed, never given a fake
+ * position. */
+.lui-waterfall {
+  --lui-waterfall-label-w: 11rem;
+  --lui-waterfall-lane-h: 1.75rem;
+  --lui-waterfall-gap: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lui-waterfall-ruler,
+.lui-waterfall-body,
+.lui-waterfall-lane-inner {
+  display: grid;
+  grid-template-columns: var(--lui-waterfall-label-w) minmax(0, 1fr);
+  column-gap: var(--lui-waterfall-gap);
+  align-items: center;
+}
+
+.lui-waterfall-ruler {
+  height: 1.5rem;
+  border-bottom: 1px solid var(--lantern-border);
+  margin-bottom: 0.25rem;
+}
+
+.lui-waterfall-ruler-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lantern-fg-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lui-waterfall-ruler-track {
+  position: relative;
+  height: 100%;
+  min-width: 0;
+}
+
+.lui-waterfall-tick {
+  position: absolute;
+  bottom: 0;
+  width: 0;
+  height: 0.375rem;
+  border-left: 1px solid var(--lantern-border);
+}
+
+.lui-waterfall-tick-label {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0;
+  transform: translateX(-50%);
+  font-family: var(--lantern-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.625rem;
+  line-height: 1;
+  color: var(--lantern-fg-subtle);
+  white-space: nowrap;
+}
+
+/* The first and last tick labels would overhang the track and clip against the
+ * label column / the container edge; nudge them inward instead of centering. */
+.lui-waterfall-tick:first-child .lui-waterfall-tick-label {
+  transform: none;
+}
+.lui-waterfall-tick:last-child .lui-waterfall-tick-label {
+  transform: translateX(-100%);
+}
+
+/* One grid cell holds both layers: the gridlines sit in the track column only,
+ * the lanes span the full width and paint over them. */
+.lui-waterfall-body > .lui-waterfall-grid {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 100%;
+  min-width: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.lui-waterfall-body > .lui-waterfall-lanes {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  z-index: 1;
+}
+
+.lui-waterfall-lanes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lui-waterfall-lane {
+  min-width: 0;
+}
+
+.lui-waterfall-lane-inner {
+  padding: 0.25rem 0;
+  border-radius: var(--lantern-radius-sm);
+  color: inherit;
+  text-decoration: none;
+}
+
+a.lui-waterfall-lane-inner:hover {
+  background: var(--lantern-surface-hover);
+}
+
+a.lui-waterfall-lane-inner:focus-visible {
+  outline: 2px solid var(--lantern-ring);
+  outline-offset: -2px;
+}
+
+.lui-waterfall-lane[data-selected="true"] > .lui-waterfall-lane-inner {
+  background: var(--lantern-surface-hover);
+  box-shadow: inset 2px 0 0 0 var(--lantern-accent);
+}
+
+.lui-waterfall-lane-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  min-width: 0;
+  padding-left: 0.5rem;
+}
+
+.lui-waterfall-lane-name {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--lantern-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lui-waterfall-lane-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+}
+
+.lui-waterfall-lane-at,
+.lui-waterfall-lane-extra {
+  font-size: 0.6875rem;
+  color: var(--lantern-fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lui-waterfall-lane-track {
+  position: relative;
+  display: block;
+  height: var(--lui-waterfall-lane-h);
+  min-width: 0;
+}
+
+.lui-waterfall-gridline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  /* Full height of the lane stack, not of one lane. */
+  width: 0;
+  border-left: 1px dashed
+    color-mix(in oklab, var(--lantern-border) 70%, transparent);
+  pointer-events: none;
+}
+
+.lui-waterfall-bar {
+  position: absolute;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  padding: 0 0.375rem;
+  border-radius: var(--lantern-radius-sm);
+  background: var(--lantern-surface-sunken);
+  color: var(--lantern-fg-muted);
+  overflow: hidden;
+}
+
+.lui-waterfall-bar-label {
+  font-family: var(--lantern-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.6875rem;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Queued: pinned to the right edge, dashed, no position claimed on the axis. */
+.lui-waterfall-bar[data-queued="true"] {
+  right: 0;
+  left: auto;
+  border: 1px dashed var(--lantern-border-strong);
+  background: transparent;
+  color: var(--lantern-fg-subtle);
+}
+
+.lui-waterfall-lane[data-status="done"] .lui-waterfall-bar:not([data-queued]) {
+  background: color-mix(in oklab, var(--lantern-success) 22%, transparent);
+  color: var(--lantern-success);
+}
+.lui-waterfall-lane[data-status="active"] .lui-waterfall-bar:not([data-queued]) {
+  background: color-mix(in oklab, var(--lantern-accent) 22%, transparent);
+  color: var(--lantern-accent);
+}
+.lui-waterfall-lane[data-status="danger"] .lui-waterfall-bar:not([data-queued]) {
+  background: color-mix(in oklab, var(--lantern-danger) 22%, transparent);
+  color: var(--lantern-danger);
+}
+.lui-waterfall-lane[data-status="warning"] .lui-waterfall-bar:not([data-queued]) {
+  background: color-mix(in oklab, var(--lantern-warning) 25%, transparent);
+  color: var(--lantern-warning);
+}
+.lui-waterfall-lane[data-status="pending"] .lui-waterfall-bar:not([data-queued]) {
+  background: var(--lantern-surface-sunken);
+  color: var(--lantern-fg-muted);
+}
+
+/* An in-flight bar has no known end; the fade says "still running" without
+ * claiming a width the caller does not have. */
+.lui-waterfall-lane[data-status="active"] .lui-waterfall-bar:not([data-queued])::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  width: 1.5rem;
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in oklab, var(--lantern-accent) 30%, transparent)
+  );
+}
+
+@media (max-width: 40rem) {
+  .lui-waterfall {
+    --lui-waterfall-label-w: 6.5rem;
+  }
+}
+
+/* ── Log view ──
+ * Monospace lines with a timestamp gutter and severity banding. The scroll box
+ * is the ROOT, so a long line scrolls inside the component and never pushes
+ * the document sideways; the header is sticky against that scroll. Severity is
+ * a left edge plus a tint, and the component also renders an sr-only word so
+ * the state is never carried by color alone. */
+.lui-log-view {
+  --lui-log-view-gutter-w: 5.5rem;
+  --lui-log-view-channel-w: 8rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  background: var(--lantern-surface);
+  color: var(--lantern-fg);
+}
+
+.lui-log-view-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.375rem 0.75rem;
+  border-bottom: 1px solid var(--lantern-border);
+  background: var(--lantern-surface);
+}
+
+.lui-log-view-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lantern-fg-subtle);
+}
+
+.lui-log-view-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.lui-log-view-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lui-log-line {
+  border-left: 2px solid transparent;
+  min-width: 0;
+}
+
+.lui-log-line-row {
+  display: grid;
+  grid-template-columns:
+    var(--lui-log-view-gutter-w) var(--lui-log-view-channel-w)
+    minmax(0, 1fr) auto;
+  column-gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.1875rem 0.75rem;
+  font-family: var(--lantern-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+/* A line with no timestamp or channel must not shift its body out of the
+ * column the lines above it established, so the cells are placed explicitly
+ * rather than flowing. */
+.lui-log-line-at {
+  grid-column: 1;
+  color: var(--lantern-fg-subtle);
+  white-space: nowrap;
+}
+
+.lui-log-line-channel {
+  grid-column: 2;
+  color: var(--lantern-fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lui-log-line-body {
+  grid-column: 3;
+  min-width: 0;
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lui-log-line-meta {
+  grid-column: 4;
+  color: var(--lantern-fg-subtle);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.lui-log-view[data-wrap="true"] .lui-log-line-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: visible;
+}
+
+.lui-log-line-details > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.lui-log-line-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.lui-log-line-details > summary:focus-visible {
+  outline: 2px solid var(--lantern-ring);
+  outline-offset: -2px;
+}
+
+.lui-log-line-details[open] > summary {
+  background: var(--lantern-surface-hover);
+}
+
+.lui-log-line-detail {
+  padding: 0.5rem 0.75rem 0.625rem
+    calc(var(--lui-log-view-gutter-w) + 0.75rem);
+  font-family: var(--lantern-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--lantern-fg-muted);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--lantern-surface-sunken);
+  border-top: 1px solid var(--lantern-border);
+}
+
+.lui-log-line:hover {
+  background: var(--lantern-surface-hover);
+}
+
+.lui-log-line[data-selected="true"] {
+  border-left-color: var(--lantern-accent);
+  background: var(--lantern-surface-hover);
+}
+
+.lui-log-line[data-severity="error"] {
+  border-left-color: var(--lantern-danger);
+  background: color-mix(in oklab, var(--lantern-danger) 8%, transparent);
+}
+.lui-log-line[data-severity="error"] .lui-log-line-body {
+  color: var(--lantern-danger);
+}
+
+.lui-log-line[data-severity="warning"] {
+  border-left-color: var(--lantern-warning);
+  background: color-mix(in oklab, var(--lantern-warning) 8%, transparent);
+}
+
+.lui-log-line[data-severity="success"] {
+  border-left-color: color-mix(in oklab, var(--lantern-success) 60%, transparent);
+}
+
+.lui-log-line[data-severity="info"] {
+  border-left-color: color-mix(in oklab, var(--lantern-accent) 60%, transparent);
+}
+
+@media (max-width: 48rem) {
+  .lui-log-view {
+    --lui-log-view-gutter-w: 4rem;
+    --lui-log-view-channel-w: 5rem;
+  }
+}

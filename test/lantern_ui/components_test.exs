@@ -510,6 +510,7 @@ defmodule LanternUI.ComponentsTest do
                :icon,
                :layout,
                :loading,
+               :log_view,
                :menu,
                :message,
                :message_scroller,
@@ -536,7 +537,8 @@ defmodule LanternUI.ComponentsTest do
                :theme,
                :timeline,
                :toast,
-               :tooltip
+               :tooltip,
+               :waterfall
              ]
     end
   end
