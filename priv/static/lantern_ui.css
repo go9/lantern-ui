@@ -3079,9 +3079,16 @@ a.lui-waterfall-lane-inner:focus-visible {
   background: color-mix(in oklab, var(--lantern-success) 22%, transparent);
   color: var(--lantern-success);
 }
+/* Active work gets its own token: hosts whose accent resolves near danger red
+ * (flicker's orange-red) override it so "running" never reads as "failing".
+ * The accent stays the default for everyone else. */
 .lui-waterfall-lane[data-status="active"] .lui-waterfall-bar:not([data-queued]) {
-  background: color-mix(in oklab, var(--lantern-accent) 22%, transparent);
-  color: var(--lantern-accent);
+  background: color-mix(
+    in oklab,
+    var(--lui-waterfall-active, var(--lantern-accent)) 22%,
+    transparent
+  );
+  color: var(--lui-waterfall-active, var(--lantern-accent));
 }
 .lui-waterfall-lane[data-status="danger"] .lui-waterfall-bar:not([data-queued]) {
   background: color-mix(in oklab, var(--lantern-danger) 22%, transparent);
@@ -3107,7 +3114,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   background: linear-gradient(
     to right,
     transparent,
-    color-mix(in oklab, var(--lantern-accent) 30%, transparent)
+    color-mix(in oklab, var(--lui-waterfall-active, var(--lantern-accent)) 30%, transparent)
   );
 }
 

@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **`--lui-waterfall-active` token — the color of in-flight waterfall bars.**
+  Defaults to `--lantern-accent`, so nothing changes for existing hosts. A host
+  whose accent resolves near danger red (flicker's orange-red) overrides it so
+  a healthy running phase never renders in the failure color at a glance.
 - **`waterfall/1` + `waterfall_lane/1` — horizontal spans on one shared axis.**
   Rail column, a ruler drawn once, and lanes whose bars are positioned by
   caller-supplied percentages of a common axis. This is deliberately NOT a mode
