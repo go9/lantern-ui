@@ -55,6 +55,30 @@ defmodule LanternUI.WaterfallTest do
       assert rule =~ ".lui-waterfall-lane-inner {"
     end
 
+    test "active bars are colored by --lui-waterfall-active with the accent as fallback" do
+      # "Running" must be overridable separately from the accent: a host whose
+      # accent resolves near danger red would otherwise paint healthy in-flight
+      # work in the failure color. Every color the active bar carries — fill,
+      # text, and the still-running fade — must route through the token, or an
+      # override leaves a red remnant.
+      css = File.read!("priv/static/lantern_ui.css")
+
+      active_rules =
+        css
+        |> String.split("\n\n")
+        |> Enum.filter(&(&1 =~ ~s([data-status="active"] .lui-waterfall-bar)))
+
+      assert active_rules != [], "no active waterfall bar rules found"
+
+      for rule <- active_rules do
+        assert rule =~ "var(--lui-waterfall-active, var(--lantern-accent))",
+               "active rule does not route through the token:\n#{rule}"
+
+        refute rule =~ ~r/var\(--lantern-accent\)(?!\))/,
+               "active rule still uses the accent directly:\n#{rule}"
+      end
+    end
+
     test "gridlines are drawn once for the whole chart, not per lane" do
       html =
         render(fn assigns ->
