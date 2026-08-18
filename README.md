@@ -52,6 +52,17 @@ Geometry is computed in Elixir, so charts re-render through normal LiveView
 assigns. The only client JS is one small hook (`ChartHover`) for the area chart's
 tooltip.
 
+## Agent skills
+
+Reusable guidance for agents working with LanternUI lives in [`skills/`](skills/):
+
+- `lantern-ui-components` — author or extend library components.
+- `lantern-migration` — migrate a Phoenix application onto LanternUI.
+- `phoenix-page-design` — design consistent LiveView pages with LanternUI.
+
+Import these files from this public repository rather than copying private,
+project-specific variants.
+
 ## Installation
 
 For the latest published Hex release (0.5.x):

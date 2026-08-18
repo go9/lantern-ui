@@ -34,6 +34,9 @@ All notable changes to this project are documented here. The format follows
   read-only code *editors* across the portfolio, which offer a caret and a
   selection model for content nobody can edit.
 
+- **Public agent skills.** Added canonical skills for authoring LanternUI
+  components, migrating Phoenix applications onto LanternUI, and designing
+  consistent LiveView pages without private portfolio paths or policy.
 
 ### Fixed
 - **An unknown `<.icon>` name no longer 500s the page.** `icon/1` used
