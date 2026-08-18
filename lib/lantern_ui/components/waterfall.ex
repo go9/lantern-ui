@@ -4,7 +4,9 @@ defmodule LanternUI.Components.Waterfall do
   No Fluxon equivalent. Pure presentational server render; no JS hook.
 
       <.waterfall id="run-phases" ticks={@ticks} label="Phase">
-        <.waterfall_lane label="plan" status={:done} left={0.0} width={31.4} bar_label="4m 12s" />
+        <.waterfall_lane label="plan" status={:done} left={0.0} width={31.4} bar_label="4m 12s">
+          <:icon><.icon name="hero-check-circle" /></:icon>
+        </.waterfall_lane>
         <.waterfall_lane label="implement" status={:danger} left={31.4} width={52.1} bar_label="7m 02s" />
         <.waterfall_lane label="test" status={:pending} queued bar_label="queued" />
       </.waterfall>
@@ -40,7 +42,6 @@ defmodule LanternUI.Components.Waterfall do
   use Phoenix.Component
 
   alias LanternUI.Class
-  alias LanternUI.Components.Icon
 
   @statuses [:done, :active, :pending, :danger, :warning, :neutral]
 
@@ -119,7 +120,6 @@ defmodule LanternUI.Components.Waterfall do
       "Lane has no position on the axis yet. Renders a dashed placeholder at the right edge instead of a positioned bar; `left`/`width` are ignored."
   )
 
-  attr(:icon, :string, default: nil, doc: "Optional lantern icon name shown beside the label.")
   attr(:selected, :boolean, default: false, doc: "Marks this lane as the current selection.")
 
   attr(:navigate, :string, default: nil, doc: "When set, the whole lane is a navigation link.")
@@ -128,6 +128,11 @@ defmodule LanternUI.Components.Waterfall do
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the lane root.")
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
   slot(:inner_block, doc: "Optional trailing content in the label column (badges, counts).")
+
+  slot(:icon,
+    doc:
+      "Optional glyph rendered before the label. A SLOT, not an icon name: the host app owns its icon set, and a shared component that dictated one would crash any caller whose vocabulary differs."
+  )
 
   def waterfall_lane(assigns) do
     assigns =
@@ -175,7 +180,7 @@ defmodule LanternUI.Components.Waterfall do
     """
   end
 
-  attr(:icon, :string, required: true)
+  attr(:icon, :any, required: true)
   attr(:label, :string, required: true)
   attr(:at, :string, required: true)
   attr(:state_label, :string, required: true)
@@ -189,7 +194,7 @@ defmodule LanternUI.Components.Waterfall do
     ~H"""
     <span class="lui-waterfall-lane-label">
       <span class="lui-waterfall-lane-name">
-        <Icon.icon :if={@icon} name={@icon} class="lui-waterfall-lane-icon" />
+        <span :if={@icon != []} class="lui-waterfall-lane-icon">{render_slot(@icon)}</span>
         {@label}
         <span :if={@state_label} class="lui-sr-only">{@state_label}</span>
       </span>

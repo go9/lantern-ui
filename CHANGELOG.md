@@ -17,7 +17,11 @@ All notable changes to this project are documented here. The format follows
   an earlier cut inherited ticks through process state and, because HEEx defers
   slot evaluation, a second waterfall on the same page drew its axis over the
   first one's lanes. A lane with no position on the axis is `queued` and
-  renders dashed at the right edge; it is never given a fabricated `left`.
+  renders dashed at the right edge; it is never given a fabricated `left`. The
+  lane glyph is a `:icon` SLOT rather than an icon name: the first cut rendered
+  a name through the library's own curated set, and flicker — which has its own
+  heroicon pipeline — crashed on `Map.fetch!` for a name that set does not
+  carry. A shared component does not get to dictate the host's icon vocabulary.
 - **`log_view/1` + `log_line/1` — command output with a timestamp gutter.**
   Monospace lines with a `channel`, per-line severity banding on a colored left
   edge, trailing `meta`, and an optional `:detail` disclosure. The scroll box is

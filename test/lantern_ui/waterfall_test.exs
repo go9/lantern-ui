@@ -217,6 +217,28 @@ defmodule LanternUI.WaterfallTest do
       assert Enum.at(lanes, 1) |> Floki.attribute("data-selected") == []
     end
 
+    test "the icon is a slot, so a host app's own icon set works" do
+      # An earlier cut took an icon NAME and rendered it with the library's
+      # curated set. flicker passes heroicon names from its own pipeline, and
+      # Map.fetch! on an unknown key crashed the whole run page. A shared
+      # component does not get to dictate the host's icon vocabulary.
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Waterfall.waterfall>
+            <Waterfall.waterfall_lane label="plan">
+              <:icon><svg data-test="host-icon"></svg></:icon>
+            </Waterfall.waterfall_lane>
+            <Waterfall.waterfall_lane label="test" />
+          </Waterfall.waterfall>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      assert [_] = Floki.find(doc, ".lui-waterfall-lane-icon svg[data-test=host-icon]")
+      assert length(Floki.find(doc, ".lui-waterfall-lane-icon")) == 1
+    end
+
     test "ticks from one waterfall do not leak into the next" do
       # This drove the design: an earlier cut inherited ticks through process
       # state, and because HEEx defers slot evaluation the SECOND waterfall's

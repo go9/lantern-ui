@@ -3003,9 +3003,15 @@ a.lui-waterfall-lane-inner:focus-visible {
 }
 
 .lui-waterfall-lane-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+/* The caller owns the glyph, so size it here rather than trusting whatever
+ * icon component the host app hands us. */
+.lui-waterfall-lane-icon > * {
   width: 0.875rem;
   height: 0.875rem;
-  flex-shrink: 0;
 }
 
 .lui-waterfall-lane-at,
