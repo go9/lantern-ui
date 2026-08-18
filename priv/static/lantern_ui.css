@@ -2962,6 +2962,9 @@ a.lui-resource-list-row:focus-visible {
 }
 
 .lui-waterfall-lane-inner {
+  /* Same containment reason as `.lui-log-view`: the lane's `.lui-sr-only`
+     state label must not escape to the initial containing block. */
+  position: relative;
   padding: 0.25rem 0;
   border-radius: var(--lantern-radius-sm);
   color: inherit;
@@ -3123,6 +3126,12 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-log-view {
   --lui-log-view-gutter-w: 5.5rem;
   --lui-log-view-channel-w: 8rem;
+  /* Contains absolutely-positioned descendants — notably the per-line
+     `.lui-sr-only` severity labels. Without it they resolve against the
+     initial containing block, so their static offsets inside a scrolled
+     400-line log inflate the DOCUMENT's scroll height and the whole app
+     shell grows a second scrollbar. Measured, not theorised. */
+  position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;

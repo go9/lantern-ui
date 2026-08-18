@@ -73,6 +73,22 @@ defmodule LanternUI.LogViewTest do
       assert rule =~ "min-width: 0;"
     end
 
+    test "the scroll box contains its own absolutely-positioned descendants" do
+      # Each line's severity label is `.lui-sr-only`, i.e. `position: absolute`.
+      # With no positioned ancestor those resolve against the initial containing
+      # block, so in a scrolled 400-line log their static offsets inflate the
+      # DOCUMENT scroll height and the app shell grows a second scrollbar that
+      # drags the sidebar and header off screen. Measured on the Factory run
+      # page before this line existed: 395px of phantom document scroll.
+      rule =
+        "priv/static/lantern_ui.css"
+        |> File.read!()
+        |> String.split("\n\n")
+        |> Enum.find(&(&1 =~ ".lui-log-view {"))
+
+      assert rule =~ "position: relative;"
+    end
+
     test "wrap is opt-in and lands on the root for the lines to read" do
       wrapped =
         render(fn assigns ->

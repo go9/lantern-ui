@@ -43,6 +43,11 @@ All notable changes to this project are documented here. The format follows
   lookup unchecked. It now renders the `<svg>` with no path (the layout keeps
   its box) and logs a warning naming the offending key, so a content mistake
   degrades instead of becoming an outage. (flicker #1345)
+- `log_view/1` and `waterfall/1` now contain their absolutely-positioned
+  `.lui-sr-only` labels (`position: relative`). Without it those labels resolve
+  against the initial containing block, and a scrolled log inflated the
+  DOCUMENT scroll height — the host app grew a second scrollbar that dragged
+  its sidebar and header off screen.
 - **Sortable data-table headers now expose `aria-sort`.** The sort state was
   carried only by a `↑`/`↓` glyph, so a screen-reader user could not tell which
   column was sorted or in which direction. The `<th>` — the cell, as ARIA
