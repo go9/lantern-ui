@@ -217,3 +217,29 @@ test("a sheet closed by the SERVER reconciles without echoing on_close back", ()
   // to the process that just told us.
   assert.equal(ctx.commands.length, 0, "must not re-fire on_close when the server closed it")
 })
+
+test("a JS-opened sheet survives server patches that re-render hidden", () => {
+  // `LanternUI.open_dialog(id)` opens it; the component's `@open` stays false,
+  // so the server re-renders `hidden` as true on EVERY patch and `data-open` is
+  // never set. Following `data-open` here would slam it shut on any round trip
+  // — a checkbox inside the overlay would close it on click.
+  const { hook, root, close, commands } = mountedClosedSheet()
+
+  root.dispatch("lantern:dialog:open")
+  assert.equal(hook.open, true)
+  assert.equal(root.hidden, false)
+
+  // A server patch: LiveView re-asserts hidden, data-open still absent.
+  root.hidden = true
+  hook.updated()
+
+  assert.equal(hook.open, true, "a JS-opened sheet must stay open across patches")
+  assert.equal(root.hidden, false, "and must re-assert its own visibility")
+  assert.equal(commands.length, 0, "no on_close should fire")
+
+  // And it must still be closable afterwards.
+  close.click()
+  assert.equal(hook.open, false)
+  assert.equal(root.hidden, true)
+  assert.equal(commands.length, 1)
+})
