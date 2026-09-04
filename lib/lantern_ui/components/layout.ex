@@ -18,6 +18,10 @@ defmodule LanternUI.Components.Layout do
             <.nav_item label="Buckets" icon="cloud" navigate="/buckets" />
           </.nav_group>
         </:sidebar>
+        <:sidebar_footer>
+          <.nav_link label="Documentation" icon="book-open" href="/docs" />
+          <.nav_link label="Terms" href="/terms" />
+        </:sidebar_footer>
 
         <.page_header title="Buckets" description="Object storage.">
           <:actions><.button>New</.button></:actions>
@@ -91,6 +95,14 @@ defmodule LanternUI.Components.Layout do
   end
 
   slot(:sidebar, required: true, doc: "nav_group / nav_item")
+
+  slot(:sidebar_footer,
+    doc:
+      "Persistent links pinned below the nav and above the collapse control " <>
+        "(support, docs, legal). Pass `nav_link/1`s. Hidden on the icon rail, " <>
+        "where there is no room for text-only links."
+  )
+
   slot(:inner_block, required: true, doc: "Main content column.")
 
   def app_shell(assigns) do
@@ -122,6 +134,9 @@ defmodule LanternUI.Components.Layout do
         <div class="lui-app-scrim" data-part="sidebar-scrim" aria-hidden="true"></div>
         <aside id={"#{@id}-sidebar"} class="lui-app-sidebar" data-part="sidebar">
           <div class="lui-app-nav">{render_slot(@sidebar)}</div>
+          <div :if={@sidebar_footer != []} class="lui-app-sidebar-links">
+            {render_slot(@sidebar_footer)}
+          </div>
           <div class="lui-app-sidebar-foot">
             <button
               type="button"
@@ -257,6 +272,53 @@ defmodule LanternUI.Components.Layout do
       <.nav_item_icon :if={@icon} name={@icon} />
       <span class="lui-nav-item-label">{@label}</span>
     </button>
+    """
+  end
+
+  @doc """
+  A quiet link for the shell's `:sidebar_footer` — support, docs, legal.
+
+  Deliberately not a `nav_item`: these are standing links that never represent
+  the current page, so they carry no active state and sit at a smaller,
+  lower-contrast weight than the nav above them.
+
+      <.nav_link label="Contact us" icon="hero-lifebuoy" navigate="/help" />
+      <.nav_link label="Terms" href="/terms" external />
+  """
+  attr(:label, :string, required: true, doc: "Link text.")
+
+  attr(:icon, :string,
+    default: nil,
+    doc: "Optional leading icon — a lantern icon-set name or a host `hero-*` name."
+  )
+
+  attr(:navigate, :string, default: nil, doc: "LiveView navigate target.")
+  attr(:patch, :string, default: nil, doc: "LiveView patch target.")
+  attr(:href, :string, default: nil, doc: "Plain href.")
+
+  attr(:external, :boolean,
+    default: false,
+    doc: "Marks the link as leaving the app: opens in a new tab and shows an outbound glyph."
+  )
+
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+
+  def nav_link(assigns) do
+    ~H"""
+    <.link
+      class={Class.merge(["lui-nav-link", @class])}
+      navigate={@navigate}
+      patch={@patch}
+      href={@href}
+      target={@external && "_blank"}
+      rel={@external && "noopener noreferrer"}
+      {@rest}
+    >
+      <.nav_item_icon :if={@icon} name={@icon} />
+      <span class="lui-nav-link-label">{@label}</span>
+      <Icon.icon :if={@external} name="arrow-right" class="lui-nav-link-out" />
+    </.link>
     """
   end
 

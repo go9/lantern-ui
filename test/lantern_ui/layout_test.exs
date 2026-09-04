@@ -520,4 +520,94 @@ defmodule LanternUI.LayoutTest do
                ~r/\.lui-app-breadcrumb-more-item\[data-inline="true"\]\s*\{\s*display:\s*flex/
     end
   end
+
+  describe "nav_link/1 and the :sidebar_footer slot" do
+    test "the footer region only renders when the slot is given" do
+      without =
+        render(fn assigns ->
+          ~H"""
+          <Layout.app_shell id="s">
+            <:brand>Acme</:brand>
+            <:sidebar>nav</:sidebar>
+            main
+          </Layout.app_shell>
+          """
+        end)
+
+      refute without =~ "lui-app-sidebar-links"
+
+      with_footer =
+        render(fn assigns ->
+          ~H"""
+          <Layout.app_shell id="s">
+            <:brand>Acme</:brand>
+            <:sidebar>nav</:sidebar>
+            <:sidebar_footer>
+              <Layout.nav_link label="Terms" href="/terms" />
+            </:sidebar_footer>
+            main
+          </Layout.app_shell>
+          """
+        end)
+
+      assert with_footer =~ "lui-app-sidebar-links"
+      assert with_footer =~ "Terms"
+    end
+
+    test "the footer sits above the collapse control, not below it" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.app_shell id="s">
+            <:brand>Acme</:brand>
+            <:sidebar>nav</:sidebar>
+            <:sidebar_footer>
+              <Layout.nav_link label="Docs" href="/docs" />
+            </:sidebar_footer>
+            main
+          </Layout.app_shell>
+          """
+        end)
+
+      assert :binary.match(html, "lui-app-sidebar-links") <
+               :binary.match(html, "lui-app-sidebar-foot")
+    end
+
+    test "an external link opens in a new tab with a safe rel and an outbound glyph" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.nav_link label="Docs" href="https://example.com" external />
+          """
+        end)
+
+      assert html =~ ~s(target="_blank")
+      assert html =~ "noopener"
+      assert html =~ "lui-nav-link-out"
+    end
+
+    test "an internal link carries neither target nor the outbound glyph" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.nav_link label="Help" navigate="/help" icon="hero-lifebuoy" />
+          """
+        end)
+
+      refute html =~ ~s(target="_blank")
+      refute html =~ "lui-nav-link-out"
+      assert html =~ "hero-lifebuoy"
+    end
+
+    # The rail is icon-only and these links are text; leaving them visible
+    # spills them past the collapsed width.
+    test "the stylesheet hides the footer links on the collapsed rail" do
+      css = File.read!(Path.join(:code.priv_dir(:lantern_ui), "static/lantern_ui.css"))
+
+      assert css =~
+               ~r/\.lui-app\[data-collapsed\]\s+\.lui-app-sidebar-links\s*\{\s*display:\s*none/
+
+      assert css =~ ~r/\.lui-nav-link\s*\{/
+    end
+  end
 end
