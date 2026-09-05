@@ -978,6 +978,25 @@
 .lui-nav-sub-inner { overflow: hidden; margin-left: 0.85rem; padding-left: 0.5rem;
   border-left: 1px solid var(--lantern-border); }
 
+/* A parent that owns a subnav is a disclosure, not a destination: "the current
+   page is in here". Painting it with the same filled background as the child
+   that IS current stacks two identical blocks against each other and neither
+   one reads as the answer. The parent keeps the accent colour and the weight;
+   the fill belongs to the leaf you are actually on. */
+.lui-nav-sub > .lui-nav-item-active,
+.lui-nav-sub > .lui-nav-item-active:hover { background: none; }
+.lui-nav-sub > .lui-nav-item-active:hover { background: var(--lantern-surface-sunken); }
+.lui-nav-sub > .lui-nav-item-active .lui-nav-sub-chevron { color: var(--lantern-accent); }
+
+/* Which segment of the rail you are on. The border lives on the container, so
+   the active child overlays its own segment rather than trying to colour part
+   of someone else's border. */
+.lui-nav-sub-inner .lui-nav-item { position: relative; }
+.lui-nav-sub-inner .lui-nav-item-active::before {
+  content: ""; position: absolute; left: -0.5rem; margin-left: -1px;
+  top: 0.15rem; bottom: 0.15rem; width: 2px; border-radius: 1px;
+  background: var(--lantern-accent); }
+
 /* Collapsed rail: hide text, center icons, flip the collapse chevron. Desktop
    only — the mobile drawer has room for the full labels. */
 @media (min-width: 769px) {
