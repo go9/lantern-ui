@@ -2501,6 +2501,8 @@
   padding: 0;
   display: flex;
   flex-direction: column;
+  container-type: inline-size;
+  container-name: lui-timeline;
 }
 
 .lui-timeline-item {
@@ -2747,6 +2749,27 @@
   font-size: var(--lantern-text-sm);
   color: var(--lantern-fg-muted);
   line-height: 1.45;
+}
+
+/* In a narrow column — a side panel, a card beside a main column — an absolute
+   timestamp in the right-hand slot leaves the title a few characters and an
+   ellipsis. Below that width the time drops under the title instead: the event
+   is what you are scanning for, and it gets the full line. */
+@container lui-timeline (max-width: 24rem) {
+  .lui-timeline-content,
+  .lui-timeline-summary {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "title"
+      "label"
+      "at"
+      "body";
+  }
+
+  .lui-timeline-item:not([data-label-position="leading"]) > .lui-timeline-content > .lui-timeline-at,
+  .lui-timeline-summary > .lui-timeline-at {
+    text-align: left;
+  }
 }
 
 /* When details is present, body sits under the disclosure */
