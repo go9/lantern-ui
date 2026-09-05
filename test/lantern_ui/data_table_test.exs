@@ -429,4 +429,49 @@ defmodule LanternUI.DataTableTest do
     refute both =~ "lui-table-wrap"
     refute both =~ "LIST-Ada"
   end
+
+  describe "flush and the pagination bar" do
+    defp plain_table(assigns) do
+      ~H"""
+      <DataTable.data_table
+        id="t"
+        rows={@rows}
+        meta={@meta}
+        path="/orders"
+        selected_ids={@selected}
+        flush={@flush}
+      >
+        <:col :let={r} label="Name">{r.name}</:col>
+        <:empty>NOTHING</:empty>
+      </DataTable.data_table>
+      """
+    end
+
+    test "flush marks the root so the panel chrome can be dropped" do
+      base = %{rows: rows(), meta: @meta, selected: MapSet.new()}
+
+      refute render(&plain_table/1, Map.put(base, :flush, false)) =~ "lui-datatable-flush"
+      assert render(&plain_table/1, Map.put(base, :flush, true)) =~ "lui-datatable-flush"
+    end
+
+    test "the bar shows on a single page, because it carries the result count" do
+      single = %{@meta | current_page: 1, total_pages: 1, total_count: 6}
+
+      html =
+        render(&plain_table/1, %{rows: rows(), meta: single, selected: MapSet.new(), flush: false})
+
+      assert html =~ "lui-dt-pagination"
+      assert html =~ "6 results"
+    end
+
+    test "an empty table has no count to report, so it has no bar" do
+      empty = %{@meta | current_page: 1, total_pages: 0, total_count: 0}
+
+      html =
+        render(&plain_table/1, %{rows: [], meta: empty, selected: MapSet.new(), flush: false})
+
+      assert html =~ "NOTHING"
+      refute html =~ "lui-dt-pagination"
+    end
+  end
 end

@@ -95,6 +95,16 @@ defmodule LanternUI.Components.DataTable do
         "page supplies neither slot."
   )
 
+  attr(:flush, :boolean,
+    default: false,
+    doc:
+      "Drop the panel chrome — border, radius, shadow, raised surface — and pull " <>
+        "the header, toolbar, cells and pagination out to the page gutter, so the " <>
+        "table reads as the page rather than as a card sitting on it. This is what " <>
+        "the list and card views already do for themselves; `flush` is how a table " <>
+        "view asks for it. Use it when the table IS the page."
+  )
+
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
 
   attr(:fill, :boolean,
@@ -180,7 +190,14 @@ defmodule LanternUI.Components.DataTable do
     ~H"""
     <div
       id={@id}
-      class={Class.merge(["lui-datatable", @fill && "lui-datatable-fill", @class])}
+      class={
+        Class.merge([
+          "lui-datatable",
+          @fill && "lui-datatable-fill",
+          @flush && "lui-datatable-flush",
+          @class
+        ])
+      }
       data-view={@view}
       {@rest}
     >
@@ -529,11 +546,14 @@ defmodule LanternUI.Components.DataTable do
         </table>
       </div>
 
-      <%!-- A single page of results has nothing to paginate: the control is pure
-            chrome there, and it is most conspicuous on the list view, whose whole
-            point is dropping machinery the page does not need. --%>
+      <%!-- Shown whenever there are rows, not only when there is more than one
+            page. The bar is not just a pager: it carries the result count and the
+            page size, and on a single page those are the two things that tell a
+            reader nothing is hidden below the fold. Withholding it there reads as
+            a table that has not finished loading. An empty table has no count to
+            report, so that is where it goes. --%>
       <Pagination.pagination
-        :if={(Map.get(@meta, :total_pages) || 0) > 1}
+        :if={@rows != []}
         id={"#{@id}-pagination"}
         meta={@meta}
         patch_fn={&page_path(@path, @meta, &1)}

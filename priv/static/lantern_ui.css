@@ -1365,6 +1365,28 @@
 .lui-datatable .lui-dt-cards { padding: 0.9rem; }
 .lui-datatable .lui-dt-pagination { margin-top: 0; padding: 0.55rem 0.9rem;
   border-top: 1px solid var(--lantern-border); }
+
+/* Flush (`<.data_table flush>`): the de-panelling the list and card views get
+   from their data-view, for the TABLE view, which has no such hook. Border,
+   radius, shadow and raised surface go; the header, toolbar, bulk bar, cells and
+   pagination come out to the page gutter, so the table reads as the page rather
+   than as a card sitting on it. The rows have to move with the chrome, or the
+   first column starts 0.7rem inside a header that starts at 0 and the left edge
+   reads as a misprint — but only the OUTER edges are zeroed, since the padding
+   between columns is doing real work. Every selector is doubled up on
+   `.lui-datatable` because it has to outrank the panel rules above, which are
+   written against that class and come later in this sheet. */
+.lui-datatable.lui-datatable-flush { border: none; border-radius: 0;
+  background: transparent; box-shadow: none; overflow: visible; }
+.lui-datatable.lui-datatable-flush .lui-dt-header,
+.lui-datatable.lui-datatable-flush .lui-dt-chromerow,
+.lui-datatable.lui-datatable-flush .lui-dt-pagination,
+.lui-datatable.lui-datatable-flush .lui-dt-bulkbar { padding-inline: 0; }
+.lui-datatable.lui-datatable-flush .lui-th:first-child,
+.lui-datatable.lui-datatable-flush .lui-td:first-child { padding-left: 0; }
+.lui-datatable.lui-datatable-flush .lui-th:last-child,
+.lui-datatable.lui-datatable-flush .lui-td:last-child { padding-right: 0; }
+.lui-datatable.lui-datatable-flush .lui-dt-cards { padding: 0.75rem 0 0; }
 .lui-dt-filtertext { height: 1.9rem; padding: 0 0.55rem; font-size: var(--lantern-text-sm);
   font-family: inherit; background: var(--lantern-surface); color: var(--lantern-fg);
   border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm);
