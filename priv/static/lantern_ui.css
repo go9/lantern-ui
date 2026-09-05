@@ -834,6 +834,11 @@
 }
 /* Horizontal full-bleed only — keep top flush with main, no negative top margin */
 .lui-app-main > .lui-app-breadcrumb {
+  /* `width: auto`, because the base rule sets `width: 100%` and that is what a
+     negative margin cannot stretch: the bar kept the content width and simply
+     slid 1.5rem left, bleeding past the left edge and stopping 3rem short of
+     the right one. Auto lets the negative margins do what they are here for. */
+  width: auto;
   margin: 0 -1.5rem 0.75rem;
   padding: 0.5rem 1.5rem;
 }
@@ -1030,6 +1035,10 @@
   .lui-app[data-nav-open] .lui-app-scrim { display: block; }
   .lui-app-main, .lui-app[data-collapsed] .lui-app-main { margin-left: 0;
     padding: 1.25rem 1.25rem 4rem; }
+  /* Main's side padding drops to 1.25rem here, so the strip's bleed has to drop
+     with it — left at 1.5rem it hung a quarter rem off both edges. */
+  .lui-app-main > .lui-app-breadcrumb { margin-inline: -1.25rem;
+    padding-inline: 1.25rem; }
   .lui-app-sidebar-foot { display: none; }
 }
 
