@@ -1739,10 +1739,18 @@ const LanternTableChrome = {
     }
     this.onClick = (e) => {
       if (!e.target.closest('[data-part="clear-filters"]')) return
+      // Each rich filter clears through its own control, so it can reset its
+      // label and aria state; that fires a change we do not want to act on
+      // once per filter, hence the suspend.
+      this.suspended = true
       this.el.querySelectorAll('[data-part="filter"]').forEach((sel) => (sel.value = ""))
       this.el
         .querySelectorAll('[data-part="filter-rich"] input[data-part="value"]')
         .forEach((i) => i.remove())
+      this.el
+        .querySelectorAll('[data-part="filter-rich"] [data-part="clear"]')
+        .forEach((btn) => btn.click())
+      this.suspended = false
       this.apply()
     }
     this.el.addEventListener("input", this.onInput)
@@ -1751,6 +1759,7 @@ const LanternTableChrome = {
   },
 
   apply() {
+    if (this.suspended) return
     // Read the dataset now rather than at mount: a patch rewrites these, and a
     // cached copy would send back the sort and tab state the page had when it
     // first loaded.
@@ -1769,9 +1778,15 @@ const LanternTableChrome = {
       }
     })
     this.el.querySelectorAll('[data-part="filter-rich"]').forEach((wrap) => {
-      const values = [...wrap.querySelectorAll('input[data-part="value"]')]
-        .map((i) => i.value)
-        .filter((v) => v !== "")
+      // A rich filter keeps its value on the hidden <select> the select
+      // component drives, whether it is single or multiple. The hidden-input
+      // form is what the datetime and autocomplete controls use.
+      const native = wrap.querySelector('select[data-part="native"]')
+      const values = native
+        ? [...native.selectedOptions].map((o) => o.value).filter((v) => v !== "")
+        : [...wrap.querySelectorAll('input[data-part="value"]')]
+            .map((i) => i.value)
+            .filter((v) => v !== "")
       if (values.length === 0) return
       if (wrap.dataset.op === "in") {
         filters.push({ field: wrap.dataset.field, op: "in", values })
