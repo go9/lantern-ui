@@ -2476,7 +2476,7 @@
  * label text carries state for grayscale legibility. Optional leading `at`
  * column, custom marker slot, and native details disclosure for :detail. */
 .lui-timeline {
-  --lui-timeline-label-w: 4.5rem;
+  --lui-timeline-label-w: 5.5rem;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -2506,6 +2506,16 @@
   align-self: start;
   padding-right: 0.25rem;
   margin-top: 0.2rem;
+  /* The rail is a fixed-width column and every item is its own grid, so it
+     cannot be widened to fit the longest timestamp without the rails going
+     ragged down the list. A nowrap label longer than the column does not
+     clip — justify-self: end pushes the overflow out the left side and it
+     escapes the card entirely. Let it wrap onto a second line instead, and
+     keep it inside its column. */
+  max-width: 100%;
+  white-space: normal;
+  text-align: right;
+  text-wrap: balance;
 }
 
 .lui-timeline-item[data-label-position="leading"] > .lui-timeline-marker {

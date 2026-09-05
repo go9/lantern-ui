@@ -324,4 +324,37 @@ defmodule LanternUI.DataTableChromeTest do
     refute html =~ "CARD-Ada"
     assert html =~ "view=cards"
   end
+
+  describe "filters the chrome row does not own" do
+    test "a tab's filter is handed back to the hook, a panel filter is not" do
+      # status comes from a tab, channel from the filter panel.
+      meta = %{
+        @meta
+        | params: %{
+            "filters" => %{
+              "0" => %{"field" => "status", "value" => "pending"},
+              "1" => %{"field" => "channel", "value" => "ebay"}
+            }
+          }
+      }
+
+      html = render(&table/1, %{rows: [], meta: meta, view: "table"})
+
+      [keep] = Regex.run(~r/data-keep-filters="([^"]*)"/, html, capture: :all_but_first)
+      keep = keep |> String.replace("&quot;", ~s(")) |> Jason.decode!()
+
+      assert keep == [%{"field" => "status", "op" => nil, "value" => "pending"}]
+    end
+
+    test "nothing to keep when every filter has a control" do
+      meta = %{
+        @meta
+        | params: %{"filters" => %{"0" => %{"field" => "channel", "value" => "ebay"}}}
+      }
+
+      html = render(&table/1, %{rows: [], meta: meta, view: "table"})
+
+      assert html =~ ~s(data-keep-filters="[]")
+    end
+  end
 end

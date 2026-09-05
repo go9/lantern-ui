@@ -253,12 +253,13 @@ defmodule LanternUI.Components.DataTable do
         phx-hook="LanternTableChrome"
         data-path={@path}
         data-params={Jason.encode!(chrome_base_params(@meta, @view, @card != [] || @list_item != []))}
+        data-keep-filters={Jason.encode!(unowned_filters(@meta, @search_field, @filter))}
       >
-        <Tabs.tabs_list :if={@tab != []} active_tab={active_tab(@tab, @meta)} size="sm">
+        <Tabs.tabs_list :if={@tab != []} active_tab={active_tab(@tab, @meta, @search_field)} size="sm">
           <:tab
             :for={{tab, i} <- Enum.with_index(@tab)}
             name={"tab-#{i}"}
-            patch={tab_path(@path, @meta, tab[:filters] || [])}
+            patch={tab_path(@path, @meta, tab[:filters] || [], @search_field)}
           >
             {tab[:label]}
             <Badge.badge :if={tab[:count]} size="sm" color="neutral">{tab[:count]}</Badge.badge>
@@ -676,6 +677,25 @@ defmodule LanternUI.Components.DataTable do
     if toggleable?, do: Map.put(base, "view", view), else: base
   end
 
+  # The chrome row rebuilds `filters` from the controls it can see, so anything
+  # set from outside it — a tab preset — has to be handed back to the hook or a
+  # keystroke in the search box would drop the tab the reader is standing in.
+  defp unowned_filters(meta, search_field, filter_slots) do
+    owned =
+      filter_slots
+      |> Enum.map(&to_string(&1[:field]))
+      |> then(&if(search_field, do: [to_string(search_field) | &1], else: &1))
+      |> MapSet.new()
+
+    base_params(meta)
+    |> Map.get("filters", %{})
+    |> normalize_filters()
+    |> Enum.reject(&(to_string(&1["field"]) in owned))
+    |> Enum.map(fn f ->
+      %{"field" => f["field"], "op" => f["op"], "value" => f["value"]}
+    end)
+  end
+
   defp filter_value(meta, field, op \\ nil) do
     field_s = to_string(field)
 
@@ -687,19 +707,38 @@ defmodule LanternUI.Components.DataTable do
     end)
   end
 
+  defp keep_search(filters, _meta, nil), do: filters
+
+  defp keep_search(filters, meta, search_field) do
+    field_s = to_string(search_field)
+
+    current =
+      base_params(meta)
+      |> Map.get("filters", %{})
+      |> normalize_filters()
+      |> Enum.find(&(&1["field"] == field_s and to_string(&1["value"] || "") != ""))
+
+    case current do
+      nil -> filters
+      found -> Map.put(filters, to_string(map_size(filters)), found)
+    end
+  end
+
   defp normalize_filters(filters) when is_map(filters), do: Map.values(filters)
   defp normalize_filters(filters) when is_list(filters), do: filters
   defp normalize_filters(_), do: []
 
   # A tab is active when its filter preset matches the current filters exactly
   # (both normalized to field=>value); the presetless tab is active otherwise
-  # when no filters are applied.
-  defp active_tab(tabs, meta) do
+  # when no filters are applied. The search filter is not part of that
+  # comparison — see `tab_path/4`.
+  defp active_tab(tabs, meta, search_field) do
     current =
       base_params(meta)
       |> Map.get("filters", %{})
       |> normalize_filters()
       |> Map.new(fn f -> {to_string(f["field"]), to_string(f["value"] || "")} end)
+      |> Map.drop([to_string(search_field)])
 
     idx =
       Enum.find_index(tabs, fn tab ->
@@ -722,7 +761,11 @@ defmodule LanternUI.Components.DataTable do
     }
   end
 
-  defp tab_path(path, meta, preset) do
+  # A tab is a preset: picking one replaces whatever was in the filter panel.
+  # The search box is the exception, because it is not a slice — it is the
+  # reader still looking for the same thing, one tab over. Wiping it on every
+  # tab click makes the tabs feel like they undo your work.
+  defp tab_path(path, meta, preset, search_field) do
     filters =
       preset
       |> Enum.map(&normalize_preset/1)
@@ -731,6 +774,7 @@ defmodule LanternUI.Components.DataTable do
         base = %{"field" => f.field, "value" => f.value}
         {to_string(i), if(f.op, do: Map.put(base, "op", f.op), else: base)}
       end)
+      |> keep_search(meta, search_field)
 
     params =
       base_params(meta)

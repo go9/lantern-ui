@@ -474,4 +474,58 @@ defmodule LanternUI.DataTableTest do
       refute html =~ "lui-dt-pagination"
     end
   end
+
+  describe "filter preset tabs" do
+    defp tabbed(assigns) do
+      ~H"""
+      <DataTable.data_table
+        id="t"
+        rows={@rows}
+        meta={@meta}
+        path="/orders"
+        selected_ids={MapSet.new()}
+        search_field={:search}
+      >
+        <:tab label="All" />
+        <:tab label="Active" filters={[%{field: "status", value: "active"}]} />
+        <:col :let={r} label="Name">{r.name}</:col>
+      </DataTable.data_table>
+      """
+    end
+
+    defp meta_with(filters), do: %{@meta | params: %{"filters" => filters}}
+
+    # The label of whichever tab is marked selected.
+    defp selected_tab(html) do
+      Regex.scan(~r/aria-selected="(true|false)">\s*(\w+)/, html)
+      |> Enum.find_value(fn [_, sel, label] -> sel == "true" && label end)
+    end
+
+    test "the tab matching the current filters is the active one" do
+      filtered = meta_with(%{"0" => %{"field" => "status", "value" => "active"}})
+
+      assert render(&tabbed/1, %{rows: rows(), meta: filtered}) |> selected_tab() == "Active"
+      assert render(&tabbed/1, %{rows: rows(), meta: meta_with(%{})}) |> selected_tab() == "All"
+    end
+
+    test "an open search survives a tab click, and does not stop a tab matching" do
+      searching =
+        meta_with(%{
+          "0" => %{"field" => "status", "value" => "active"},
+          "1" => %{"field" => "search", "value" => "ada"}
+        })
+
+      html = render(&tabbed/1, %{rows: rows(), meta: searching})
+
+      # the search is not a slice, so it does not disqualify the Active tab
+      assert selected_tab(html) == "Active"
+
+      # and every tab link carries it forward, the unfiltered one included
+      assert html =~ ~s(href="/orders?filters[0][field]=search&amp;filters[0][value]=ada")
+
+      assert html =~
+               ~s(href="/orders?filters[0][field]=status&amp;filters[0][value]=active) <>
+                 ~s(&amp;filters[1][field]=search&amp;filters[1][value]=ada")
+    end
+  end
 end

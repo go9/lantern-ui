@@ -1725,7 +1725,6 @@ const LanternCollapse = {
 const LanternTableChrome = {
   mounted() {
     this.path = this.el.dataset.path
-    this.base = JSON.parse(this.el.dataset.params || "{}")
 
     this.onInput = (e) => {
       const t = e.target
@@ -1752,7 +1751,14 @@ const LanternTableChrome = {
   },
 
   apply() {
-    const filters = []
+    // Read the dataset now rather than at mount: a patch rewrites these, and a
+    // cached copy would send back the sort and tab state the page had when it
+    // first loaded.
+    const base = JSON.parse(this.el.dataset.params || "{}")
+    // Filters no control in this row owns — the ones a tab set. Rebuilding only
+    // what the search box and filter panel know about would silently drop them,
+    // so a search would knock you out of the tab you were in.
+    const filters = JSON.parse(this.el.dataset.keepFilters || "[]")
     const search = this.el.querySelector('[data-part="search"]')
     if (search && search.value.trim() !== "") {
       filters.push({ field: search.dataset.field, op: search.dataset.op, value: search.value.trim() })
@@ -1774,7 +1780,7 @@ const LanternTableChrome = {
       }
     })
 
-    const params = { ...this.base }
+    const params = { ...base }
     delete params.page
     filters.forEach((f, i) => {
       params[`filters[${i}][field]`] = f.field
