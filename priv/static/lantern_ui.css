@@ -1049,7 +1049,12 @@
 .lui-badge[data-variant="solid"] { background: var(--lui-badge-c); color: var(--lantern-primary-fg); }
 .lui-badge[data-variant="outline"] { border-color: var(--lantern-border); color: var(--lantern-fg); background: transparent; }
 .lui-badge[data-color="neutral"] { --lui-badge-c: var(--lantern-fg-muted); --lui-badge-c-soft: var(--lantern-surface-sunken); }
-.lui-badge[data-color="neutral"][data-variant="soft"] { color: var(--lantern-fg); }
+/* Neutral's soft fill IS the sunken surface, so on a plain row the pill has no
+   edge and, in a column where every other value is a coloured badge, the
+   neutral ones read as unstyled text. A hairline restores the shape without
+   adding a colour; box-shadow so the box does not change size. */
+.lui-badge[data-color="neutral"][data-variant="soft"] { color: var(--lantern-fg);
+  box-shadow: inset 0 0 0 1px var(--lantern-border); }
 .lui-badge[data-color="primary"] { --lui-badge-c: var(--lantern-primary); --lui-badge-c-soft: var(--lantern-surface-sunken); }
 .lui-badge[data-color="primary"][data-variant="solid"] { color: var(--lantern-primary-fg); }
 .lui-badge[data-color="accent"] { --lui-badge-c: var(--lantern-accent); --lui-badge-c-soft: var(--lantern-accent-soft); }
