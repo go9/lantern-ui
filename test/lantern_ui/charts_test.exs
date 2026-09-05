@@ -132,4 +132,40 @@ defmodule LanternUI.ChartsTest do
       refute html =~ "<svg"
     end
   end
+
+  describe "area_chart smoothing and axis labels" do
+    @monthly [
+      %{date: "2025-10-01", value: 0},
+      %{date: "2025-11-01", value: 0},
+      %{date: "2025-12-01", value: 5},
+      %{date: "2026-01-01", value: 0}
+    ]
+
+    defp line_path(html) do
+      [_, d] = Regex.run(~r/<path\s+d="([^"]+)"\s+fill="none"/, html)
+      d
+    end
+
+    defp x_tick_anchors(html) do
+      ~r/<text[^>]*y="\d+"[^>]*text-anchor="(\w+)"[^>]*>\s*[A-Z][a-z]{2}/
+      |> Regex.scan(html)
+      |> Enum.map(&List.last/1)
+    end
+
+    test "smooths the line by default" do
+      assert line_path(area(@monthly)) =~ "C"
+    end
+
+    test "smooth={false} draws straight segments, so empty months stay flat" do
+      d = line_path(area(@monthly, smooth: false))
+
+      refute d =~ "C"
+      assert d =~ "L"
+    end
+
+    test "the first and last x labels anchor inward so they cannot clip" do
+      assert ["start" | rest] = x_tick_anchors(area(@monthly))
+      assert List.last(rest) == "end"
+    end
+  end
 end

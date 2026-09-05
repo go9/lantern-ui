@@ -56,11 +56,19 @@ defmodule LanternUI.Charts do
   attr(:empty_message, :string, default: "No data", doc: "Copy shown when series is empty.")
   attr(:aria_label, :string, default: "Area chart", doc: "Accessible name for the SVG.")
 
+  attr(:smooth, :boolean,
+    default: true,
+    doc:
+      "Curve the line between points. Set false for values counted per discrete " <>
+        "bucket (per month, per build): a spline through them bulges into the " <>
+        "empty periods either side and reads as activity that never happened."
+  )
+
   def area_chart(assigns) do
     assigns =
       assigns.series
       |> normalize_dated()
-      |> area_geometry(assigns.height, assigns.value_format)
+      |> area_geometry(assigns.height, assigns.value_format, assigns.smooth)
       |> then(&assign(assigns, &1))
 
     ~H"""
@@ -84,7 +92,9 @@ defmodule LanternUI.Charts do
           </g>
           <g fill="currentColor" fill-opacity="0.5" font-size="11">
             <text :for={{l, y} <- @y_ticks} x={@plot_left - 8} y={y + 3} text-anchor="end">{l}</text>
-            <text :for={{l, x} <- @x_ticks} x={x} y={@height - 8} text-anchor="middle">{l}</text>
+            <text :for={{l, x, anchor} <- @x_ticks} x={x} y={@height - 8} text-anchor={anchor}>
+              {l}
+            </text>
           </g>
           <g style={"color:#{@accent}"}>
             <defs>
@@ -223,9 +233,9 @@ defmodule LanternUI.Charts do
 
   # ── geometry assembly ───────────────────────────────────────────────────────
 
-  defp area_geometry([], _height, _fmt), do: %{has_data: false, fg_muted: @fg_muted}
+  defp area_geometry([], _height, _fmt, _smooth), do: %{has_data: false, fg_muted: @fg_muted}
 
-  defp area_geometry(points, height, fmt) do
+  defp area_geometry(points, height, fmt, smooth) do
     plot_left = @margin.left
     plot_right = @vb_w - @margin.right
     plot_top = @margin.top
@@ -244,7 +254,7 @@ defmodule LanternUI.Charts do
     yf = fn v -> Geometry.scale(ymin, ymax, plot_bottom, plot_top, v) end
 
     px = Enum.map(points, fn {d, v} -> {xf.(d), yf.(v)} end)
-    smooth? = length(px) <= @smooth_max
+    smooth? = smooth and length(px) <= @smooth_max
 
     y_ticks = Enum.map(ticks, fn t -> {format_value(t, fmt), Geometry.round1(yf.(t))} end)
 
@@ -257,7 +267,7 @@ defmodule LanternUI.Charts do
       |> Enum.uniq()
       |> Enum.map(fn i ->
         {d, _} = Enum.at(points, i)
-        {label_fun.(d), Geometry.round1(xf.(d))}
+        {label_fun.(d), Geometry.round1(xf.(d)), tick_anchor(i, count)}
       end)
 
     points_json =
@@ -289,6 +299,13 @@ defmodule LanternUI.Charts do
       fg_muted: @fg_muted
     }
   end
+
+  # The first and last labels sit on the plot edges, so centring them pushes half
+  # the text outside the viewBox and the browser clips it ("Sep '2"). Anchor the
+  # end ticks inward instead.
+  defp tick_anchor(0, _count), do: "start"
+  defp tick_anchor(i, count) when i == count - 1, do: "end"
+  defp tick_anchor(_i, _count), do: "middle"
 
   defp spark_geometry(series, height) do
     nums = Enum.filter(series, &is_number/1)
@@ -484,7 +501,9 @@ defmodule LanternUI.Charts do
           </g>
           <g fill="currentColor" fill-opacity="0.5" font-size="11">
             <text :for={{l, y} <- @y_ticks} x={@plot_left - 8} y={y + 3} text-anchor="end">{l}</text>
-            <text :for={{l, x} <- @x_ticks} x={x} y={@height - 8} text-anchor="middle">{l}</text>
+            <text :for={{l, x, anchor} <- @x_ticks} x={x} y={@height - 8} text-anchor={anchor}>
+              {l}
+            </text>
           </g>
           <g :for={s <- @lines} style={"color:#{s.color}"}>
             <path
@@ -567,8 +586,10 @@ defmodule LanternUI.Charts do
 
         x_ticks =
           0..4
-          |> Enum.map(fn k -> DateTime.add(t0, round(k / 4 * span), :second) end)
-          |> Enum.map(fn t -> {label_for.(t), Geometry.round1(xf.(t))} end)
+          |> Enum.map(fn k ->
+            t = DateTime.add(t0, round(k / 4 * span), :second)
+            {label_for.(t), Geometry.round1(xf.(t)), tick_anchor(k, 5)}
+          end)
           |> Enum.uniq()
 
         series_json =
