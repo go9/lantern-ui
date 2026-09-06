@@ -1367,6 +1367,15 @@
 .lui-datatable .lui-dt-bulkbar { margin-bottom: 0; border: none; border-radius: 0;
   border-bottom: 1px solid color-mix(in oklab, var(--lantern-accent) 25%, transparent); }
 .lui-datatable .lui-table-wrap { border: none; border-radius: 0; }
+/* Inside a datatable the column header drops its tint. Standing alone the table
+   is a bordered, rounded box and the sunken band reads as its cap; full-bleed in
+   a card it is a hard-cornered slab jammed into the card's edge, in the same
+   colour as the segmented tabs sitting rounded and inset directly above it. The
+   hairline under it already says "header", and every other chrome row here —
+   the toolbar, the bulk bar, the pagination — is a hairline and nothing else.
+   The surface is stated rather than dropped because in fill mode the header is
+   sticky and rows must not show through it. */
+.lui-datatable .lui-th { background: var(--lantern-surface-raised); }
 
 /* Fill mode (`<.data_table fill>`): the datatable stretches to its flex parent's
    height, the table body becomes the vertical scroll region, and the overview /
