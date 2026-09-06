@@ -1393,15 +1393,20 @@
   overflow-y: auto;
 }
 /* In fill mode the wrap is the scroll region, so the column header would scroll
-   away with the rows. Pin it. `.lui-table` uses border-collapse: collapse, which
-   gives the border to the TABLE rather than the cell — a sticky th therefore
-   loses its border-bottom on scroll, so redraw that hairline as an inset shadow.
-   The th already carries an opaque --lantern-surface-sunken background, so rows
-   cannot show through it. */
+   away with the rows. Pin it. `.lui-table` uses border-collapse: collapse, and a
+   collapsed border belongs to the TABLE rather than to the cell, so it does not
+   travel with a sticky th — the hairline is redrawn as an inset shadow, which
+   does. The cell's own bottom border has to go with it: left in place it kept
+   painting one pixel below the shadow, and the header ended up underlined at
+   twice the weight of every row divider beneath it. It is zeroed by colour
+   rather than by `none` so collapsed-border resolution still picks this edge
+   and a neighbour's border cannot surface in its place. The th carries an
+   opaque surface, so rows cannot show through it. */
 .lui-datatable-fill > .lui-table-wrap .lui-th {
   position: sticky;
   top: 0;
   z-index: 2;
+  border-bottom-color: transparent;
   box-shadow: inset 0 -1px 0 var(--lantern-border);
 }
 .lui-datatable .lui-dt-cards { padding: 0.9rem; }
