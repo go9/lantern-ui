@@ -168,9 +168,26 @@ defmodule LanternUI.Charts do
 
   `series` is a list of maps like `%{label: "Q1", value: 42}`. Empty series render
   an empty state.
+
+  A category may carry an `:href`, which makes that bar a link:
+
+      <.bar_chart id="stages" series={[
+        %{label: "Open", value: 12, href: "/orders?status=open"},
+        %{label: "Shipped", value: 40, href: "/orders?status=shipped"}
+      ]} />
+
+  A linked bar navigates through LiveView and is reachable by keyboard. Its hit
+  area is the whole column rather than the drawn bar, so a category sitting at
+  zero — the one a reader is most likely to want to check — can still be
+  clicked. Categories without an `:href` are drawn exactly as before.
   """
   attr(:id, :string, required: true, doc: "Stable DOM id for the chart root.")
-  attr(:series, :list, default: [], doc: "Categories: %{label: String.t(), value: number}.")
+
+  attr(:series, :list,
+    default: [],
+    doc: "Categories: %{label: String.t(), value: number, href: String.t() | nil}."
+  )
+
   attr(:height, :integer, default: 180, doc: "SVG viewBox height in CSS pixels.")
   attr(:class, :string, default: nil, doc: "Extra classes merged onto the root element.")
 
@@ -195,21 +212,47 @@ defmodule LanternUI.Charts do
         style={"display:block;width:100%;height:auto;font-family:inherit;color:#{@fg}"}
       >
         <g>
-          <rect
-            :for={b <- @bars}
-            x={b.x}
-            y={b.y}
-            width={b.w}
-            height={b.h}
-            rx="4"
-            fill={@accent}
-            opacity="0.9"
-          />
+          <%= for b <- @bars do %>
+            <.link
+              :if={b.href}
+              navigate={b.href}
+              class="lui-bar-link"
+              aria-label={"#{b.label}: #{b.value}"}
+            >
+              <rect x={b.band_x} y={@plot_top} width={b.band_w} height={b.band_h} fill="transparent" />
+              <rect x={b.x} y={b.y} width={b.w} height={b.h} rx="4" fill={@accent} opacity="0.9" />
+            </.link>
+            <rect
+              :if={!b.href}
+              x={b.x}
+              y={b.y}
+              width={b.w}
+              height={b.h}
+              rx="4"
+              fill={@accent}
+              opacity="0.9"
+            />
+          <% end %>
         </g>
-        <g fill="currentColor" fill-opacity="0.6" font-size="11.5" text-anchor="middle">
+        <%!-- The labels sit over the bars, and a glyph is a click target of its
+              own, so a click that landed on the "12" would miss the link under
+              it. They are decoration either way. --%>
+        <g
+          fill="currentColor"
+          fill-opacity="0.6"
+          font-size="11.5"
+          text-anchor="middle"
+          pointer-events="none"
+        >
           <text :for={b <- @bars} x={b.cx} y={b.y - 6} font-weight="500">{b.value}</text>
         </g>
-        <g fill="currentColor" fill-opacity="0.45" font-size="11" text-anchor="middle">
+        <g
+          fill="currentColor"
+          fill-opacity="0.45"
+          font-size="11"
+          text-anchor="middle"
+          pointer-events="none"
+        >
           <text :for={b <- @bars} x={b.cx} y={@baseline + 16}>{b.label}</text>
         </g>
         <line
@@ -339,8 +382,8 @@ defmodule LanternUI.Charts do
   defp bar_geometry(series, height, fmt) do
     items =
       series
-      |> Enum.map(fn item -> {bar_label(item), bar_value(item)} end)
-      |> Enum.reject(fn {_l, v} -> is_nil(v) end)
+      |> Enum.map(fn item -> {bar_label(item), bar_value(item), bar_href(item)} end)
+      |> Enum.reject(fn {_l, v, _h} -> is_nil(v) end)
 
     case items do
       [] ->
@@ -360,7 +403,7 @@ defmodule LanternUI.Charts do
         bars =
           items
           |> Enum.with_index()
-          |> Enum.map(fn {{label, v}, i} ->
+          |> Enum.map(fn {{label, v, href}, i} ->
             bh = v / maxv * inner_h
             bx = m.left + i * band + (band - barw) / 2
 
@@ -370,6 +413,12 @@ defmodule LanternUI.Charts do
               w: Geometry.round1(barw),
               h: Geometry.round1(bh),
               cx: Geometry.round1(bx + barw / 2),
+              # The whole column, for a link's hit area: a bar at zero has no
+              # height to click.
+              band_x: Geometry.round1(m.left + i * band),
+              band_w: Geometry.round1(band),
+              band_h: Geometry.round1(inner_h),
+              href: href,
               label: label,
               value: format_value(v, fmt)
             }
@@ -379,6 +428,7 @@ defmodule LanternUI.Charts do
           has_data: true,
           vb_w: @vb_w,
           baseline: Geometry.round1(baseline),
+          plot_top: m.top,
           plot_left: m.left,
           plot_right: @vb_w - m.right,
           bars: bars,
@@ -420,6 +470,10 @@ defmodule LanternUI.Charts do
   defp bar_value(%{value: v}) when is_number(v), do: v
   defp bar_value(%{"value" => v}) when is_number(v), do: v
   defp bar_value(_), do: nil
+
+  defp bar_href(%{href: h}) when is_binary(h), do: h
+  defp bar_href(%{"href" => h}) when is_binary(h), do: h
+  defp bar_href(_), do: nil
 
   defp bar_label(%{label: l}), do: to_string(l)
   defp bar_label(%{"label" => l}), do: to_string(l)

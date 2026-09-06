@@ -3453,3 +3453,13 @@ a.lui-waterfall-lane-inner:focus-visible {
 /* The rail has no room for text-only links, and these carry no active state
    worth showing as an icon. */
 .lui-app[data-collapsed] .lui-app-sidebar-links { display: none; }
+
+/* ── charts: a bar that is a link ───────────────────────────────────────── */
+/* The chart draws its own colours inline, so only the states an inline style
+   cannot express live here. The hit area is the whole column; the bar under it
+   is what lights up, so hovering the empty air above a short bar still tells
+   you which one you are about to follow. */
+.lui-bar-link { cursor: pointer; }
+.lui-bar-link rect { transition: opacity var(--lantern-duration) var(--lantern-ease); }
+.lui-bar-link:hover rect, .lui-bar-link:focus-visible rect { opacity: 1; }
+.lui-bar-link:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: 2px; }

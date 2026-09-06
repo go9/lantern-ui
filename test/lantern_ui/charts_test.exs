@@ -85,6 +85,36 @@ defmodule LanternUI.ChartsTest do
       html = render_component(&LanternUI.Charts.bar_chart/1, id: "b", series: [])
       assert html =~ "No data"
     end
+
+    test "a category with an href becomes a live link over the whole column" do
+      html =
+        render_component(&LanternUI.Charts.bar_chart/1,
+          id: "b",
+          series: [
+            %{label: "Open", value: 12, href: "/orders?status=open"},
+            %{label: "Shipped", value: 0, href: "/orders?status=shipped"}
+          ]
+        )
+
+      assert html =~ ~s(href="/orders?status=open")
+      assert html =~ ~s(data-phx-link="redirect")
+      assert html =~ ~s(aria-label="Open: 12")
+      # The category sitting at zero draws no bar, so its column is the only
+      # thing there is to click.
+      assert html =~ ~s(aria-label="Shipped: 0")
+      assert html =~ ~s(fill="transparent")
+    end
+
+    test "a category without an href is drawn as a plain bar" do
+      html =
+        render_component(&LanternUI.Charts.bar_chart/1,
+          id: "b",
+          series: [%{label: "Q1", value: 42}]
+        )
+
+      refute html =~ "lui-bar-link"
+      refute html =~ "<a"
+    end
   end
 
   describe "line_chart/1" do
