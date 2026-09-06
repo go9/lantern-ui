@@ -1364,8 +1364,15 @@
 .lui-dt-chromerow { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
   padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--lantern-border); }
 .lui-dt-spacer { flex: 1; }
+/* Standing alone the bulk bar is a rounded accent callout floating above the
+   table. Inside a datatable it is a chrome row like the toolbar and the
+   pagination — flush, full width, square — and an accent wash on a strip that
+   shape is a slab, sitting directly under a segmented control of much the same
+   colour. It keeps the ordinary hairline and lets the count, which is already
+   in the accent, say that a selection is live. */
 .lui-datatable .lui-dt-bulkbar { margin-bottom: 0; border: none; border-radius: 0;
-  border-bottom: 1px solid color-mix(in oklab, var(--lantern-accent) 25%, transparent); }
+  background: transparent;
+  border-bottom: 1px solid var(--lantern-border); }
 .lui-datatable .lui-table-wrap { border: none; border-radius: 0; }
 
 /* A row's hover and selected states are rounded bands, not full-bleed slabs.
@@ -1378,8 +1385,25 @@
 .lui-datatable .lui-table { border-collapse: separate; border-spacing: 0; }
 .lui-datatable .lui-tr:hover { background: transparent; }
 .lui-datatable .lui-tr:hover .lui-td { background: var(--lantern-surface-hover); }
+/* A run of selected rows is one band, not a stack of cards. Every row rounding
+   on its own turns a block of them into separate tiles with the page showing
+   through the dividers, so the corners a row shares with a selected neighbour
+   are squared and the hairline between them goes. The tint is mixed into the
+   surface rather than laid over it as a translucent wash, so it does not
+   deepen where it meets the hover state. */
 .lui-datatable .lui-tr-selected .lui-td,
-.lui-datatable .lui-tr-selected:hover .lui-td { background: var(--lantern-accent-soft); }
+.lui-datatable .lui-tr-selected:hover .lui-td {
+  background: color-mix(in oklab, var(--lantern-accent) 12%, var(--lantern-surface));
+}
+.lui-datatable .lui-tr-selected:has(+ .lui-tr-selected) .lui-td {
+  border-bottom-color: transparent;
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
+.lui-datatable .lui-tr-selected + .lui-tr-selected .lui-td {
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+}
 .lui-datatable .lui-tr .lui-td:first-child {
   border-start-start-radius: var(--lantern-radius-sm);
   border-end-start-radius: var(--lantern-radius-sm);
