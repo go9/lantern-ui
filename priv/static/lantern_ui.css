@@ -1367,6 +1367,27 @@
 .lui-datatable .lui-dt-bulkbar { margin-bottom: 0; border: none; border-radius: 0;
   border-bottom: 1px solid color-mix(in oklab, var(--lantern-accent) 25%, transparent); }
 .lui-datatable .lui-table-wrap { border: none; border-radius: 0; }
+
+/* A row's hover and selected states are rounded bands, not full-bleed slabs.
+   `border-collapse: collapse` hands every border and corner to the TABLE, so a
+   radius on a row or a cell is dropped on the floor — hence separate borders
+   with zero spacing, which draws the same hairlines (only the cells' bottom
+   edges are ever set, so nothing doubles up) while letting the outer cells
+   round. The tint moves from the row to its cells for the same reason: a
+   `border-radius` on a `tr` is not reliably honoured. */
+.lui-datatable .lui-table { border-collapse: separate; border-spacing: 0; }
+.lui-datatable .lui-tr:hover { background: transparent; }
+.lui-datatable .lui-tr:hover .lui-td { background: var(--lantern-surface-hover); }
+.lui-datatable .lui-tr-selected .lui-td,
+.lui-datatable .lui-tr-selected:hover .lui-td { background: var(--lantern-accent-soft); }
+.lui-datatable .lui-tr .lui-td:first-child {
+  border-start-start-radius: var(--lantern-radius-sm);
+  border-end-start-radius: var(--lantern-radius-sm);
+}
+.lui-datatable .lui-tr .lui-td:last-child {
+  border-start-end-radius: var(--lantern-radius-sm);
+  border-end-end-radius: var(--lantern-radius-sm);
+}
 /* Inside a datatable the column header drops its tint. Standing alone the table
    is a bordered, rounded box and the sunken band reads as its cap; full-bleed in
    a card it is a hard-cornered slab jammed into the card's edge, in the same
@@ -1429,10 +1450,18 @@
 .lui-datatable.lui-datatable-flush .lui-dt-chromerow,
 .lui-datatable.lui-datatable-flush .lui-dt-pagination,
 .lui-datatable.lui-datatable-flush .lui-dt-bulkbar { padding-inline: 0; }
+/* The outer cells used to sit at the gutter on zero padding. That leaves a
+   rounded row highlight starting on the first glyph, so the padding comes back
+   and the table is pulled out by the same amount — the text still lands on the
+   gutter, and the band has somewhere to turn its corner. */
+.lui-datatable.lui-datatable-flush { --lui-dt-bleed: 0.6rem; }
+.lui-datatable.lui-datatable-flush .lui-table-wrap {
+  margin-inline: calc(var(--lui-dt-bleed) * -1);
+}
 .lui-datatable.lui-datatable-flush .lui-th:first-child,
-.lui-datatable.lui-datatable-flush .lui-td:first-child { padding-left: 0; }
+.lui-datatable.lui-datatable-flush .lui-td:first-child { padding-left: var(--lui-dt-bleed); }
 .lui-datatable.lui-datatable-flush .lui-th:last-child,
-.lui-datatable.lui-datatable-flush .lui-td:last-child { padding-right: 0; }
+.lui-datatable.lui-datatable-flush .lui-td:last-child { padding-right: var(--lui-dt-bleed); }
 .lui-datatable.lui-datatable-flush .lui-dt-cards { padding: 0.75rem 0 0; }
 
 /* The wrap carries the raised surface that makes a standalone table a panel, and
