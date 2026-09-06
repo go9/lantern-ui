@@ -1434,6 +1434,15 @@
 .lui-datatable.lui-datatable-flush .lui-th:last-child,
 .lui-datatable.lui-datatable-flush .lui-td:last-child { padding-right: 0; }
 .lui-datatable.lui-datatable-flush .lui-dt-cards { padding: 0.75rem 0 0; }
+
+/* The wrap carries the raised surface that makes a standalone table a panel, and
+   flush takes the panel away — so left alone it stays a hard-cornered raised
+   rectangle bleeding to the page gutter, which is the slab flush exists to get
+   rid of. Give the page back its own surface. The header cell cannot simply go
+   transparent with it: in fill mode it is sticky and rows scroll underneath, so
+   it is painted in that same page surface instead, opaque and invisible. */
+.lui-datatable.lui-datatable-flush .lui-table-wrap { background: transparent; }
+.lui-datatable.lui-datatable-flush .lui-th { background: var(--lantern-surface); }
 .lui-dt-filtertext { height: 1.9rem; padding: 0 0.55rem; font-size: var(--lantern-text-sm);
   font-family: inherit; background: var(--lantern-surface); color: var(--lantern-fg);
   border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm);
