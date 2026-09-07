@@ -970,6 +970,16 @@
 .lui-nav-item-icon.lui-nav-item-icon-mask { width: 1.15rem; height: 1.15rem; }
 .lui-nav-item-label { overflow: hidden; text-overflow: ellipsis; }
 
+/* A count on a nav item. `margin-left: auto` parks it at the end of the row so
+   several of them line up down the nav, and `flex-shrink: 0` means a long label
+   ellipsises rather than squeezing the number it is competing with. When the
+   item also owns a subnav chevron, the badge takes the auto margin and the
+   chevron follows it. */
+.lui-nav-item-badge { margin-left: auto; flex-shrink: 0; min-width: 1.3rem;
+  padding: 0 0.35rem; border-radius: 999px; font-size: 0.6875rem; font-weight: 600;
+  line-height: 1.3rem; text-align: center; font-variant-numeric: tabular-nums;
+  background: var(--lantern-accent); color: var(--lantern-accent-fg); }
+
 /* Expandable nav_item (`:subnav` slot): a toggle with a chevron over a
    grid-rows-based slide panel — client-side via JS.toggle_attribute on
    data-expanded (Fluxon-parity nesting). */
@@ -1012,7 +1022,15 @@
   .lui-app[data-collapsed] .lui-collapse-label { display: none; }
   /* On the rail, don't expand the subnav panel. */
   .lui-app[data-collapsed] .lui-nav-sub-panel { grid-template-rows: 0fr; }
-  .lui-app[data-collapsed] .lui-nav-item { justify-content: center; padding-inline: 0; }
+  .lui-app[data-collapsed] .lui-nav-item { justify-content: center; padding-inline: 0;
+    position: relative; }
+  /* On the rail a count has nowhere to sit and nothing to sit beside, so it
+     becomes a dot on the icon. The number stays in the markup for anyone
+     reading the tooltip or the accessibility tree. */
+  .lui-app[data-collapsed] .lui-nav-item-badge { position: absolute;
+    top: 0.2rem; right: 0.85rem; margin-left: 0; min-width: 0; padding: 0;
+    width: 0.5rem; height: 0.5rem; font-size: 0; line-height: 0;
+    box-shadow: 0 0 0 2px var(--lantern-surface); }
   .lui-app[data-collapsed] .lui-collapse-btn { justify-content: center; }
   .lui-app[data-collapsed] .lui-collapse-icon { transform: rotate(180deg); }
   .lui-app[data-collapsed] .lui-nav-group { margin-bottom: 0.5rem; }

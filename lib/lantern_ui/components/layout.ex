@@ -194,6 +194,11 @@ defmodule LanternUI.Components.Layout do
   button when given `phx-click`. Collapses to an icon-only rail item (with a
   tooltip) when the sidebar is collapsed.
 
+  Pass `badge` to hang a count off the item — how many things are waiting behind
+  the link. It sits at the end of the row and becomes a dot on the collapsed
+  rail, where there is no room for a number and none is needed: the point of a
+  count on a rail is that there is something.
+
   Pass a `:subnav` slot of nested `nav_item`s to make it an expandable section
   (Fluxon parity): the item becomes a toggle with a chevron, and the subnav
   slides open/closed client-side. Use `expanded` for the initial open state
@@ -211,6 +216,14 @@ defmodule LanternUI.Components.Layout do
     doc:
       "Leading icon. A lantern icon-set name (e.g. `chart-bar`), or a host heroicon " <>
         "name (`hero-*`) rendered as a CSS-mask span so an app can keep its own icons."
+  )
+
+  attr(:badge, :any,
+    default: nil,
+    doc:
+      "A count or short marker for what is waiting behind this link. Sits at the end " <>
+        "of the row, and shrinks to a dot on the collapsed rail. Pass `nil` for none — " <>
+        "a badge reading `0` is a badge saying there is nothing to see."
   )
 
   attr(:active, :boolean, default: false, doc: "Highlight as the current page.")
@@ -242,6 +255,7 @@ defmodule LanternUI.Components.Layout do
       >
         <.nav_item_icon :if={@icon} name={@icon} />
         <span class="lui-nav-item-label">{@label}</span>
+        <span :if={@badge} class="lui-nav-item-badge">{@badge}</span>
         <Icon.icon name="chevron-right" class="lui-nav-sub-chevron" />
       </button>
       <div class="lui-nav-sub-panel">
@@ -260,6 +274,7 @@ defmodule LanternUI.Components.Layout do
     >
       <.nav_item_icon :if={@icon} name={@icon} />
       <span class="lui-nav-item-label">{@label}</span>
+      <span :if={@badge} class="lui-nav-item-badge">{@badge}</span>
     </.link>
     <button
       :if={@subnav == [] && !@link?}
@@ -271,6 +286,7 @@ defmodule LanternUI.Components.Layout do
     >
       <.nav_item_icon :if={@icon} name={@icon} />
       <span class="lui-nav-item-label">{@label}</span>
+      <span :if={@badge} class="lui-nav-item-badge">{@badge}</span>
     </button>
     """
   end
