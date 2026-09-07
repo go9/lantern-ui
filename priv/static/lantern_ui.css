@@ -1078,10 +1078,16 @@
 .lui-table-wrap { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius);
   overflow-x: auto; background: var(--lantern-surface-raised); }
 .lui-table { width: 100%; border-collapse: collapse; font-size: var(--lantern-text); }
+/* Row height is set by the tallest thing in a cell, which in a table with row
+   actions is the trigger button rather than the text — so the vertical padding
+   is what is left to give, and at 0.5rem it was giving too much: a 30px control
+   in a 48px row. Trimmed to 0.35rem the row lands near 43px, in the band the
+   reference tables sit in, without touching the shared button sizes. The
+   horizontal padding is unchanged; the columns were never the crowded part. */
 .lui-th { background: var(--lantern-surface-sunken); color: var(--lantern-fg-muted);
   font-size: var(--lantern-text-sm); font-weight: 550; text-align: left;
-  padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--lantern-border); white-space: nowrap; }
-.lui-td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--lantern-border);
+  padding: 0.35rem 0.7rem; border-bottom: 1px solid var(--lantern-border); white-space: nowrap; }
+.lui-td { padding: 0.35rem 0.7rem; border-bottom: 1px solid var(--lantern-border);
   color: var(--lantern-fg); }
 .lui-tr:last-child .lui-td { border-bottom: none; }
 .lui-tr:hover { background: var(--lantern-surface-hover); }
