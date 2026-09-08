@@ -250,7 +250,11 @@ defmodule LanternUI.Components.Layout do
         title={@label}
         aria-expanded={to_string(@expanded)}
         data-expanded={@expanded || nil}
-        phx-click={JS.toggle_attribute({"data-expanded", ""})}
+        data-part="nav-disclosure"
+        phx-click={
+          JS.toggle_attribute({"data-expanded", ""})
+          |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+        }
         {@rest}
       >
         <.nav_item_icon :if={@icon} name={@icon} />

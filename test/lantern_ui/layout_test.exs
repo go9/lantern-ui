@@ -170,6 +170,30 @@ defmodule LanternUI.LayoutTest do
       assert html =~ ~s(href="/s/general")
     end
 
+    test "the toggle is marked a disclosure and keeps aria-expanded with it" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.nav_item label="Org Settings" icon="hero-cog-6-tooth">
+            <:subnav>
+              <Layout.nav_item label="General" navigate="/s/general" />
+            </:subnav>
+          </Layout.nav_item>
+          """
+        end)
+
+      # The shell's sidebar hook closes the mobile drawer on a nav item, which
+      # is right for a destination and wrong for a disclosure — it would shut
+      # the menu in the same click that opened the section. This is how the
+      # hook tells the two apart, so the parent must carry it.
+      assert html =~ ~s(data-part="nav-disclosure")
+
+      # One click moves both the styling hook and what a screen reader is told.
+      assert html =~ ~s(data-expanded)
+      assert html =~ ~s(aria-expanded)
+      assert html =~ ~s(&quot;aria-expanded&quot;,&quot;true&quot;,&quot;false&quot;)
+    end
+
     test "without a :subnav it is a plain link (no toggle/panel)" do
       html =
         render(fn assigns ->
