@@ -429,4 +429,103 @@ defmodule LanternUI.DataTableTest do
     refute both =~ "lui-table-wrap"
     refute both =~ "LIST-Ada"
   end
+
+  describe "flush and the pagination bar" do
+    defp plain_table(assigns) do
+      ~H"""
+      <DataTable.data_table
+        id="t"
+        rows={@rows}
+        meta={@meta}
+        path="/orders"
+        selected_ids={@selected}
+        flush={@flush}
+      >
+        <:col :let={r} label="Name">{r.name}</:col>
+        <:empty>NOTHING</:empty>
+      </DataTable.data_table>
+      """
+    end
+
+    test "flush marks the root so the panel chrome can be dropped" do
+      base = %{rows: rows(), meta: @meta, selected: MapSet.new()}
+
+      refute render(&plain_table/1, Map.put(base, :flush, false)) =~ "lui-datatable-flush"
+      assert render(&plain_table/1, Map.put(base, :flush, true)) =~ "lui-datatable-flush"
+    end
+
+    test "the bar shows on a single page, because it carries the result count" do
+      single = %{@meta | current_page: 1, total_pages: 1, total_count: 6}
+
+      html =
+        render(&plain_table/1, %{rows: rows(), meta: single, selected: MapSet.new(), flush: false})
+
+      assert html =~ "lui-dt-pagination"
+      assert html =~ "6 results"
+    end
+
+    test "an empty table has no count to report, so it has no bar" do
+      empty = %{@meta | current_page: 1, total_pages: 0, total_count: 0}
+
+      html =
+        render(&plain_table/1, %{rows: [], meta: empty, selected: MapSet.new(), flush: false})
+
+      assert html =~ "NOTHING"
+      refute html =~ "lui-dt-pagination"
+    end
+  end
+
+  describe "filter preset tabs" do
+    defp tabbed(assigns) do
+      ~H"""
+      <DataTable.data_table
+        id="t"
+        rows={@rows}
+        meta={@meta}
+        path="/orders"
+        selected_ids={MapSet.new()}
+        search_field={:search}
+      >
+        <:tab label="All" />
+        <:tab label="Active" filters={[%{field: "status", value: "active"}]} />
+        <:col :let={r} label="Name">{r.name}</:col>
+      </DataTable.data_table>
+      """
+    end
+
+    defp meta_with(filters), do: %{@meta | params: %{"filters" => filters}}
+
+    # The label of whichever tab is marked selected.
+    defp selected_tab(html) do
+      Regex.scan(~r/aria-selected="(true|false)">\s*(\w+)/, html)
+      |> Enum.find_value(fn [_, sel, label] -> sel == "true" && label end)
+    end
+
+    test "the tab matching the current filters is the active one" do
+      filtered = meta_with(%{"0" => %{"field" => "status", "value" => "active"}})
+
+      assert render(&tabbed/1, %{rows: rows(), meta: filtered}) |> selected_tab() == "Active"
+      assert render(&tabbed/1, %{rows: rows(), meta: meta_with(%{})}) |> selected_tab() == "All"
+    end
+
+    test "an open search survives a tab click, and does not stop a tab matching" do
+      searching =
+        meta_with(%{
+          "0" => %{"field" => "status", "value" => "active"},
+          "1" => %{"field" => "search", "value" => "ada"}
+        })
+
+      html = render(&tabbed/1, %{rows: rows(), meta: searching})
+
+      # the search is not a slice, so it does not disqualify the Active tab
+      assert selected_tab(html) == "Active"
+
+      # and every tab link carries it forward, the unfiltered one included
+      assert html =~ ~s(href="/orders?filters[0][field]=search&amp;filters[0][value]=ada")
+
+      assert html =~
+               ~s(href="/orders?filters[0][field]=status&amp;filters[0][value]=active) <>
+                 ~s(&amp;filters[1][field]=search&amp;filters[1][value]=ada")
+    end
+  end
 end

@@ -834,6 +834,11 @@
 }
 /* Horizontal full-bleed only — keep top flush with main, no negative top margin */
 .lui-app-main > .lui-app-breadcrumb {
+  /* `width: auto`, because the base rule sets `width: 100%` and that is what a
+     negative margin cannot stretch: the bar kept the content width and simply
+     slid 1.5rem left, bleeding past the left edge and stopping 3rem short of
+     the right one. Auto lets the negative margins do what they are here for. */
+  width: auto;
   margin: 0 -1.5rem 0.75rem;
   padding: 0.5rem 1.5rem;
 }
@@ -965,6 +970,16 @@
 .lui-nav-item-icon.lui-nav-item-icon-mask { width: 1.15rem; height: 1.15rem; }
 .lui-nav-item-label { overflow: hidden; text-overflow: ellipsis; }
 
+/* A count on a nav item. `margin-left: auto` parks it at the end of the row so
+   several of them line up down the nav, and `flex-shrink: 0` means a long label
+   ellipsises rather than squeezing the number it is competing with. When the
+   item also owns a subnav chevron, the badge takes the auto margin and the
+   chevron follows it. */
+.lui-nav-item-badge { margin-left: auto; flex-shrink: 0; min-width: 1.3rem;
+  padding: 0 0.35rem; border-radius: 999px; font-size: 0.6875rem; font-weight: 600;
+  line-height: 1.3rem; text-align: center; font-variant-numeric: tabular-nums;
+  background: var(--lantern-accent); color: var(--lantern-accent-fg); }
+
 /* Expandable nav_item (`:subnav` slot): a toggle with a chevron over a
    grid-rows-based slide panel — client-side via JS.toggle_attribute on
    data-expanded (Fluxon-parity nesting). */
@@ -978,6 +993,25 @@
 .lui-nav-sub-inner { overflow: hidden; margin-left: 0.85rem; padding-left: 0.5rem;
   border-left: 1px solid var(--lantern-border); }
 
+/* A parent that owns a subnav is a disclosure, not a destination: "the current
+   page is in here". Painting it with the same filled background as the child
+   that IS current stacks two identical blocks against each other and neither
+   one reads as the answer. The parent keeps the accent colour and the weight;
+   the fill belongs to the leaf you are actually on. */
+.lui-nav-sub > .lui-nav-item-active,
+.lui-nav-sub > .lui-nav-item-active:hover { background: none; }
+.lui-nav-sub > .lui-nav-item-active:hover { background: var(--lantern-surface-sunken); }
+.lui-nav-sub > .lui-nav-item-active .lui-nav-sub-chevron { color: var(--lantern-accent); }
+
+/* Which segment of the rail you are on. The border lives on the container, so
+   the active child overlays its own segment rather than trying to colour part
+   of someone else's border. */
+.lui-nav-sub-inner .lui-nav-item { position: relative; }
+.lui-nav-sub-inner .lui-nav-item-active::before {
+  content: ""; position: absolute; left: -0.5rem; margin-left: -1px;
+  top: 0.15rem; bottom: 0.15rem; width: 2px; border-radius: 1px;
+  background: var(--lantern-accent); }
+
 /* Collapsed rail: hide text, center icons, flip the collapse chevron. Desktop
    only — the mobile drawer has room for the full labels. */
 @media (min-width: 769px) {
@@ -988,7 +1022,15 @@
   .lui-app[data-collapsed] .lui-collapse-label { display: none; }
   /* On the rail, don't expand the subnav panel. */
   .lui-app[data-collapsed] .lui-nav-sub-panel { grid-template-rows: 0fr; }
-  .lui-app[data-collapsed] .lui-nav-item { justify-content: center; padding-inline: 0; }
+  .lui-app[data-collapsed] .lui-nav-item { justify-content: center; padding-inline: 0;
+    position: relative; }
+  /* On the rail a count has nowhere to sit and nothing to sit beside, so it
+     becomes a dot on the icon. The number stays in the markup for anyone
+     reading the tooltip or the accessibility tree. */
+  .lui-app[data-collapsed] .lui-nav-item-badge { position: absolute;
+    top: 0.2rem; right: 0.85rem; margin-left: 0; min-width: 0; padding: 0;
+    width: 0.5rem; height: 0.5rem; font-size: 0; line-height: 0;
+    box-shadow: 0 0 0 2px var(--lantern-surface); }
   .lui-app[data-collapsed] .lui-collapse-btn { justify-content: center; }
   .lui-app[data-collapsed] .lui-collapse-icon { transform: rotate(180deg); }
   .lui-app[data-collapsed] .lui-nav-group { margin-bottom: 0.5rem; }
@@ -1011,6 +1053,10 @@
   .lui-app[data-nav-open] .lui-app-scrim { display: block; }
   .lui-app-main, .lui-app[data-collapsed] .lui-app-main { margin-left: 0;
     padding: 1.25rem 1.25rem 4rem; }
+  /* Main's side padding drops to 1.25rem here, so the strip's bleed has to drop
+     with it — left at 1.5rem it hung a quarter rem off both edges. */
+  .lui-app-main > .lui-app-breadcrumb { margin-inline: -1.25rem;
+    padding-inline: 1.25rem; }
   .lui-app-sidebar-foot { display: none; }
 }
 
@@ -1030,7 +1076,12 @@
 .lui-badge[data-variant="solid"] { background: var(--lui-badge-c); color: var(--lantern-primary-fg); }
 .lui-badge[data-variant="outline"] { border-color: var(--lantern-border); color: var(--lantern-fg); background: transparent; }
 .lui-badge[data-color="neutral"] { --lui-badge-c: var(--lantern-fg-muted); --lui-badge-c-soft: var(--lantern-surface-sunken); }
-.lui-badge[data-color="neutral"][data-variant="soft"] { color: var(--lantern-fg); }
+/* Neutral's soft fill IS the sunken surface, so on a plain row the pill has no
+   edge and, in a column where every other value is a coloured badge, the
+   neutral ones read as unstyled text. A hairline restores the shape without
+   adding a colour; box-shadow so the box does not change size. */
+.lui-badge[data-color="neutral"][data-variant="soft"] { color: var(--lantern-fg);
+  box-shadow: inset 0 0 0 1px var(--lantern-border); }
 .lui-badge[data-color="primary"] { --lui-badge-c: var(--lantern-primary); --lui-badge-c-soft: var(--lantern-surface-sunken); }
 .lui-badge[data-color="primary"][data-variant="solid"] { color: var(--lantern-primary-fg); }
 .lui-badge[data-color="accent"] { --lui-badge-c: var(--lantern-accent); --lui-badge-c-soft: var(--lantern-accent-soft); }
@@ -1045,10 +1096,16 @@
 .lui-table-wrap { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius);
   overflow-x: auto; background: var(--lantern-surface-raised); }
 .lui-table { width: 100%; border-collapse: collapse; font-size: var(--lantern-text); }
+/* Row height is set by the tallest thing in a cell, which in a table with row
+   actions is the trigger button rather than the text — so the vertical padding
+   is what is left to give, and at 0.5rem it was giving too much: a 30px control
+   in a 48px row. Trimmed to 0.35rem the row lands near 43px, in the band the
+   reference tables sit in, without touching the shared button sizes. The
+   horizontal padding is unchanged; the columns were never the crowded part. */
 .lui-th { background: var(--lantern-surface-sunken); color: var(--lantern-fg-muted);
   font-size: var(--lantern-text-sm); font-weight: 550; text-align: left;
-  padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--lantern-border); white-space: nowrap; }
-.lui-td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--lantern-border);
+  padding: 0.35rem 0.7rem; border-bottom: 1px solid var(--lantern-border); white-space: nowrap; }
+.lui-td { padding: 0.35rem 0.7rem; border-bottom: 1px solid var(--lantern-border);
   color: var(--lantern-fg); }
 .lui-tr:last-child .lui-td { border-bottom: none; }
 .lui-tr:hover { background: var(--lantern-surface-hover); }
@@ -1331,9 +1388,63 @@
 .lui-dt-chromerow { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
   padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--lantern-border); }
 .lui-dt-spacer { flex: 1; }
+/* Standing alone the bulk bar is a rounded accent callout floating above the
+   table. Inside a datatable it is a chrome row like the toolbar and the
+   pagination — flush, full width, square — and an accent wash on a strip that
+   shape is a slab, sitting directly under a segmented control of much the same
+   colour. It keeps the ordinary hairline and lets the count, which is already
+   in the accent, say that a selection is live. */
 .lui-datatable .lui-dt-bulkbar { margin-bottom: 0; border: none; border-radius: 0;
-  border-bottom: 1px solid color-mix(in oklab, var(--lantern-accent) 25%, transparent); }
+  background: transparent;
+  border-bottom: 1px solid var(--lantern-border); }
 .lui-datatable .lui-table-wrap { border: none; border-radius: 0; }
+
+/* A row's hover and selected states are rounded bands, not full-bleed slabs.
+   `border-collapse: collapse` hands every border and corner to the TABLE, so a
+   radius on a row or a cell is dropped on the floor — hence separate borders
+   with zero spacing, which draws the same hairlines (only the cells' bottom
+   edges are ever set, so nothing doubles up) while letting the outer cells
+   round. The tint moves from the row to its cells for the same reason: a
+   `border-radius` on a `tr` is not reliably honoured. */
+.lui-datatable .lui-table { border-collapse: separate; border-spacing: 0; }
+.lui-datatable .lui-tr:hover { background: transparent; }
+.lui-datatable .lui-tr:hover .lui-td { background: var(--lantern-surface-hover); }
+/* A run of selected rows is one band, not a stack of cards. Every row rounding
+   on its own turns a block of them into separate tiles with the page showing
+   through the dividers, so the corners a row shares with a selected neighbour
+   are squared and the hairline between them goes. The tint is mixed into the
+   surface rather than laid over it as a translucent wash, so it does not
+   deepen where it meets the hover state. */
+.lui-datatable .lui-tr-selected .lui-td,
+.lui-datatable .lui-tr-selected:hover .lui-td {
+  background: color-mix(in oklab, var(--lantern-accent) 12%, var(--lantern-surface));
+}
+.lui-datatable .lui-tr-selected:has(+ .lui-tr-selected) .lui-td {
+  border-bottom-color: transparent;
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
+.lui-datatable .lui-tr-selected + .lui-tr-selected .lui-td {
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+}
+.lui-datatable .lui-tr .lui-td:first-child {
+  border-start-start-radius: var(--lantern-radius-sm);
+  border-end-start-radius: var(--lantern-radius-sm);
+}
+.lui-datatable .lui-tr .lui-td:last-child {
+  border-start-end-radius: var(--lantern-radius-sm);
+  border-end-end-radius: var(--lantern-radius-sm);
+}
+/* Inside a datatable the column header drops its tint. Standing alone the table
+   is a bordered, rounded box and the sunken band reads as its cap; full-bleed in
+   a card it is a hard-cornered slab jammed into the card's edge, in the same
+   colour as the segmented tabs sitting rounded and inset directly above it. The
+   hairline under it already says "header", and every other chrome row here —
+   the toolbar, the bulk bar, the pagination — is a hairline and nothing else.
+   The surface is stated rather than dropped because in fill mode the header is
+   sticky and rows must not show through it. */
+.lui-datatable .lui-th { background: var(--lantern-surface-raised); }
 
 /* Fill mode (`<.data_table fill>`): the datatable stretches to its flex parent's
    height, the table body becomes the vertical scroll region, and the overview /
@@ -1351,20 +1462,64 @@
   overflow-y: auto;
 }
 /* In fill mode the wrap is the scroll region, so the column header would scroll
-   away with the rows. Pin it. `.lui-table` uses border-collapse: collapse, which
-   gives the border to the TABLE rather than the cell — a sticky th therefore
-   loses its border-bottom on scroll, so redraw that hairline as an inset shadow.
-   The th already carries an opaque --lantern-surface-sunken background, so rows
-   cannot show through it. */
+   away with the rows. Pin it. `.lui-table` uses border-collapse: collapse, and a
+   collapsed border belongs to the TABLE rather than to the cell, so it does not
+   travel with a sticky th — the hairline is redrawn as an inset shadow, which
+   does. The cell's own bottom border has to go with it: left in place it kept
+   painting one pixel below the shadow, and the header ended up underlined at
+   twice the weight of every row divider beneath it. It is zeroed by colour
+   rather than by `none` so collapsed-border resolution still picks this edge
+   and a neighbour's border cannot surface in its place. The th carries an
+   opaque surface, so rows cannot show through it. */
 .lui-datatable-fill > .lui-table-wrap .lui-th {
   position: sticky;
   top: 0;
   z-index: 2;
+  border-bottom-color: transparent;
   box-shadow: inset 0 -1px 0 var(--lantern-border);
 }
 .lui-datatable .lui-dt-cards { padding: 0.9rem; }
 .lui-datatable .lui-dt-pagination { margin-top: 0; padding: 0.55rem 0.9rem;
   border-top: 1px solid var(--lantern-border); }
+
+/* Flush (`<.data_table flush>`): the de-panelling the list and card views get
+   from their data-view, for the TABLE view, which has no such hook. Border,
+   radius, shadow and raised surface go; the header, toolbar, bulk bar, cells and
+   pagination come out to the page gutter, so the table reads as the page rather
+   than as a card sitting on it. The rows have to move with the chrome, or the
+   first column starts 0.7rem inside a header that starts at 0 and the left edge
+   reads as a misprint — but only the OUTER edges are zeroed, since the padding
+   between columns is doing real work. Every selector is doubled up on
+   `.lui-datatable` because it has to outrank the panel rules above, which are
+   written against that class and come later in this sheet. */
+.lui-datatable.lui-datatable-flush { border: none; border-radius: 0;
+  background: transparent; box-shadow: none; overflow: visible; }
+.lui-datatable.lui-datatable-flush .lui-dt-header,
+.lui-datatable.lui-datatable-flush .lui-dt-chromerow,
+.lui-datatable.lui-datatable-flush .lui-dt-pagination,
+.lui-datatable.lui-datatable-flush .lui-dt-bulkbar { padding-inline: 0; }
+/* The outer cells used to sit at the gutter on zero padding. That leaves a
+   rounded row highlight starting on the first glyph, so the padding comes back
+   and the table is pulled out by the same amount — the text still lands on the
+   gutter, and the band has somewhere to turn its corner. */
+.lui-datatable.lui-datatable-flush { --lui-dt-bleed: 0.6rem; }
+.lui-datatable.lui-datatable-flush .lui-table-wrap {
+  margin-inline: calc(var(--lui-dt-bleed) * -1);
+}
+.lui-datatable.lui-datatable-flush .lui-th:first-child,
+.lui-datatable.lui-datatable-flush .lui-td:first-child { padding-left: var(--lui-dt-bleed); }
+.lui-datatable.lui-datatable-flush .lui-th:last-child,
+.lui-datatable.lui-datatable-flush .lui-td:last-child { padding-right: var(--lui-dt-bleed); }
+.lui-datatable.lui-datatable-flush .lui-dt-cards { padding: 0.75rem 0 0; }
+
+/* The wrap carries the raised surface that makes a standalone table a panel, and
+   flush takes the panel away — so left alone it stays a hard-cornered raised
+   rectangle bleeding to the page gutter, which is the slab flush exists to get
+   rid of. Give the page back its own surface. The header cell cannot simply go
+   transparent with it: in fill mode it is sticky and rows scroll underneath, so
+   it is painted in that same page surface instead, opaque and invisible. */
+.lui-datatable.lui-datatable-flush .lui-table-wrap { background: transparent; }
+.lui-datatable.lui-datatable-flush .lui-th { background: var(--lantern-surface); }
 .lui-dt-filtertext { height: 1.9rem; padding: 0 0.55rem; font-size: var(--lantern-text-sm);
   font-family: inherit; background: var(--lantern-surface); color: var(--lantern-fg);
   border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm);
@@ -2454,12 +2609,14 @@
  * label text carries state for grayscale legibility. Optional leading `at`
  * column, custom marker slot, and native details disclosure for :detail. */
 .lui-timeline {
-  --lui-timeline-label-w: 4.5rem;
+  --lui-timeline-label-w: 5.5rem;
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
+  container-type: inline-size;
+  container-name: lui-timeline;
 }
 
 .lui-timeline-item {
@@ -2484,6 +2641,16 @@
   align-self: start;
   padding-right: 0.25rem;
   margin-top: 0.2rem;
+  /* The rail is a fixed-width column and every item is its own grid, so it
+     cannot be widened to fit the longest timestamp without the rails going
+     ragged down the list. A nowrap label longer than the column does not
+     clip — justify-self: end pushes the overflow out the left side and it
+     escapes the card entirely. Let it wrap onto a second line instead, and
+     keep it inside its column. */
+  max-width: 100%;
+  white-space: normal;
+  text-align: right;
+  text-wrap: balance;
 }
 
 .lui-timeline-item[data-label-position="leading"] > .lui-timeline-marker {
@@ -2696,6 +2863,27 @@
   font-size: var(--lantern-text-sm);
   color: var(--lantern-fg-muted);
   line-height: 1.45;
+}
+
+/* In a narrow column — a side panel, a card beside a main column — an absolute
+   timestamp in the right-hand slot leaves the title a few characters and an
+   ellipsis. Below that width the time drops under the title instead: the event
+   is what you are scanning for, and it gets the full line. */
+@container lui-timeline (max-width: 24rem) {
+  .lui-timeline-content,
+  .lui-timeline-summary {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "title"
+      "label"
+      "at"
+      "body";
+  }
+
+  .lui-timeline-item:not([data-label-position="leading"]) > .lui-timeline-content > .lui-timeline-at,
+  .lui-timeline-summary > .lui-timeline-at {
+    text-align: left;
+  }
 }
 
 /* When details is present, body sits under the disclosure */
@@ -3307,3 +3495,78 @@ a.lui-waterfall-lane-inner:focus-visible {
     --lui-log-view-channel-w: 5rem;
   }
 }
+
+/* ── card ──────────────────────────────────────────────────────────────────
+   A titled surface. The head is only drawn when there is something to put in
+   it, so a bare <.card> is just a padded panel. */
+.lui-card { display: flex; flex-direction: column; min-width: 0;
+  background: var(--lantern-surface-raised);
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg); }
+.lui-card-head { display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 0.75rem; padding: 0.85rem 1rem 0; }
+.lui-card-headtext { min-width: 0; }
+.lui-card-title { display: flex; align-items: center; gap: 0.45rem; margin: 0;
+  font-size: var(--lantern-text); font-weight: 600; color: var(--lantern-fg);
+  letter-spacing: -0.01em; }
+.lui-card-desc { margin: 0.2rem 0 0; font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted); }
+.lui-card-icon { flex: none; width: 1rem; height: 1rem; color: var(--lantern-fg-muted); }
+/* The host's own `hero-*` class supplies the mask; lantern only sizes it —
+   same contract as .lui-nav-item-icon-mask. */
+.lui-card-icon.lui-card-icon-mask { width: 1rem; height: 1rem; }
+.lui-card-actions { flex: none; display: flex; align-items: center; gap: 0.4rem; }
+.lui-card-body { padding: 1rem; min-width: 0; }
+/* Content that draws its own edges meets the card's border instead of floating
+   inside its padding; the head keeps its own spacing above it. */
+.lui-card-body-flush { padding: 0; }
+.lui-card-head + .lui-card-body-flush { margin-top: 0.85rem; }
+.lui-card-foot { padding: 0.7rem 1rem; border-top: 1px solid var(--lantern-border);
+  font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); }
+/* Same flex-from-a-basis reasoning as .lui-dt-stats: `grid auto-fit` leaves
+   dead cells beside a final orphan card. */
+.lui-card-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.lui-card-grid > * { flex: 1 1 var(--lui-card-min, 16rem); min-width: 0; }
+
+/* ── description list ──────────────────────────────────────────────────── */
+.lui-dl { display: grid; gap: 0.85rem 1.5rem; margin: 0; min-width: 0; }
+.lui-dl-cols-1 { grid-template-columns: minmax(0, 1fr); }
+.lui-dl-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.lui-dl-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.lui-dl-row { min-width: 0; }
+.lui-dl-wide { grid-column: 1 / -1; }
+.lui-dl-label { font-size: var(--lantern-text-sm); font-weight: 500;
+  color: var(--lantern-fg-muted); }
+.lui-dl-value { margin: 0.15rem 0 0; min-width: 0; font-size: var(--lantern-text);
+  color: var(--lantern-fg); overflow-wrap: anywhere; }
+.lui-dl-inline .lui-dl-row { display: grid; grid-template-columns: minmax(0, 8rem) minmax(0, 1fr);
+  align-items: baseline; gap: 0.75rem; }
+.lui-dl-inline .lui-dl-value { margin: 0; }
+@media (max-width: 640px) {
+  .lui-dl-cols-2, .lui-dl-cols-3 { grid-template-columns: minmax(0, 1fr); }
+  .lui-dl-inline .lui-dl-row { grid-template-columns: minmax(0, 1fr); gap: 0.15rem; }
+}
+
+/* ── sidebar footer links ──────────────────────────────────────────────── */
+.lui-app-sidebar-links { border-top: 1px solid var(--lantern-border);
+  padding: 0.4rem 0.6rem; display: flex; flex-direction: column; gap: 0.05rem; }
+.lui-nav-link { display: flex; align-items: center; gap: 0.6rem; padding: 0.3rem 0.5rem;
+  border-radius: var(--lantern-radius-sm); color: var(--lantern-fg-muted);
+  font-size: 0.8125rem; text-decoration: none; }
+.lui-nav-link:hover { color: var(--lantern-fg); background: var(--lantern-surface-hover); }
+.lui-nav-link:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: -2px; }
+.lui-nav-link-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lui-nav-link-out { flex: none; width: 0.75rem; height: 0.75rem; margin-left: auto;
+  opacity: 0.6; transform: rotate(-45deg); }
+/* The rail has no room for text-only links, and these carry no active state
+   worth showing as an icon. */
+.lui-app[data-collapsed] .lui-app-sidebar-links { display: none; }
+
+/* ── charts: a bar that is a link ───────────────────────────────────────── */
+/* The chart draws its own colours inline, so only the states an inline style
+   cannot express live here. The hit area is the whole column; the bar under it
+   is what lights up, so hovering the empty air above a short bar still tells
+   you which one you are about to follow. */
+.lui-bar-link { cursor: pointer; }
+.lui-bar-link rect { transition: opacity var(--lantern-duration) var(--lantern-ease); }
+.lui-bar-link:hover rect, .lui-bar-link:focus-visible rect { opacity: 1; }
+.lui-bar-link:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: 2px; }
