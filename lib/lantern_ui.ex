@@ -50,6 +50,8 @@ defmodule LanternUI do
     menu: LanternUI.Components.Menu,
     breadcrumb: LanternUI.Components.Breadcrumb,
     empty_state: LanternUI.Components.EmptyState,
+    card: LanternUI.Components.Card,
+    description_list: LanternUI.Components.DescriptionList,
     layout: LanternUI.Components.Layout,
     badge: LanternUI.Components.Badge,
     table: LanternUI.Components.Table,

@@ -18,6 +18,10 @@ defmodule LanternUI.Components.Layout do
             <.nav_item label="Buckets" icon="cloud" navigate="/buckets" />
           </.nav_group>
         </:sidebar>
+        <:sidebar_footer>
+          <.nav_link label="Documentation" icon="book-open" href="/docs" />
+          <.nav_link label="Terms" href="/terms" />
+        </:sidebar_footer>
 
         <.page_header title="Buckets" description="Object storage.">
           <:actions><.button>New</.button></:actions>
@@ -91,6 +95,14 @@ defmodule LanternUI.Components.Layout do
   end
 
   slot(:sidebar, required: true, doc: "nav_group / nav_item")
+
+  slot(:sidebar_footer,
+    doc:
+      "Persistent links pinned below the nav and above the collapse control " <>
+        "(support, docs, legal). Pass `nav_link/1`s. Hidden on the icon rail, " <>
+        "where there is no room for text-only links."
+  )
+
   slot(:inner_block, required: true, doc: "Main content column.")
 
   def app_shell(assigns) do
@@ -122,6 +134,9 @@ defmodule LanternUI.Components.Layout do
         <div class="lui-app-scrim" data-part="sidebar-scrim" aria-hidden="true"></div>
         <aside id={"#{@id}-sidebar"} class="lui-app-sidebar" data-part="sidebar">
           <div class="lui-app-nav">{render_slot(@sidebar)}</div>
+          <div :if={@sidebar_footer != []} class="lui-app-sidebar-links">
+            {render_slot(@sidebar_footer)}
+          </div>
           <div class="lui-app-sidebar-foot">
             <button
               type="button"
@@ -179,6 +194,11 @@ defmodule LanternUI.Components.Layout do
   button when given `phx-click`. Collapses to an icon-only rail item (with a
   tooltip) when the sidebar is collapsed.
 
+  Pass `badge` to hang a count off the item — how many things are waiting behind
+  the link. It sits at the end of the row and becomes a dot on the collapsed
+  rail, where there is no room for a number and none is needed: the point of a
+  count on a rail is that there is something.
+
   Pass a `:subnav` slot of nested `nav_item`s to make it an expandable section
   (Fluxon parity): the item becomes a toggle with a chevron, and the subnav
   slides open/closed client-side. Use `expanded` for the initial open state
@@ -196,6 +216,14 @@ defmodule LanternUI.Components.Layout do
     doc:
       "Leading icon. A lantern icon-set name (e.g. `chart-bar`), or a host heroicon " <>
         "name (`hero-*`) rendered as a CSS-mask span so an app can keep its own icons."
+  )
+
+  attr(:badge, :any,
+    default: nil,
+    doc:
+      "A count or short marker for what is waiting behind this link. Sits at the end " <>
+        "of the row, and shrinks to a dot on the collapsed rail. Pass `nil` for none — " <>
+        "a badge reading `0` is a badge saying there is nothing to see."
   )
 
   attr(:active, :boolean, default: false, doc: "Highlight as the current page.")
@@ -222,11 +250,16 @@ defmodule LanternUI.Components.Layout do
         title={@label}
         aria-expanded={to_string(@expanded)}
         data-expanded={@expanded || nil}
-        phx-click={JS.toggle_attribute({"data-expanded", ""})}
+        data-part="nav-disclosure"
+        phx-click={
+          JS.toggle_attribute({"data-expanded", ""})
+          |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+        }
         {@rest}
       >
         <.nav_item_icon :if={@icon} name={@icon} />
         <span class="lui-nav-item-label">{@label}</span>
+        <span :if={@badge} class="lui-nav-item-badge">{@badge}</span>
         <Icon.icon name="chevron-right" class="lui-nav-sub-chevron" />
       </button>
       <div class="lui-nav-sub-panel">
@@ -245,6 +278,7 @@ defmodule LanternUI.Components.Layout do
     >
       <.nav_item_icon :if={@icon} name={@icon} />
       <span class="lui-nav-item-label">{@label}</span>
+      <span :if={@badge} class="lui-nav-item-badge">{@badge}</span>
     </.link>
     <button
       :if={@subnav == [] && !@link?}
@@ -256,7 +290,55 @@ defmodule LanternUI.Components.Layout do
     >
       <.nav_item_icon :if={@icon} name={@icon} />
       <span class="lui-nav-item-label">{@label}</span>
+      <span :if={@badge} class="lui-nav-item-badge">{@badge}</span>
     </button>
+    """
+  end
+
+  @doc """
+  A quiet link for the shell's `:sidebar_footer` — support, docs, legal.
+
+  Deliberately not a `nav_item`: these are standing links that never represent
+  the current page, so they carry no active state and sit at a smaller,
+  lower-contrast weight than the nav above them.
+
+      <.nav_link label="Contact us" icon="hero-lifebuoy" navigate="/help" />
+      <.nav_link label="Terms" href="/terms" external />
+  """
+  attr(:label, :string, required: true, doc: "Link text.")
+
+  attr(:icon, :string,
+    default: nil,
+    doc: "Optional leading icon — a lantern icon-set name or a host `hero-*` name."
+  )
+
+  attr(:navigate, :string, default: nil, doc: "LiveView navigate target.")
+  attr(:patch, :string, default: nil, doc: "LiveView patch target.")
+  attr(:href, :string, default: nil, doc: "Plain href.")
+
+  attr(:external, :boolean,
+    default: false,
+    doc: "Marks the link as leaving the app: opens in a new tab and shows an outbound glyph."
+  )
+
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+
+  def nav_link(assigns) do
+    ~H"""
+    <.link
+      class={Class.merge(["lui-nav-link", @class])}
+      navigate={@navigate}
+      patch={@patch}
+      href={@href}
+      target={@external && "_blank"}
+      rel={@external && "noopener noreferrer"}
+      {@rest}
+    >
+      <.nav_item_icon :if={@icon} name={@icon} />
+      <span class="lui-nav-link-label">{@label}</span>
+      <Icon.icon :if={@external} name="arrow-right" class="lui-nav-link-out" />
+    </.link>
     """
   end
 

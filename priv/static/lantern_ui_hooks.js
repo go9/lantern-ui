@@ -910,8 +910,10 @@ const LanternPicker = {
 //     use inside the shell.
 //   data-nav-open — the mobile off-canvas drawer, opened by the bar's
 //     hamburger. Ephemeral: closes on scrim click, Escape, widening past the
-//     drawer breakpoint, and on any nav item click — that last one is what
-//     stops a `navigate` link from leaving the drawer over the new page.
+//     drawer breakpoint, and on any nav item click that is a destination —
+//     that last one is what stops a `navigate` link from leaving the drawer
+//     over the new page. A disclosure parent is not a destination and is
+//     excluded, or opening a section would close the drawer around it.
 //
 // The drawer attribute is re-asserted in updated() because a LiveView patch
 // re-renders the root without it.
@@ -928,14 +930,30 @@ const LanternSidebar = {
 
     this.onClick = (e) => {
       if (e.target.closest('[data-part="sidebar-collapse"]')) {
-        const collapsed = this.el.toggleAttribute("data-collapsed")
-        try {
-          localStorage.setItem(this.key(), String(collapsed))
-        } catch (_) {}
-        return
+        return this.setCollapsed(!this.el.hasAttribute("data-collapsed"))
       }
       if (e.target.closest('[data-part="sidebar-toggle"]')) return this.setNav(!this.navOpen)
       if (e.target.closest('[data-part="sidebar-scrim"]')) return this.setNav(false)
+
+      // A disclosure parent wears .lui-nav-item but is not a destination: it
+      // reveals its children in place. Closing the drawer on it would shut the
+      // menu in the same click that opened the section, so it is handled here
+      // and never falls through to the nav-item rule below.
+      const disclosure = e.target.closest('[data-part="nav-disclosure"]')
+      if (disclosure) {
+        if (!this.el.hasAttribute("data-collapsed")) return
+        // On the icon rail the panel is hidden, so the markup's own toggle
+        // would flip a section nobody can see — and it would still be flipped
+        // when the rail comes back. Take the click instead: open the rail with
+        // the section showing. Stopping propagation is what keeps the markup's
+        // phx-click from toggling it straight back.
+        e.stopPropagation()
+        this.setCollapsed(false)
+        disclosure.setAttribute("data-expanded", "")
+        disclosure.setAttribute("aria-expanded", "true")
+        return
+      }
+
       if (e.target.closest('[data-part="sidebar"] .lui-nav-item')) this.setNav(false)
     }
     this.el.addEventListener("click", this.onClick)
@@ -946,6 +964,13 @@ const LanternSidebar = {
     this.mq = window.matchMedia(MOBILE_NAV_MQ)
     this.onMq = () => this.mq.matches && this.setNav(false)
     this.mq.addEventListener("change", this.onMq)
+  },
+
+  setCollapsed(collapsed) {
+    this.el.toggleAttribute("data-collapsed", collapsed)
+    try {
+      localStorage.setItem(this.key(), String(collapsed))
+    } catch (_) {}
   },
 
   setNav(open) {
@@ -1725,7 +1750,6 @@ const LanternCollapse = {
 const LanternTableChrome = {
   mounted() {
     this.path = this.el.dataset.path
-    this.base = JSON.parse(this.el.dataset.params || "{}")
 
     this.onInput = (e) => {
       const t = e.target
@@ -1740,10 +1764,18 @@ const LanternTableChrome = {
     }
     this.onClick = (e) => {
       if (!e.target.closest('[data-part="clear-filters"]')) return
+      // Each rich filter clears through its own control, so it can reset its
+      // label and aria state; that fires a change we do not want to act on
+      // once per filter, hence the suspend.
+      this.suspended = true
       this.el.querySelectorAll('[data-part="filter"]').forEach((sel) => (sel.value = ""))
       this.el
         .querySelectorAll('[data-part="filter-rich"] input[data-part="value"]')
         .forEach((i) => i.remove())
+      this.el
+        .querySelectorAll('[data-part="filter-rich"] [data-part="clear"]')
+        .forEach((btn) => btn.click())
+      this.suspended = false
       this.apply()
     }
     this.el.addEventListener("input", this.onInput)
@@ -1752,7 +1784,15 @@ const LanternTableChrome = {
   },
 
   apply() {
-    const filters = []
+    if (this.suspended) return
+    // Read the dataset now rather than at mount: a patch rewrites these, and a
+    // cached copy would send back the sort and tab state the page had when it
+    // first loaded.
+    const base = JSON.parse(this.el.dataset.params || "{}")
+    // Filters no control in this row owns — the ones a tab set. Rebuilding only
+    // what the search box and filter panel know about would silently drop them,
+    // so a search would knock you out of the tab you were in.
+    const filters = JSON.parse(this.el.dataset.keepFilters || "[]")
     const search = this.el.querySelector('[data-part="search"]')
     if (search && search.value.trim() !== "") {
       filters.push({ field: search.dataset.field, op: search.dataset.op, value: search.value.trim() })
@@ -1763,9 +1803,15 @@ const LanternTableChrome = {
       }
     })
     this.el.querySelectorAll('[data-part="filter-rich"]').forEach((wrap) => {
-      const values = [...wrap.querySelectorAll('input[data-part="value"]')]
-        .map((i) => i.value)
-        .filter((v) => v !== "")
+      // A rich filter keeps its value on the hidden <select> the select
+      // component drives, whether it is single or multiple. The hidden-input
+      // form is what the datetime and autocomplete controls use.
+      const native = wrap.querySelector('select[data-part="native"]')
+      const values = native
+        ? [...native.selectedOptions].map((o) => o.value).filter((v) => v !== "")
+        : [...wrap.querySelectorAll('input[data-part="value"]')]
+            .map((i) => i.value)
+            .filter((v) => v !== "")
       if (values.length === 0) return
       if (wrap.dataset.op === "in") {
         filters.push({ field: wrap.dataset.field, op: "in", values })
@@ -1774,7 +1820,7 @@ const LanternTableChrome = {
       }
     })
 
-    const params = { ...this.base }
+    const params = { ...base }
     delete params.page
     filters.forEach((f, i) => {
       params[`filters[${i}][field]`] = f.field

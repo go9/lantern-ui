@@ -85,6 +85,36 @@ defmodule LanternUI.ChartsTest do
       html = render_component(&LanternUI.Charts.bar_chart/1, id: "b", series: [])
       assert html =~ "No data"
     end
+
+    test "a category with an href becomes a live link over the whole column" do
+      html =
+        render_component(&LanternUI.Charts.bar_chart/1,
+          id: "b",
+          series: [
+            %{label: "Open", value: 12, href: "/orders?status=open"},
+            %{label: "Shipped", value: 0, href: "/orders?status=shipped"}
+          ]
+        )
+
+      assert html =~ ~s(href="/orders?status=open")
+      assert html =~ ~s(data-phx-link="redirect")
+      assert html =~ ~s(aria-label="Open: 12")
+      # The category sitting at zero draws no bar, so its column is the only
+      # thing there is to click.
+      assert html =~ ~s(aria-label="Shipped: 0")
+      assert html =~ ~s(fill="transparent")
+    end
+
+    test "a category without an href is drawn as a plain bar" do
+      html =
+        render_component(&LanternUI.Charts.bar_chart/1,
+          id: "b",
+          series: [%{label: "Q1", value: 42}]
+        )
+
+      refute html =~ "lui-bar-link"
+      refute html =~ "<a"
+    end
   end
 
   describe "line_chart/1" do
@@ -130,6 +160,42 @@ defmodule LanternUI.ChartsTest do
       html = render_component(&LanternUI.Charts.line_chart/1, id: "l", series: [])
       assert html =~ "No data"
       refute html =~ "<svg"
+    end
+  end
+
+  describe "area_chart smoothing and axis labels" do
+    @monthly [
+      %{date: "2025-10-01", value: 0},
+      %{date: "2025-11-01", value: 0},
+      %{date: "2025-12-01", value: 5},
+      %{date: "2026-01-01", value: 0}
+    ]
+
+    defp line_path(html) do
+      [_, d] = Regex.run(~r/<path\s+d="([^"]+)"\s+fill="none"/, html)
+      d
+    end
+
+    defp x_tick_anchors(html) do
+      ~r/<text[^>]*y="\d+"[^>]*text-anchor="(\w+)"[^>]*>\s*[A-Z][a-z]{2}/
+      |> Regex.scan(html)
+      |> Enum.map(&List.last/1)
+    end
+
+    test "smooths the line by default" do
+      assert line_path(area(@monthly)) =~ "C"
+    end
+
+    test "smooth={false} draws straight segments, so empty months stay flat" do
+      d = line_path(area(@monthly, smooth: false))
+
+      refute d =~ "C"
+      assert d =~ "L"
+    end
+
+    test "the first and last x labels anchor inward so they cannot clip" do
+      assert ["start" | rest] = x_tick_anchors(area(@monthly))
+      assert List.last(rest) == "end"
     end
   end
 end
