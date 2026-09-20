@@ -22,13 +22,24 @@ the hooks bundle for `segmented` and `side_panel_toggle`.
 ## Group band
 
 ```heex
-<.group_band name="In progress" count={12}>
+<.group_band
+  name="In progress"
+  count={12}
+  group="tickets:in_progress"
+  data-lantern-persist="tickets:in_progress"
+>
   <:glyph><.status_glyph status={:in_progress} /></:glyph>
   <:action navigate={~p"/tickets/new?status=in_progress"} label="New ticket in In progress">
     <.icon name="plus" />
   </:action>
 </.group_band>
+<.list_row group="tickets:in_progress" identifier="#241" title="Visible progress ring" navigate={~p"/tickets/241"} />
 ```
+
+`group` (with no `navigate`/`patch`/`href`) makes the name row a collapse
+button. Rows (or any sibling) with the same `group` hide client-side. Match
+`data-lantern-persist` to the group key so the collapsed set survives
+patches and reloads — see [Behaviours](behaviours.md).
 
 ## Inspector rail
 

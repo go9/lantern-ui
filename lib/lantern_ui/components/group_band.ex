@@ -3,7 +3,7 @@ defmodule LanternUI.Components.GroupBand do
   Tinted full-width group header: chevron · glyph · name · count · trailing
   action (the `+`).
 
-      <.group_band name="In progress" count={12}>
+      <.group_band name="In progress" count={12} group="tickets:in_progress">
         <:glyph><.status_glyph status={:in_progress} /></:glyph>
         <:action navigate="/tickets/new?status=in_progress" label="New ticket in In progress">
           <.icon name="plus" />
@@ -14,8 +14,15 @@ defmodule LanternUI.Components.GroupBand do
         <:glyph><.status_glyph status={:done} /></:glyph>
       </.group_band>
 
-  A collapsed band with `navigate`/`patch`/`href` makes the name row the expand
-  control (chevron points right). Expanded bands show a down chevron.
+  Pass `group` (and no `navigate`/`patch`/`href`) to make the name row a
+  client-side collapse control: `data-lantern-collapse` plus `aria-expanded`.
+  Matching siblings carry `data-lantern-group` (see `list_row/1`). Put
+  `data-lantern-persist` on the band with the same key so the collapsed set
+  survives LiveView patches — see `docs/behaviours.md`.
+
+  A collapsed band with `navigate`/`patch`/`href` stays a link (chevron points
+  right). Interactive bands always render the down chevron; CSS rotates it
+  when `[data-collapsed]` is set so a client toggle needs no re-render.
   """
   use Phoenix.Component
 
@@ -25,6 +32,12 @@ defmodule LanternUI.Components.GroupBand do
   attr(:name, :string, required: true, doc: "Group label (status name, section title).")
   attr(:count, :any, default: nil, doc: "Optional count shown after the name.")
   attr(:collapsed, :boolean, default: false, doc: "When true, chevron points right.")
+
+  attr(:group, :string,
+    default: nil,
+    doc: "Collapse key. Renders the name row as a button when there is no link target."
+  )
+
   attr(:navigate, :string, default: nil, doc: "LiveView navigate on the name row.")
   attr(:patch, :string, default: nil, doc: "LiveView patch on the name row.")
   attr(:href, :any, default: nil, doc: "Href on the name row.")
@@ -42,10 +55,17 @@ defmodule LanternUI.Components.GroupBand do
   end
 
   def group_band(assigns) do
+    link? = assigns.navigate || assigns.patch || assigns.href
+    collapse? = collapse?(assigns.group, link?)
+
     assigns =
       assigns
-      |> assign(:link?, assigns.navigate || assigns.patch || assigns.href)
-      |> assign(:chevron, if(assigns.collapsed, do: "chevron-right", else: "chevron-down"))
+      |> assign(:link?, link?)
+      |> assign(:collapse?, collapse?)
+      |> assign(
+        :chevron,
+        if(assigns.collapsed and not collapse?, do: "chevron-right", else: "chevron-down")
+      )
 
     ~H"""
     <div class={Class.merge(["lui-group-band", @class])} data-collapsed={@collapsed || nil} {@rest}>
@@ -63,7 +83,21 @@ defmodule LanternUI.Components.GroupBand do
         <span class="lui-group-band-name">{@name}</span>
         <span :if={not is_nil(@count)} class="lui-group-band-count">{@count}</span>
       </.link>
-      <span :if={!@link?} class="lui-group-band-main">
+      <button
+        :if={@collapse?}
+        type="button"
+        class="lui-group-band-main"
+        aria-expanded={to_string(not @collapsed)}
+        data-lantern-collapse={@group}
+      >
+        <span class="lui-group-band-chevron" aria-hidden="true">
+          <Icon.icon name={@chevron} />
+        </span>
+        <span :if={@glyph != []} class="lui-group-band-glyph">{render_slot(@glyph)}</span>
+        <span class="lui-group-band-name">{@name}</span>
+        <span :if={not is_nil(@count)} class="lui-group-band-count">{@count}</span>
+      </button>
+      <span :if={!@link? and !@collapse?} class="lui-group-band-main">
         <span class="lui-group-band-chevron" aria-hidden="true">
           <Icon.icon name={@chevron} />
         </span>
@@ -92,4 +126,7 @@ defmodule LanternUI.Components.GroupBand do
     </div>
     """
   end
+
+  defp collapse?(group, link?) when is_binary(group), do: group != "" and !link?
+  defp collapse?(_group, _link?), do: false
 end

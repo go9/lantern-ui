@@ -64,6 +64,11 @@ defmodule LanternUI.RecipesTest do
     assert html =~ "lui-icon-btn-kbd"
     assert html =~ "data-lantern-list-nav"
     assert html =~ "data-collapsed"
+    assert html =~ ~s(data-lantern-collapse="tickets:in_progress")
+    assert html =~ ~s(data-lantern-group="tickets:in_progress")
+    assert html =~ ~s(data-lantern-persist="tickets:in_progress")
+    assert html =~ ~s(aria-expanded="true")
+    assert html =~ ~s(aria-expanded="false")
   end
 
   test "record page puts the side_panel toggle in the breadcrumb bar" do

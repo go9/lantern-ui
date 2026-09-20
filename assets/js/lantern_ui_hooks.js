@@ -7,8 +7,8 @@
 //   let liveSocket = new LiveSocket("/live", Socket, { hooks: Hooks, ... })
 //
 // The file you import is the esbuild bundle of `assets/js/`. Rebuild with
-// `npm run build`. Data-attribute behaviours (list nav, persist) install
-// themselves on import — no page-local hook.
+// `npm run build`. Data-attribute behaviours (list nav, persist, collapse)
+// install themselves on import — no page-local hook.
 //
 // `ChartHover` draws a crosshair + tooltip over a server-rendered LanternUI chart.
 // All geometry is computed in Elixir; the hook only reads the embedded point list

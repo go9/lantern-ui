@@ -40,19 +40,23 @@ function onListNavKey(e) {
 
   const items = listItems(list)
   if (items.length === 0) return
-  const current = items.find((item) => item === e.target || item.contains(e.target)) || items[0]
-  const idx = items.indexOf(current)
+  const current = items.find((item) => item === e.target || item.contains(e.target))
+  if (e.key === "Enter") {
+    if (!current) return
+    e.preventDefault()
+    openListItem(current)
+    return
+  }
+
+  const from = current || items[0]
+  const idx = items.indexOf(from)
   let next = null
 
   if (e.key === "j" || e.key === "ArrowDown") next = items[Math.min(idx + 1, items.length - 1)]
   else if (e.key === "k" || e.key === "ArrowUp") next = items[Math.max(idx - 1, 0)]
   else if (e.key === "Home") next = items[0]
   else if (e.key === "End") next = items[items.length - 1]
-  else if (e.key === "Enter") {
-    e.preventDefault()
-    openListItem(current)
-    return
-  } else return
+  else return
 
   if (next && next !== current) {
     e.preventDefault()
@@ -128,6 +132,64 @@ function restorePersist(root) {
   if (stored === "closed") setPersistedOpen(root, false)
 }
 
+function collapseKey(control) {
+  return control.getAttribute("data-lantern-collapse")
+}
+
+function applyCollapse(control, collapsed) {
+  const key = collapseKey(control)
+  if (!key) return
+  const band = control.closest(".lui-group-band")
+  if (band) {
+    if (collapsed) band.setAttribute("data-collapsed", "")
+    else band.removeAttribute("data-collapsed")
+  }
+  control.setAttribute("aria-expanded", String(!collapsed))
+  const container = (band || control).parentElement
+  if (!container) return
+  for (const el of container.children) {
+    if (el.getAttribute("data-lantern-group") === key) el.hidden = collapsed
+  }
+}
+
+function persistKeyFor(control) {
+  return persistRoot(control).getAttribute("data-lantern-persist")
+}
+
+function toggleCollapse(control) {
+  const band = control.closest(".lui-group-band")
+  const next = !band?.hasAttribute("data-collapsed")
+  applyCollapse(control, next)
+  const persistKey = persistKeyFor(control)
+  if (persistKey) writePersist(control, persistKey, next ? "closed" : "open")
+}
+
+function restoreCollapse(control) {
+  const persistKey = persistKeyFor(control)
+  const stored = persistKey ? readPersist(control, persistKey) : null
+  let collapsed
+  if (stored === "closed") collapsed = true
+  else if (stored === "open") collapsed = false
+  else collapsed = Boolean(control.closest(".lui-group-band")?.hasAttribute("data-collapsed"))
+  applyCollapse(control, collapsed)
+}
+
+function onCollapseClick(e) {
+  const control = e.target.closest("[data-lantern-collapse]")
+  if (!control) return
+  toggleCollapse(control)
+}
+
+function onCollapseKey(e) {
+  if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return
+  if (e.key !== "Enter" && e.key !== " ") return
+  if (typingTarget(e.target)) return
+  const control = e.target.closest?.("[data-lantern-collapse]")
+  if (!control) return
+  e.preventDefault()
+  toggleCollapse(control)
+}
+
 let applying = false
 
 function restoreAll(doc) {
@@ -136,6 +198,7 @@ function restoreAll(doc) {
   try {
     doc.querySelectorAll("[data-lantern-persist]").forEach(restorePersist)
     doc.querySelectorAll("[data-lantern-list-nav]").forEach(initList)
+    doc.querySelectorAll("[data-lantern-collapse]").forEach(restoreCollapse)
   } finally {
     applying = false
   }
@@ -149,7 +212,9 @@ export function installBehaviours(doc = typeof document === "undefined" ? null :
   }
   doc.documentElement.dataset.lanternBehaviours = "1"
   doc.addEventListener("keydown", onListNavKey, true)
+  doc.addEventListener("keydown", onCollapseKey)
   doc.addEventListener("click", onPersistClick)
+  doc.addEventListener("click", onCollapseClick)
   doc.addEventListener("toggle", onPersistToggle, true)
   restoreAll(doc)
   const Observer = doc.defaultView?.MutationObserver

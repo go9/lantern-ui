@@ -3692,12 +3692,23 @@ a.lui-waterfall-lane-inner:focus-visible {
   color: inherit;
   text-decoration: none;
 }
+button.lui-group-band-main {
+  border: 0;
+  margin: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  text-align: inherit;
+}
 .lui-group-band-main:hover {
   color: var(--lantern-fg);
 }
 .lui-group-band-chevron {
   display: inline-flex;
   color: var(--lantern-fg-subtle);
+}
+.lui-group-band[data-collapsed] .lui-group-band-main[data-lantern-collapse] .lui-group-band-chevron {
+  transform: rotate(-90deg);
 }
 .lui-group-band-chevron .lui-icon {
   width: 0.875rem;

@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **`group_band` client-side collapse** via `group=` and the
+  `data-lantern-collapse` behaviour. Click / Enter / Space toggles
+  `data-collapsed` on the band and `hidden` on siblings with matching
+  `data-lantern-group` (`list_row` `group=`). Compose with
+  `data-lantern-persist` using the same key so the collapsed set survives
+  LiveView patches. CSS rotates the down chevron when collapsed. (flicker #2888)
+
 ### Fixed
 - **`icon_button` tooltips rendered open.** `.lui-icon-btn-tip .lui-tooltip`
   (`display: inline-flex`) out-specified `.lui-tooltip[hidden]`, so every

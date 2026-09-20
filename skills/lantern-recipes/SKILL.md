@@ -69,7 +69,12 @@ Origins: flicker #1404 tickets list, #1407 suggestions inbox, #1408 project hub.
     </.icon_button>
   </:actions>
   <.scroll_area label="Tickets" data-lantern-list-nav>
-    <.group_band name="In progress" count={2} patch={@paths.in_progress}>
+    <.group_band
+      name="In progress"
+      count={2}
+      group="tickets:in_progress"
+      data-lantern-persist="tickets:in_progress"
+    >
       <:glyph><.status_glyph status={:in_progress} /></:glyph>
       <:action navigate={@paths.new_in_progress} label="New ticket in In progress">
         <.icon name="plus" />
@@ -77,6 +82,7 @@ Origins: flicker #1404 tickets list, #1407 suggestions inbox, #1408 project hub.
     </.group_band>
     <.list_row
       :for={ticket <- @tickets}
+      group="tickets:in_progress"
       identifier={ticket.identifier}
       title={ticket.title}
       parent={ticket.parent}
@@ -90,7 +96,13 @@ Origins: flicker #1404 tickets list, #1407 suggestions inbox, #1408 project hub.
       </:meta>
       <:trailing>{ticket.date}</:trailing>
     </.list_row>
-    <.group_band name="Done" count={40} collapsed patch={@paths.done}>
+    <.group_band
+      name="Done"
+      count={40}
+      group="tickets:done"
+      collapsed
+      data-lantern-persist="tickets:done"
+    >
       <:glyph><.status_glyph status={:done} /></:glyph>
     </.group_band>
   </.scroll_area>
