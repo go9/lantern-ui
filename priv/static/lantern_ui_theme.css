@@ -39,7 +39,7 @@
   /* ── Color · foreground ← fluxon foreground* ── */
   --lantern-fg: var(--foreground, #09090b);
   --lantern-fg-muted: var(--foreground-soft, #71717a);
-  --lantern-fg-subtle: var(--foreground-softer, #a1a1aa);
+  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #a1a1aa));
 
   /* ── Color · surfaces ← fluxon background-base / surface / background-accent ── */
   --lantern-surface: var(--background-base, #ffffff);
@@ -110,6 +110,14 @@
   --lantern-control-px: 0.75rem;
   --lantern-text: 0.8125rem;
   --lantern-text-sm: 0.75rem;
+  --lantern-text-meta: 11px;
+  --lantern-text-meta-leading: 1.25;
+  --lantern-text-meta-tracking: 0.01em;
+  --lantern-text-caption: 12px;
+  --lantern-text-caption-leading: 1.35;
+  --lantern-text-caption-tracking: 0.005em;
+  --lantern-text-mono-meta: 11px;
+  --lantern-text-mono-meta-leading: 1.25;
   --lantern-gap: 0.4375rem;
   --lantern-radius: var(--lantern-radius-md);
 }
@@ -120,6 +128,9 @@
   --lantern-control-px: 1rem;
   --lantern-text: 0.875rem;
   --lantern-text-sm: 0.8125rem;
+  --lantern-text-meta: 12px;
+  --lantern-text-caption: 13px;
+  --lantern-text-mono-meta: 12px;
   --lantern-gap: 0.5rem;
   --lantern-space-xs: 0.25rem;
   --lantern-space-sm: 0.5rem;
@@ -137,7 +148,7 @@
 .light {
   --lantern-fg: var(--foreground, #09090b);
   --lantern-fg-muted: var(--foreground-soft, #71717a);
-  --lantern-fg-subtle: var(--foreground-softer, #a1a1aa);
+  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #a1a1aa));
 
   --lantern-surface: var(--background-base, #ffffff);
   --lantern-surface-raised: var(--surface, #ffffff);
@@ -181,7 +192,7 @@
 .dark {
   --lantern-fg: var(--foreground, #fafafa);
   --lantern-fg-muted: var(--foreground-soft, #a1a1aa);
-  --lantern-fg-subtle: var(--foreground-softer, #71717a);
+  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #71717a));
 
   --lantern-surface: var(--background-base, #09090b);
   --lantern-surface-raised: var(--surface, #0c0c0e);
@@ -219,7 +230,7 @@
   :root:not(.light) {
     --lantern-fg: var(--foreground, #fafafa);
     --lantern-fg-muted: var(--foreground-soft, #a1a1aa);
-    --lantern-fg-subtle: var(--foreground-softer, #71717a);
+    --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #71717a));
 
     --lantern-surface: var(--background-base, #09090b);
     --lantern-surface-raised: var(--surface, #0c0c0e);

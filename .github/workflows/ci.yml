@@ -39,6 +39,7 @@ jobs:
       - run: mix format --check-formatted
       - run: mix compile --warnings-as-errors
       - run: mix test
+      - run: mix lantern.lint
 
       # The hook tests mount the real hooks against jsdom, so they need the
       # repo's dev-only package.json. It is never published — neither to npm

@@ -65,6 +65,8 @@ Every hook root needs stable `id`. Child IDs derive from root: `#{@id}-panel`, `
 - Use `--lantern-*` variables for every visual value.
 - Use `data-variant`, `data-size`, `data-color`, `data-state`, and similar attrs for variants.
 - No Tailwind dependency. No hardcoded product colors.
+- Dense chrome uses `text-meta` (11px metadata), `text-caption` (12px helper), `text-mono-meta` (ids). Do not write `text-[Npx]`.
+- Grey roles: `text-foreground` primary content; `text-foreground-soft` labels; `text-foreground-softest` timestamps and ids; `text-muted-foreground` disabled/placeholder. `text-foreground-softer` is a deprecated alias of `-soft`. See `docs/scale.md`.
 
 ## Hooks
 

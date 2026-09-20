@@ -7,6 +7,15 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Compact type scale + four grey roles, with `mix lantern.lint`.** Dense UI
+  now has named sizes (`text-meta` 11px, `text-caption` 12px, `text-mono-meta`)
+  instead of `text-[11px]`. Grey roles are `text-foreground` (primary),
+  `-soft` (labels), `-softest` (timestamps and ids), and `text-muted-foreground`
+  (disabled / placeholder). `text-foreground-softer` is a deprecated alias of
+  `-soft` so existing markup keeps compiling. `mix lantern.lint` fails
+  arbitrary `text-[Npx]` / `w-[Npx]` / palette colors / page-local hex greys
+  in consuming apps; allowlist via `.lantern-lint.json` or
+  `lantern-lint:ignore`. See `docs/scale.md`.
 - **`--lui-waterfall-active` token — the color of in-flight waterfall bars.**
   Defaults to `--lantern-accent`, so nothing changes for existing hosts. A host
   whose accent resolves near danger red (flicker's orange-red) overrides it so

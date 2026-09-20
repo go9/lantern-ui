@@ -363,6 +363,13 @@ Pick per host:
   their built-in fallbacks.
 - **Recolor** by setting any `--lantern-*` variable yourself.
 
+**Compact type + grey roles.** Dense chrome uses `text-meta` (11px),
+`text-caption` (12px), and `text-mono-meta` instead of `text-[11px]`. The four
+grey roles are `text-foreground`, `text-foreground-soft`,
+`text-foreground-softest`, and `text-muted-foreground`.
+`text-foreground-softer` is a deprecated alias of `-soft`. Full table and the
+consumer lint (`mix lantern.lint`) are in [docs/scale.md](docs/scale.md).
+
 ## Value formatting
 
 `area_chart` and `bar_chart` accept `value_format`: `:number` (default),
@@ -374,6 +381,7 @@ plain text — it is HTML-escaped before it reaches the tooltip.
 
 ```bash
 mix test    # Elixir: rendering, ARIA conformance, class merging
+mix lantern.lint   # optional: same check consumers run (this repo is mostly lui-* CSS)
 npm test    # JavaScript: the hooks in priv/static/lantern_ui_hooks.js
 ```
 

@@ -73,7 +73,7 @@ Cover relevant states:
 - responsive overflow
 - light and dark themes
 
-Use semantic tokens. Icon-only actions require accessible labels. Validate action overflow and mobile navigation, not only wide desktop state.
+Use semantic tokens. Dense chrome: `text-meta` / `text-caption` / `text-mono-meta`, never `text-[Npx]`. Greys: `text-foreground`, `-soft`, `-softest`, `text-muted-foreground` — not `-softer` (deprecated alias) and not `text-gray-*`. Icon-only actions require accessible labels. Validate action overflow and mobile navigation, not only wide desktop state.
 
 ## 9. Rendered-page review
 
