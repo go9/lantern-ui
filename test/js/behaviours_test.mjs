@@ -233,6 +233,27 @@ test("collapse: a patched-in sibling is hidden when the group is collapsed", asy
   }
 })
 
+test("collapse: nested descendants with the same key are left alone", () => {
+  const ctx = withDoc(`
+    <div id="list">
+      <div class="lui-group-band">
+        <button type="button" data-lantern-collapse="demo:g-nest" aria-expanded="true">Band</button>
+      </div>
+      <div data-lantern-group="demo:g-nest" id="sib">sibling</div>
+      <div>
+        <div data-lantern-group="demo:g-nest" id="nested">nested</div>
+      </div>
+    </div>
+  `)
+  try {
+    ctx.document.querySelector("[data-lantern-collapse]").click()
+    assert.equal(ctx.document.getElementById("sib").hidden, true)
+    assert.equal(ctx.document.getElementById("nested").hidden, false)
+  } finally {
+    ctx.unmount()
+  }
+})
+
 test("list nav Enter on a collapse button does not activate a row", () => {
   const ctx = withDoc(`
     <div data-lantern-list-nav>

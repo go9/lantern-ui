@@ -35,7 +35,7 @@ elsewhere inside the list (a group-band collapse button) is left alone.
 
 `data-lantern-collapse="<key>"` on the band's control (a `<button>`). Click,
 Enter, or Space toggles `data-collapsed` on the closest `.lui-group-band` and
-the `hidden` attribute on every element in the same parent that carries
+the `hidden` attribute on every **sibling** in the same parent that carries
 `data-lantern-group="<key>"`. `aria-expanded` tracks the open state.
 
 `group_band` with `group=` (and no `navigate`/`patch`/`href`) wires the

@@ -1449,7 +1449,7 @@ function applyCollapse(control, collapsed) {
   control.setAttribute("aria-expanded", String(!collapsed));
   const container = (band || control).parentElement;
   if (!container) return;
-  for (const el of container.querySelectorAll("[data-lantern-group]")) {
+  for (const el of container.children) {
     if (el.getAttribute("data-lantern-group") === key) el.hidden = collapsed;
   }
 }
