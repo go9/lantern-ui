@@ -66,7 +66,7 @@ defmodule LanternUI.Components.Segmented do
         disabled={segment[:disabled]}
         class={segment[:class]}
         phx-click={segment[:"phx-click"]}
-        phx-value-tab={segment[:"phx-value"] || token(segment[:value])}
+        phx-value-segment={segment[:"phx-value"] || token(segment[:value])}
         phx-target={segment[:"phx-target"]}
       >
         {render_slot(segment)}

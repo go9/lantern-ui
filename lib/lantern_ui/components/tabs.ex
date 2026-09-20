@@ -70,6 +70,11 @@ defmodule LanternUI.Components.Tabs do
     attr(:class, :any, doc: "Extra classes on this tab trigger.")
     attr(:"phx-click", :string, doc: "LiveView click event when not using patch/navigate.")
     attr(:"phx-value-tab", :string, doc: "phx-value-tab payload; defaults to name.")
+
+    attr(:"phx-value-segment", :string,
+      doc: "Legacy segmented alias payload; sent as params[\"segment\"]."
+    )
+
     attr(:"phx-target", :any, doc: "LiveView target for the click event.")
   end
 
@@ -161,7 +166,8 @@ defmodule LanternUI.Components.Tabs do
           disabled={tab[:disabled]}
           tabindex={meta.tabindex}
           phx-click={tab[:"phx-click"]}
-          phx-value-tab={tab[:"phx-value-tab"] || tab[:name]}
+          phx-value-tab={tab[:"phx-value-tab"] || unless(tab[:"phx-value-segment"], do: tab[:name])}
+          phx-value-segment={tab[:"phx-value-segment"]}
           phx-target={tab[:"phx-target"]}
           aria-selected={unless @radio?, do: to_string(meta.active?)}
         >
