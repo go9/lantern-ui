@@ -3622,6 +3622,10 @@ a.lui-waterfall-lane-inner:focus-visible {
   cursor: pointer;
   transition: background-color var(--lantern-duration) var(--lantern-ease);
 }
+/* Same reason as .lui-modal[hidden]: the author `display: flex` above beats
+   the UA `[hidden]` rule, so a collapsed group (LanternCollapse sets
+   `el.hidden`) would still render its rows. */
+.lui-list-row[hidden] { display: none; }
 .lui-list-row + .lui-list-row {
   box-shadow: inset 0 1px 0 var(--lantern-border);
 }
