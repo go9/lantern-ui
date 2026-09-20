@@ -1,0 +1,8 @@
+<.stat_grid>
+  <:stat label="Slots" value={@capacity.slots} />
+  <:stat label="Busy" value={@capacity.busy} />
+  <:stat label="Waiting" value={@capacity.waiting} />
+  <:stat label="Cost" value={@capacity.cost} />
+</.stat_grid>
+<.badge color="warning" size="sm">{@capacity.waiting} waiting</.badge>
+<.badge color="success" size="sm">{@capacity.busy} busy</.badge>

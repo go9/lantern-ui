@@ -57,7 +57,8 @@ defmodule LanternUI.MixProject do
         "docs/support-helpers.md",
         "docs/scale.md",
         "docs/behaviours.md",
-        "docs/dense-app.md"
+        "docs/dense-app.md",
+        "docs/recipes.md"
       ],
       source_ref: "v#{@version}",
       source_url: @source_url
