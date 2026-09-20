@@ -7,6 +7,11 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **`state_glyph` `kind="sync"` and `kind="source"`** — sync states
+  (`syncing`, `live`, `failed`, `empty`) and source kinds (`repo`, `doc`,
+  `ticket_memory`, `upload`), plus flicker-shaped `sync_glyph/1` (`state=`)
+  and `source_glyph/1` (`source=`). Unknown sync values draw `empty`;
+  unknown source values draw `doc`. (flicker #2882)
 - **`state_glyph` `kind="run"`** — a generic CI/pipeline set (`queued`,
   `claiming_env`, `running`, `verifying`, `passed`, `failed`, `blocked`) plus
   a flicker-shaped `run_glyph/1` alias (`state=`). Unknown values draw

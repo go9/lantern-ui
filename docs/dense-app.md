@@ -65,14 +65,19 @@ the hooks bundle for `segmented` and `side_panel_toggle`.
 <.status_glyph status={:in_progress} />
 <.priority_glyph priority={:high} />
 <.run_glyph state={:verifying} />
+<.sync_glyph state={:live} />
+<.source_glyph source={:repo} />
 <.state_glyph kind="status" value="cancelled" />
 <.state_glyph kind="priority" value="none" />
 <.state_glyph kind="run" value="claiming_env" />
+<.state_glyph kind="sync" value="empty" />
+<.state_glyph kind="source" value="ticket_memory" />
 ```
 
 `:selected_for_dev` draws the same empty ring as `:todo`. Run states are
 `queued`, `claiming_env`, `running`, `verifying`, `passed`, `failed`,
-`blocked`.
+`blocked`. Sync states are `syncing`, `live`, `failed`, `empty`. Source
+kinds are `repo`, `doc`, `ticket_memory`, `upload`.
 
 ## Progress ring
 
