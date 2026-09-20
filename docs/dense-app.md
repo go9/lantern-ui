@@ -64,11 +64,15 @@ the hooks bundle for `segmented` and `side_panel_toggle`.
 ```heex
 <.status_glyph status={:in_progress} />
 <.priority_glyph priority={:high} />
+<.run_glyph state={:verifying} />
 <.state_glyph kind="status" value="cancelled" />
 <.state_glyph kind="priority" value="none" />
+<.state_glyph kind="run" value="claiming_env" />
 ```
 
-`:selected_for_dev` draws the same empty ring as `:todo`.
+`:selected_for_dev` draws the same empty ring as `:todo`. Run states are
+`queued`, `claiming_env`, `running`, `verifying`, `passed`, `failed`,
+`blocked`.
 
 ## Progress ring
 

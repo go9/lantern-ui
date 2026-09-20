@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **`state_glyph` `kind="run"`** — a generic CI/pipeline set (`queued`,
+  `claiming_env`, `running`, `verifying`, `passed`, `failed`, `blocked`) plus
+  a flicker-shaped `run_glyph/1` alias (`state=`). Unknown values draw
+  `queued`. Token-tinted like the status and priority sets.
 - **Recipes page + `lantern-recipes` skill.** Kitchen-sink copyable HEEx for
   Linear-shaped pages — list row, grouped list, record rail, 3-column inbox,
   project overview, icon toolbar, capacity strip — built only from lantern

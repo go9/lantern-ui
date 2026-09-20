@@ -3864,6 +3864,13 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-state-glyph[data-kind="priority"][data-value="medium"] { color: var(--lantern-fg-muted); }
 .lui-state-glyph[data-kind="priority"][data-value="low"],
 .lui-state-glyph[data-kind="priority"][data-value="none"] { color: var(--lantern-fg-subtle); }
+.lui-state-glyph[data-kind="run"][data-value="queued"] { color: var(--lantern-fg-subtle); }
+.lui-state-glyph[data-kind="run"][data-value="claiming_env"] { color: var(--lantern-fg-muted); }
+.lui-state-glyph[data-kind="run"][data-value="running"] { color: var(--lantern-warning); }
+.lui-state-glyph[data-kind="run"][data-value="verifying"] { color: var(--lantern-info, var(--lantern-accent)); }
+.lui-state-glyph[data-kind="run"][data-value="passed"] { color: var(--lantern-success); }
+.lui-state-glyph[data-kind="run"][data-value="failed"] { color: var(--lantern-danger); }
+.lui-state-glyph[data-kind="run"][data-value="blocked"] { color: var(--lantern-warning); }
 
 .lui-progress-ring {
   display: inline-flex;
