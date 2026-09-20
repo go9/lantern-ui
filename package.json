@@ -2,12 +2,17 @@
   "name": "lantern-ui-dev",
   "private": true,
   "version": "0.0.0",
-  "description": "Development-only harness for testing priv/static/lantern_ui_hooks.js. NOT published to npm and NOT part of the Hex package (see the `files:` whitelist in mix.exs) — consumers get the hooks as a plain ES module with zero JS dependencies.",
+  "description": "Build + test harness for priv/static/lantern_ui_hooks.js. NOT published to npm and NOT part of the Hex package (see the `files:` whitelist in mix.exs). Consumers import the committed bundle — they do not need a JS toolchain.",
   "type": "module",
   "scripts": {
+    "build": "esbuild assets/js/lantern_ui_hooks.js --bundle --format=esm --outfile=priv/static/lantern_ui_hooks.js",
     "test": "node --test test/js/*.mjs"
   },
+  "dependencies": {
+    "@floating-ui/dom": "^1.7.4"
+  },
   "devDependencies": {
+    "esbuild": "^0.25.9",
     "jsdom": "^26.1.0"
   }
 }

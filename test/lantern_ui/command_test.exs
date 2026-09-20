@@ -425,7 +425,7 @@ defmodule LanternUI.CommandTest do
     end
 
     test "every data-part the hook queries exists in the render" do
-      js = File.read!("priv/static/lantern_ui_hooks.js")
+      js = File.read!("assets/js/lantern_ui_hooks.js")
 
       hook =
         js

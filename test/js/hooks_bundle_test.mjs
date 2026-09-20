@@ -6,7 +6,7 @@ import test from "node:test"
 
 import { hooks } from "./helpers/dom.mjs"
 
-const source = await readFile(new URL("../../priv/static/lantern_ui_hooks.js", import.meta.url), "utf8")
+const source = await readFile(new URL("../../assets/js/lantern_ui_hooks.js", import.meta.url), "utf8")
 
 test("no hook defines the same method twice", () => {
   // A duplicated key in an object literal is not an error in JavaScript: the
