@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-09-20
+
+### Fixed
+- **`group_band` collapse actually hides its rows.** `LanternCollapse` sets
+  `hidden` on each `list_row` in the group, but `.lui-list-row { display: flex }`
+  out-specified the UA `[hidden]` rule, so collapsed rows stayed painted.
+  `.lui-list-row[hidden] { display: none }` (flicker #2894, found via
+  lantern-demo#2).
+
 ## [0.8.2] - 2026-09-20
 
 ### Changed

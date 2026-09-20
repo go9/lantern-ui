@@ -120,6 +120,14 @@ defmodule LanternUI.DenseAppTest do
                "tickets:in_progress"
              ]
     end
+
+    test "hidden rows do not render (collapse sets el.hidden)" do
+      css = File.read!("priv/static/lantern_ui.css")
+
+      # `.lui-list-row {display: flex}` beats the UA `[hidden]` rule, so a
+      # collapsed group would still paint its rows (#2894).
+      assert css =~ ~r/\.lui-list-row\[hidden\] \{ display: none; \}/
+    end
   end
 
   describe "group_band/1" do
