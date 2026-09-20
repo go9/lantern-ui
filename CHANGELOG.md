@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-09-20
+
+Dense-app primitives, compact type/grey scale, and the esbuild hooks
+pipeline land together. The old zero-dependency unbundled-hooks goal is
+retired (`@floating-ui/dom` is inlined in the committed bundle; consumers
+still import `priv/static/lantern_ui_hooks.js` with no JS toolchain).
+`text-foreground-softer` is a deprecated alias of `-soft`.
+
 ### Added
 - **Dense-app primitives — Linear-shaped rows, rails, and glyphs (flicker #2861).**
   Eight components extracted from the flicker tickets/suggestions/hub pages:
@@ -602,5 +610,6 @@ All notable changes to this project are documented here. The format follows
 - Optional standalone theme (`priv/static/lantern_ui.css`); components otherwise
   inherit host CSS variables (Fluxon-compatible).
 
-[Unreleased]: https://github.com/go9/lantern-ui
+[Unreleased]: https://github.com/go9/lantern-ui/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/go9/lantern-ui/releases/tag/v0.8.0
 [0.3.0]: https://github.com/go9/lantern-ui/releases/tag/v0.3.0

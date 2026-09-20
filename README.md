@@ -53,11 +53,11 @@ the complete function and attribute surface.
   `LanternUI.Components.MessageScroller` composition.
 
 See the [latest published HexDocs](https://hexdocs.pm/lantern_ui) for the
-released 0.5.x API. The current 0.7.0 main branch is not published there.
+released 0.5.x API. The current 0.8.0 main branch is not published there.
 
 Geometry is computed in Elixir, so charts re-render through normal LiveView
-assigns. The only client JS is one small hook (`ChartHover`) for the area chart's
-tooltip.
+assigns. Client JS lives in the committed `priv/static/lantern_ui_hooks.js`
+bundle (esbuild; consumers do not need a JS toolchain).
 
 ## Agent skills
 
@@ -80,9 +80,8 @@ def deps do
 end
 ```
 
-The main branch currently targets version 0.7.0. Command and Chat Kit are newer
-components in that unreleased line, so use this reproducible git pin until 0.7
-is published:
+The main branch currently targets version 0.8.0. Use this reproducible git pin
+until 0.8 is published to Hex:
 
 ```elixir
 {:lantern_ui, git: "https://github.com/go9/lantern-ui.git", ref: "0ad0627054ee6765c81eceace58ad316959565bb"}
