@@ -56,7 +56,10 @@ export function patchLayoutGaps(window) {
  * LiveComponent MUST use `pushEventTo`), not an implementation detail.
  */
 export function mountHook(hook, html, { rootId } = {}) {
-  const dom = new JSDOM(`<!doctype html><html><body>${html}</body></html>`, { pretendToBeVisual: true })
+  const dom = new JSDOM(`<!doctype html><html><body>${html}</body></html>`, {
+    pretendToBeVisual: true,
+    url: "https://lantern.test/",
+  })
   const { window } = dom
   patchLayoutGaps(window)
 
