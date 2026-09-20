@@ -3783,7 +3783,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   align-items: center;
 }
 
-.lui-icon-btn-tip .lui-tooltip {
+.lui-icon-btn-tip .lui-tooltip:not([hidden]) {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;

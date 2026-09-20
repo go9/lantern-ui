@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- **`icon_button` tooltips rendered open.** `.lui-icon-btn-tip .lui-tooltip`
+  (`display: inline-flex`) out-specified `.lui-tooltip[hidden]`, so every
+  icon-button tip was visible on load. The override is now scoped to
+  `:not([hidden])`. (flicker #2889)
+
 ## [0.8.1] - 2026-09-20
 
 ### Added

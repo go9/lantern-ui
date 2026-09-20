@@ -194,6 +194,15 @@ defmodule LanternUI.DenseAppTest do
       assert html =~ "<a"
       assert html =~ ~s(href="/new")
     end
+
+    test "tip display override does not out-specify the hidden state" do
+      css = File.read!("priv/static/lantern_ui.css")
+
+      # `.a .b {display}` (0,2,0) would beat `.lui-tooltip[hidden]` (0,1,1) and
+      # render every icon-button tip open on load; keep the override scoped.
+      refute css =~ ~r/\.lui-icon-btn-tip \.lui-tooltip \{/
+      assert css =~ ~r/\.lui-icon-btn-tip \.lui-tooltip:not\(\[hidden\]\) \{/
+    end
   end
 
   describe "segmented/1" do
