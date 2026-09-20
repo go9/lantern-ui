@@ -2,7 +2,8 @@
 
 Linear-shaped building blocks extracted from flicker tickets/suggestions/hub
 (#1404 / #1407 / #1408). Styled by default with `--lantern-*` tokens. Register
-the hooks bundle for `segmented` and `side_panel_toggle`.
+the hooks bundle for `tabs_list` (`LanternTabs`; `LanternSegmented` still
+works this release) and `side_panel_toggle`.
 
 ## List row
 
@@ -46,8 +47,10 @@ patches and reloads — see [Behaviours](behaviours.md).
 ```heex
 <.inspector aria-label="Ticket">
   <.inspector_section title="Properties">
-    <.property_row label="Repo">enventory_new</.property_row>
-    <.property_row label="Status">{@status}</.property_row>
+    <.description_list layout="dense">
+      <:item label="Repo">enventory_new</:item>
+      <:item label="Status">{@status}</:item>
+    </.description_list>
   </.inspector_section>
 </.inspector>
 ```
@@ -55,20 +58,26 @@ patches and reloads — see [Behaviours](behaviours.md).
 ## Icon button
 
 ```heex
-<.icon_button label="Toggle panel" kbd="]">
+<.button size="icon" label="Toggle panel" kbd="]">
   <.icon name="view-columns" />
-</.icon_button>
+</.button>
 ```
+
+`label` is the accessible name. On `icon-*` sizes the control is wrapped in
+`tooltip/1`; `kbd` is the optional hint in that tip.
 
 ## Segmented control
 
 ```heex
-<.segmented id="scope" value={@scope} label="View">
-  <:segment value="all" patch={~p"/tickets"}>All</:segment>
-  <:segment value="active" patch={~p"/tickets?scope=active"}>Active</:segment>
-  <:segment value="backlog" patch={~p"/tickets?scope=backlog"}>Backlog</:segment>
-</.segmented>
+<.tabs_list id="scope" variant="segmented" size="sm" active_tab={@scope} aria-label="View">
+  <:tab name="all" patch={~p"/tickets"}>All</:tab>
+  <:tab name="active" patch={~p"/tickets?scope=active"}>Active</:tab>
+  <:tab name="backlog" patch={~p"/tickets?scope=backlog"}>Backlog</:tab>
+</.tabs_list>
 ```
+
+Give the list an `id` so `LanternTabs` handles arrow-key activation. Pass
+`role="radiogroup"` when there is no tab panel.
 
 ## State glyphs
 
@@ -93,7 +102,7 @@ kinds are `repo`, `doc`, `ticket_memory`, `upload`.
 ## Progress ring
 
 ```heex
-<.progress_ring value={7} max={19} label="Completion">7 / 19</.progress_ring>
+<.progress shape="ring" value={7} max={19} label="Completion">7 / 19</.progress>
 ```
 
 `completed`/`scope` is the flicker-shaped alias of `value`/`max`. The track uses
@@ -117,6 +126,18 @@ kinds are `repo`, `doc`, `ticket_memory`, `upload`.
 
 Handle `set_panel` (`%{"open" => bool}`) to apply the stored preference. The
 toggle defaults open at ≥1280px when `localStorage` is empty. Not resizable —
-that stays with the host until the build-pipeline ticket.
+that stays with the host until the build-pipeline ticket. The toggle is a
+`button/1` with `label`/`kbd` plus the persist attrs.
+
+## Deprecated in 0.8.2
+
+Old names still render. They warn once per node and go away in 0.9.0.
+
+| Deprecated | Use instead |
+|---|---|
+| `<.icon_button label="Filter" kbd="F">` | `<.button size="icon" label="Filter" kbd="F" variant="ghost">` |
+| `<.progress_ring value={7} max={19}>` | `<.progress shape="ring" value={7} max={19}>` |
+| `<.segmented id="scope" value={@scope}> <:segment>` | `<.tabs_list id="scope" variant="segmented" active_tab={@scope}> <:tab>` |
+| `<.property_row label="Repo">` | `<.description_list layout="dense"> <:item label="Repo">` |
 
 Copyable page compositions that use these primitives live in [Recipes](recipes.md).

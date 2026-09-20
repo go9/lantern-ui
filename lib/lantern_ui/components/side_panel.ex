@@ -15,18 +15,18 @@ defmodule LanternUI.Components.SidePanel do
         <.inspector>…</.inspector>
       </.side_panel>
 
-  The toggle owns the `LanternSidePanel` hook. On mount, with no stored choice,
-  the panel defaults open at ≥1280px and closed below. After that the viewer's
-  last choice wins. The LiveView still owns `open` — the hook pushes
-  `set_panel` (override with `event`) when the stored value disagrees with
-  `aria-pressed`.
+  The toggle is a `button/1` with `label`/`kbd` plus the persist attrs. It owns
+  the `LanternSidePanel` hook. On mount, with no stored choice, the panel
+  defaults open at ≥1280px and closed below. After that the viewer's last
+  choice wins. The LiveView still owns `open` — the hook pushes `set_panel`
+  (override with `event`) when the stored value disagrees with `aria-pressed`.
 
   Not resizable. Not the app-shell sidebar (`LanternSidebar`).
   """
   use Phoenix.Component
 
   alias LanternUI.Class
-  alias LanternUI.Components.IconButton
+  alias LanternUI.Components.Button
 
   attr(:id, :string, required: true, doc: "DOM id; referenced by the toggle's aria-controls.")
   attr(:open, :boolean, default: false, doc: "Whether the panel is shown.")
@@ -80,13 +80,18 @@ defmodule LanternUI.Components.SidePanel do
   slot(:inner_block, doc: "Override the default panel-split glyph.")
 
   def side_panel_toggle(assigns) do
+    assigns =
+      assigns
+      |> assign(:btn_variant, btn_variant(assigns.variant))
+      |> assign(:btn_size, btn_size(assigns.size))
+
     ~H"""
-    <IconButton.icon_button
+    <Button.button
       id={@id}
       label={@label}
       kbd={@kbd}
-      variant={@variant}
-      size={@size}
+      variant={@btn_variant}
+      size={@btn_size}
       class={@class}
       phx-hook="LanternSidePanel"
       aria-pressed={to_string(@open)}
@@ -112,7 +117,14 @@ defmodule LanternUI.Components.SidePanel do
           <path d="M10 2.5v11" stroke="currentColor" stroke-width="1.3" />
         </svg>
       <% end %>
-    </IconButton.icon_button>
+    </Button.button>
     """
   end
+
+  defp btn_variant("primary"), do: "solid"
+  defp btn_variant(other), do: other
+
+  defp btn_size("sm"), do: "icon-sm"
+  defp btn_size("lg"), do: "icon-lg"
+  defp btn_size(_), do: "icon"
 end

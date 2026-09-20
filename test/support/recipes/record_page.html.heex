@@ -17,11 +17,13 @@
 <.side_panel id="ticket-panel" open={@panel_open} aria-label="Ticket properties">
   <.inspector aria-label="Ticket">
     <.inspector_section title="Properties">
-      <.property_row label="Status">{@ticket.status}</.property_row>
-      <.property_row label="Priority">{@ticket.priority}</.property_row>
-      <.property_row label="Tags">
-        <.badge size="sm">{@ticket.tag}</.badge>
-      </.property_row>
+      <.description_list layout="dense">
+        <:item label="Status">{@ticket.status}</:item>
+        <:item label="Priority">{@ticket.priority}</:item>
+        <:item label="Tags">
+          <.badge size="sm">{@ticket.tag}</.badge>
+        </:item>
+      </.description_list>
     </.inspector_section>
   </.inspector>
 </.side_panel>

@@ -1,12 +1,13 @@
 <.page_header title={@project.name} description={@project.summary}>
   <:actions>
-    <.progress_ring
+    <.progress
+      shape="ring"
       completed={@project.completed}
       scope={@project.scope}
       label="Progress"
     >
       {@project.completed} / {@project.scope}
-    </.progress_ring>
+    </.progress>
   </:actions>
 </.page_header>
 <.stat_grid>

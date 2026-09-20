@@ -37,7 +37,7 @@ Swap the fixture assigns (`@ticket`, `@paths`, …) for the host's LiveView assi
   </:leading>
   <:meta>
     <.badge size="sm">{@ticket.tag}</.badge>
-    <.progress_ring completed={@ticket.completed} scope={@ticket.scope} size="sm" />
+    <.progress shape="ring" completed={@ticket.completed} scope={@ticket.scope} size="sm" />
   </:meta>
   <:trailing>{@ticket.date}</:trailing>
 </.list_row>
@@ -52,19 +52,25 @@ Swap the fixture assigns (`@ticket`, `@paths`, …) for the host's LiveView assi
 ```heex
 <.card flush>
   <:header>
-    <.segmented id="tickets-scope" value={@scope} label="View">
-      <:segment value="all" patch={@paths.all}>All</:segment>
-      <:segment value="active" patch={@paths.active}>Active</:segment>
-      <:segment value="backlog" patch={@paths.backlog}>Backlog</:segment>
-    </.segmented>
+    <.tabs_list
+      id="tickets-scope"
+      variant="segmented"
+      size="sm"
+      active_tab={@scope}
+      aria-label="View"
+    >
+      <:tab name="all" patch={@paths.all}>All</:tab>
+      <:tab name="active" patch={@paths.active}>Active</:tab>
+      <:tab name="backlog" patch={@paths.backlog}>Backlog</:tab>
+    </.tabs_list>
   </:header>
   <:actions>
-    <.icon_button label="Filter" kbd="F">
+    <.button size="icon" variant="ghost" label="Filter" kbd="F">
       <.icon name="funnel" />
-    </.icon_button>
-    <.icon_button label="Display" kbd="D">
+    </.button>
+    <.button size="icon" variant="ghost" label="Display" kbd="D">
       <.icon name="adjustments-horizontal" />
-    </.icon_button>
+    </.button>
   </:actions>
   <.scroll_area label="Tickets" data-lantern-list-nav>
     <.group_band
@@ -133,11 +139,13 @@ Swap the fixture assigns (`@ticket`, `@paths`, …) for the host's LiveView assi
 <.side_panel id="ticket-panel" open={@panel_open} aria-label="Ticket properties">
   <.inspector aria-label="Ticket">
     <.inspector_section title="Properties">
-      <.property_row label="Status">{@ticket.status}</.property_row>
-      <.property_row label="Priority">{@ticket.priority}</.property_row>
-      <.property_row label="Tags">
-        <.badge size="sm">{@ticket.tag}</.badge>
-      </.property_row>
+      <.description_list layout="dense">
+        <:item label="Status">{@ticket.status}</:item>
+        <:item label="Priority">{@ticket.priority}</:item>
+        <:item label="Tags">
+          <.badge size="sm">{@ticket.tag}</.badge>
+        </:item>
+      </.description_list>
     </.inspector_section>
   </.inspector>
 </.side_panel>
@@ -153,9 +161,9 @@ Swap the fixture assigns (`@ticket`, `@paths`, …) for the host's LiveView assi
 <.card_grid>
   <.card flush title={"Inbox · #{@inbox_count}"}>
     <:actions>
-      <.icon_button label="Filter" kbd="F">
+      <.button size="icon" variant="ghost" label="Filter" kbd="F">
         <.icon name="funnel" />
-      </.icon_button>
+      </.button>
     </:actions>
     <.scroll_area label="Inbox" data-lantern-list-nav>
       <.list_row
@@ -179,8 +187,10 @@ Swap the fixture assigns (`@ticket`, `@paths`, …) for the host's LiveView assi
   <.card flush title="Properties">
     <.inspector aria-label="Suggestion">
       <.inspector_section title="Properties">
-        <.property_row label="Status">{@selected.status}</.property_row>
-        <.property_row label="Source">{@selected.source}</.property_row>
+        <.description_list layout="dense">
+          <:item label="Status">{@selected.status}</:item>
+          <:item label="Source">{@selected.source}</:item>
+        </.description_list>
       </.inspector_section>
     </.inspector>
   </.card>
@@ -196,13 +206,14 @@ Swap the fixture assigns (`@ticket`, `@paths`, …) for the host's LiveView assi
 ```heex
 <.page_header title={@project.name} description={@project.summary}>
   <:actions>
-    <.progress_ring
+    <.progress
+      shape="ring"
       completed={@project.completed}
       scope={@project.scope}
       label="Progress"
     >
       {@project.completed} / {@project.scope}
-    </.progress_ring>
+    </.progress>
   </:actions>
 </.page_header>
 <.stat_grid>
@@ -235,18 +246,18 @@ Swap the fixture assigns (`@ticket`, `@paths`, …) for the host's LiveView assi
 ```heex
 <.card>
   <:actions>
-    <.icon_button label="Promote to ticket" kbd="P" variant="primary">
+    <.button size="icon" label="Promote to ticket" kbd="P" variant="solid">
       <.icon name="arrow-up-tray" />
-    </.icon_button>
-    <.icon_button label="Snooze" kbd="H">
+    </.button>
+    <.button size="icon" label="Snooze" kbd="H" variant="ghost">
       <.icon name="clock" />
-    </.icon_button>
-    <.icon_button label="Mark resolved" kbd="E">
+    </.button>
+    <.button size="icon" label="Mark resolved" kbd="E" variant="ghost">
       <.icon name="check" />
-    </.icon_button>
-    <.icon_button label="More">
+    </.button>
+    <.button size="icon" label="More" variant="ghost">
       <.icon name="ellipsis-horizontal" />
-    </.icon_button>
+    </.button>
   </:actions>
   Inbox thread
 </.card>

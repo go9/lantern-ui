@@ -1115,6 +1115,7 @@
 /* ── Tabs ── */
 .lui-tabs-list { display: inline-flex; align-items: center; }
 .lui-tabs-list[data-variant="segmented"] { background: var(--lantern-surface-sunken);
+  border: 1px solid var(--lantern-border);
   border-radius: calc(var(--lantern-radius) + 1px); padding: 3px; gap: 2px; }
 .lui-tab { display: inline-flex; align-items: center; gap: 0.35rem; border: none; background: none;
   color: var(--lantern-fg-muted); font-weight: 500; cursor: pointer; text-decoration: none;
@@ -3899,6 +3900,7 @@ button.lui-group-band-main {
 }
 .lui-progress-ring[data-size="sm"] .lui-progress-ring-svg { width: 1.75rem; height: 1.75rem; }
 .lui-progress-ring[data-size="md"] .lui-progress-ring-svg { width: 2.5rem; height: 2.5rem; }
+.lui-progress-ring[data-size="lg"] .lui-progress-ring-svg { width: 3rem; height: 3rem; }
 .lui-progress-ring-track {
   fill: none;
   stroke: var(--lantern-border-strong);

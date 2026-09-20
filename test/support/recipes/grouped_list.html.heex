@@ -1,18 +1,24 @@
 <.card flush>
   <:header>
-    <.segmented id="tickets-scope" value={@scope} label="View">
-      <:segment value="all" patch={@paths.all}>All</:segment>
-      <:segment value="active" patch={@paths.active}>Active</:segment>
-      <:segment value="backlog" patch={@paths.backlog}>Backlog</:segment>
-    </.segmented>
+    <.tabs_list
+      id="tickets-scope"
+      variant="segmented"
+      size="sm"
+      active_tab={@scope}
+      aria-label="View"
+    >
+      <:tab name="all" patch={@paths.all}>All</:tab>
+      <:tab name="active" patch={@paths.active}>Active</:tab>
+      <:tab name="backlog" patch={@paths.backlog}>Backlog</:tab>
+    </.tabs_list>
   </:header>
   <:actions>
-    <.icon_button label="Filter" kbd="F">
+    <.button size="icon" variant="ghost" label="Filter" kbd="F">
       <.icon name="funnel" />
-    </.icon_button>
-    <.icon_button label="Display" kbd="D">
+    </.button>
+    <.button size="icon" variant="ghost" label="Display" kbd="D">
       <.icon name="adjustments-horizontal" />
-    </.icon_button>
+    </.button>
   </:actions>
   <.scroll_area label="Tickets" data-lantern-list-nav>
     <.group_band

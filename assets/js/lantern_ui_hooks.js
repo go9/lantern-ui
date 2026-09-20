@@ -3187,8 +3187,8 @@ const LanternSidePanel = {
 Hooks.LanternSidePanel = LanternSidePanel
 export { LanternSidePanel }
 
-// Segmented control: Left/Right/Up/Down/Home/End move and activate.
-const LanternSegmented = {
+// Tabs / segmented control: Left/Right/Up/Down/Home/End move and activate.
+const LanternTabs = {
   mounted() {
     this.onKey = (event) => this.onKeydown(event)
     this.el.addEventListener("keydown", this.onKey)
@@ -3199,7 +3199,7 @@ const LanternSegmented = {
   },
 
   segments() {
-    return [...this.el.querySelectorAll('[data-part="segment"]')].filter((el) => {
+    return [...this.el.querySelectorAll('[data-part="segment"], [data-part="tab"]')].filter((el) => {
       if (el.disabled || el.getAttribute("aria-disabled") === "true") return false
       return true
     })
@@ -3227,7 +3227,9 @@ const LanternSegmented = {
   },
 }
 
+const LanternSegmented = LanternTabs
+Hooks.LanternTabs = LanternTabs
 Hooks.LanternSegmented = LanternSegmented
-export { LanternSegmented }
+export { LanternTabs, LanternSegmented }
 
 if (typeof document !== "undefined") installBehaviours(document)

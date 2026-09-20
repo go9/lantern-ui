@@ -137,6 +137,36 @@ defmodule LanternUI.ComponentsTest do
       refute html =~ "aria-disabled"
       refute html =~ "tabindex"
     end
+
+    test "label on an icon size is aria-label and wraps a tooltip with optional kbd" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.Button.button size="icon" label="Toggle panel" kbd="]">
+            x
+          </LanternUI.Components.Button.button>
+          """
+        end)
+
+      assert html =~ ~s(aria-label="Toggle panel")
+      assert html =~ "lui-tooltip"
+      assert html =~ ~s(class="lui-icon-btn-kbd")
+      assert html =~ "]"
+      assert html =~ ~s(data-size="icon")
+    end
+
+    test "label on a non-icon size is aria-label only, no tooltip wrap" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.Button.button label="Save">Save</LanternUI.Components.Button.button>
+          """
+        end)
+
+      assert html =~ ~s(aria-label="Save")
+      refute html =~ "lui-tooltip"
+      refute html =~ "lui-icon-btn-kbd"
+    end
   end
 
   describe "input/1" do

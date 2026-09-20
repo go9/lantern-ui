@@ -9,9 +9,15 @@ defmodule LanternUI.Components.DescriptionList do
         <:item label="Description" wide>Long free text…</:item>
       </.description_list>
 
+      <.description_list layout="dense">
+        <:item label="Repo">enventory_new</:item>
+        <:item label="Status">{@status}</:item>
+      </.description_list>
+
   `columns` sets how many pairs sit side by side on a wide viewport; it always
   collapses to one column on narrow screens. `layout="inline"` puts the label
-  beside its value instead of above it, for dense side panels.
+  beside its value instead of above it. `layout="dense"` is the inspector-rail
+  grid (label column + value).
   """
   use Phoenix.Component
 
@@ -21,8 +27,9 @@ defmodule LanternUI.Components.DescriptionList do
 
   attr(:layout, :string,
     default: "stacked",
-    values: ~w(stacked inline),
-    doc: "`stacked` puts the label above the value; `inline` puts it alongside."
+    values: ~w(stacked inline dense),
+    doc:
+      "`stacked` puts the label above the value; `inline` puts it alongside; `dense` is the inspector rail."
   )
 
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
@@ -35,13 +42,17 @@ defmodule LanternUI.Components.DescriptionList do
   end
 
   def description_list(assigns) do
+    dense? = assigns.layout == "dense"
+    assigns = assign(assigns, :dense?, dense?)
+
     ~H"""
     <dl
       class={
         Class.merge([
           "lui-dl",
           "lui-dl-#{@layout}",
-          "lui-dl-cols-#{@columns}",
+          not @dense? && "lui-dl-cols-#{@columns}",
+          @dense? && "lui-inspector-list",
           @class
         ])
       }
@@ -49,10 +60,21 @@ defmodule LanternUI.Components.DescriptionList do
     >
       <div
         :for={item <- @item}
-        class={Class.merge(["lui-dl-row", item[:wide] && "lui-dl-wide", item[:class]])}
+        class={
+          Class.merge([
+            "lui-dl-row",
+            @dense? && "lui-property-row",
+            item[:wide] && "lui-dl-wide",
+            item[:class]
+          ])
+        }
       >
-        <dt class="lui-dl-label">{item[:label]}</dt>
-        <dd class="lui-dl-value">{render_slot(item)}</dd>
+        <dt class={Class.merge(["lui-dl-label", @dense? && "lui-property-label"])}>
+          {item[:label]}
+        </dt>
+        <dd class={Class.merge(["lui-dl-value", @dense? && "lui-property-value"])}>
+          {render_slot(item)}
+        </dd>
       </div>
     </dl>
     """

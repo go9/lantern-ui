@@ -97,6 +97,36 @@ defmodule LanternUI.TablePrimitivesTest do
       assert html =~ ~s(phx-click="set_tab")
       assert html =~ ~s(phx-value-tab="b")
     end
+
+    test "segmented list with id mounts the tabs hook and can be a radiogroup" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Tabs.tabs_list
+            id="scope"
+            variant="segmented"
+            size="sm"
+            active_tab="active"
+            role="radiogroup"
+            aria-label="View"
+          >
+            <:tab name="all" patch="/t">All</:tab>
+            <:tab name="active" patch="/t?scope=active">Active</:tab>
+            <:tab name="backlog" phx-click="set_scope">Backlog</:tab>
+          </Tabs.tabs_list>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      assert Floki.attribute(Floki.find(doc, ".lui-segmented"), "role") == ["radiogroup"]
+      assert html =~ ~s(phx-hook="LanternTabs")
+      items = Floki.find(doc, "[data-part=segment]")
+      assert length(items) == 3
+      assert Floki.attribute(Enum.at(items, 1), "aria-checked") == ["true"]
+      assert Floki.attribute(Enum.at(items, 1), "class") |> hd() =~ "lui-segmented-item-active"
+      assert Floki.attribute(Enum.at(items, 1), "tabindex") == ["0"]
+      assert Floki.attribute(Enum.at(items, 0), "tabindex") == ["-1"]
+    end
   end
 
   describe "select/1" do
