@@ -1,7 +1,7 @@
 # Chat Kit
 
-Chat Kit is present on the main branch, which currently targets LanternUI 0.7.0.
-Hex 0.7 is not published yet. Install the reproducible git revision below until
+Chat Kit is present on the main branch, which currently targets LanternUI 0.8.0.
+Hex 0.8 is not published yet. Install the reproducible git revision below until
 that release is available:
 
 ```elixir
