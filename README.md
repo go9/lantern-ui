@@ -52,8 +52,7 @@ the complete function and attribute surface.
   `LanternUI.Components.Avatar`, `LanternUI.Components.Message`, and
   `LanternUI.Components.MessageScroller` composition.
 
-See the [latest published HexDocs](https://hexdocs.pm/lantern_ui) for the
-released 0.5.x API. The current 0.8.0 main branch is not published there.
+See the [published HexDocs](https://hexdocs.pm/lantern_ui) for the released API.
 
 Geometry is computed in Elixir, so charts re-render through normal LiveView
 assigns. Client JS lives in the committed `priv/static/lantern_ui_hooks.js`
@@ -73,19 +72,10 @@ project-specific variants.
 
 ## Installation
 
-For the latest published Hex release (0.5.x):
-
 ```elixir
 def deps do
-  [{:lantern_ui, "~> 0.5"}]
+  [{:lantern_ui, "~> 0.8"}]
 end
-```
-
-The main branch currently targets version 0.8.0. Use this reproducible git pin
-until 0.8 is published to Hex:
-
-```elixir
-{:lantern_ui, git: "https://github.com/go9/lantern-ui.git", ref: "0ad0627054ee6765c81eceace58ad316959565bb"}
 ```
 
 ## Usage
