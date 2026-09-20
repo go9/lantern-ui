@@ -98,3 +98,5 @@ the hooks bundle for `segmented` and `side_panel_toggle`.
 Handle `set_panel` (`%{"open" => bool}`) to apply the stored preference. The
 toggle defaults open at ≥1280px when `localStorage` is empty. Not resizable —
 that stays with the host until the build-pipeline ticket.
+
+Copyable page compositions that use these primitives live in [Recipes](recipes.md).

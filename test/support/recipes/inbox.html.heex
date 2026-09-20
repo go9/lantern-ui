@@ -1,0 +1,35 @@
+<.card_grid>
+  <.card flush title={"Inbox · #{@inbox_count}"}>
+    <:actions>
+      <.icon_button label="Filter" kbd="F">
+        <.icon name="funnel" />
+      </.icon_button>
+    </:actions>
+    <.scroll_area label="Inbox" data-lantern-list-nav>
+      <.list_row
+        :for={item <- @inbox_items}
+        identifier={item.identifier}
+        title={item.title}
+        navigate={item.href}
+        selected={item.selected}
+        data-lantern-list-item
+      >
+        <:leading><.status_glyph status={item.status} /></:leading>
+        <:meta>
+          <.badge size="sm">{item.kind}</.badge>
+        </:meta>
+      </.list_row>
+    </.scroll_area>
+  </.card>
+  <.card title={@selected.title} description={@selected.meta}>
+    {@selected.body}
+  </.card>
+  <.card flush title="Properties">
+    <.inspector aria-label="Suggestion">
+      <.inspector_section title="Properties">
+        <.property_row label="Status">{@selected.status}</.property_row>
+        <.property_row label="Source">{@selected.source}</.property_row>
+      </.inspector_section>
+    </.inspector>
+  </.card>
+</.card_grid>

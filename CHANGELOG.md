@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **Recipes page + `lantern-recipes` skill.** Kitchen-sink copyable HEEx for
+  Linear-shaped pages — list row, grouped list, record rail, 3-column inbox,
+  project overview, icon toolbar, capacity strip — built only from lantern
+  components and sourced from flicker #1404 / #1407 / #1408. Showcase:
+  [docs/recipes.md](docs/recipes.md).
+
 ## [0.8.0] - 2026-09-20
 
 Dense-app primitives, compact type/grey scale, and the esbuild hooks

@@ -66,6 +66,7 @@ Reusable guidance for agents working with LanternUI lives in [`skills/`](skills/
 - `lantern-ui-components` — author or extend library components.
 - `lantern-migration` — migrate a Phoenix application onto LanternUI.
 - `phoenix-page-design` — design consistent LiveView pages with LanternUI.
+- `lantern-recipes` — copy these before writing any list/rail/inbox/overview page.
 
 Import these files from this public repository rather than copying private,
 project-specific variants.
