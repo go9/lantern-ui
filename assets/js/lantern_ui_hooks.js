@@ -3136,4 +3136,98 @@ const LanternMessageScroller = {
 Hooks.LanternMessageScroller = LanternMessageScroller
 export { LanternMessageScroller }
 
+// Right-hand inspector panel (#2861). Port of flicker's TicketPanel: the
+// LiveView owns `open`; this hook remembers the viewer's last choice in
+// localStorage and restores it on mount. With no stored choice the panel
+// opens on a wide viewport (≥1280px) and stays closed below.
+const LanternSidePanel = {
+  storageKey() {
+    return `lui-side-panel:${this.el.dataset.panelKey || this.el.id}`
+  },
+
+  readStored() {
+    try {
+      const stored = window.localStorage.getItem(this.storageKey())
+      if (stored === "open") return true
+      if (stored === "closed") return false
+    } catch (_e) {}
+    return null
+  },
+
+  writeStored(open) {
+    try {
+      window.localStorage.setItem(this.storageKey(), open ? "open" : "closed")
+    } catch (_e) {}
+  },
+
+  isOpen() {
+    return this.el.getAttribute("aria-pressed") === "true"
+  },
+
+  eventName() {
+    return this.el.dataset.event || "set_panel"
+  },
+
+  persistEventName() {
+    return this.el.dataset.persistEvent || "side_panel"
+  },
+
+  mounted() {
+    let open = this.readStored()
+    if (open === null) open = window.innerWidth >= 1280
+    if (open !== this.isOpen()) this.pushEvent(this.eventName(), { open })
+    this.handleEvent(this.persistEventName(), ({ open }) => this.writeStored(!!open))
+  },
+
+  updated() {
+    this.writeStored(this.isOpen())
+  },
+}
+
+Hooks.LanternSidePanel = LanternSidePanel
+export { LanternSidePanel }
+
+// Segmented control: Left/Right/Up/Down/Home/End move and activate.
+const LanternSegmented = {
+  mounted() {
+    this.onKey = (event) => this.onKeydown(event)
+    this.el.addEventListener("keydown", this.onKey)
+  },
+
+  destroyed() {
+    this.el.removeEventListener("keydown", this.onKey)
+  },
+
+  segments() {
+    return [...this.el.querySelectorAll('[data-part="segment"]')].filter((el) => {
+      if (el.disabled || el.getAttribute("aria-disabled") === "true") return false
+      return true
+    })
+  },
+
+  onKeydown(event) {
+    const keys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"]
+    if (!keys.includes(event.key)) return
+    const segs = this.segments()
+    if (segs.length === 0) return
+    const current = segs.findIndex((el) => el === event.target || el.contains(event.target))
+    if (current < 0) return
+    event.preventDefault()
+    let next = current
+    if (event.key === "Home") next = 0
+    else if (event.key === "End") next = segs.length - 1
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      next = (current - 1 + segs.length) % segs.length
+    } else {
+      next = (current + 1) % segs.length
+    }
+    const el = segs[next]
+    el.focus()
+    el.click()
+  },
+}
+
+Hooks.LanternSegmented = LanternSegmented
+export { LanternSegmented }
+
 if (typeof document !== "undefined") installBehaviours(document)

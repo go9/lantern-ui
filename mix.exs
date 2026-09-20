@@ -56,7 +56,8 @@ defmodule LanternUI.MixProject do
         "docs/chat-kit.md",
         "docs/support-helpers.md",
         "docs/scale.md",
-        "docs/behaviours.md"
+        "docs/behaviours.md",
+        "docs/dense-app.md"
       ],
       source_ref: "v#{@version}",
       source_url: @source_url

@@ -7,6 +7,16 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Dense-app primitives — Linear-shaped rows, rails, and glyphs (flicker #2861).**
+  Eight components extracted from the flicker tickets/suggestions/hub pages:
+  `list_row/1`, `group_band/1`, `inspector/1` + `property_row/1`,
+  `icon_button/1`, `segmented/1`, `state_glyph/1` (with flicker-shaped
+  `status_glyph/1` / `priority_glyph/1` aliases), `progress_ring/1`, and
+  `side_panel/1` + `side_panel_toggle/1`. The progress ring keeps a visible
+  muted track and a thicker value stroke, so 7/19 no longer reads as an empty
+  circle. `LanternSidePanel` persists open/closed in localStorage (default
+  open ≥1280px); `LanternSegmented` handles arrow-key activation. Showcase:
+  [docs/dense-app.md](docs/dense-app.md).
 - **esbuild hooks bundle + data-attribute behaviours.** `lantern_ui_hooks.js` is
   authored in `assets/js/` and bundled to `priv/static/` (`npm run build`).
   `@floating-ui/dom` is the first JS dependency and is inlined, so the consumer

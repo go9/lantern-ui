@@ -3983,6 +3983,81 @@ var LanternMessageScroller = {
   }
 };
 Hooks.LanternMessageScroller = LanternMessageScroller;
+var LanternSidePanel = {
+  storageKey() {
+    return `lui-side-panel:${this.el.dataset.panelKey || this.el.id}`;
+  },
+  readStored() {
+    try {
+      const stored = window.localStorage.getItem(this.storageKey());
+      if (stored === "open") return true;
+      if (stored === "closed") return false;
+    } catch (_e) {
+    }
+    return null;
+  },
+  writeStored(open) {
+    try {
+      window.localStorage.setItem(this.storageKey(), open ? "open" : "closed");
+    } catch (_e) {
+    }
+  },
+  isOpen() {
+    return this.el.getAttribute("aria-pressed") === "true";
+  },
+  eventName() {
+    return this.el.dataset.event || "set_panel";
+  },
+  persistEventName() {
+    return this.el.dataset.persistEvent || "side_panel";
+  },
+  mounted() {
+    let open = this.readStored();
+    if (open === null) open = window.innerWidth >= 1280;
+    if (open !== this.isOpen()) this.pushEvent(this.eventName(), { open });
+    this.handleEvent(this.persistEventName(), ({ open: open2 }) => this.writeStored(!!open2));
+  },
+  updated() {
+    this.writeStored(this.isOpen());
+  }
+};
+Hooks.LanternSidePanel = LanternSidePanel;
+var LanternSegmented = {
+  mounted() {
+    this.onKey = (event) => this.onKeydown(event);
+    this.el.addEventListener("keydown", this.onKey);
+  },
+  destroyed() {
+    this.el.removeEventListener("keydown", this.onKey);
+  },
+  segments() {
+    return [...this.el.querySelectorAll('[data-part="segment"]')].filter((el) => {
+      if (el.disabled || el.getAttribute("aria-disabled") === "true") return false;
+      return true;
+    });
+  },
+  onKeydown(event) {
+    const keys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"];
+    if (!keys.includes(event.key)) return;
+    const segs = this.segments();
+    if (segs.length === 0) return;
+    const current = segs.findIndex((el2) => el2 === event.target || el2.contains(event.target));
+    if (current < 0) return;
+    event.preventDefault();
+    let next = current;
+    if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = segs.length - 1;
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      next = (current - 1 + segs.length) % segs.length;
+    } else {
+      next = (current + 1) % segs.length;
+    }
+    const el = segs[next];
+    el.focus();
+    el.click();
+  }
+};
+Hooks.LanternSegmented = LanternSegmented;
 if (typeof document !== "undefined") installBehaviours(document);
 export {
   ChartHover,
@@ -4000,8 +4075,10 @@ export {
   LanternModal,
   LanternOverlay,
   LanternPicker,
+  LanternSegmented,
   LanternSelect,
   LanternSheet,
+  LanternSidePanel,
   LanternSidebar,
   LanternSlider,
   LanternTableChrome,

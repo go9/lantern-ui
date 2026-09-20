@@ -30,12 +30,19 @@ the complete function and attribute surface.
   `LanternUI.Components.DataTable`, `LanternUI.Components.ResourceList`,
   `LanternUI.Components.Stat`, `LanternUI.Components.Badge`,
   `LanternUI.Components.Avatar`, `LanternUI.Components.Icon`,
-  `LanternUI.Components.Separator`, and `LanternUI.Components.Timeline`.
+  `LanternUI.Components.Separator`, `LanternUI.Components.Timeline`,
+  `LanternUI.Components.Waterfall`, and `LanternUI.Components.LogView`.
 - **Feedback and status:** `LanternUI.Components.Alert`,
   `LanternUI.Components.Toast`, `LanternUI.Components.EmptyState`,
   `LanternUI.Components.Progress`, `LanternUI.Components.Meter`,
   `LanternUI.Components.Loading`, `LanternUI.Components.Skeleton`, and
   `LanternUI.Components.ScrollArea`.
+- **Dense-app primitives:** `LanternUI.Components.ListRow`,
+  `LanternUI.Components.GroupBand`, `LanternUI.Components.Inspector`,
+  `LanternUI.Components.IconButton`, `LanternUI.Components.Segmented`,
+  `LanternUI.Components.StateGlyph`, `LanternUI.Components.ProgressRing`, and
+  `LanternUI.Components.SidePanel`
+  (see [Dense-app primitives](docs/dense-app.md)).
 - **Theming and layout:** `LanternUI.Components.Theme` supplies the theme
   component and tokens used by the component families.
 - **Charts:** `LanternUI.Charts` provides area, bar, line, and

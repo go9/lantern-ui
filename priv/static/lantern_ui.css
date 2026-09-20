@@ -3602,3 +3602,311 @@ a.lui-waterfall-lane-inner:focus-visible {
   outline: 2px solid var(--lantern-ring);
   outline-offset: -2px;
 }
+/* ── Dense-app primitives (list_row, group_band, inspector, icon_button,
+      segmented, state_glyph, progress_ring, side_panel) ── */
+
+.lui-list-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  height: 2.25rem;
+  width: 100%;
+  padding: 0 0.75rem;
+  box-sizing: border-box;
+  font-size: var(--lantern-text);
+  color: var(--lantern-fg);
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: background-color var(--lantern-duration) var(--lantern-ease);
+}
+.lui-list-row + .lui-list-row {
+  box-shadow: inset 0 1px 0 var(--lantern-border);
+}
+.lui-list-row:hover {
+  background: var(--lantern-surface-hover);
+}
+.lui-list-row[data-selected] {
+  background: var(--lantern-accent-soft);
+}
+.lui-list-row:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--lantern-ring);
+}
+.lui-list-row-leading {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+.lui-list-row-id {
+  flex-shrink: 0;
+  min-width: 2.75rem;
+  font-family: var(--lantern-font-mono);
+  font-size: var(--lantern-text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--lantern-fg-subtle);
+}
+.lui-list-row-title {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lui-list-row-parent {
+  color: var(--lantern-fg-subtle);
+  font-weight: 400;
+  margin-right: 0.25rem;
+}
+.lui-list-row-name {
+  font-weight: 500;
+}
+.lui-list-row-meta,
+.lui-list-row-trailing {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted);
+}
+
+.lui-group-band {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+  padding: 0 0.75rem;
+  font-size: var(--lantern-text-sm);
+  background: var(--lantern-accent-soft);
+  color: var(--lantern-fg);
+}
+.lui-group-band-main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  color: inherit;
+  text-decoration: none;
+}
+.lui-group-band-main:hover {
+  color: var(--lantern-fg);
+}
+.lui-group-band-chevron {
+  display: inline-flex;
+  color: var(--lantern-fg-subtle);
+}
+.lui-group-band-chevron .lui-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+.lui-group-band-glyph {
+  display: inline-flex;
+}
+.lui-group-band-name {
+  font-weight: 500;
+}
+.lui-group-band-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--lantern-fg-muted);
+}
+.lui-group-band-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem;
+  border-radius: var(--lantern-radius-sm);
+  color: var(--lantern-fg-subtle);
+  text-decoration: none;
+}
+.lui-group-band-action:hover {
+  background: var(--lantern-surface-hover);
+  color: var(--lantern-fg);
+}
+.lui-group-band-action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--lantern-ring-soft);
+}
+
+.lui-inspector {
+  display: flex;
+  flex-direction: column;
+  width: 18rem;
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--lantern-border);
+  background: var(--lantern-surface-raised);
+  font-size: var(--lantern-text-sm);
+}
+.lui-inspector-section {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--lantern-border);
+}
+.lui-inspector-section:last-child {
+  border-bottom: 0;
+}
+.lui-inspector-heading {
+  margin: 0 0 0.5rem;
+  font-size: var(--lantern-text-sm);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lantern-fg-subtle);
+}
+.lui-inspector-list {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  gap: 0.35rem 0.75rem;
+  margin: 0;
+  align-items: center;
+}
+.lui-property-row {
+  display: contents;
+}
+.lui-property-label {
+  margin: 0;
+  min-height: 1.75rem;
+  color: var(--lantern-fg-muted);
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+}
+.lui-property-value {
+  min-width: 0;
+  margin: 0;
+  min-height: 1.75rem;
+  color: var(--lantern-fg);
+  display: flex;
+  align-items: center;
+}
+
+.lui-icon-btn-tip .lui-tooltip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.lui-icon-btn-kbd {
+  font-family: var(--lantern-font-mono);
+  font-size: 0.7em;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid var(--lantern-border);
+  border-radius: 0.25rem;
+  color: var(--lantern-fg-subtle);
+}
+
+.lui-segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--lantern-surface-sunken);
+  border: 1px solid var(--lantern-border);
+  border-radius: calc(var(--lantern-radius) + 1px);
+}
+.lui-segmented-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--lantern-fg-muted);
+  font-family: inherit;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  border-radius: var(--lantern-radius-sm);
+}
+.lui-segmented[data-size="sm"] .lui-segmented-item {
+  font-size: var(--lantern-text-sm);
+  padding: 0.2rem 0.55rem;
+}
+.lui-segmented[data-size="md"] .lui-segmented-item {
+  font-size: var(--lantern-text);
+  padding: 0.25rem 0.7rem;
+}
+.lui-segmented-item-active {
+  background: var(--lantern-surface-raised);
+  color: var(--lantern-fg);
+  font-weight: 600;
+  box-shadow: var(--lantern-shadow);
+}
+.lui-segmented-item:hover:not(.lui-segmented-item-active) {
+  color: var(--lantern-fg);
+}
+.lui-segmented-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--lantern-ring-soft);
+}
+.lui-segmented-item[disabled],
+.lui-segmented-item[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.lui-state-glyph {
+  flex-shrink: 0;
+  display: block;
+}
+.lui-state-glyph[data-size="sm"] { width: 0.75rem; height: 0.75rem; }
+.lui-state-glyph[data-size="md"] { width: 0.875rem; height: 0.875rem; }
+.lui-state-glyph[data-kind="status"][data-value="backlog"] { color: var(--lantern-fg-subtle); }
+.lui-state-glyph[data-kind="status"][data-value="todo"],
+.lui-state-glyph[data-kind="status"][data-value="selected_for_dev"] { color: var(--lantern-fg-muted); }
+.lui-state-glyph[data-kind="status"][data-value="in_progress"] { color: var(--lantern-warning); }
+.lui-state-glyph[data-kind="status"][data-value="done"] { color: var(--lantern-success); }
+.lui-state-glyph[data-kind="status"][data-value="cancelled"] { color: var(--lantern-fg-subtle); }
+.lui-state-glyph[data-kind="priority"][data-value="urgent"] { color: var(--lantern-danger); }
+.lui-state-glyph[data-kind="priority"][data-value="high"] { color: var(--lantern-warning); }
+.lui-state-glyph[data-kind="priority"][data-value="medium"] { color: var(--lantern-fg-muted); }
+.lui-state-glyph[data-kind="priority"][data-value="low"],
+.lui-state-glyph[data-kind="priority"][data-value="none"] { color: var(--lantern-fg-subtle); }
+
+.lui-progress-ring {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.lui-progress-ring-svg {
+  flex-shrink: 0;
+  transform: rotate(-90deg);
+}
+.lui-progress-ring[data-size="sm"] .lui-progress-ring-svg { width: 1.75rem; height: 1.75rem; }
+.lui-progress-ring[data-size="md"] .lui-progress-ring-svg { width: 2.5rem; height: 2.5rem; }
+.lui-progress-ring-track {
+  fill: none;
+  stroke: var(--lantern-border-strong);
+  stroke-width: 2.5;
+}
+.lui-progress-ring-value {
+  fill: none;
+  stroke: var(--lantern-success);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.lui-progress-ring[data-color="accent"] .lui-progress-ring-value { stroke: var(--lantern-accent); }
+.lui-progress-ring[data-color="primary"] .lui-progress-ring-value { stroke: var(--lantern-primary); }
+.lui-progress-ring[data-color="danger"] .lui-progress-ring-value { stroke: var(--lantern-danger); }
+.lui-progress-ring[data-color="warning"] .lui-progress-ring-value { stroke: var(--lantern-warning); }
+.lui-progress-ring[data-color="info"] .lui-progress-ring-value { stroke: var(--lantern-info, var(--lantern-accent)); }
+.lui-progress-ring-label {
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted);
+}
+
+.lui-side-panel {
+  display: flex;
+  flex-direction: column;
+  width: 18rem;
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--lantern-border);
+  background: var(--lantern-surface-raised);
+  font-size: var(--lantern-text-sm);
+}
+.lui-side-panel[hidden] {
+  display: none;
+}
