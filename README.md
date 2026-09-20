@@ -231,6 +231,13 @@ let Hooks = { ...LanternHooks /* , ...yourOtherHooks */ }
 let liveSocket = new LiveSocket("/live", Socket, { params: {/* ... */}, hooks: Hooks })
 ```
 
+The file you import is the esbuild bundle of `assets/js/`. Data-attribute
+behaviours (list keyboard nav, persist) install themselves on import — see
+[docs/behaviours.md](docs/behaviours.md). Overlay panels (popover, dropdown,
+select, menu, autocomplete) are placed with `@floating-ui/dom`, inlined in
+the bundle so the import path stays
+`deps/lantern_ui/priv/static/lantern_ui_hooks.js`.
+
 `sparkline` and `bar_chart` need no JavaScript. Accordion always requires the
 hook bundle above.
 
@@ -382,7 +389,8 @@ plain text — it is HTML-escaped before it reaches the tooltip.
 ```bash
 mix test    # Elixir: rendering, ARIA conformance, class merging
 mix lantern.lint   # optional: same check consumers run (this repo is mostly lui-* CSS)
-npm test    # JavaScript: the hooks in priv/static/lantern_ui_hooks.js
+npm run build      # assets/js → priv/static/lantern_ui_hooks.js (commit the result)
+npm test           # JavaScript: the committed hooks bundle against jsdom
 ```
 
 `npm test` needs `npm install` once; it runs `node --test test/js/*.mjs`, which
@@ -391,9 +399,11 @@ Two `command` bugs — the palette vanishing on the first keystroke, and events
 never reaching a LiveComponent — were invisible to the Elixir suite because both
 lived entirely in the hook, so interactive behaviour belongs in `test/js/`.
 
-jsdom is a devDependency of a private `package.json` used only by this repo.
-Nothing JavaScript-related ships in the Hex package beyond the dependency-free
-hooks module itself, so consumers never need a JS toolchain.
+jsdom, esbuild, and `@floating-ui/dom` are dependencies of a private
+`package.json` used only to build and test this repo. The Hex package ships the
+already-bundled `priv/static/lantern_ui_hooks.js`, so consumers never need a JS
+toolchain. The previous “zero JS dependencies / unbundled ESM” goal was retired
+on 2026-09-20 — the public import path did not change.
 
 ## License
 

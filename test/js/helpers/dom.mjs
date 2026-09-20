@@ -16,9 +16,9 @@
 import { readFile } from "node:fs/promises"
 import { JSDOM } from "jsdom"
 
-// The bundle is an ES module authored for the browser. Loading it through a
-// data: URL keeps the on-disk file the single source of truth — no build step,
-// no copy that can drift from what ships in `priv/static`.
+// The bundle is an ES module. Loading it through a data: URL keeps the
+// committed priv/static file the import consumers use. Rebuild with
+// `npm run build` after editing assets/js/.
 const source = await readFile(new URL("../../../priv/static/lantern_ui_hooks.js", import.meta.url), "utf8")
 
 export const hooks = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)
@@ -26,7 +26,7 @@ export const hooks = await import(`data:text/javascript;base64,${Buffer.from(sou
 // jsdom has no layout engine, so two things the hooks legitimately rely on are
 // missing. Shimming them here — rather than weakening the hooks — keeps the
 // production code honest about what a browser provides.
-function patchLayoutGaps(window) {
+export function patchLayoutGaps(window) {
   // `offsetParent` is always null in jsdom. `trapFocus` filters candidates on
   // `offsetParent !== null` to skip elements hidden by CSS, so without this
   // every element looks invisible and focus management silently does nothing.

@@ -7,6 +7,14 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **esbuild hooks bundle + data-attribute behaviours.** `lantern_ui_hooks.js` is
+  authored in `assets/js/` and bundled to `priv/static/` (`npm run build`).
+  `@floating-ui/dom` is the first JS dependency and is inlined, so the consumer
+  import path is unchanged. Markup-only behaviours: `data-lantern-list-nav`
+  (j/k, arrows, Home/End, Enter) and `data-lantern-persist="<key>"`
+  (localStorage open/collapsed, failures swallowed). See `docs/behaviours.md`.
+  The old “zero JS dependencies / unbundled ESM” goal is retired; consumers
+  still do not need a JS toolchain.
 - **Compact type scale + four grey roles, with `mix lantern.lint`.** Dense UI
   now has named sizes (`text-meta` 11px, `text-caption` 12px, `text-mono-meta`)
   instead of `text-[11px]`. Grey roles are `text-foreground` (primary),

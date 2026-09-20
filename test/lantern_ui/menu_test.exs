@@ -268,15 +268,20 @@ defmodule LanternUI.MenuTest do
 
   describe "hook registration (the silent no-op trap)" do
     test "LanternMenu and LanternMenubar are exported from the Hooks object" do
-      hooks = File.read!(Path.join(:code.priv_dir(:lantern_ui), "static/lantern_ui_hooks.js"))
+      source = File.read!("assets/js/lantern_ui_hooks.js")
+      bundle = File.read!("priv/static/lantern_ui_hooks.js")
 
-      assert hooks =~ "const LanternMenu = {"
-      assert hooks =~ "const LanternMenubar = {"
+      assert source =~ "const LanternMenu = {"
+      assert source =~ "const LanternMenubar = {"
       # both must appear inside the Hooks export or the phx-hook is a no-op
-      [_before, exports] = String.split(hooks, "export const Hooks = {", parts: 2)
+      [_before, exports] = String.split(source, "export const Hooks = {", parts: 2)
       [hooks_block, _rest] = String.split(exports, "}", parts: 2)
       assert hooks_block =~ "LanternMenu"
       assert hooks_block =~ "LanternMenubar"
+
+      assert bundle =~ "LanternMenu"
+      assert bundle =~ "LanternMenubar"
+      assert bundle =~ "installBehaviours"
     end
   end
 end

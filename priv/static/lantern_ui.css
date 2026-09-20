@@ -3596,3 +3596,9 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-bar-link rect { transition: opacity var(--lantern-duration) var(--lantern-ease); }
 .lui-bar-link:hover rect, .lui-bar-link:focus-visible rect { opacity: 1; }
 .lui-bar-link:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: 2px; }
+
+/* ── data-attribute behaviours (no page-local hook) ─────────────────────── */
+[data-lantern-list-item]:focus-visible {
+  outline: 2px solid var(--lantern-ring);
+  outline-offset: -2px;
+}
