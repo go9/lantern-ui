@@ -132,10 +132,6 @@ function restorePersist(root) {
   if (stored === "closed") setPersistedOpen(root, false)
 }
 
-// Group keys the user has toggled this page. Survives LiveView morphs via
-// restoreAll; localStorage (data-lantern-persist, same key) survives reloads.
-const collapseState = new Map()
-
 function collapseKey(control) {
   return control.getAttribute("data-lantern-collapse")
 }
@@ -164,24 +160,18 @@ function toggleCollapse(control) {
   const band = control.closest(".lui-group-band")
   const next = !band?.hasAttribute("data-collapsed")
   applyCollapse(control, next)
-  const key = collapseKey(control)
-  if (key) collapseState.set(key, next)
   const persistKey = persistKeyFor(control)
   if (persistKey) writePersist(control, persistKey, next ? "closed" : "open")
 }
 
 function restoreCollapse(control) {
-  const key = collapseKey(control)
-  if (!key) return
   const persistKey = persistKeyFor(control)
   const stored = persistKey ? readPersist(control, persistKey) : null
   let collapsed
   if (stored === "closed") collapsed = true
   else if (stored === "open") collapsed = false
-  else if (collapseState.has(key)) collapsed = collapseState.get(key)
   else collapsed = Boolean(control.closest(".lui-group-band")?.hasAttribute("data-collapsed"))
   applyCollapse(control, collapsed)
-  collapseState.set(key, collapsed)
 }
 
 function onCollapseClick(e) {

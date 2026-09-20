@@ -51,9 +51,11 @@ carry that attribute — it is not list-row-only.
 </div>
 ```
 
-The collapsed set is remembered in memory so a LiveView morph re-applies it
-(same MutationObserver restore as persist). To also survive a full reload,
-put `data-lantern-persist` on the band with **the same key**:
+After a LiveView morph, `restoreAll` re-hides siblings from the band's
+`data-collapsed` (so a newly patched-in row under a still-collapsed band
+disappears). To keep the collapsed set when the server rewrites the band,
+and across a full reload, put `data-lantern-persist` on the band with
+**the same key**:
 
 ```heex
 <.group_band
