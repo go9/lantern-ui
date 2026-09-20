@@ -3496,6 +3496,32 @@ a.lui-waterfall-lane-inner:focus-visible {
   }
 }
 
+/* ═══ Dense type scale (see docs/scale.md) ═══
+ *
+ * Named replacements for `text-[11px]` on ticket rows, inspectors, and rails.
+ * Pixel values on purpose: rem would shrink under a 14px density root, which
+ * is exactly why hosts were writing arbitrary px. Comfortable density bumps
+ * the tokens; these classes follow. Grey roles live in lantern_ui_compat.css
+ * (`text-foreground` / `-soft` / `-softest` / `text-muted-foreground`).
+ */
+.text-meta {
+  font-size: var(--lantern-text-meta, 11px);
+  line-height: var(--lantern-text-meta-leading, 1.25);
+  letter-spacing: var(--lantern-text-meta-tracking, 0.01em);
+}
+.text-caption {
+  font-size: var(--lantern-text-caption, 12px);
+  line-height: var(--lantern-text-caption-leading, 1.35);
+  letter-spacing: var(--lantern-text-caption-tracking, 0.005em);
+}
+.text-mono-meta {
+  font-family: var(--lantern-font-mono, ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, monospace);
+  font-size: var(--lantern-text-mono-meta, 11px);
+  line-height: var(--lantern-text-mono-meta-leading, 1.25);
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── card ──────────────────────────────────────────────────────────────────
    A titled surface. The head is only drawn when there is something to put in
    it, so a bare <.card> is just a padded panel. */

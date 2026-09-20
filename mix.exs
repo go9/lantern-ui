@@ -50,7 +50,13 @@ defmodule LanternUI.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md", "CHANGELOG.md", "docs/chat-kit.md", "docs/support-helpers.md"],
+      extras: [
+        "README.md",
+        "CHANGELOG.md",
+        "docs/chat-kit.md",
+        "docs/support-helpers.md",
+        "docs/scale.md"
+      ],
       source_ref: "v#{@version}",
       source_url: @source_url
     ]

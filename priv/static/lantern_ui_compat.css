@@ -52,8 +52,11 @@
   --primary-soft: light-dark(color-mix(in oklab, var(--primary) 5%, var(--background-base)), color-mix(in oklab, var(--primary) 15%, var(--background-base)));
   --foreground: light-dark(var(--color-zinc-700), var(--color-zinc-200));
   --foreground-soft: light-dark(var(--color-zinc-600), var(--color-zinc-300));
-  --foreground-softer: light-dark(var(--color-zinc-500), var(--color-zinc-400));
+  /* Deprecated alias of --foreground-soft. Kept so text-foreground-softer still
+     compiles; hosts that set --foreground-softer themselves keep that colour. */
+  --foreground-softer: var(--foreground-soft);
   --foreground-softest: light-dark(var(--color-zinc-400), var(--color-zinc-500));
+  --muted-foreground: var(--foreground-softest);
   --foreground-primary: light-dark(var(--color-white), var(--color-zinc-800));
   --background-base: light-dark(var(--color-white), var(--color-zinc-900));
   --background-accent: light-dark(var(--color-zinc-100), var(--color-zinc-700));
@@ -101,7 +104,7 @@
      --lantern-* (or the Fluxon token it chains through) AFTER this import. */
   --lantern-fg: var(--foreground, #09090b);
   --lantern-fg-muted: var(--foreground-soft, #71717a);
-  --lantern-fg-subtle: var(--foreground-softer, #a1a1aa);
+  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #a1a1aa));
   --lantern-surface: var(--background-base, #ffffff);
   --lantern-surface-raised: var(--surface, #ffffff);
   --lantern-surface-sunken: var(--background-accent, #f4f4f5);
@@ -137,6 +140,14 @@
   --lantern-control-px: 0.75rem;
   --lantern-text: 0.8125rem;
   --lantern-text-sm: 0.75rem;
+  --lantern-text-meta: 11px;
+  --lantern-text-meta-leading: 1.25;
+  --lantern-text-meta-tracking: 0.01em;
+  --lantern-text-caption: 12px;
+  --lantern-text-caption-leading: 1.35;
+  --lantern-text-caption-tracking: 0.005em;
+  --lantern-text-mono-meta: 11px;
+  --lantern-text-mono-meta-leading: 1.25;
   --lantern-gap: 0.4375rem;
 }
 
@@ -148,6 +159,18 @@
   --text-color-foreground-softer: var(--foreground-softer);
   --text-color-foreground-softest: var(--foreground-softest);
   --text-color-foreground-primary: var(--foreground-primary);
+  --text-color-muted-foreground: var(--muted-foreground);
+  --color-foreground: var(--foreground);
+  --color-foreground-soft: var(--foreground-soft);
+  --color-foreground-softer: var(--foreground-softer);
+  --color-foreground-softest: var(--foreground-softest);
+  --color-muted-foreground: var(--muted-foreground);
+  --text-meta: var(--lantern-text-meta);
+  --text-meta--line-height: var(--lantern-text-meta-leading);
+  --text-caption: var(--lantern-text-caption);
+  --text-caption--line-height: var(--lantern-text-caption-leading);
+  --text-mono-meta: var(--lantern-text-mono-meta);
+  --text-mono-meta--line-height: var(--lantern-text-mono-meta-leading);
   --background-color-base: var(--background-base);
   --background-color-accent: var(--background-accent);
   --background-color-surface: var(--surface);
