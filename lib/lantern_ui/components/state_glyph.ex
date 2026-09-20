@@ -1,17 +1,20 @@
 defmodule LanternUI.Components.StateGlyph do
   @moduledoc """
-  Status circles and priority signal bars for dense lists.
+  Status circles, priority signal bars, and run-pipeline glyphs for dense lists.
 
-  Two sets, selected with `kind`. Status is Linear's circle (dotted backlog,
+  Sets are selected with `kind`. Status is Linear's circle (dotted backlog,
   empty todo, half-filled in progress, filled check for done, x for cancelled).
   Priority is Linear's signal bars, tinted by urgency; `:none` is three dashes.
+  Run is a CI/pipeline set: queued, claiming an environment, running,
+  verifying, passed, failed, blocked.
 
       <.state_glyph kind="status" value="in_progress" />
       <.state_glyph kind="priority" value="high" size="sm" />
+      <.state_glyph kind="run" value="verifying" />
 
-  Flicker-shaped aliases `status_glyph/1` and `priority_glyph/1` take
-  `status=` / `priority=` so a consuming page is a rename, not a remap.
-  `:selected_for_dev` draws the same empty ring as `:todo`.
+  Flicker-shaped aliases `status_glyph/1`, `priority_glyph/1`, and `run_glyph/1`
+  take `status=` / `priority=` / `state=` so a consuming page is a rename, not
+  a remap. `:selected_for_dev` draws the same empty ring as `:todo`.
   """
   use Phoenix.Component
 
@@ -19,17 +22,18 @@ defmodule LanternUI.Components.StateGlyph do
 
   @status_values ~w(backlog todo selected_for_dev in_progress done cancelled)
   @priority_values ~w(urgent high medium low none)
+  @run_values ~w(queued claiming_env running verifying passed failed blocked)
   @sizes ~w(sm md)
 
   attr(:kind, :string,
     required: true,
-    values: ~w(status priority),
-    doc: "Glyph set: status circles or priority bars."
+    values: ~w(status priority run),
+    doc: "Glyph set: status circles, priority bars, or run-pipeline states."
   )
 
   attr(:value, :any,
     required: true,
-    doc: "Status or priority name (atom or string). See the set lists above."
+    doc: "Status, priority, or run-state name (atom or string). See the set lists above."
   )
 
   attr(:size, :string, default: "md", values: @sizes, doc: "sm is 12px; md is 14px.")
@@ -132,6 +136,52 @@ defmodule LanternUI.Components.StateGlyph do
             fill="currentColor"
             opacity={if level == :high, do: "1", else: "0.3"}
           />
+        <% {"run", :queued} -> %>
+          <circle
+            cx="7"
+            cy="7"
+            r="5.5"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-dasharray="1.6 2.2"
+            stroke-linecap="round"
+          />
+        <% {"run", :claiming_env} -> %>
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5" />
+          <circle cx="7" cy="7" r="2.1" fill="currentColor" />
+        <% {"run", :running} -> %>
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5" />
+          <path d="M7 3.5a3.5 3.5 0 0 1 0 7z" fill="currentColor" />
+        <% {"run", :verifying} -> %>
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5" />
+          <path
+            d="M4.6 7.2l1.7 1.7 3.3-3.5"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        <% {"run", :passed} -> %>
+          <circle cx="7" cy="7" r="6.25" fill="currentColor" />
+          <path
+            d="M4.4 7.2l1.8 1.8 3.5-3.7"
+            stroke="var(--lantern-surface, #fff)"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        <% {"run", :failed} -> %>
+          <circle cx="7" cy="7" r="6.25" fill="currentColor" />
+          <path
+            d="M5 5l4 4M9 5l-4 4"
+            stroke="var(--lantern-surface, #fff)"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        <% {"run", :blocked} -> %>
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5" />
+          <rect x="5" y="4.5" width="1.4" height="5" rx="0.4" fill="currentColor" />
+          <rect x="7.6" y="4.5" width="1.4" height="5" rx="0.4" fill="currentColor" />
       <% end %>
     </svg>
     """
@@ -165,8 +215,23 @@ defmodule LanternUI.Components.StateGlyph do
     |> state_glyph()
   end
 
+  attr(:state, :any, required: true, doc: "Run-pipeline state (atom or string).")
+  attr(:size, :string, default: "md", values: @sizes, doc: "sm is 12px; md is 14px.")
+  attr(:label, :string, default: nil, doc: "Accessible name; decorative when omitted.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the svg.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+
+  @doc "Flicker-shaped alias of `state_glyph/1` with `kind=\"run\"`."
+  def run_glyph(assigns) do
+    assigns
+    |> assign(:kind, "run")
+    |> assign(:value, assigns.state)
+    |> state_glyph()
+  end
+
   defp kind_string(kind) when kind in [:status, "status"], do: "status"
   defp kind_string(kind) when kind in [:priority, "priority"], do: "priority"
+  defp kind_string(kind) when kind in [:run, "run"], do: "run"
 
   defp token(value) when is_atom(value), do: Atom.to_string(value)
   defp token(value) when is_binary(value), do: value
@@ -185,4 +250,7 @@ defmodule LanternUI.Components.StateGlyph do
     do: String.to_existing_atom(value)
 
   defp glyph("priority", _), do: :none
+
+  defp glyph("run", value) when value in @run_values, do: String.to_existing_atom(value)
+  defp glyph("run", _), do: :queued
 end

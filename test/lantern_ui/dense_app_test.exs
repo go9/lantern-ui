@@ -321,6 +321,69 @@ defmodule LanternUI.DenseAppTest do
       assert high =~ ~s(opacity="1")
       assert none =~ "M2 7h2.5"
     end
+
+    test "run set: queued dotted, claiming inner dot, running half, verifying check, passed fill, failed x, blocked pause" do
+      queued =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.run_glyph state={:queued} />
+          """
+        end)
+
+      claiming =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.state_glyph kind="run" value="claiming_env" />
+          """
+        end)
+
+      running =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.run_glyph state="running" />
+          """
+        end)
+
+      verifying =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.state_glyph kind="run" value={:verifying} />
+          """
+        end)
+
+      passed =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.run_glyph state={:passed} />
+          """
+        end)
+
+      failed =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.run_glyph state={:failed} />
+          """
+        end)
+
+      blocked =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.run_glyph state={:blocked} />
+          """
+        end)
+
+      assert queued =~ ~s(data-kind="run")
+      assert queued =~ ~s(data-value="queued")
+      assert queued =~ ~s(stroke-dasharray="1.6 2.2")
+      assert claiming =~ ~s(r="2.1")
+      assert running =~ "M7 3.5a3.5 3.5 0 0 1 0 7z"
+      assert verifying =~ "M4.6 7.2l1.7 1.7 3.3-3.5"
+      assert passed =~ "M4.4 7.2l1.8 1.8"
+      assert failed =~ ~s(r="6.25")
+      assert failed =~ "M5 5l4 4"
+      assert blocked =~ ~s(x="5" y="4.5")
+      assert blocked =~ ~s(x="7.6" y="4.5")
+    end
   end
 
   describe "progress_ring/1" do
@@ -439,6 +502,7 @@ defmodule LanternUI.DenseAppTest do
       assert css =~ ".lui-inspector"
       assert css =~ ".lui-segmented"
       assert css =~ ".lui-state-glyph"
+      assert css =~ ~s([data-kind="run"][data-value="verifying"])
       assert css =~ ".lui-progress-ring-track"
       assert css =~ "stroke: var(--lantern-border-strong)"
       assert css =~ ".lui-progress-ring-value"
