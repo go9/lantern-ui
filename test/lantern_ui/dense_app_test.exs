@@ -384,6 +384,100 @@ defmodule LanternUI.DenseAppTest do
       assert blocked =~ ~s(x="5" y="4.5")
       assert blocked =~ ~s(x="7.6" y="4.5")
     end
+
+    test "sync set: empty dotted, syncing half, live check, failed x" do
+      empty =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.sync_glyph state={:empty} />
+          """
+        end)
+
+      syncing =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.state_glyph kind="sync" value="syncing" />
+          """
+        end)
+
+      live =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.sync_glyph state="live" />
+          """
+        end)
+
+      failed =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.state_glyph kind="sync" value={:failed} />
+          """
+        end)
+
+      unknown =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.sync_glyph state={:nope} />
+          """
+        end)
+
+      assert empty =~ ~s(data-kind="sync")
+      assert empty =~ ~s(data-value="empty")
+      assert empty =~ ~s(stroke-dasharray="1.6 2.2")
+      assert syncing =~ "M7 3.5a3.5 3.5 0 0 1 0 7z"
+      assert live =~ "M4.4 7.2l1.8 1.8"
+      assert failed =~ ~s(r="6.25")
+      assert failed =~ "M5 5l4 4"
+      assert unknown =~ ~s(data-value="nope")
+      assert unknown =~ ~s(stroke-dasharray="1.6 2.2")
+    end
+
+    test "source set: repo brackets, doc fold, ticket hole, upload arrow" do
+      repo =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.source_glyph source={:repo} />
+          """
+        end)
+
+      doc =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.state_glyph kind="source" value="doc" />
+          """
+        end)
+
+      ticket =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.source_glyph source="ticket_memory" />
+          """
+        end)
+
+      upload =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.state_glyph kind="source" value={:upload} />
+          """
+        end)
+
+      unknown =
+        render(fn assigns ->
+          ~H"""
+          <StateGlyph.source_glyph source={:slack} />
+          """
+        end)
+
+      assert repo =~ ~s(data-kind="source")
+      assert repo =~ ~s(data-value="repo")
+      assert repo =~ "M5 3.5L2.5 7L5 10.5"
+      assert doc =~ "M4 2.5h4.5L11.5 5.5V11.5H4V2.5z"
+      assert ticket =~ ~s(cx="5" cy="7")
+      assert ticket =~ "M8 5.5h2.5"
+      assert upload =~ "M7 9.5V3.5"
+      assert unknown =~ ~s(data-value="slack")
+      assert unknown =~ "M4 2.5h4.5L11.5 5.5V11.5H4V2.5z"
+    end
   end
 
   describe "progress_ring/1" do
@@ -503,6 +597,8 @@ defmodule LanternUI.DenseAppTest do
       assert css =~ ".lui-segmented"
       assert css =~ ".lui-state-glyph"
       assert css =~ ~s([data-kind="run"][data-value="verifying"])
+      assert css =~ ~s([data-kind="sync"][data-value="live"])
+      assert css =~ ~s([data-kind="source"])
       assert css =~ ".lui-progress-ring-track"
       assert css =~ "stroke: var(--lantern-border-strong)"
       assert css =~ ".lui-progress-ring-value"

@@ -3871,6 +3871,11 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-state-glyph[data-kind="run"][data-value="passed"] { color: var(--lantern-success); }
 .lui-state-glyph[data-kind="run"][data-value="failed"] { color: var(--lantern-danger); }
 .lui-state-glyph[data-kind="run"][data-value="blocked"] { color: var(--lantern-warning); }
+.lui-state-glyph[data-kind="sync"][data-value="empty"] { color: var(--lantern-fg-subtle); }
+.lui-state-glyph[data-kind="sync"][data-value="syncing"] { color: var(--lantern-warning); }
+.lui-state-glyph[data-kind="sync"][data-value="live"] { color: var(--lantern-success); }
+.lui-state-glyph[data-kind="sync"][data-value="failed"] { color: var(--lantern-danger); }
+.lui-state-glyph[data-kind="source"] { color: var(--lantern-fg-muted); }
 
 .lui-progress-ring {
   display: inline-flex;
