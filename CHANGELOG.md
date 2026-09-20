@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-09-20
+
 ### Added
 - **`state_glyph` `kind="sync"` and `kind="source"`** — sync states
   (`syncing`, `live`, `failed`, `empty`) and source kinds (`repo`, `doc`,
