@@ -1,17 +1,17 @@
 defmodule LanternUI.Components.Segmented do
   @moduledoc """
-  Compact segmented control (All · Active · Backlog). Not tabs — there is no
-  panel. Arrow keys move and activate the next segment.
+  Deprecated alias of `LanternUI.Components.Tabs.tabs_list/1` with
+  `variant="segmented"`. Removed in 0.9.0.
 
-      <.segmented id="scope" value={@scope} aria-label="View">
-        <:segment value="all" patch={~p"/tickets"}>All</:segment>
-        <:segment value="active" patch={~p"/tickets?scope=active"}>Active</:segment>
-        <:segment value="backlog" phx-click="set_scope" phx-value="backlog">Backlog</:segment>
-      </.segmented>
+      <.tabs_list id="scope" variant="segmented" size="sm" active_tab={@scope} aria-label="View">
+        <:tab name="all" patch={~p"/tickets"}>All</:tab>
+        <:tab name="active" patch={~p"/tickets?scope=active"}>Active</:tab>
+      </.tabs_list>
   """
   use Phoenix.Component
 
-  alias LanternUI.Class
+  alias LanternUI.Components.Tabs
+  alias LanternUI.Deprecated
 
   attr(:id, :string, required: true, doc: "Stable id for the `LanternSegmented` hook.")
   attr(:value, :any, default: nil, doc: "Value of the active segment (atom or string).")
@@ -39,82 +39,39 @@ defmodule LanternUI.Components.Segmented do
     attr(:"phx-target", :any)
   end
 
+  @deprecated "Use tabs_list/1 with variant=\"segmented\". Removed in 0.9.0."
   def segmented(assigns) do
-    current = token(assigns.value)
-    has_current? = not is_nil(current)
+    Deprecated.warn(:segmented, ~s|<.tabs_list variant="segmented"> with <:tab> slots|)
 
-    items =
-      assigns.segment
-      |> Enum.with_index()
-      |> Enum.map(fn {segment, index} ->
-        active? = has_current? and token(segment[:value]) == current
-
-        {segment,
-         %{
-           active?: active?,
-           link?: segment[:patch] || segment[:navigate] || segment[:href],
-           tabindex: tab_index(active?, index, has_current?)
-         }}
-      end)
-
-    assigns = assign(assigns, :items, items)
+    assigns = assign(assigns, :active_tab, token(assigns.value))
 
     ~H"""
-    <div
+    <Tabs.tabs_list
       id={@id}
-      class={Class.merge(["lui-segmented", @class])}
-      data-size={@size}
+      active_tab={@active_tab}
+      variant="segmented"
+      size={@size}
+      class={@class}
       role="radiogroup"
       aria-label={@label}
       phx-hook="LanternSegmented"
       {@rest}
     >
-      <%= for {segment, meta} <- @items do %>
-        <.link
-          :if={meta.link?}
-          class={
-            Class.merge([
-              "lui-segmented-item",
-              meta.active? && "lui-segmented-item-active",
-              segment[:class]
-            ])
-          }
-          data-part="segment"
-          data-value={token(segment[:value])}
-          role="radio"
-          aria-checked={to_string(meta.active?)}
-          aria-disabled={segment[:disabled] && "true"}
-          tabindex={meta.tabindex}
-          patch={segment[:patch]}
-          navigate={segment[:navigate]}
-          href={segment[:href]}
-        >
-          {render_slot(segment)}
-        </.link>
-        <button
-          :if={!meta.link?}
-          type="button"
-          class={
-            Class.merge([
-              "lui-segmented-item",
-              meta.active? && "lui-segmented-item-active",
-              segment[:class]
-            ])
-          }
-          data-part="segment"
-          data-value={token(segment[:value])}
-          role="radio"
-          aria-checked={to_string(meta.active?)}
-          disabled={segment[:disabled]}
-          tabindex={meta.tabindex}
-          phx-click={segment[:"phx-click"]}
-          phx-value-segment={segment[:"phx-value"] || token(segment[:value])}
-          phx-target={segment[:"phx-target"]}
-        >
-          {render_slot(segment)}
-        </button>
-      <% end %>
-    </div>
+      <:tab
+        :for={segment <- @segment}
+        name={token(segment[:value])}
+        patch={segment[:patch]}
+        navigate={segment[:navigate]}
+        href={segment[:href]}
+        disabled={segment[:disabled]}
+        class={segment[:class]}
+        phx-click={segment[:"phx-click"]}
+        phx-value-segment={segment[:"phx-value"] || token(segment[:value])}
+        phx-target={segment[:"phx-target"]}
+      >
+        {render_slot(segment)}
+      </:tab>
+    </Tabs.tabs_list>
     """
   end
 
@@ -122,9 +79,4 @@ defmodule LanternUI.Components.Segmented do
   defp token(value) when is_atom(value), do: Atom.to_string(value)
   defp token(value) when is_binary(value), do: value
   defp token(value), do: to_string(value)
-
-  # Active segment is in the tab order; if nothing is selected, the first one is.
-  defp tab_index(true, _index, _has_current?), do: "0"
-  defp tab_index(_active?, 0, false), do: "0"
-  defp tab_index(_active?, _index, _has_current?), do: "-1"
 end

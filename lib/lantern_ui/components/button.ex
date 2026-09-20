@@ -6,6 +6,9 @@ defmodule LanternUI.Components.Button do
       <.button variant="solid">Deploy</.button>
       <.button variant="solid" color="danger">Delete</.button>
       <.button size="icon"><.icon name="plus" /></.button>
+      <.button size="icon" label="Toggle panel" kbd="]">
+        <.icon name="view-columns" />
+      </.button>
 
   The API mirrors Fluxon's `button/1` (`color` × `variant` × `size`), so a
   consumer migrates by swapping imports. Styling is LanternUI's own: token-driven
@@ -14,11 +17,15 @@ defmodule LanternUI.Components.Button do
   Colors set a per-button `--lui-c` custom property; variants derive their
   background/border/text from it, so every color works with every variant
   without a compiled class matrix.
+
+  `label` is the accessible name. On `icon-*` sizes it also wraps the control
+  in `tooltip/1` (with optional `kbd`), the same chrome `icon_button/1` used.
   """
 
   use Phoenix.Component
 
   alias LanternUI.Class
+  alias LanternUI.Components.Tooltip
 
   @colors ~w(primary danger warning success info)
   @variants ~w(solid soft surface outline dashed ghost)
@@ -40,6 +47,19 @@ defmodule LanternUI.Components.Button do
     default: "md",
     values: @sizes,
     doc: "Control height; icon-* sizes are square."
+  )
+
+  attr(:label, :string,
+    default: nil,
+    doc: """
+    Accessible name (`aria-label`). On `icon-*` sizes the control is also
+    wrapped in `tooltip/1` with this copy.
+    """
+  )
+
+  attr(:kbd, :string,
+    default: nil,
+    doc: "Optional keyboard hint shown in the tooltip after `label`."
   )
 
   attr(:disabled, :boolean,
@@ -70,11 +90,47 @@ defmodule LanternUI.Components.Button do
     assigns =
       assigns
       |> assign(:computed_class, Class.merge(["lui-btn", assigns.class]))
-      |> assign(:link?, assigns.navigate || assigns.patch || assigns.href)
+      |> assign(:link?, !!(assigns.navigate || assigns.patch || assigns.href))
+      |> assign(:tip?, icon_tip?(assigns.label, assigns.size))
 
     ~H"""
+    <Tooltip.tooltip :if={@tip?} placement="bottom" class="lui-icon-btn-tip">
+      <:content>
+        <span>{@label}</span>
+        <kbd :if={@kbd} class="lui-icon-btn-kbd">{@kbd}</kbd>
+      </:content>
+      <.link
+        :if={@link?}
+        class={@computed_class}
+        data-variant={@variant}
+        data-color={@color}
+        data-size={@size}
+        data-disabled={@disabled || nil}
+        aria-disabled={@disabled && "true"}
+        tabindex={@disabled && "-1"}
+        navigate={@navigate}
+        patch={@patch}
+        href={@href}
+        aria-label={@label}
+        {@rest}
+      >
+        {render_slot(@inner_block)}
+      </.link>
+      <button
+        :if={!@link?}
+        class={@computed_class}
+        data-variant={@variant}
+        data-color={@color}
+        data-size={@size}
+        disabled={@disabled}
+        aria-label={@label}
+        {@rest}
+      >
+        {render_slot(@inner_block)}
+      </button>
+    </Tooltip.tooltip>
     <.link
-      :if={@link?}
+      :if={!@tip? and @link?}
       class={@computed_class}
       data-variant={@variant}
       data-color={@color}
@@ -85,17 +141,19 @@ defmodule LanternUI.Components.Button do
       navigate={@navigate}
       patch={@patch}
       href={@href}
+      aria-label={@label}
       {@rest}
     >
       {render_slot(@inner_block)}
     </.link>
     <button
-      :if={!@link?}
+      :if={!@tip? and not @link?}
       class={@computed_class}
       data-variant={@variant}
       data-color={@color}
       data-size={@size}
       disabled={@disabled}
+      aria-label={@label}
       {@rest}
     >
       {render_slot(@inner_block)}
@@ -117,4 +175,9 @@ defmodule LanternUI.Components.Button do
     </div>
     """
   end
+
+  defp icon_tip?(label, size) when is_binary(label) and is_binary(size),
+    do: String.starts_with?(size, "icon")
+
+  defp icon_tip?(_label, _size), do: false
 end

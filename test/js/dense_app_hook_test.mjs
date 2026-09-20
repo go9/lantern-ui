@@ -80,3 +80,7 @@ test("LanternSegmented arrow keys move and click the next segment", () => {
   assert.equal(harness.document.activeElement, segs[2])
   assert.deepEqual(clicks, ["active", "backlog"])
 })
+
+test("LanternTabs is the same hook as LanternSegmented and also reads data-part=tab", () => {
+  assert.equal(hooks.LanternTabs, LanternSegmented)
+})

@@ -15,8 +15,15 @@ defmodule LanternUI.Components.Tabs do
         <.tabs_panel name="pending" active={@tab == "pending"}>…</.tabs_panel>
       </.tabs>
 
-  Tabs given `patch`/`navigate` render as links — the pattern `data_table`
-  uses so tab state lives in the URL.
+      <.tabs_list id="scope" variant="segmented" size="sm" active_tab={@scope} aria-label="View">
+        <:tab name="all" patch={~p"/tickets"}>All</:tab>
+        <:tab name="active" patch={~p"/tickets?scope=active"}>Active</:tab>
+      </.tabs_list>
+
+  Tabs given `patch`/`navigate`/`href` render as links — the pattern `data_table`
+  uses so tab state lives in the URL. A `tabs_list` with an `id` mounts
+  `LanternTabs` for arrow-key activation. Pass `role="radiogroup"` when the
+  list is a standalone control with no panels.
   """
   use Phoenix.Component
 
@@ -35,6 +42,11 @@ defmodule LanternUI.Components.Tabs do
     """
   end
 
+  attr(:id, :string,
+    default: nil,
+    doc: "Stable id; required to mount `LanternTabs` for arrow-key activation."
+  )
+
   attr(:active_tab, :string, default: nil, doc: "Name of the currently selected tab.")
 
   attr(:variant, :string,
@@ -49,47 +61,115 @@ defmodule LanternUI.Components.Tabs do
 
   slot :tab,
     required: true,
-    doc: "One tab trigger; link via patch/navigate or button via phx-click." do
+    doc: "One tab trigger; link via patch/navigate/href or button via phx-click." do
     attr(:name, :string, doc: "Stable tab key; matched against active_tab.")
     attr(:patch, :string, doc: "LiveView patch URL; renders the tab as a link.")
     attr(:navigate, :string, doc: "LiveView navigate URL; renders the tab as a link.")
+    attr(:href, :any, doc: "External/full-page href; renders the tab as a link.")
+    attr(:disabled, :boolean, doc: "Disable this trigger.")
     attr(:class, :any, doc: "Extra classes on this tab trigger.")
     attr(:"phx-click", :string, doc: "LiveView click event when not using patch/navigate.")
     attr(:"phx-value-tab", :string, doc: "phx-value-tab payload; defaults to name.")
+
+    attr(:"phx-value-segment", :string,
+      doc: "Legacy segmented alias payload; sent as params[\"segment\"]."
+    )
+
     attr(:"phx-target", :any, doc: "LiveView target for the click event.")
   end
 
   slot(:inner_block, doc: "Optional extra content inside the tab list.")
 
   def tabs_list(assigns) do
+    rest = assigns.rest
+    radio? = radiogroup?(rest)
+    segmented? = assigns.variant == "segmented"
+    roving? = segmented? and is_binary(assigns.id)
+    has_current? = not is_nil(assigns.active_tab)
+
+    hooked? = is_binary(assigns.id)
+
+    hook =
+      Map.get(rest, "phx-hook") ||
+        Map.get(rest, :"phx-hook") ||
+        if(hooked?, do: "LanternTabs")
+
+    items =
+      assigns.tab
+      |> Enum.with_index()
+      |> Enum.map(fn {tab, index} ->
+        active? = tab[:name] == assigns.active_tab
+
+        {tab,
+         %{
+           active?: active?,
+           link?: tab[:patch] || tab[:navigate] || tab[:href],
+           tabindex: if(roving?, do: tab_index(active?, index, has_current?)),
+           class:
+             Class.merge([
+               "lui-tab",
+               segmented? && "lui-segmented-item",
+               active? && "lui-tab-active",
+               segmented? && active? && "lui-segmented-item-active",
+               tab[:class]
+             ]),
+           part: if(hooked?, do: if(segmented?, do: "segment", else: "tab")),
+           value: if(hooked?, do: tab[:name])
+         }}
+      end)
+
+    assigns =
+      assign(assigns,
+        items: items,
+        radio?: radio?,
+        segmented?: segmented?,
+        hook: hook,
+        list_role: if(radio?, do: "radiogroup", else: "tablist"),
+        rest: Map.drop(rest, ["role", :role, "phx-hook", :"phx-hook"])
+      )
+
     ~H"""
     <div
-      class={Class.merge(["lui-tabs-list", @class])}
+      id={@id}
+      class={Class.merge(["lui-tabs-list", @segmented? && "lui-segmented", @class])}
       data-variant={@variant}
       data-size={@size}
-      role="tablist"
+      role={@list_role}
+      phx-hook={@hook}
       {@rest}
     >
-      <%= for tab <- @tab do %>
+      <%= for {tab, meta} <- @items do %>
         <.link
-          :if={tab[:patch] || tab[:navigate]}
+          :if={meta.link?}
           patch={tab[:patch]}
           navigate={tab[:navigate]}
-          class={Class.merge(["lui-tab", tab[:name] == @active_tab && "lui-tab-active", tab[:class]])}
-          role="tab"
-          aria-selected={to_string(tab[:name] == @active_tab)}
+          href={tab[:href]}
+          class={meta.class}
+          data-part={meta.part}
+          data-value={meta.value}
+          role={if @radio?, do: "radio", else: "tab"}
+          aria-checked={@radio? && to_string(meta.active?)}
+          aria-disabled={tab[:disabled] && "true"}
+          tabindex={meta.tabindex}
+          aria-selected={unless @radio?, do: to_string(meta.active?)}
         >
           {render_slot(tab)}
         </.link>
         <button
-          :if={!(tab[:patch] || tab[:navigate])}
+          :if={!meta.link?}
           type="button"
-          class={Class.merge(["lui-tab", tab[:name] == @active_tab && "lui-tab-active", tab[:class]])}
-          role="tab"
-          aria-selected={to_string(tab[:name] == @active_tab)}
+          class={meta.class}
+          data-part={meta.part}
+          data-value={meta.value}
+          role={if @radio?, do: "radio", else: "tab"}
+          aria-checked={@radio? && to_string(meta.active?)}
+          disabled={tab[:disabled]}
+          tabindex={meta.tabindex}
           phx-click={tab[:"phx-click"]}
-          phx-value-tab={tab[:"phx-value-tab"] || tab[:name]}
+          phx-value-tab={tab[:"phx-value-tab"] || unless(tab[:"phx-value-segment"], do: tab[:name])}
+          phx-value-segment={tab[:"phx-value-segment"]}
           phx-target={tab[:"phx-target"]}
+          aria-selected={unless @radio?, do: to_string(meta.active?)}
         >
           {render_slot(tab)}
         </button>
@@ -118,4 +198,14 @@ defmodule LanternUI.Components.Tabs do
     </div>
     """
   end
+
+  defp radiogroup?(rest) when is_map(rest) do
+    Map.get(rest, "role") == "radiogroup" or Map.get(rest, :role) == "radiogroup"
+  end
+
+  defp radiogroup?(_), do: false
+
+  defp tab_index(true, _index, _has_current?), do: "0"
+  defp tab_index(_active?, 0, false), do: "0"
+  defp tab_index(_active?, _index, _has_current?), do: "-1"
 end

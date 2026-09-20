@@ -6,6 +6,29 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-09-20
+
+### Changed
+- **Dense-app primitives fold into existing components (flicker #2890).**
+  Five 0.8.0 names were reskins of library components that already existed.
+  The old functions remain as deprecated aliases for this release and are
+  removed in 0.9.0. Each alias logs a one-per-node warning.
+
+  | Before | After |
+  |---|---|
+  | `<.icon_button label="Filter" kbd="F">` | `<.button size="icon" variant="ghost" label="Filter" kbd="F">` |
+  | `<.progress_ring value={7} max={19}>` | `<.progress shape="ring" value={7} max={19}>` |
+  | `<.segmented id="scope" value={@scope}><:segment>` | `<.tabs_list id="scope" variant="segmented" active_tab={@scope}><:tab>` |
+  | `<.property_row label="Repo">` | `<.description_list layout="dense"><:item label="Repo">` |
+
+  `button` gains `label` / `kbd` (tooltip wrap on `icon-*` sizes). `progress`
+  gains `shape="ring"` (value/max, completed/scope, thicker value stroke and
+  `border-strong` track). `tabs_list variant="segmented"` gains the pill
+  border, optional `id` + `LanternTabs` arrow keys (`LanternSegmented` is the
+  same hook), and `role="radiogroup"` when passed. `description_list` gains
+  `layout="dense"` for the inspector rail. `side_panel_toggle` is implemented
+  through `button/1`. Docs, recipes, and skills use the consolidated names.
+
 ### Added
 - **`group_band` client-side collapse** via `group=` and the
   `data-lantern-collapse` behaviour. Click / Enter / Space toggles
@@ -13,6 +36,10 @@ All notable changes to this project are documented here. The format follows
   `data-lantern-group` (`list_row` `group=`). Compose with
   `data-lantern-persist` using the same key so the collapsed set survives
   LiveView patches. CSS rotates the down chevron when collapsed. (flicker #2888)
+
+### Deprecated
+- `icon_button/1`, `progress_ring/1`, `segmented/1`, and `property_row/1`.
+  Use the after column above. Removed in 0.9.0.
 
 ### Fixed
 - **`icon_button` tooltips rendered open.** `.lui-icon-btn-tip .lui-tooltip`

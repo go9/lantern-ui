@@ -185,5 +185,25 @@ defmodule LanternUI.CardTest do
 
       assert html =~ "lui-dl-wide"
     end
+
+    test "layout=dense uses inspector rail classes" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <DescriptionList.description_list layout="dense">
+            <:item label="Repo">enventory_new</:item>
+          </DescriptionList.description_list>
+          """
+        end)
+
+      assert html =~ "lui-dl-dense"
+      assert html =~ "lui-inspector-list"
+      assert html =~ "lui-property-row"
+      assert html =~ "lui-property-label"
+      assert html =~ "lui-property-value"
+      assert html =~ "Repo"
+      assert html =~ "enventory_new"
+      refute html =~ "lui-dl-cols-"
+    end
   end
 end

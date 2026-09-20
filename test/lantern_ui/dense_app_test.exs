@@ -307,6 +307,8 @@ defmodule LanternUI.DenseAppTest do
       assert Floki.attribute(Enum.at(items, 1), "tabindex") == ["0"]
       assert Floki.attribute(Enum.at(items, 0), "tabindex") == ["-1"]
       assert Floki.find(doc, "button[data-value=backlog]") != []
+      assert html =~ ~s(phx-value-segment="backlog")
+      refute html =~ ~s(phx-value-tab="backlog")
     end
 
     test "ARIA gate: labelled radiogroup is conformant" do

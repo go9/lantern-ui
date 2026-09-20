@@ -129,3 +129,15 @@ mix test
 ```
 
 Update `CHANGELOG.md` for component behavior changes.
+
+## Deprecated in 0.8.2
+
+These 0.8.0 names still render as aliases. Prefer the target. Removed in 0.9.0.
+
+| Deprecated | Use instead |
+|---|---|
+| `icon_button/1` | `button/1` with `size="icon"` and `label` |
+| `progress_ring/1` | `progress/1` with `shape="ring"` |
+| `segmented/1` | `tabs_list/1` with `variant="segmented"` and `<:tab>` |
+| `property_row/1` | `description_list/1` with `layout="dense"` and `<:item>` |
+

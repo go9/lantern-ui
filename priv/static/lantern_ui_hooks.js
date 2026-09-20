@@ -4079,7 +4079,7 @@ var LanternSidePanel = {
   }
 };
 Hooks.LanternSidePanel = LanternSidePanel;
-var LanternSegmented = {
+var LanternTabs = {
   mounted() {
     this.onKey = (event) => this.onKeydown(event);
     this.el.addEventListener("keydown", this.onKey);
@@ -4088,7 +4088,7 @@ var LanternSegmented = {
     this.el.removeEventListener("keydown", this.onKey);
   },
   segments() {
-    return [...this.el.querySelectorAll('[data-part="segment"]')].filter((el) => {
+    return [...this.el.querySelectorAll('[data-part="segment"], [data-part="tab"]')].filter((el) => {
       if (el.disabled || el.getAttribute("aria-disabled") === "true") return false;
       return true;
     });
@@ -4114,6 +4114,8 @@ var LanternSegmented = {
     el.click();
   }
 };
+var LanternSegmented = LanternTabs;
+Hooks.LanternTabs = LanternTabs;
 Hooks.LanternSegmented = LanternSegmented;
 if (typeof document !== "undefined") installBehaviours(document);
 export {
@@ -4139,6 +4141,7 @@ export {
   LanternSidebar,
   LanternSlider,
   LanternTableChrome,
+  LanternTabs,
   LanternTheme,
   LanternToast,
   LanternTooltip,

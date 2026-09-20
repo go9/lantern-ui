@@ -39,9 +39,10 @@ the complete function and attribute surface.
   `LanternUI.Components.ScrollArea`.
 - **Dense-app primitives:** `LanternUI.Components.ListRow`,
   `LanternUI.Components.GroupBand`, `LanternUI.Components.Inspector`,
-  `LanternUI.Components.IconButton`, `LanternUI.Components.Segmented`,
-  `LanternUI.Components.StateGlyph`, `LanternUI.Components.ProgressRing`, and
-  `LanternUI.Components.SidePanel`
+  `LanternUI.Components.StateGlyph`, and `LanternUI.Components.SidePanel`.
+  Icon actions, rings, segmented controls, and property rows fold into
+  `Button` (`label`/`kbd`), `Progress` (`shape="ring"`), `Tabs`
+  (`tabs_list variant="segmented"`), and `DescriptionList` (`layout="dense"`)
   (see [Dense-app primitives](docs/dense-app.md)).
 - **Theming and layout:** `LanternUI.Components.Theme` supplies the theme
   component and tokens used by the component families.

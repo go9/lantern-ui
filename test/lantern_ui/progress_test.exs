@@ -107,5 +107,43 @@ defmodule LanternUI.ProgressTest do
 
       assert ARIAConformance.audit(html, []) == []
     end
+
+    test "shape=ring uses value/max and completed/scope" do
+      generic =
+        render(fn assigns ->
+          ~H"""
+          <Progress.progress shape="ring" value={7} max={19} label="Completion" />
+          """
+        end)
+
+      alias =
+        render(fn assigns ->
+          ~H"""
+          <Progress.progress shape="ring" completed={7} scope={19}>7 / 19</Progress.progress>
+          """
+        end)
+
+      assert generic =~ "lui-progress-ring-track"
+      assert generic =~ "lui-progress-ring-value"
+      assert generic =~ "stroke-dasharray"
+      assert generic =~ ~s(role="progressbar")
+      assert generic =~ ~s(aria-valuenow="7")
+      assert generic =~ ~s(aria-valuemax="19")
+      assert generic =~ ~s(data-progress-pct="37")
+      assert alias =~ "7 / 19"
+      assert alias =~ ~s(data-progress-pct="37")
+    end
+
+    test "an unlabeled ring with no caption is decorative" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Progress.progress shape="ring" scope={0} completed={0} />
+          """
+        end)
+
+      assert html =~ ~s(aria-hidden="true")
+      refute html =~ "progressbar"
+    end
   end
 end
