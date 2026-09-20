@@ -141,3 +141,121 @@ test("hooks bundle inlines floating-ui and keeps the public import surface", asy
   assert.match(bundle, /export \{[\s\S]*\bHooks\b/)
   assert.match(bundle, /export \{[\s\S]*installBehaviours/)
 })
+
+function collapseFixture(key) {
+  return `
+    <div id="list">
+      <div class="lui-group-band" data-lantern-persist="${key}">
+        <button type="button" class="lui-group-band-main" data-lantern-collapse="${key}" aria-expanded="true">Band</button>
+        <a class="lui-group-band-action" href="#new">+</a>
+      </div>
+      <div data-lantern-group="${key}" id="row-a">A</div>
+      <div data-lantern-group="${key}" id="row-b">B</div>
+      <div class="lui-group-band">
+        <button type="button" class="lui-group-band-main" data-lantern-collapse="${key}-other" aria-expanded="true">Other</button>
+      </div>
+      <div data-lantern-group="${key}-other" id="row-other">Other</div>
+    </div>
+  `
+}
+
+test("collapse: click toggles the band, matching siblings, and aria-expanded", () => {
+  const ctx = withDoc(collapseFixture("demo:g1"))
+  try {
+    const band = ctx.document.querySelector(".lui-group-band")
+    const control = ctx.document.querySelector("[data-lantern-collapse='demo:g1']")
+    const rowA = ctx.document.getElementById("row-a")
+    const other = ctx.document.getElementById("row-other")
+    control.click()
+    assert.equal(band.hasAttribute("data-collapsed"), true)
+    assert.equal(control.getAttribute("aria-expanded"), "false")
+    assert.equal(rowA.hidden, true)
+    assert.equal(other.hidden, false)
+    control.click()
+    assert.equal(band.hasAttribute("data-collapsed"), false)
+    assert.equal(control.getAttribute("aria-expanded"), "true")
+    assert.equal(rowA.hidden, false)
+  } finally {
+    ctx.unmount()
+  }
+})
+
+test("collapse: Enter and Space toggle; the trailing action does not", () => {
+  const ctx = withDoc(collapseFixture("demo:g-keys"))
+  try {
+    const control = ctx.document.querySelector("[data-lantern-collapse='demo:g-keys']")
+    const band = control.closest(".lui-group-band")
+    const action = ctx.document.querySelector(".lui-group-band-action")
+    control.focus()
+    keydown(control, "Enter")
+    assert.equal(band.hasAttribute("data-collapsed"), true)
+    keydown(control, " ")
+    assert.equal(band.hasAttribute("data-collapsed"), false)
+    action.click()
+    assert.equal(band.hasAttribute("data-collapsed"), false)
+  } finally {
+    ctx.unmount()
+  }
+})
+
+test("collapse: persist with the same key restores after a DOM replace", async () => {
+  const ctx = withDoc(`<div id="host"></div>`)
+  try {
+    ctx.document.getElementById("host").innerHTML = collapseFixture("demo:g-persist")
+    await sleep(10)
+    ctx.document.querySelector("[data-lantern-collapse='demo:g-persist']").click()
+    assert.equal(ctx.window.localStorage.getItem("lantern:persist:demo:g-persist"), "closed")
+
+    ctx.document.getElementById("host").innerHTML = collapseFixture("demo:g-persist")
+    await sleep(10)
+    const band = ctx.document.querySelector(".lui-group-band")
+    const control = ctx.document.querySelector("[data-lantern-collapse='demo:g-persist']")
+    assert.equal(band.hasAttribute("data-collapsed"), true)
+    assert.equal(control.getAttribute("aria-expanded"), "false")
+    assert.equal(ctx.document.getElementById("row-a").hidden, true)
+  } finally {
+    ctx.unmount()
+  }
+})
+
+test("collapse: a patched-in sibling is hidden when the group is collapsed", async () => {
+  const ctx = withDoc(collapseFixture("demo:g-patch"))
+  try {
+    ctx.document.querySelector("[data-lantern-collapse='demo:g-patch']").click()
+    const row = ctx.document.createElement("div")
+    row.setAttribute("data-lantern-group", "demo:g-patch")
+    row.id = "row-new"
+    ctx.document.getElementById("list").append(row)
+    await sleep(10)
+    assert.equal(ctx.document.getElementById("row-new").hidden, true)
+  } finally {
+    ctx.unmount()
+  }
+})
+
+test("list nav Enter on a collapse button does not activate a row", () => {
+  const ctx = withDoc(`
+    <div data-lantern-list-nav>
+      <div class="lui-group-band">
+        <button type="button" data-lantern-collapse="demo:g-nav" aria-expanded="true">Band</button>
+      </div>
+      <div data-lantern-list-item data-lantern-group="demo:g-nav"><a href="#row">Row</a></div>
+    </div>
+  `)
+  try {
+    const control = ctx.document.querySelector("[data-lantern-collapse]")
+    const band = control.closest(".lui-group-band")
+    let clicked = false
+    ctx.document.querySelector("a").addEventListener("click", (e) => {
+      e.preventDefault()
+      clicked = true
+    })
+    control.focus()
+    keydown(control, "Enter")
+    assert.equal(clicked, false)
+    assert.equal(band.hasAttribute("data-collapsed"), true)
+  } finally {
+    ctx.unmount()
+  }
+})
+

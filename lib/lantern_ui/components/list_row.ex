@@ -11,6 +11,9 @@ defmodule LanternUI.Components.ListRow do
 
   Optional `parent` renders muted before the title with a › separator. The
   whole row is the hit target when `navigate`, `patch`, or `href` is set.
+
+  Pass `group` to set `data-lantern-group` so a `group_band` with the same
+  key can hide this row client-side. Any sibling may carry that attribute.
   """
   use Phoenix.Component
 
@@ -26,6 +29,11 @@ defmodule LanternUI.Components.ListRow do
   attr(:parent, :string,
     default: nil,
     doc: "Optional parent title rendered muted with a › before `title`."
+  )
+
+  attr(:group, :string,
+    default: nil,
+    doc: "Collapse key. Rendered as `data-lantern-group` on the row root."
   )
 
   attr(:selected, :boolean, default: false, doc: "Selected/active row tint.")
@@ -46,6 +54,7 @@ defmodule LanternUI.Components.ListRow do
       :if={@link?}
       class={Class.merge(["lui-list-row", @class])}
       data-selected={@selected || nil}
+      data-lantern-group={@group}
       navigate={@navigate}
       patch={@patch}
       href={@href}
@@ -64,6 +73,7 @@ defmodule LanternUI.Components.ListRow do
       :if={!@link?}
       class={Class.merge(["lui-list-row", @class])}
       data-selected={@selected || nil}
+      data-lantern-group={@group}
       {@rest}
     >
       <span :if={@leading != []} class="lui-list-row-leading">{render_slot(@leading)}</span>

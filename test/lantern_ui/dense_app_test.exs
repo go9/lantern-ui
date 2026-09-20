@@ -92,6 +92,34 @@ defmodule LanternUI.DenseAppTest do
       assert Floki.attribute(Floki.find(doc, "a.lui-list-row"), "href") == ["/t/1"]
       assert Floki.find(doc, "a.lui-list-row[data-selected]") != []
     end
+
+    test "group sets data-lantern-group on the row root" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <ListRow.list_row title="Go" group="tickets:in_progress" />
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+
+      assert Floki.attribute(Floki.find(doc, ".lui-list-row"), "data-lantern-group") == [
+               "tickets:in_progress"
+             ]
+
+      nav =
+        render(fn assigns ->
+          ~H"""
+          <ListRow.list_row title="Go" group="tickets:in_progress" navigate="/t/1" />
+          """
+        end)
+
+      nav_doc = Floki.parse_fragment!(nav)
+
+      assert Floki.attribute(Floki.find(nav_doc, "a.lui-list-row"), "data-lantern-group") == [
+               "tickets:in_progress"
+             ]
+    end
   end
 
   describe "group_band/1" do
@@ -130,6 +158,55 @@ defmodule LanternUI.DenseAppTest do
       assert Floki.attribute(Floki.find(doc, "a.lui-group-band-main"), "href") == [
                "/tickets?show_done=1"
              ]
+    end
+
+    test "group without a link target renders a collapse button" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <GroupBand.group_band name="In progress" count={2} group="tickets:in_progress">
+            <:glyph><span>G</span></:glyph>
+          </GroupBand.group_band>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      button = Floki.find(doc, "button.lui-group-band-main")
+      assert button != []
+      assert Floki.attribute(button, "type") == ["button"]
+      assert Floki.attribute(button, "data-lantern-collapse") == ["tickets:in_progress"]
+      assert Floki.attribute(button, "aria-expanded") == ["true"]
+      refute html =~ "data-collapsed"
+      refute html =~ "<a"
+    end
+
+    test "group + collapsed starts closed; group + patch stays a link" do
+      closed =
+        render(fn assigns ->
+          ~H"""
+          <GroupBand.group_band name="Done" group="tickets:done" collapsed />
+          """
+        end)
+
+      closed_doc = Floki.parse_fragment!(closed)
+      assert Floki.find(closed_doc, "[data-collapsed]") != []
+
+      assert Floki.attribute(
+               Floki.find(closed_doc, "button.lui-group-band-main"),
+               "aria-expanded"
+             ) ==
+               ["false"]
+
+      linked =
+        render(fn assigns ->
+          ~H"""
+          <GroupBand.group_band name="Done" group="tickets:done" collapsed patch="/tickets?show_done=1" />
+          """
+        end)
+
+      linked_doc = Floki.parse_fragment!(linked)
+      assert Floki.find(linked_doc, "a.lui-group-band-main") != []
+      assert Floki.find(linked_doc, "button.lui-group-band-main") == []
     end
   end
 
@@ -602,6 +679,10 @@ defmodule LanternUI.DenseAppTest do
       css = File.read!("priv/static/lantern_ui.css")
       assert css =~ ".lui-list-row"
       assert css =~ ".lui-group-band"
+
+      assert css =~
+               ".lui-group-band[data-collapsed] .lui-group-band-main[data-lantern-collapse] .lui-group-band-chevron"
+
       assert css =~ ".lui-inspector"
       assert css =~ ".lui-segmented"
       assert css =~ ".lui-state-glyph"

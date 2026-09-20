@@ -229,7 +229,7 @@ let liveSocket = new LiveSocket("/live", Socket, { params: {/* ... */}, hooks: H
 ```
 
 The file you import is the esbuild bundle of `assets/js/`. Data-attribute
-behaviours (list keyboard nav, persist) install themselves on import — see
+behaviours (list keyboard nav, persist, collapse) install themselves on import — see
 [docs/behaviours.md](docs/behaviours.md). Overlay panels (popover, dropdown,
 select, menu, autocomplete) are placed with `@floating-ui/dom`, inlined in
 the bundle so the import path stays

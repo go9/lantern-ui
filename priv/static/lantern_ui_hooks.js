@@ -1358,18 +1358,21 @@ function onListNavKey(e) {
   if (!list) return;
   const items = listItems(list);
   if (items.length === 0) return;
-  const current = items.find((item) => item === e.target || item.contains(e.target)) || items[0];
-  const idx = items.indexOf(current);
+  const current = items.find((item) => item === e.target || item.contains(e.target));
+  if (e.key === "Enter") {
+    if (!current) return;
+    e.preventDefault();
+    openListItem(current);
+    return;
+  }
+  const from = current || items[0];
+  const idx = items.indexOf(from);
   let next = null;
   if (e.key === "j" || e.key === "ArrowDown") next = items[Math.min(idx + 1, items.length - 1)];
   else if (e.key === "k" || e.key === "ArrowUp") next = items[Math.max(idx - 1, 0)];
   else if (e.key === "Home") next = items[0];
   else if (e.key === "End") next = items[items.length - 1];
-  else if (e.key === "Enter") {
-    e.preventDefault();
-    openListItem(current);
-    return;
-  } else return;
+  else return;
   if (next && next !== current) {
     e.preventDefault();
     roveList(list, next);
@@ -1431,6 +1434,64 @@ function restorePersist(root) {
   if (stored === "open") setPersistedOpen(root, true);
   if (stored === "closed") setPersistedOpen(root, false);
 }
+var collapseState = /* @__PURE__ */ new Map();
+function collapseKey(control) {
+  return control.getAttribute("data-lantern-collapse");
+}
+function applyCollapse(control, collapsed) {
+  const key = collapseKey(control);
+  if (!key) return;
+  const band = control.closest(".lui-group-band");
+  if (band) {
+    if (collapsed) band.setAttribute("data-collapsed", "");
+    else band.removeAttribute("data-collapsed");
+  }
+  control.setAttribute("aria-expanded", String(!collapsed));
+  const container = (band || control).parentElement;
+  if (!container) return;
+  for (const el of container.querySelectorAll("[data-lantern-group]")) {
+    if (el.getAttribute("data-lantern-group") === key) el.hidden = collapsed;
+  }
+}
+function persistKeyFor(control) {
+  return persistRoot(control).getAttribute("data-lantern-persist");
+}
+function toggleCollapse(control) {
+  const band = control.closest(".lui-group-band");
+  const next = !band?.hasAttribute("data-collapsed");
+  applyCollapse(control, next);
+  const key = collapseKey(control);
+  if (key) collapseState.set(key, next);
+  const persistKey = persistKeyFor(control);
+  if (persistKey) writePersist(control, persistKey, next ? "closed" : "open");
+}
+function restoreCollapse(control) {
+  const key = collapseKey(control);
+  if (!key) return;
+  const persistKey = persistKeyFor(control);
+  const stored = persistKey ? readPersist(control, persistKey) : null;
+  let collapsed;
+  if (stored === "closed") collapsed = true;
+  else if (stored === "open") collapsed = false;
+  else if (collapseState.has(key)) collapsed = collapseState.get(key);
+  else collapsed = Boolean(control.closest(".lui-group-band")?.hasAttribute("data-collapsed"));
+  applyCollapse(control, collapsed);
+  collapseState.set(key, collapsed);
+}
+function onCollapseClick(e) {
+  const control = e.target.closest("[data-lantern-collapse]");
+  if (!control) return;
+  toggleCollapse(control);
+}
+function onCollapseKey(e) {
+  if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key !== "Enter" && e.key !== " ") return;
+  if (typingTarget(e.target)) return;
+  const control = e.target.closest?.("[data-lantern-collapse]");
+  if (!control) return;
+  e.preventDefault();
+  toggleCollapse(control);
+}
 var applying = false;
 function restoreAll(doc) {
   if (applying || !doc) return;
@@ -1438,6 +1499,7 @@ function restoreAll(doc) {
   try {
     doc.querySelectorAll("[data-lantern-persist]").forEach(restorePersist);
     doc.querySelectorAll("[data-lantern-list-nav]").forEach(initList);
+    doc.querySelectorAll("[data-lantern-collapse]").forEach(restoreCollapse);
   } finally {
     applying = false;
   }
@@ -1450,7 +1512,9 @@ function installBehaviours(doc = typeof document === "undefined" ? null : docume
   }
   doc.documentElement.dataset.lanternBehaviours = "1";
   doc.addEventListener("keydown", onListNavKey, true);
+  doc.addEventListener("keydown", onCollapseKey);
   doc.addEventListener("click", onPersistClick);
+  doc.addEventListener("click", onCollapseClick);
   doc.addEventListener("toggle", onPersistToggle, true);
   restoreAll(doc);
   const Observer = doc.defaultView?.MutationObserver;
