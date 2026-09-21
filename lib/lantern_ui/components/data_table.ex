@@ -452,7 +452,11 @@ defmodule LanternUI.Components.DataTable do
 
       <div :if={@card != [] && @view == "cards"} class="lui-dt-cards">
         <%= if @rows == [] do %>
-          <EmptyState.empty_state icon="inbox" title="Nothing here yet" />
+          <%= if @empty != [] do %>
+            {render_slot(@empty)}
+          <% else %>
+            <EmptyState.empty_state icon="inbox" title="Nothing here yet" />
+          <% end %>
         <% else %>
           <div :for={row <- @rows} class="lui-dt-card">{render_slot(@card, row)}</div>
         <% end %>
