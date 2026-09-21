@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.8.5] - 2026-09-21
+
+### Fixed
+- **`data_table fill` pins pagination in list and cards views.** Fill previously
+  only made `.lui-table-wrap` the scroll region, so a grouped list (`group_band`
+  + `:list_item`) grew and pushed pagination below the fold. `.lui-dt-list` and
+  `.lui-dt-cards` now take the remaining height and scroll internally; chrome
+  and pagination stay pinned. `app_shell` also drops the 4rem main gutter when a
+  fill table is nested (not only a direct child). (flicker #2912)
+
 ## [0.8.4] - 2026-09-21
 
 ### Fixed

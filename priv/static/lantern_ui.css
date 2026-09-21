@@ -944,8 +944,10 @@
   /* The 4rem bottom gutter is sized for scrolling content. A `.lui-datatable-fill`
      is a full-height panel, so that gutter becomes a dead band under it (the
      pinned pagination stops ~4rem short of the viewport). When main holds a fill
-     table, match the bottom gutter to the sides so the table reaches the bottom. */
-  .lui-app-main:has(> .lui-datatable-fill) { padding-bottom: 1.5rem; }
+     table — as a direct child or nested in a page wrapper — match the bottom
+     gutter to the sides so the table reaches the bottom. A child combinator
+     misses the nested case (flicker's `page_layout fill` wraps the table). */
+  .lui-app-main:has(.lui-datatable-fill) { padding-bottom: 1.5rem; }
 }
 
 /* Nav */
@@ -1450,19 +1452,38 @@
 .lui-datatable .lui-th { background: var(--lantern-surface-raised); }
 
 /* Fill mode (`<.data_table fill>`): the datatable stretches to its flex parent's
-   height, the table body becomes the vertical scroll region, and the overview /
+   height, the rows area becomes the vertical scroll region, and the overview /
    header / chrome / pagination stay pinned and always visible. Opt-in so the
-   default table keeps its natural content height. */
+   default table keeps its natural content height. Only `.lui-table-wrap` used
+   to scroll, so a grouped list (`group_band` inside `:list_item`) grew with
+   its rows and pushed pagination below the fold. List and cards take the same
+   remaining-height + internal-scroll contract as the table wrap. */
 .lui-datatable-fill {
   display: flex;
   flex-direction: column;
   flex: 1 1 0%;
   min-height: 0;
 }
-.lui-datatable-fill > .lui-table-wrap {
+.lui-datatable-fill > .lui-dt-overview,
+.lui-datatable-fill > .lui-dt-header,
+.lui-datatable-fill > .lui-dt-chromerow,
+.lui-datatable-fill > .lui-dt-bulkbar,
+.lui-datatable-fill > .lui-dt-pagination {
+  flex: none;
+}
+.lui-datatable-fill > .lui-table-wrap,
+.lui-datatable-fill > .lui-dt-list,
+.lui-datatable-fill > .lui-dt-cards {
   flex: 1 1 0%;
   min-height: 0;
   overflow-y: auto;
+}
+/* List/cards drop the panel and set overflow:visible so rows sit on the page.
+   In fill mode the root is a bounded flex column; clip so a tall grouped list
+   cannot paint past the pinned pagination. */
+.lui-datatable-fill[data-view="list"],
+.lui-datatable-fill[data-view="cards"] {
+  overflow: hidden;
 }
 /* In fill mode the wrap is the scroll region, so the column header would scroll
    away with the rows. Pin it. `.lui-table` uses border-collapse: collapse, and a

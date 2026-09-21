@@ -48,7 +48,7 @@ For `data_table`, decide every capability explicitly:
 
 Sortable fields must exist in backing query/schema allowlist. Disable checkboxes when no bulk action exists.
 
-Use fill layout only when parent has bounded height and component should own body scrolling.
+Use fill layout only when parent has bounded height and component should own body scrolling. `fill` scrolls the rows area (table body, list, or cards) internally and pins pagination; a grouped list without it pushes the pager below the fold.
 
 ## 5. Records get routes
 

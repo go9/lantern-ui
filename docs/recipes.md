@@ -12,6 +12,10 @@ Origins are the flicker pages these shapes were extracted from:
 
 Swap the fixture assigns (`@ticket`, `@paths`, …) for the host's LiveView assigns. String paths in the recipes compile without verified routes; prefer `~p` in the app.
 
+## Fill list pages
+
+**When to use:** The page body is a single `data_table` — with or without `group_band` grouping. Pass `fill` (and give the parent a bounded flex height, e.g. flicker's `page_layout fill`) so the rows area scrolls inside the table and pagination stays at the bottom of the viewport. List, cards, and table views all honour this; without `fill` a grouped list grows and pushes the pager below the fold.
+
 ## Linear-style list row
 
 **When to use:** A dense issue row — priority glyph, id, status glyph, title, tags, progress ring, date — sitting under a tinted group band.

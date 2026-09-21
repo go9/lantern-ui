@@ -133,6 +133,23 @@ defmodule LanternUI.DataTableTest do
     assert on =~ "lui-datatable-fill"
   end
 
+  test "fill CSS scrolls list and cards, not only the table wrap" do
+    css = File.read!("priv/static/lantern_ui.css")
+
+    # All three row surfaces share the remaining-height + internal-scroll contract.
+    assert css =~ ~r/\.lui-datatable-fill > \.lui-table-wrap,/
+    assert css =~ ~r/\.lui-datatable-fill > \.lui-dt-list,/
+    assert css =~ ~r/\.lui-datatable-fill > \.lui-dt-cards \{/
+
+    # Pagination and chrome must not shrink when the rows area claims remaining height.
+    assert css =~ ~r/\.lui-datatable-fill > \.lui-dt-pagination \{/
+
+    # Nested fill tables (page_layout wrapping the table) still drop the 4rem
+    # main gutter; a child combinator would miss them.
+    assert css =~ ~r/\.lui-app-main:has\(\.lui-datatable-fill\) \{ padding-bottom: 1\.5rem; \}/
+    refute css =~ ~r/\.lui-app-main:has\(> \.lui-datatable-fill\)/
+  end
+
   test "selection: checkboxes, selected row class, bulk bar + events" do
     html = render(&table/1, %{rows: rows(), meta: @meta, selected: MapSet.new([1])})
 

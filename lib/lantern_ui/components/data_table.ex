@@ -110,9 +110,9 @@ defmodule LanternUI.Components.DataTable do
   attr(:fill, :boolean,
     default: false,
     doc:
-      "Stretch to the parent's height (the parent must be a flex column with a definite height), " <>
-        "scroll the table body, and pin the header/overview/pagination. Without it the table is " <>
-        "its natural content height."
+      "Stretch to the parent's height (the parent must be a flex column with a definite height). " <>
+        "The rows area — table body, list, or cards — scrolls internally; overview, chrome, and " <>
+        "pagination stay pinned. Without it the table is its natural content height."
   )
 
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
