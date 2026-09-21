@@ -88,11 +88,21 @@ defmodule LanternUI.Components.DataTable do
     default: "table",
     values: ~w(table cards list),
     doc:
-      "active view when a :card or :list_item slot is given. The switcher always " <>
-        "offers exactly two, never three: `list` + `cards` on a page with a " <>
-        ":list_item slot, and `table` + `cards` on one without (otherwise the " <>
-        "grid would be a dead end). `table` is also the rendering used when a " <>
-        "page supplies neither slot."
+      "active view. Coerced to an available view when the requested one has no " <>
+        "slot. The switcher renders only when two or more views are available; " <>
+        "a list-only or cards-only page (no `:col`) has no toggle. When both " <>
+        "`:list_item` and `:card` are given, table drops out so the switcher " <>
+        "stays two-way. `table` is the rendering when a page supplies neither " <>
+        "list nor card slot."
+  )
+
+  attr(:views, :list,
+    default: nil,
+    doc:
+      "Allowed views, as strings. Intersected with the views that have slots " <>
+        "(`:col` → table, `:list_item` → list, `:card` → cards). Omit to accept " <>
+        "every slotted view. Use e.g. `[\"list\"]` to pin a page that still " <>
+        "declares `:col` to list-only."
   )
 
   attr(:flush, :boolean,
@@ -120,7 +130,9 @@ defmodule LanternUI.Components.DataTable do
   slot(:header_action, doc: "Actions rendered in the title row (right side).")
   slot(:toolbar, doc: "Extra controls in the filter/search toolbar.")
 
-  slot :col, required: true, doc: "One data column; body is rendered per row via :let." do
+  slot :col,
+    doc:
+      "One data column; body is rendered per row via :let. Optional when view is list or cards." do
     attr(:label, :string, doc: "Header label for the column.")
     attr(:field, :atom, doc: "Flop sort field when sortable.")
     attr(:sortable, :boolean, doc: "Enable sort patch links on the header.")
@@ -186,6 +198,8 @@ defmodule LanternUI.Components.DataTable do
         :all_selected?,
         assigns.page_ids != [] and Enum.all?(assigns.page_ids, &(&1 in assigns.selected_ids))
       )
+
+    assigns = resolve_views(assigns)
 
     ~H"""
     <div
@@ -283,22 +297,17 @@ defmodule LanternUI.Components.DataTable do
           />
         </div>
 
-        <div :if={@card != [] || @list_item != []} class="lui-dt-viewtoggle">
+        <div :if={length(@available_views) > 1} class="lui-dt-viewtoggle">
           <.link
-            :if={@list_item != []}
+            :if={"list" in @available_views}
             patch={view_path(@path, @meta, "list")}
             class={["lui-vt", @view == "list" && "lui-vt-active"]}
             aria-label="List view"
           >
             <Icon.icon name="bars-3" class="lui-vt-icon" />
           </.link>
-          <%!-- The table is the counterpart whenever a page declares only ONE of
-                the two simple views: a :card-only page has no list to go back
-                to, a :list_item-only page (admin organizations) has no grid.
-                Without it that page renders a single button — one view in, no
-                way out. Only when both slots exist does the table drop out. --%>
           <.link
-            :if={@list_item == [] || @card == []}
+            :if={"table" in @available_views}
             patch={view_path(@path, @meta, "table")}
             class={["lui-vt", @view == "table" && "lui-vt-active"]}
             aria-label="Table view"
@@ -306,7 +315,7 @@ defmodule LanternUI.Components.DataTable do
             <Icon.icon name="view-columns" class="lui-vt-icon" />
           </.link>
           <.link
-            :if={@card != []}
+            :if={"cards" in @available_views}
             patch={view_path(@path, @meta, "cards")}
             class={["lui-vt", @view == "cards" && "lui-vt-active"]}
             aria-label="Grid view"
@@ -811,6 +820,45 @@ defmodule LanternUI.Components.DataTable do
     |> Map.get("filters", %{})
     |> normalize_filters()
     |> Enum.count(fn f -> to_string(f["field"]) in fields and f["value"] not in [nil, ""] end)
+  end
+
+  defp resolve_views(assigns) do
+    available =
+      assigns
+      |> slotted_views()
+      |> restrict_views(assigns.views)
+
+    view =
+      cond do
+        assigns.view in available -> assigns.view
+        available != [] -> hd(available)
+        true -> assigns.view
+      end
+
+    assign(assigns, available_views: available, view: view)
+  end
+
+  defp slotted_views(assigns) do
+    has_list? = assigns.list_item != []
+    has_cards? = assigns.card != []
+    has_table? = assigns.col != []
+
+    cond do
+      has_list? and has_cards? -> ["list", "cards"]
+      has_list? and has_table? -> ["list", "table"]
+      has_cards? and has_table? -> ["table", "cards"]
+      has_list? -> ["list"]
+      has_cards? -> ["cards"]
+      has_table? -> ["table"]
+      true -> []
+    end
+  end
+
+  defp restrict_views(from_slots, nil), do: from_slots
+
+  defp restrict_views(from_slots, allowed) when is_list(allowed) do
+    allowed = Enum.map(allowed, &to_string/1)
+    Enum.filter(from_slots, &(&1 in allowed))
   end
 
   defp opt_value({_label, value}), do: value

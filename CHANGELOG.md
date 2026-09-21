@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.8.6] - 2026-09-21
+
+### Changed
+- **`data_table` list/cards no longer require `:col`.** A page that only
+  supplies `:list_item` or `:card` compiles and renders that view. `:col`
+  remains how the table view is declared.
+- **`.lui-dt-viewtoggle` only renders when two or more views are available.**
+  No `:col` means table is not a view, so a list-only page has no switcher.
+  Pass `views={["list"]}` to pin a page that still declares `:col`. When both
+  `:list_item` and `:card` are present, table still drops out so the switcher
+  stays two-way. (flicker #2913)
+
 ## [0.8.5] - 2026-09-21
 
 ### Fixed

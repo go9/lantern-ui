@@ -321,6 +321,24 @@ defmodule LanternUI.DataTableTest do
     assert table == squash_html(@baseline_table_html)
   end
 
+  defp list_only_table(assigns) do
+    ~H"""
+    <DataTable.data_table
+      id="list-only"
+      rows={@rows}
+      meta={@meta}
+      path="/orders"
+      selected_ids={@selected}
+      view={@view}
+      show_checkboxes={false}
+    >
+      <:list_item :let={r}>
+        <span class="name">{r.name}</span>
+      </:list_item>
+    </DataTable.data_table>
+    """
+  end
+
   defp list_table(assigns) do
     ~H"""
     <DataTable.data_table
@@ -443,6 +461,64 @@ defmodule LanternUI.DataTableTest do
     assert html =~ "view=list"
     # cards toggle stays absent without :card
     refute html =~ ~s(aria-label="Card view")
+  end
+
+  test "list-only with no :col renders list and no viewtoggle" do
+    html =
+      render(&list_only_table/1, %{
+        rows: rows(),
+        meta: @meta,
+        selected: MapSet.new(),
+        view: "list"
+      })
+
+    assert html =~ "lui-dt-list"
+    assert html =~ "Ada"
+    refute html =~ "lui-dt-viewtoggle"
+    refute html =~ "lui-thead"
+    refute html =~ "lui-table-wrap"
+  end
+
+  test "list-only coerces view=table to list when there is no :col" do
+    html =
+      render(&list_only_table/1, %{
+        rows: rows(),
+        meta: @meta,
+        selected: MapSet.new(),
+        view: "table"
+      })
+
+    assert html =~ "lui-dt-list"
+    refute html =~ "lui-table-wrap"
+    refute html =~ "lui-dt-viewtoggle"
+  end
+
+  test "views=[list] hides the toggle even when :col is present" do
+    html =
+      render(
+        fn assigns ->
+          ~H"""
+          <DataTable.data_table
+            id="pinned-list"
+            rows={@rows}
+            meta={@meta}
+            path="/orders"
+            selected_ids={@selected}
+            view="list"
+            views={["list"]}
+            show_checkboxes={false}
+          >
+            <:col :let={r} label="Name">{r.name}</:col>
+            <:list_item :let={r}>{r.name}</:list_item>
+          </DataTable.data_table>
+          """
+        end,
+        %{rows: rows(), meta: @meta, selected: MapSet.new()}
+      )
+
+    assert html =~ "lui-dt-list"
+    refute html =~ "lui-dt-viewtoggle"
+    refute html =~ "lui-table-wrap"
   end
 
   test "exactly one view renders at a time" do
