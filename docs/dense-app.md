@@ -38,9 +38,10 @@ works this release) and `side_panel_toggle`.
 ```
 
 `group` (with no `navigate`/`patch`/`href`) makes the name row a collapse
-button. Rows (or any sibling) with the same `group` hide client-side. Match
-`data-lantern-persist` to the group key so the collapsed set survives
-patches and reloads — see [Behaviours](behaviours.md).
+button. Rows with the same `group` hide client-side, including when they
+sit in `data_table` `:list_item` wrappers — see [Behaviours](behaviours.md).
+Match `data-lantern-persist` to the group key so the collapsed set survives
+patches and reloads.
 
 ## Inspector rail
 

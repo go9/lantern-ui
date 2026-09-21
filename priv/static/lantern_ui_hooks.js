@@ -1437,6 +1437,22 @@ function restorePersist(root) {
 function collapseKey(control) {
   return control.getAttribute("data-lantern-collapse");
 }
+function cssEscape(root, value) {
+  const css = root.ownerDocument?.defaultView?.CSS;
+  if (css?.escape) return css.escape(value);
+  return String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+function collapseScope(control) {
+  const from = control.closest(".lui-group-band") || control;
+  return from.closest("[data-lantern-collapse-scope]") || from.closest(".lui-dt-list") || from.parentElement;
+}
+function collapseHideTarget(el, scope, band) {
+  let node = el;
+  while (node.parentElement && node.parentElement !== scope && !(band && node.parentElement.contains(band))) {
+    node = node.parentElement;
+  }
+  return node;
+}
 function applyCollapse(control, collapsed) {
   const key = collapseKey(control);
   if (!key) return;
@@ -1446,10 +1462,11 @@ function applyCollapse(control, collapsed) {
     else band.removeAttribute("data-collapsed");
   }
   control.setAttribute("aria-expanded", String(!collapsed));
-  const container = (band || control).parentElement;
-  if (!container) return;
-  for (const el of container.children) {
-    if (el.getAttribute("data-lantern-group") === key) el.hidden = collapsed;
+  const scope = collapseScope(control);
+  if (!scope) return;
+  const selector = `[data-lantern-group="${cssEscape(control, key)}"]`;
+  for (const el of scope.querySelectorAll(selector)) {
+    collapseHideTarget(el, scope, band).hidden = collapsed;
   }
 }
 function persistKeyFor(control) {

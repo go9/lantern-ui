@@ -127,6 +127,8 @@ defmodule LanternUI.DenseAppTest do
       # `.lui-list-row {display: flex}` beats the UA `[hidden]` rule, so a
       # collapsed group would still paint its rows (#2894).
       assert css =~ ~r/\.lui-list-row\[hidden\] \{ display: none; \}/
+      # Same bug on data_table's list_item wrapper (#2895).
+      assert css =~ ~r/\.lui-dt-list-row\[hidden\] \{ display: none; \}/
     end
   end
 

@@ -35,12 +35,27 @@ elsewhere inside the list (a group-band collapse button) is left alone.
 
 `data-lantern-collapse="<key>"` on the band's control (a `<button>`). Click,
 Enter, or Space toggles `data-collapsed` on the closest `.lui-group-band` and
-the `hidden` attribute on every **sibling** in the same parent that carries
-`data-lantern-group="<key>"`. `aria-expanded` tracks the open state.
+the `hidden` attribute on matching `[data-lantern-group="<key>"]` nodes in
+the **collapse scope**. `aria-expanded` tracks the open state.
+
+Scope, first match: the closest ancestor with `data-lantern-collapse-scope`,
+else the closest `.lui-dt-list`, else the band's (or control's) parent.
+Inside that scope the hook finds every `[data-lantern-group="<key>"]` (the
+key is CSS-escaped) and hides the outermost descendant of the scope that
+does **not** contain the control's band. The head row — whose wrapper
+contains the band — still hides just the `list_row` itself, so the band
+stays visible.
+
+That last step is why `data_table` list view works: each `:list_item` slot
+renders inside its own `.lui-dt-list-row > .lui-dt-list-main` wrapper, so
+the band and its head `list_row` are not siblings of the other rows.
+`data_table` stamps `data-lantern-collapse-scope` on `.lui-dt-list`; the
+`.lui-dt-list` class is also a fallback if the attribute is missing.
+Put `data-lantern-collapse-scope` on any other wrapping list yourself.
 
 `group_band` with `group=` (and no `navigate`/`patch`/`href`) wires the
-button. `list_row` with `group=` sets `data-lantern-group`. Any sibling may
-carry that attribute — it is not list-row-only.
+button. `list_row` with `group=` sets `data-lantern-group`. Any element in
+the scope may carry that attribute — it is not list-row-only.
 
 ```heex
 <div>
@@ -51,9 +66,9 @@ carry that attribute — it is not list-row-only.
 </div>
 ```
 
-After a LiveView morph, `restoreAll` re-hides siblings from the band's
-`data-collapsed` (so a newly patched-in row under a still-collapsed band
-disappears). To keep the collapsed set when the server rewrites the band,
+After a LiveView morph, `restoreAll` re-hides the same scoped matches from
+the band's `data-collapsed` (so a newly patched-in row under a still-collapsed
+band disappears). To keep the collapsed set when the server rewrites the band,
 and across a full reload, put `data-lantern-persist` on the band with
 **the same key**:
 

@@ -233,22 +233,120 @@ test("collapse: a patched-in sibling is hidden when the group is collapsed", asy
   }
 })
 
-test("collapse: nested descendants with the same key are left alone", () => {
+test("collapse: nested same-key descendants hide via their outermost wrapper", () => {
   const ctx = withDoc(`
     <div id="list">
       <div class="lui-group-band">
         <button type="button" data-lantern-collapse="demo:g-nest" aria-expanded="true">Band</button>
       </div>
       <div data-lantern-group="demo:g-nest" id="sib">sibling</div>
-      <div>
+      <div id="nested-wrap">
         <div data-lantern-group="demo:g-nest" id="nested">nested</div>
       </div>
     </div>
+    <div data-lantern-group="demo:g-nest" id="outside">outside</div>
   `)
   try {
     ctx.document.querySelector("[data-lantern-collapse]").click()
     assert.equal(ctx.document.getElementById("sib").hidden, true)
+    assert.equal(ctx.document.getElementById("nested-wrap").hidden, true)
     assert.equal(ctx.document.getElementById("nested").hidden, false)
+    assert.equal(ctx.document.getElementById("outside").hidden, false)
+  } finally {
+    ctx.unmount()
+  }
+})
+
+function dataTableCollapseFixture(key) {
+  return `
+    <div class="lui-dt-list">
+      <div class="lui-dt-list-row" id="wrap-head">
+        <div class="lui-dt-list-main">
+          <div class="lui-group-band" data-lantern-persist="${key}">
+            <button type="button" class="lui-group-band-main" data-lantern-collapse="${key}" aria-expanded="true">Band</button>
+          </div>
+          <div class="lui-list-row" data-lantern-group="${key}" id="row-head">head</div>
+        </div>
+      </div>
+      <div class="lui-dt-list-row" id="wrap-a">
+        <div class="lui-dt-list-main">
+          <div class="lui-list-row" data-lantern-group="${key}" id="row-a">A</div>
+        </div>
+      </div>
+      <div class="lui-dt-list-row" id="wrap-b">
+        <div class="lui-dt-list-main">
+          <div class="lui-list-row" data-lantern-group="${key}" id="row-b">B</div>
+        </div>
+      </div>
+    </div>
+  `
+}
+
+test("collapse: data_table list_item wrappers hide; the head wrapper keeps the band", () => {
+  const ctx = withDoc(dataTableCollapseFixture("tickets:in_progress"))
+  try {
+    const control = ctx.document.querySelector("[data-lantern-collapse='tickets:in_progress']")
+    const band = ctx.document.querySelector(".lui-group-band")
+    const wrapHead = ctx.document.getElementById("wrap-head")
+    const wrapA = ctx.document.getElementById("wrap-a")
+    const wrapB = ctx.document.getElementById("wrap-b")
+    const rowHead = ctx.document.getElementById("row-head")
+
+    control.click()
+    assert.equal(band.hasAttribute("data-collapsed"), true)
+    assert.equal(wrapHead.hidden, false)
+    assert.equal(band.hidden, false)
+    assert.equal(rowHead.hidden, true)
+    assert.equal(wrapA.hidden, true)
+    assert.equal(wrapB.hidden, true)
+
+    control.click()
+    assert.equal(band.hasAttribute("data-collapsed"), false)
+    assert.equal(wrapHead.hidden, false)
+    assert.equal(rowHead.hidden, false)
+    assert.equal(wrapA.hidden, false)
+    assert.equal(wrapB.hidden, false)
+  } finally {
+    ctx.unmount()
+  }
+})
+
+test("collapse: data_table persist restore uses the same wrapper scoping", async () => {
+  const ctx = withDoc(`<div id="host"></div>`)
+  try {
+    ctx.document.getElementById("host").innerHTML = dataTableCollapseFixture("tickets:persist")
+    await sleep(10)
+    ctx.document.querySelector("[data-lantern-collapse='tickets:persist']").click()
+    assert.equal(ctx.window.localStorage.getItem("lantern:persist:tickets:persist"), "closed")
+
+    ctx.document.getElementById("host").innerHTML = dataTableCollapseFixture("tickets:persist")
+    await sleep(10)
+    assert.equal(ctx.document.querySelector(".lui-group-band").hasAttribute("data-collapsed"), true)
+    assert.equal(ctx.document.getElementById("wrap-head").hidden, false)
+    assert.equal(ctx.document.getElementById("row-head").hidden, true)
+    assert.equal(ctx.document.getElementById("wrap-a").hidden, true)
+    assert.equal(ctx.document.getElementById("wrap-b").hidden, true)
+  } finally {
+    ctx.unmount()
+  }
+})
+
+test("collapse: data-lantern-collapse-scope is the query root when it is not a data_table list", () => {
+  const ctx = withDoc(`
+    <div data-lantern-collapse-scope id="scope">
+      <div class="lui-group-band">
+        <button type="button" data-lantern-collapse="demo:scope" aria-expanded="true">Band</button>
+      </div>
+      <section id="wrap">
+        <div data-lantern-group="demo:scope" id="row">row</div>
+      </section>
+    </div>
+  `)
+  try {
+    ctx.document.querySelector("[data-lantern-collapse]").click()
+    assert.equal(ctx.document.getElementById("scope").hidden, false)
+    assert.equal(ctx.document.getElementById("wrap").hidden, true)
+    assert.equal(ctx.document.getElementById("row").hidden, false)
   } finally {
     ctx.unmount()
   }

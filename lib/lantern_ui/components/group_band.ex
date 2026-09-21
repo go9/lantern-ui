@@ -16,9 +16,9 @@ defmodule LanternUI.Components.GroupBand do
 
   Pass `group` (and no `navigate`/`patch`/`href`) to make the name row a
   client-side collapse control: `data-lantern-collapse` plus `aria-expanded`.
-  Matching siblings carry `data-lantern-group` (see `list_row/1`). Put
-  `data-lantern-persist` on the band with the same key so the collapsed set
-  survives LiveView patches — see `docs/behaviours.md`.
+  Matching `[data-lantern-group]` nodes in the collapse scope hide (see
+  `list_row/1` and `docs/behaviours.md`). Put `data-lantern-persist` on the
+  band with the same key so the collapsed set survives LiveView patches.
 
   A collapsed band with `navigate`/`patch`/`href` stays a link (chevron points
   right). Interactive bands always render the down chevron; CSS rotates it

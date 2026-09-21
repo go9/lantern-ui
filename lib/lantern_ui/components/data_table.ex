@@ -458,7 +458,7 @@ defmodule LanternUI.Components.DataTable do
         <% end %>
       </div>
 
-      <div :if={@list_item != [] && @view == "list"} class="lui-dt-list">
+      <div :if={@list_item != [] && @view == "list"} class="lui-dt-list" data-lantern-collapse-scope>
         <%= if @rows == [] do %>
           <%= if @empty != [] do %>
             {render_slot(@empty)}

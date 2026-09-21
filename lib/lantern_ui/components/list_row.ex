@@ -13,7 +13,8 @@ defmodule LanternUI.Components.ListRow do
   whole row is the hit target when `navigate`, `patch`, or `href` is set.
 
   Pass `group` to set `data-lantern-group` so a `group_band` with the same
-  key can hide this row client-side. Any sibling may carry that attribute.
+  key can hide this row client-side. Any element in the collapse scope may
+  carry that attribute.
   """
   use Phoenix.Component
 
