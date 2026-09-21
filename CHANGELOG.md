@@ -15,6 +15,9 @@ All notable changes to this project are documented here. The format follows
   `.lui-dt-cards` now take the remaining height and scroll internally; chrome
   and pagination stay pinned. `app_shell` also drops the 4rem main gutter when a
   fill table is nested (not only a direct child). (flicker #2912)
+- **`data_table` cards view honours `:empty`.** List and table already rendered
+  the slot; cards always fell through to "Nothing here yet", so an index that
+  defaults to cards dropped its empty-state CTA. (flicker #2911)
 
 ## [0.8.4] - 2026-09-21
 

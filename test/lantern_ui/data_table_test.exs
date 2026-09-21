@@ -384,6 +384,44 @@ defmodule LanternUI.DataTableTest do
     refute html =~ ~r/lui-dt-list-row[^>]*>\s*<a/
   end
 
+  defp cards_table(assigns) do
+    ~H"""
+    <DataTable.data_table
+      id="cards"
+      rows={@rows}
+      meta={@meta}
+      path="/orders"
+      selected_ids={@selected}
+      view="cards"
+    >
+      <:col :let={r} label="Name">{r.name}</:col>
+      <:card :let={r}>CARD-{r.name}</:card>
+      <:empty>NOTHING</:empty>
+    </DataTable.data_table>
+    """
+  end
+
+  test "cards empty uses the :empty slot, matching list and table" do
+    empty = %{@meta | current_page: 1, total_pages: 0, total_count: 0}
+
+    cards =
+      render(&cards_table/1, %{rows: [], meta: empty, selected: MapSet.new()})
+
+    assert cards =~ "NOTHING"
+    refute cards =~ "Nothing here yet"
+
+    list =
+      render(&list_table/1, %{
+        rows: [],
+        meta: empty,
+        selected: MapSet.new(),
+        view: "list"
+      })
+
+    assert list =~ "NOTHING"
+    refute list =~ "Nothing here yet"
+  end
+
   test "list toggle is absent when no :list_item is given" do
     html = render(&table/1, %{rows: rows(), meta: @meta, selected: MapSet.new()})
     refute html =~ "List view"
