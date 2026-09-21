@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.8.4] - 2026-09-21
+
+### Fixed
+- **`group_band` collapse hides `data_table` list-item wrappers.** Collapse
+  used to walk only the band's parent `children`, so a `list_row` inside
+  `data_table`'s `:list_item` wrapper hid just the head row and left the rest
+  of the group painted. The hook now queries `[data-lantern-group]` inside
+  the closest `data-lantern-collapse-scope` (else `.lui-dt-list`, else the
+  parent) and hides each match's outermost wrapper that does not contain the
+  band. `.lui-dt-list-row[hidden] { display: none }` so author `display: flex`
+  cannot beat UA `[hidden]` (flicker #2895).
+
 ## [0.8.3] - 2026-09-20
 
 ### Fixed
