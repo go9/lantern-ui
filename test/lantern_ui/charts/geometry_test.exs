@@ -30,6 +30,28 @@ defmodule LanternUI.Charts.GeometryTest do
       ticks = Geometry.nice_ticks(10, 10, 5)
       assert length(ticks) > 1
     end
+
+    test "a flat range of zeros stays at or above zero" do
+      ticks = Geometry.nice_ticks(0, 0, 5)
+      assert hd(ticks) == 0.0
+      assert List.last(ticks) > 0
+    end
+
+    test "a flat negative range still widens both ways" do
+      ticks = Geometry.nice_ticks(-3, -3, 5)
+      assert hd(ticks) < -3
+      assert List.last(ticks) > -3
+    end
+
+    test "integer ticks never fall between whole numbers" do
+      assert Geometry.nice_ticks(0, 0, 5, integer: true) == [0.0, 1.0]
+
+      for max <- [1, 2, 3, 7, 13] do
+        ticks = Geometry.nice_ticks(0, max, 5, integer: true)
+        assert Enum.all?(ticks, &(Float.round(&1) == &1)), "fractional tick for 0..#{max}"
+        assert List.last(ticks) >= max
+      end
+    end
   end
 
   describe "line_path/2 and area_path/3" do
