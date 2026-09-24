@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- **`area_chart` and `line_chart` value axes start at zero for non-negative
+  data and use whole-number ticks for integer series.** A series of zero counts
+  drew a `-1..1` axis with fractional ticks; it now draws `0..1`. An area's
+  baseline is zero unless the data goes below it. `Geometry.nice_ticks/4` takes
+  an `integer: true` option, and a flat non-negative range no longer widens
+  below zero.
+
 ## [0.8.6] - 2026-09-21
 
 ### Changed

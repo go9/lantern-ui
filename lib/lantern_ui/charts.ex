@@ -291,7 +291,12 @@ defmodule LanternUI.Charts do
 
     values = Enum.map(points, fn {_d, v} -> v end)
     {vmin, vmax} = Enum.min_max(values)
-    ticks = Geometry.nice_ticks(vmin, vmax, 5)
+    # An area is read as an amount measured up from its baseline, so the
+    # baseline is zero unless the data goes below it; whole-number series (counts)
+    # get whole-number ticks.
+    ticks =
+      Geometry.nice_ticks(min(vmin, 0), vmax, 5, integer: Enum.all?(values, &is_integer/1))
+
     ymin = hd(ticks)
     ymax = List.last(ticks)
     yf = fn v -> Geometry.scale(ymin, ymax, plot_bottom, plot_top, v) end
@@ -617,8 +622,11 @@ defmodule LanternUI.Charts do
         span = DateTime.diff(tn, t0)
         xf = fn t -> Geometry.scale(0, span, plot_left, plot_right, DateTime.diff(t, t0)) end
 
-        vmax = all_points |> Enum.map(fn {_t, v} -> v end) |> Enum.max()
-        ticks = Geometry.nice_ticks(0, vmax, 4)
+        values = Enum.map(all_points, fn {_t, v} -> v end)
+
+        ticks =
+          Geometry.nice_ticks(0, Enum.max(values), 4, integer: Enum.all?(values, &is_integer/1))
+
         ymax = List.last(ticks)
         yf = fn v -> Geometry.scale(0, ymax, plot_bottom, plot_top, v) end
         label_for = time_label_fun(span)

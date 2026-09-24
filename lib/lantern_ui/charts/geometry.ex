@@ -22,13 +22,22 @@ defmodule LanternUI.Charts.Geometry do
 
   Returns an ascending list of floats; the first and last entries define the
   padded ("nice") domain the caller should scale against.
-  """
-  @spec nice_ticks(number, number, pos_integer) :: [float]
-  def nice_ticks(min, max, count \\ 5)
 
-  def nice_ticks(min, max, count) when count > 1 do
-    {min, max} = if max <= min, do: {min - 1.0, max + 1.0}, else: {min * 1.0, max * 1.0}
+  A flat range is widened so there is an axis to draw, but never below zero
+  when the data is not: a row of zero counts is `0..1`, not `-1..1`.
+
+  Options:
+
+    * `:integer` - the values are whole numbers (counts), so the step is at
+      least 1 and no tick falls between them.
+  """
+  @spec nice_ticks(number, number, pos_integer, keyword) :: [float]
+  def nice_ticks(min, max, count \\ 5, opts \\ [])
+
+  def nice_ticks(min, max, count, opts) when count > 1 do
+    {min, max} = domain(min, max)
     step = nice_num(nice_num(max - min, false) / (count - 1), true)
+    step = if Keyword.get(opts, :integer, false), do: max(step, 1.0), else: step
     nmin = Float.floor(min / step) * step
     nmax = Float.ceil(max / step) * step
 
@@ -37,6 +46,10 @@ defmodule LanternUI.Charts.Geometry do
     |> Enum.take_while(&(&1 <= nmax + step / 2.0))
     |> Enum.map(&Float.round(&1, 6))
   end
+
+  defp domain(min, max) when max <= min and min >= 0, do: {max(min - 1.0, 0.0), min + 1.0}
+  defp domain(min, max) when max <= min, do: {min - 1.0, max + 1.0}
+  defp domain(min, max), do: {min * 1.0, max * 1.0}
 
   defp nice_num(range, round?) do
     range = if range <= 0, do: 1.0, else: range * 1.0

@@ -10,6 +10,15 @@ defmodule LanternUI.ChartsTest do
     )
   end
 
+  # The value axis labels: the right-anchored text that is a number (the last
+  # date label is right-anchored too).
+  defp y_labels(html) do
+    ~r/text-anchor="end"[^>]*>\s*([^<]*?)\s*</
+    |> Regex.scan(html, capture: :all_but_first)
+    |> List.flatten()
+    |> Enum.filter(&(&1 =~ ~r/^-?[\d.]+$/))
+  end
+
   describe "area_chart/1" do
     test "renders an svg and embeds the point list for sparse series" do
       html =
@@ -43,6 +52,21 @@ defmodule LanternUI.ChartsTest do
       html = area([])
       assert html =~ "No data"
       refute html =~ "<svg"
+    end
+
+    # A count per month is never negative and never a fraction; the axis used
+    # to read -1, -0.5, 0, 0.5, 1 under a year of zeros.
+    test "a series of zero counts gets a 0-based axis in whole numbers" do
+      html = area(for m <- 1..12, do: %{date: Date.new!(2024, m, 1), value: 0})
+
+      assert y_labels(html) == ["0", "1"]
+    end
+
+    test "positive counts start the axis at zero, not at their minimum" do
+      html = area([%{date: "2024-01-01", value: 4}, %{date: "2024-02-01", value: 6}])
+
+      assert hd(y_labels(html)) == "0"
+      refute Enum.any?(y_labels(html), &String.contains?(&1, "."))
     end
 
     test "currency formatting reaches the labels" do
