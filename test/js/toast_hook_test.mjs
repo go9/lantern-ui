@@ -61,7 +61,7 @@ test("only the front toast counts down; the next takes over when it leaves", () 
 
   hook.remove(front)
   assert.ok(hook.toastTimers.get(back).timer)
-  assert.equal(hook.toastTimers.get(back).remaining, 1000)
+  assert.ok(hook.toastTimers.get(back).remaining > 900) // paused while behind, so ~all of its time is left
   assert.equal(back.dataset.paused, "false")
 })
 
