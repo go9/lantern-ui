@@ -130,13 +130,24 @@ defmodule LanternUI do
 
   @doc """
   Push a toast notification to a `LanternUI.Components.Toast.toast_group/1`.
+
+  Options include `:title`, `:duration` (milliseconds; `0` is sticky), and
+  `:action` as `%{label: "Undo", event: "undo_event"}`. Clicking the action
+  pushes the named event to the LiveView and dismisses the toast.
   """
   def send_toast(%Phoenix.LiveView.Socket{} = socket, kind, message, opts \\ []) do
+    duration =
+      case Keyword.get(opts, :duration) do
+        value when is_integer(value) and value >= 0 -> value
+        _ -> 4000
+      end
+
     Phoenix.LiveView.push_event(socket, "lantern:toast", %{
       kind: to_string(kind),
       message: message,
       title: opts[:title],
-      duration: opts[:duration] || 4000
+      duration: duration,
+      action: opts[:action]
     })
   end
 

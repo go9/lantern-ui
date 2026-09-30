@@ -95,6 +95,9 @@ defmodule LanternUI.FeedbackJSTest do
       assert html =~ ~s(id="alerts")
       assert html =~ ~s(class="lui-toasts")
       assert html =~ ~s(phx-hook="LanternToast")
+      assert html =~ ~s(data-part="client")
+      assert html =~ ~s(phx-update="ignore")
+      assert html =~ ~s(data-part="flashes")
       assert html =~ ~s(data-placement="bottom-right")
       assert html =~ ~s(aria-live="polite")
     end
@@ -111,6 +114,46 @@ defmodule LanternUI.FeedbackJSTest do
           end)
 
         assert html =~ ~s(data-placement="#{placement}")
+      end
+    end
+
+    test "sets the deck cap and renders info/error flashes with clear events" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.Toast.toast_group
+            id="alerts"
+            max={12}
+            flash={%{info: "Saved", error: "Failed"}}
+          />
+          """
+        end)
+
+      assert html =~ ~s(data-max="10")
+      assert html =~ ~s(data-kind="info")
+      assert html =~ ~s(data-kind="error")
+      assert html =~ "Saved"
+      assert html =~ "Failed"
+      assert html =~ ~s(phx-click="lv:clear-flash")
+      assert html =~ ~s(phx-value-key="info")
+      assert html =~ ~s(phx-value-key="error")
+    end
+  end
+
+  describe "send_toast/4 duration" do
+    test "only a nonnegative integer duration is accepted" do
+      for {duration, expected} <- [
+            {0, 0},
+            {750, 750},
+            {false, 4000},
+            {nil, 4000},
+            {750.5, 4000},
+            {"0", 4000},
+            {-1, 4000}
+          ] do
+        socket = %Phoenix.LiveView.Socket{private: %{live_temp: %{}}}
+        updated = LanternUI.send_toast(socket, :info, "Message", duration: duration)
+        assert [["lantern:toast", %{duration: ^expected}]] = updated.private.live_temp.push_events
       end
     end
   end

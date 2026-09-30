@@ -6,6 +6,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **Stacked toast deck and Phoenix flash bridge** (`toast_group`, `send_toast/4`).
+  Toasts expand on hover or focus, pause timers while expanded or the document is
+  hidden, support an optional LiveView action, and render `:info`/`:error` flashes.
+
 ### Fixed
 - **`area_chart` and `line_chart` value axes start at zero for non-negative
   data and use whole-number ticks for integer series.** A series of zero counts
