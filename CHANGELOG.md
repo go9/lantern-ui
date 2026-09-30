@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.8.7] - 2026-09-30
+
 ### Added
 - **Stacked toast deck and Phoenix flash bridge** (`toast_group`, `send_toast/4`).
   Toasts expand on hover or focus, pause timers while expanded or the document is
