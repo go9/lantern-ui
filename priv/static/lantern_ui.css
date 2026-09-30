@@ -2059,6 +2059,8 @@
     height 400ms cubic-bezier(0.21, 1.02, 0.73, 1);
 }
 .lui-toast[data-stack-hidden="true"] { opacity: 0; pointer-events: none; }
+/* Collapsed deck: cards behind the front one show only their edge, not their content. */
+.lui-toasts:not([data-expanded="true"]) .lui-toast[data-stack-back="true"] > * { visibility: hidden; }
 .lui-toasts[data-expanded="true"] { display: flex; flex-direction: column; gap: 0.5rem; }
 .lui-toasts[data-expanded="true"][data-placement^="bottom"] { flex-direction: column-reverse; }
 .lui-toasts[data-expanded="true"] .lui-toast { translate: 0 0; scale: 1; opacity: 1; }

@@ -2924,6 +2924,7 @@ const LanternToast = {
       .sort((a, b) => Number(b.dataset.createdAt) - Number(a.dataset.createdAt))
     toasts.forEach((toast, index) => {
       toast.style.setProperty("--toast-index", index)
+      toast.dataset.stackBack = index > 0 ? "true" : "false"
       toast.dataset.stackHidden = !this.expanded && index >= max ? "true" : "false"
       toast.dataset.paused = toast === this.activeToast ? "false" : "true"
     })
