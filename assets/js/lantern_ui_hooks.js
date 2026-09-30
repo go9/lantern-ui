@@ -2782,7 +2782,7 @@ const LanternToast = {
     document.addEventListener("visibilitychange", this.onVisibilityChange)
     this.handleEvent("lantern:toast", (toast) => this.add(toast))
     this.el.querySelectorAll(".lui-toast").forEach((toast) => this.initializeToast(toast))
-    this.updateDeck()
+    this.syncTimers()
   },
 
   updated() {
@@ -2794,7 +2794,7 @@ const LanternToast = {
       this.toastTimers.delete(toast)
     }
     this.enforceLimit()
-    this.updateDeck()
+    this.syncTimers()
   },
 
   add({ kind = "info", message = "", title = null, duration = 4000, action = null } = {}) {
@@ -2839,7 +2839,7 @@ const LanternToast = {
     this.clientEl.insertBefore(toast, this.clientEl.firstChild)
     this.initializeToast(toast, duration)
     this.enforceLimit()
-    this.updateDeck()
+    this.syncTimers()
   },
 
   closeButton() {
@@ -2866,7 +2866,6 @@ const LanternToast = {
     progress.setAttribute("aria-hidden", "true")
     toast.appendChild(progress)
     this.toastTimers.set(toast, { remaining: ms, timer: null, startedAt: null })
-    if (!this.expanded && document.visibilityState !== "hidden") this.startTimer(toast)
   },
 
   startTimer(toast) {
@@ -2887,14 +2886,27 @@ const LanternToast = {
 
   pauseAll() {
     this.el.dataset.paused = "true"
-    this.el.querySelectorAll(".lui-toast").forEach((toast) => this.pauseTimer(toast))
-    this.updateDeck()
+    this.syncTimers()
   },
 
   resumeAll() {
     if (this.expanded || document.visibilityState === "hidden") return
     delete this.el.dataset.paused
-    this.el.querySelectorAll(".lui-toast").forEach((toast) => this.startTimer(toast))
+    this.syncTimers()
+  },
+
+  // Only the newest timed toast counts down; the ones behind it keep their full
+  // time and take over one at a time as the front one leaves.
+  syncTimers() {
+    const running = !this.expanded && document.visibilityState !== "hidden"
+    const front = [...this.toastTimers.keys()]
+      .filter((toast) => toast.isConnected && !toast.classList.contains("lui-toast-out"))
+      .sort((a, b) => Number(b.dataset.createdAt) - Number(a.dataset.createdAt))[0]
+    this.activeToast = running ? front : null
+    for (const toast of this.toastTimers.keys()) {
+      if (toast === this.activeToast) this.startTimer(toast)
+      else this.pauseTimer(toast)
+    }
     this.updateDeck()
   },
 
@@ -2913,7 +2925,7 @@ const LanternToast = {
     toasts.forEach((toast, index) => {
       toast.style.setProperty("--toast-index", index)
       toast.dataset.stackHidden = !this.expanded && index >= max ? "true" : "false"
-      toast.dataset.paused = this.expanded || this.el.dataset.paused === "true" ? "true" : "false"
+      toast.dataset.paused = toast === this.activeToast ? "false" : "true"
     })
   },
 
@@ -2936,6 +2948,7 @@ const LanternToast = {
     this.toastTimers.delete(toast)
     toast.classList.remove("lui-toast-in")
     toast.classList.add("lui-toast-out")
+    this.syncTimers()
     this.setTimer(() => {
       toast.remove()
       this.updateDeck()

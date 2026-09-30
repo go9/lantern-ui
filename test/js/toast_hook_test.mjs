@@ -47,6 +47,24 @@ test("hover expands the stack and pauses then resumes the remaining timer", () =
   assert.ok(timer.timer)
 })
 
+test("only the front toast counts down; the next takes over when it leaves", () => {
+  const { hook, el } = mount()
+  hook.add({ message: "first", duration: 1000 })
+  hook.add({ message: "second", duration: 1000 })
+  const [front, back] = [...el.querySelectorAll(".lui-toast")]
+
+  assert.equal(front.querySelector(".lui-toast-message").textContent, "second")
+  assert.ok(hook.toastTimers.get(front).timer)
+  assert.equal(hook.toastTimers.get(back).timer, null)
+  assert.equal(front.dataset.paused, "false")
+  assert.equal(back.dataset.paused, "true")
+
+  hook.remove(front)
+  assert.ok(hook.toastTimers.get(back).timer)
+  assert.equal(hook.toastTimers.get(back).remaining, 1000)
+  assert.equal(back.dataset.paused, "false")
+})
+
 test("an action pushes its LiveView event and dismisses the toast", () => {
   const { hook, el, pushEvent, window } = mount()
   hook.add({ message: "Saved", duration: 0, action: { label: "Undo", event: "undo_save" } })
