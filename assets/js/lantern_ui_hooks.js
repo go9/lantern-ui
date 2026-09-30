@@ -2749,59 +2749,188 @@ const LanternToast = {
   mounted() {
     this.timers = new Set()
     this.toastTimers = new Map()
+    this.expanded = false
+    this.hovered = false
+    this.focusWithin = false
+    this.onPointerEnter = () => { this.hovered = true; this.syncExpanded() }
+    this.onPointerLeave = () => { this.hovered = false; this.syncExpanded() }
+    this.onFocusIn = () => { this.focusWithin = true; this.syncExpanded() }
+    this.onFocusOut = (event) => {
+      if (!this.el.contains(event.relatedTarget)) { this.focusWithin = false; this.syncExpanded() }
+    }
+    this.onVisibilityChange = () => document.visibilityState === "hidden" ? this.pauseAll() : this.resumeAll()
+    this.onClick = (event) => {
+      const close = event.target.closest?.('[data-part="close"]')
+      if (close && this.el.contains(close)) {
+        const toast = close.closest(".lui-toast")
+        if (!toast?.dataset.flashKey) this.remove(toast)
+        return
+      }
+      const action = event.target.closest?.('[data-part="action"]')
+      if (!action || !this.el.contains(action)) return
+      const toast = action.closest(".lui-toast")
+      if (action.dataset.event) this.pushEvent(action.dataset.event, {})
+      this.remove(toast)
+    }
+    this.el.addEventListener("pointerenter", this.onPointerEnter)
+    this.el.addEventListener("pointerleave", this.onPointerLeave)
+    this.el.addEventListener("focusin", this.onFocusIn)
+    this.el.addEventListener("focusout", this.onFocusOut)
+    this.el.addEventListener("click", this.onClick)
+    document.addEventListener("visibilitychange", this.onVisibilityChange)
     this.handleEvent("lantern:toast", (toast) => this.add(toast))
+    this.el.querySelectorAll(".lui-toast").forEach((toast) => this.initializeToast(toast))
+    this.updateDeck()
   },
 
-  add({ kind = "info", message = "", title = null, duration = 4000 } = {}) {
+  updated() {
+    this.el.querySelectorAll(".lui-toast").forEach((toast) => this.initializeToast(toast))
+    const current = new Set(this.el.querySelectorAll(".lui-toast"))
+    for (const [toast, state] of this.toastTimers) {
+      if (current.has(toast)) continue
+      this.clearTimer(state.timer)
+      this.toastTimers.delete(toast)
+    }
+    this.enforceLimit()
+    this.updateDeck()
+  },
+
+  add({ kind = "info", message = "", title = null, duration = 4000, action = null } = {}) {
     const toast = document.createElement("div")
     toast.className = "lui-toast lui-toast-in"
     toast.dataset.kind = kind || "info"
-
-    const dot = document.createElement("span")
-    dot.className = "lui-toast-dot"
-    dot.setAttribute("aria-hidden", "true")
-
-    const body = document.createElement("div")
-    body.className = "lui-toast-body"
     if (title) {
+      const header = document.createElement("div")
+      header.className = "lui-toast-header"
       const heading = document.createElement("strong")
       heading.className = "lui-toast-title"
       heading.textContent = String(title)
-      body.appendChild(heading)
+      header.append(heading, this.closeButton())
+      toast.appendChild(header)
     }
 
+    const body = document.createElement("div")
+    body.className = "lui-toast-body"
     const copy = document.createElement("p")
     copy.className = "lui-toast-message"
     copy.textContent = message == null ? "" : String(message)
     body.appendChild(copy)
+    if (!title) body.appendChild(this.closeButton())
+    toast.appendChild(body)
 
+    if (action && typeof action.label === "string" && typeof action.event === "string") {
+      const actions = document.createElement("div")
+      actions.className = "lui-toast-actions"
+      const button = document.createElement("button")
+      button.type = "button"
+      button.className = "lui-btn"
+      button.dataset.part = "action"
+      button.dataset.size = "sm"
+      button.dataset.variant = "solid"
+      button.dataset.color = "primary"
+      button.dataset.event = action.event
+      button.textContent = action.label
+      actions.appendChild(button)
+      toast.appendChild(actions)
+    }
+
+    this.el.insertBefore(toast, this.el.firstChild)
+    this.initializeToast(toast, duration)
+    this.enforceLimit()
+    this.updateDeck()
+  },
+
+  closeButton() {
     const close = document.createElement("button")
     close.type = "button"
     close.className = "lui-toast-close"
     close.dataset.part = "close"
-    close.setAttribute("aria-label", "Close")
+    close.setAttribute("aria-label", "Close notification")
     close.textContent = "×"
-    close.addEventListener("click", () => this.remove(toast))
+    return close
+  },
 
-    toast.append(dot, body, close)
-    this.el.appendChild(toast)
-
+  initializeToast(toast, duration = toast.dataset.duration ?? 4000) {
+    if (toast.dataset.initialized) return
+    toast.dataset.initialized = "true"
     const rawDuration = duration == null ? 4000 : Number(duration)
-    const ms = Number.isFinite(rawDuration) ? rawDuration : 4000
-    if (ms > 0) {
-      const timer = this.setTimer(() => this.remove(toast), ms)
-      this.toastTimers.set(toast, timer)
-    }
+    const ms = Number.isFinite(rawDuration) ? Math.max(rawDuration, 0) : 4000
+    toast.style.setProperty("--duration", `${ms}ms`)
+    if (ms === 0) return
+    const progress = document.createElement("span")
+    progress.className = "lui-toast-progress"
+    progress.setAttribute("aria-hidden", "true")
+    toast.appendChild(progress)
+    this.toastTimers.set(toast, { remaining: ms, timer: null, startedAt: null })
+    if (!this.expanded && document.visibilityState !== "hidden") this.startTimer(toast)
+  },
+
+  startTimer(toast) {
+    const state = this.toastTimers.get(toast)
+    if (!state || state.timer || state.remaining <= 0) return
+    state.startedAt = Date.now()
+    state.timer = this.setTimer(() => this.remove(toast), state.remaining)
+  },
+
+  pauseTimer(toast) {
+    const state = this.toastTimers.get(toast)
+    if (!state?.timer) return
+    state.remaining = Math.max(0, state.remaining - (Date.now() - state.startedAt))
+    this.clearTimer(state.timer)
+    state.timer = null
+    state.startedAt = null
+  },
+
+  pauseAll() {
+    this.el.dataset.paused = "true"
+    this.el.querySelectorAll(".lui-toast").forEach((toast) => this.pauseTimer(toast))
+    this.updateDeck()
+  },
+
+  resumeAll() {
+    if (this.expanded || document.visibilityState === "hidden") return
+    delete this.el.dataset.paused
+    this.el.querySelectorAll(".lui-toast").forEach((toast) => this.startTimer(toast))
+    this.updateDeck()
+  },
+
+  syncExpanded() {
+    const expanded = this.hovered || this.focusWithin
+    this.expanded = expanded
+    this.el.dataset.expanded = expanded ? "true" : "false"
+    if (expanded) this.pauseAll()
+    else this.resumeAll()
+  },
+
+  updateDeck() {
+    const max = Math.min(Math.max(Number(this.el.dataset.max) || 3, 1), 10)
+    this.el.querySelectorAll(".lui-toast").forEach((toast, index) => {
+      toast.style.setProperty("--toast-index", index)
+      toast.dataset.stackHidden = !this.expanded && index >= max ? "true" : "false"
+      toast.dataset.paused = this.expanded || this.el.dataset.paused === "true" ? "true" : "false"
+    })
+  },
+
+  enforceLimit() {
+    const toasts = [...this.el.querySelectorAll(".lui-toast")]
+    toasts.slice(10).forEach((toast) => {
+      this.clearTimer(this.toastTimers.get(toast)?.timer)
+      this.toastTimers.delete(toast)
+      toast.remove()
+    })
   },
 
   remove(toast) {
     if (!toast || !toast.parentNode) return
     if (toast.classList.contains("lui-toast-out")) return
-    this.clearTimer(this.toastTimers.get(toast))
+    this.clearTimer(this.toastTimers.get(toast)?.timer)
     this.toastTimers.delete(toast)
     toast.classList.remove("lui-toast-in")
     toast.classList.add("lui-toast-out")
-    this.setTimer(() => toast.remove(), 150)
+    this.setTimer(() => {
+      toast.remove()
+      this.updateDeck()
+    }, 400)
   },
 
   setTimer(callback, ms) {
@@ -2820,6 +2949,12 @@ const LanternToast = {
   },
 
   destroyed() {
+    this.el.removeEventListener("pointerenter", this.onPointerEnter)
+    this.el.removeEventListener("pointerleave", this.onPointerLeave)
+    this.el.removeEventListener("focusin", this.onFocusIn)
+    this.el.removeEventListener("focusout", this.onFocusOut)
+    this.el.removeEventListener("click", this.onClick)
+    document.removeEventListener("visibilitychange", this.onVisibilityChange)
     this.timers.forEach((timer) => clearTimeout(timer))
     this.timers.clear()
     this.toastTimers.clear()

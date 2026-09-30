@@ -113,6 +113,28 @@ defmodule LanternUI.FeedbackJSTest do
         assert html =~ ~s(data-placement="#{placement}")
       end
     end
+
+    test "sets the deck cap and renders info/error flashes with clear events" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <LanternUI.Components.Toast.toast_group
+            id="alerts"
+            max={12}
+            flash={%{info: "Saved", error: "Failed"}}
+          />
+          """
+        end)
+
+      assert html =~ ~s(data-max="10")
+      assert html =~ ~s(data-kind="info")
+      assert html =~ ~s(data-kind="error")
+      assert html =~ "Saved"
+      assert html =~ "Failed"
+      assert html =~ ~s(phx-click="lv:clear-flash")
+      assert html =~ ~s(phx-value-key="info")
+      assert html =~ ~s(phx-value-key="error")
+    end
   end
 
   describe "theme/1" do
