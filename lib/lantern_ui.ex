@@ -136,11 +136,17 @@ defmodule LanternUI do
   pushes the named event to the LiveView and dismisses the toast.
   """
   def send_toast(%Phoenix.LiveView.Socket{} = socket, kind, message, opts \\ []) do
+    duration =
+      case Keyword.get(opts, :duration) do
+        value when is_integer(value) and value >= 0 -> value
+        _ -> 4000
+      end
+
     Phoenix.LiveView.push_event(socket, "lantern:toast", %{
       kind: to_string(kind),
       message: message,
       title: opts[:title],
-      duration: if(Keyword.has_key?(opts, :duration), do: opts[:duration], else: 4000),
+      duration: duration,
       action: opts[:action]
     })
   end

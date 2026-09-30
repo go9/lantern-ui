@@ -2032,6 +2032,7 @@
   --lui-toast-direction: 1;
 }
 .lui-toasts[hidden] { display: none; }
+.lui-toast-layer { display: contents; }
 .lui-toasts[data-placement^="top"] { top: 0.75rem; }
 .lui-toasts[data-placement^="bottom"] { bottom: 0.75rem; --lui-toast-direction: -1; }
 .lui-toasts[data-placement$="left"] { left: 0.75rem; }

@@ -2749,6 +2749,8 @@ const LanternToast = {
   mounted() {
     this.timers = new Set()
     this.toastTimers = new Map()
+    this.toastOrder = Date.now() * 1000
+    this.clientEl = this.el.querySelector('[data-part="client"]')
     this.expanded = false
     this.hovered = false
     this.focusWithin = false
@@ -2834,7 +2836,7 @@ const LanternToast = {
       toast.appendChild(actions)
     }
 
-    this.el.insertBefore(toast, this.el.firstChild)
+    this.clientEl.insertBefore(toast, this.clientEl.firstChild)
     this.initializeToast(toast, duration)
     this.enforceLimit()
     this.updateDeck()
@@ -2850,11 +2852,13 @@ const LanternToast = {
     return close
   },
 
-  initializeToast(toast, duration = toast.dataset.duration ?? 4000) {
+  initializeToast(toast, duration = 4000) {
     if (toast.dataset.initialized) return
     toast.dataset.initialized = "true"
-    const rawDuration = duration == null ? 4000 : Number(duration)
-    const ms = Number.isFinite(rawDuration) ? Math.max(rawDuration, 0) : 4000
+    const ms = toast.dataset.flashKey
+      ? 0
+      : Number.isInteger(duration) && duration >= 0 ? duration : 4000
+    toast.dataset.createdAt ||= String(++this.toastOrder)
     toast.style.setProperty("--duration", `${ms}ms`)
     if (ms === 0) return
     const progress = document.createElement("span")
@@ -2904,7 +2908,9 @@ const LanternToast = {
 
   updateDeck() {
     const max = Math.min(Math.max(Number(this.el.dataset.max) || 3, 1), 10)
-    this.el.querySelectorAll(".lui-toast").forEach((toast, index) => {
+    const toasts = [...this.el.querySelectorAll(".lui-toast")]
+      .sort((a, b) => Number(b.dataset.createdAt) - Number(a.dataset.createdAt))
+    toasts.forEach((toast, index) => {
       toast.style.setProperty("--toast-index", index)
       toast.dataset.stackHidden = !this.expanded && index >= max ? "true" : "false"
       toast.dataset.paused = this.expanded || this.el.dataset.paused === "true" ? "true" : "false"
@@ -2913,11 +2919,14 @@ const LanternToast = {
 
   enforceLimit() {
     const toasts = [...this.el.querySelectorAll(".lui-toast")]
-    toasts.slice(10).forEach((toast) => {
+    while (toasts.length > 10) {
+      const toast = toasts.slice(10).reverse().find((item) => !item.dataset.flashKey)
+      if (!toast) break
       this.clearTimer(this.toastTimers.get(toast)?.timer)
       this.toastTimers.delete(toast)
       toast.remove()
-    })
+      toasts.splice(toasts.indexOf(toast), 1)
+    }
   },
 
   remove(toast) {

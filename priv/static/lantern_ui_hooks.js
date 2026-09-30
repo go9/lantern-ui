@@ -3742,6 +3742,8 @@ var LanternToast = {
   mounted() {
     this.timers = /* @__PURE__ */ new Set();
     this.toastTimers = /* @__PURE__ */ new Map();
+    this.toastOrder = Date.now() * 1e3;
+    this.clientEl = this.el.querySelector('[data-part="client"]');
     this.expanded = false;
     this.hovered = false;
     this.focusWithin = false;
@@ -3834,7 +3836,7 @@ var LanternToast = {
       actions.appendChild(button);
       toast.appendChild(actions);
     }
-    this.el.insertBefore(toast, this.el.firstChild);
+    this.clientEl.insertBefore(toast, this.clientEl.firstChild);
     this.initializeToast(toast, duration);
     this.enforceLimit();
     this.updateDeck();
@@ -3848,11 +3850,11 @@ var LanternToast = {
     close.textContent = "\xD7";
     return close;
   },
-  initializeToast(toast, duration = toast.dataset.duration ?? 4e3) {
+  initializeToast(toast, duration = 4e3) {
     if (toast.dataset.initialized) return;
     toast.dataset.initialized = "true";
-    const rawDuration = duration == null ? 4e3 : Number(duration);
-    const ms = Number.isFinite(rawDuration) ? Math.max(rawDuration, 0) : 4e3;
+    const ms = toast.dataset.flashKey ? 0 : Number.isInteger(duration) && duration >= 0 ? duration : 4e3;
+    toast.dataset.createdAt ||= String(++this.toastOrder);
     toast.style.setProperty("--duration", `${ms}ms`);
     if (ms === 0) return;
     const progress = document.createElement("span");
@@ -3896,7 +3898,8 @@ var LanternToast = {
   },
   updateDeck() {
     const max2 = Math.min(Math.max(Number(this.el.dataset.max) || 3, 1), 10);
-    this.el.querySelectorAll(".lui-toast").forEach((toast, index) => {
+    const toasts = [...this.el.querySelectorAll(".lui-toast")].sort((a, b) => Number(b.dataset.createdAt) - Number(a.dataset.createdAt));
+    toasts.forEach((toast, index) => {
       toast.style.setProperty("--toast-index", index);
       toast.dataset.stackHidden = !this.expanded && index >= max2 ? "true" : "false";
       toast.dataset.paused = this.expanded || this.el.dataset.paused === "true" ? "true" : "false";
@@ -3904,11 +3907,14 @@ var LanternToast = {
   },
   enforceLimit() {
     const toasts = [...this.el.querySelectorAll(".lui-toast")];
-    toasts.slice(10).forEach((toast) => {
+    while (toasts.length > 10) {
+      const toast = toasts.slice(10).reverse().find((item) => !item.dataset.flashKey);
+      if (!toast) break;
       this.clearTimer(this.toastTimers.get(toast)?.timer);
       this.toastTimers.delete(toast);
       toast.remove();
-    });
+      toasts.splice(toasts.indexOf(toast), 1);
+    }
   },
   remove(toast) {
     if (!toast || !toast.parentNode) return;

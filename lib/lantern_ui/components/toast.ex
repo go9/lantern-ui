@@ -68,37 +68,39 @@ defmodule LanternUI.Components.Toast do
       aria-live="polite"
       {@rest}
     >
-      <div
-        :for={toast <- @flash_toasts}
-        class="lui-toast lui-toast-in"
-        data-kind={toast.kind}
-        data-flash-key={toast.key}
-        data-duration="0"
-      >
-        <div :if={toast.message} class="lui-toast-header">
-          <strong class="lui-toast-title">{if toast.kind == "error", do: "Error", else: "Notice"}</strong>
-          <button
-            type="button"
-            class="lui-toast-close"
-            data-part="close"
-            aria-label="Close"
-            phx-click="lv:clear-flash"
-            phx-value-key={toast.key}
-          >×</button>
-        </div>
-        <div class="lui-toast-body">
-          <p class="lui-toast-message">{toast.message}</p>
-          <button
-            :if={!toast.message}
-            type="button"
-            class="lui-toast-close"
-            data-part="close"
-            aria-label="Close"
-            phx-click="lv:clear-flash"
-            phx-value-key={toast.key}
-          >×</button>
+      <div class="lui-toast-layer" data-part="flashes">
+        <div
+          :for={toast <- @flash_toasts}
+          class="lui-toast lui-toast-in"
+          data-kind={toast.kind}
+          data-flash-key={toast.key}
+        >
+          <div :if={toast.message} class="lui-toast-header">
+            <strong class="lui-toast-title">{if toast.kind == "error", do: "Error", else: "Notice"}</strong>
+            <button
+              type="button"
+              class="lui-toast-close"
+              data-part="close"
+              aria-label="Close"
+              phx-click="lv:clear-flash"
+              phx-value-key={toast.key}
+            >×</button>
+          </div>
+          <div class="lui-toast-body">
+            <p class="lui-toast-message">{toast.message}</p>
+            <button
+              :if={!toast.message}
+              type="button"
+              class="lui-toast-close"
+              data-part="close"
+              aria-label="Close"
+              phx-click="lv:clear-flash"
+              phx-value-key={toast.key}
+            >×</button>
+          </div>
         </div>
       </div>
+      <div id={"#{@id}-client"} class="lui-toast-layer" data-part="client" phx-update="ignore"></div>
     </div>
     """
   end
