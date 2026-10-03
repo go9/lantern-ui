@@ -29,6 +29,17 @@ All notable changes to this project are documented here. The format follows
   The default theme is unchanged. Gallery baseline (4 HTML + 4 screenshots,
   default/shadcn × light/dark) lives in `test/fixtures/shadcn_gallery/`.
 
+- **Zag-driven select prototype** (flicker #3416, step 1). The non-searchable
+  rich `<.select>` now runs a `@zag-js/select` state machine behind the same
+  `LanternSelect` hook and `lui-*` styling: Zag owns open state, keyboard,
+  type-ahead, and ARIA via `data-scope="select"` anatomy, shielded from morphs
+  by `JS.ignore_attributes`. Client mode (default) keeps the hidden-`<select>`
+  + `phx-change` form contract; `controlled` makes the server value truth;
+  `on_change` / `on_change_client` fan value changes out. The Zag runtime ships
+  as `priv/static/zag/select.js`, loaded on demand — pages without a Zag select
+  load no Zag code. `native` and `searchable` paths are unchanged (searchable
+  stays on the legacy hook).
+
 ## [0.8.7] - 2026-09-30
 
 ### Added

@@ -12,17 +12,32 @@ defmodule LanternUI.Components.Select do
   focus, ↑/↓/Home/End/Enter/Esc, type-ahead) over a hidden input carrying the
   value — form semantics identical to the native path.
 
+  The non-searchable rich path is Zag-driven (a `@zag-js/select` state
+  machine, loaded on demand): the hook root carries `data-zag` plus
+  `data-scope="select"` / `data-part` anatomy, and Zag owns open state,
+  keyboard, type-ahead, and ARIA. Styling stays `lui-*` tokens. Two modes:
+
+    * client (default) — Zag owns the value from `data-default-value`;
+      picks sync the hidden `<select>` and fire `input`/`change`, so an
+      existing `phx-change` keeps working with no server round trip.
+    * server-driven (`controlled`) — the server value (`data-value`) is
+      truth; patches flow into the machine, client picks flow out through
+      `on_change` (and the hidden input as usual).
+
   `searchable` adds a search box to the listbox (client-side filtering; or set
-  `search_threshold` to auto-enable at N options). `multiple` turns the picker
-  into a multi-select: options toggle, the panel stays open, the toggle shows
-  a count, and one hidden `name[]` input is submitted per selected value.
-  Fluxon's `on_search` (server-driven options) is not yet implemented.
+  `search_threshold` to auto-enable at N options). The searchable listbox
+  stays on the legacy hook for now — it is not Zag-driven. `multiple` turns
+  the picker into a multi-select: options toggle, the panel stays open, the
+  toggle shows a count, and one hidden `name[]` input is submitted per
+  selected value. Fluxon's `on_search` (server-driven options) is not yet
+  implemented.
   """
   use Phoenix.Component
 
   alias LanternUI.Class
   alias LanternUI.Components.Form
   alias LanternUI.Components.Icon
+  alias Phoenix.LiveView.JS
 
   attr(:id, :any,
     default: nil,
@@ -96,6 +111,24 @@ defmodule LanternUI.Components.Select do
     doc: "show a clear (×) button that resets the selection (Fluxon parity)."
   )
 
+  attr(:controlled, :boolean,
+    default: false,
+    doc:
+      "server-driven mode: the server `value` is truth and patches flow into the Zag machine (non-searchable rich path only)."
+  )
+
+  attr(:on_change, :string,
+    default: nil,
+    doc:
+      "server event pushed with `%{id, value}` when the Zag select value changes (non-searchable rich path only)."
+  )
+
+  attr(:on_change_client, :string,
+    default: nil,
+    doc:
+      "bubbling DOM CustomEvent dispatched with `%{id, value}` on Zag value changes (non-searchable rich path only)."
+  )
+
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
 
   attr(:rest, :global,
@@ -150,11 +183,197 @@ defmodule LanternUI.Components.Select do
       assign(
         assigns,
         :search?,
-        (assigns.searchable or
-           (assigns.search_threshold && length(assigns.opts) >= assigns.search_threshold)) ||
+        assigns.searchable or
+          (assigns.search_threshold && length(assigns.opts) >= assigns.search_threshold) ||
           false
       )
 
+    if assigns.search? do
+      legacy_select(assigns)
+    else
+      zag_select(assigns)
+    end
+  end
+
+  # Zag-driven rich select. Same public attrs and `lui-*` styling as the
+  # legacy path; internal markup follows the Zag select anatomy
+  # (`data-scope="select"` + `data-part`) so `connect()` can spread machine
+  # props onto it. The trigger keeps the stable `@id` (via the machine
+  # `ids` override) so `<label for>` keeps working; every other part id is
+  # Zag-generated, except items, which render deterministic ids
+  # (`select:<hook>:option:<value>`) so morphs match them across
+  # option-list patches. Zag-written attributes are shielded from morphs by
+  # `phx-mounted` + `JS.ignore_attributes` on the hook root (one rule, all
+  # parts — LiveView resolves `:to` with `querySelectorAll`).
+  defp zag_select(assigns) do
+    hook_id = "#{assigns.id}-select"
+
+    assigns =
+      assigns
+      |> assign(:hook_id, hook_id)
+      |> assign(:items_json, Jason.encode!(zag_items(assigns.opts)))
+      |> assign(
+        :value_json,
+        Jason.encode!(if assigns.controlled, do: assigns.values_s, else: [])
+      )
+      |> assign(:default_json, Jason.encode!(assigns.values_s))
+
+    ~H"""
+    <div class={Class.merge(["lui-field", @class])} data-size={@size}>
+      <Form.label :if={@label} for={@id} sublabel={@sublabel}>{@label}</Form.label>
+      <p :if={@description} class="lui-description">{@description}</p>
+
+      <div
+        id={@hook_id}
+        class="lui-select"
+        phx-hook="LanternSelect"
+        phx-mounted={JS.ignore_attributes(zag_ignored_attrs(), to: "[data-scope=\"select\"]")}
+        data-zag
+        data-items={@items_json}
+        data-controlled={@controlled || nil}
+        data-value={if @controlled, do: @value_json}
+        data-default-value={unless @controlled, do: @default_json}
+        data-trigger-id={@id}
+        data-labelled-by={@id}
+        data-placeholder={@placeholder}
+        data-invalid={@errors != [] || nil}
+        data-multiple={@multiple || nil}
+        data-max={@max}
+        data-name={@name}
+        data-on-change={@on_change}
+        data-on-change-client={@on_change_client}
+      >
+        <div data-scope="select" data-part="root">
+          <select
+            :if={@include_hidden}
+            class="lui-sr-only"
+            data-scope="select"
+            data-part="hidden-select"
+            name={(@multiple && "#{@name}[]") || @name}
+            multiple={@multiple}
+            disabled={@disabled}
+            aria-hidden="true"
+            tabindex="-1"
+            {hidden_rest(@rest)}
+          >
+            <option :if={!@multiple} value="" selected={@values_s == []}>{@prompt}</option>
+            <option
+              :for={{label, value} <- @opts}
+              value={value}
+              selected={to_string(value) in @values_s}
+            >
+              {label}
+            </option>
+          </select>
+          <div data-scope="select" data-part="control">
+            <button
+              type="button"
+              id={@id}
+              class="lui-select-toggle"
+              data-scope="select"
+              data-part="trigger"
+              disabled={@disabled}
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-describedby={@errors != [] && "#{@id}-error"}
+            >
+              <span
+                class="lui-select-value"
+                data-scope="select"
+                data-part="item-text"
+                data-placeholder={@placeholder}
+                data-empty={toggle_label(@opts, @values_s, @multiple) == nil || nil}
+              >
+                {toggle_label(@opts, @values_s, @multiple) || @placeholder}
+              </span>
+              <Icon.icon name="chevron-up-down" class="lui-select-caret" />
+            </button>
+          </div>
+          <button
+            :if={@clearable && @values_s != []}
+            type="button"
+            class="lui-select-clear"
+            data-scope="select"
+            data-part="clear-trigger"
+            aria-label="Clear selection"
+            tabindex="-1"
+          >
+            <Icon.icon name="x-mark" />
+          </button>
+
+          <div data-scope="select" data-part="positioner">
+            <div
+              class="lui-select-listbox"
+              data-scope="select"
+              data-part="content"
+              role="listbox"
+              aria-multiselectable={@multiple && "true"}
+              aria-labelledby={@id}
+              hidden
+              tabindex="-1"
+            >
+              <div class="lui-select-options">
+                <button
+                  :for={{label, value} <- @opts}
+                  type="button"
+                  id={zag_item_id(@hook_id, value)}
+                  class="lui-select-option"
+                  role="option"
+                  data-scope="select"
+                  data-part="item"
+                  data-value={value}
+                  aria-selected={to_string(to_string(value) in @values_s)}
+                  tabindex="-1"
+                >
+                  <span
+                    class="lui-select-option-label"
+                    data-scope="select"
+                    data-part="item-text"
+                  >
+                    {label}
+                  </span>
+                  <span data-scope="select" data-part="item-indicator" class="lui-select-check">
+                    <Icon.icon name="check" />
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Form.error :for={msg <- @errors} id={"#{@id}-error"}>{msg}</Form.error>
+      <p :if={@help_text && @errors == []} class="lui-help">{@help_text}</p>
+    </div>
+    """
+  end
+
+  # Attributes Zag writes after mount. LiveView must not clobber them on
+  # patches — the machine is the writer, the server copy is stale by design.
+  # Deliberately NOT ignored: `value`/`selected` (hidden-option form state),
+  # `aria-describedby` (server-owned error wiring), and trigger text content
+  # (re-asserted from machine state in `update()` instead).
+  defp zag_ignored_attrs do
+    ~w(
+      data-state data-orientation dir id data-disabled data-readonly
+      data-invalid data-required data-open data-focus data-focus-visible
+      data-active data-hover data-placement data-highlighted data-value
+      aria-expanded aria-controls aria-haspopup aria-labelledby aria-label
+      aria-selected aria-checked aria-disabled aria-multiselectable
+      disabled hidden role tabindex style
+    )
+  end
+
+  defp zag_items(opts) do
+    Enum.map(opts, fn {label, value} -> %{value: to_string(value), label: label} end)
+  end
+
+  # Mirrors the Zag default item id (`select:<machine>:option:<value>`) so
+  # server and client agree and morphs match items across patches. The
+  # machine id is the hook root id.
+  defp zag_item_id(hook_id, value), do: "select:#{hook_id}:option:#{value}"
+
+  defp legacy_select(assigns) do
     ~H"""
     <div class={Class.merge(["lui-field", @class])} data-size={@size}>
       <Form.label :if={@label} for={@id} sublabel={@sublabel}>{@label}</Form.label>
