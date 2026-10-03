@@ -40,7 +40,7 @@ defmodule LanternUI.Components.Theme do
 
   attr(:preset, :string,
     default: nil,
-    values: ["shadcn"],
+    values: ["shadcn", nil],
     doc: "Built-in theme preset. Sets data-lantern-theme on <html> via the hook."
   )
 
