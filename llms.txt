@@ -1,0 +1,678 @@
+# LanternUI 0.8.7 — llms.txt
+
+> Native Phoenix LiveView UI components. Server-rendered HEEx/SVG, themed
+> via CSS variables. No React, no JS UI libraries.
+
+## Rules for AI assistants
+
+1. Never switch to React or a JS component library. Build with LanternUI
+   components in HEEx.
+2. Grouped lists and group headers are banned. One flat list: a status
+   column on each row, rows ordered by status then recency, counts in the
+   rows or in filter chips. Whatever a group header would have said stays
+   visible per row or in the chips.
+3. Never hand-roll a table or button element where a component exists:
+   table/1, data_table/1, resource_list/1 for tables; button/1
+   (size="icon" for icon-only) or dialog action slots for buttons.
+4. Never use palette color classes (red-500, slate-200) or hex-in-class
+   (bg-[#fff]). Use semantic tokens: text-foreground, -soft, -softest,
+   text-muted-foreground, text-danger, bg-success, and friends.
+5. Never use arbitrary pixel values (text-[11px], w-[320px]). Dense chrome
+   is text-meta (11px), text-caption (12px), text-mono-meta. The
+   text-foreground-softer alias is deprecated; use text-foreground-soft.
+6. Copy the recipe HEEx below wherever a recipe fits. Never hand-roll
+   rows, glyphs, rings, or rails.
+7. Page layout: title and actions live in the breadcrumb bar; no tabs as a
+   default grouping mechanism; data_table fill only inside a bounded-height
+   parent; row click opens the record's own route; disable checkboxes when
+   there is no bulk action.
+8. Run `mix lantern.lint` on new code. Unknown component or attribute
+   names get a did-you-mean hint — trust it over a guess.
+
+
+## Component catalog
+
+One line per component: name, then when to use it. Deprecated entries name
+their replacement. Full attribute tables are in llms-full.txt.
+
+### LanternUI.Charts
+
+- `area_chart/1` — A time-series area + line chart.
+- `bar_chart/1` — A categorical bar chart.
+- `line_chart/1` — A multi-series time-series line chart with a legend and a shared crosshair tooltip.
+- `sparkline/1` — A compact trend sparkline (no axes).
+
+### LanternUI.Components.Accordion
+
+- `accordion/1` — Accordion — a WAI-ARIA APG accordion with the Fluxon 2.3.1 composition API.
+- `accordion_item/1` — Accordion — a WAI-ARIA APG accordion with the Fluxon 2.3.1 composition API.
+
+### LanternUI.Components.Alert
+
+- `alert/1` — Inline status alert.
+
+### LanternUI.Components.AlertDialog
+
+- `alert_dialog/1` — Semantic confirmation dialog composed on the shared modal runtime.
+
+### LanternUI.Components.Autocomplete
+
+- `autocomplete/1` — A Fluxon-compatible autocomplete for static or LiveView-backed search.
+
+### LanternUI.Components.Avatar
+
+- `avatar/1` — Compact initials or fallback-content avatar.
+
+### LanternUI.Components.Badge
+
+- `badge/1` — Status badge / pill.
+
+### LanternUI.Components.Breadcrumb
+
+- `breadcrumb/1` — Compact path breadcrumb — layout chrome + file/tree navigation.
+
+### LanternUI.Components.Button
+
+- `button/1` — Buttons — Fluxon-compatible API, shadcn-caliber styling.
+- `button_group/1` — Groups buttons into a single segmented control (shared borders, joined radius).
+
+### LanternUI.Components.Calendar
+
+- `calendar/1` — A month-grid calendar primitive — the pane the date pickers compose.
+
+### LanternUI.Components.Card
+
+- `card/1` — A bounded panel: a titled surface that groups related content on a page.
+- `card_grid/1` — A responsive grid of cards.
+
+### LanternUI.Components.Checkbox
+
+- `checkbox/1` — Checkbox with label, description, and error states.
+
+### LanternUI.Components.ColorInput
+
+- `color_input/1` — Native color picker paired with a hex readout.
+
+### LanternUI.Components.Command
+
+- `command/1` — Command palette (⌘K dialog) — a modal combobox over a listbox of actions.
+- `command_empty/1` — Command palette (⌘K dialog) — a modal combobox over a listbox of actions.
+- `command_group/1` — Command palette (⌘K dialog) — a modal combobox over a listbox of actions.
+- `command_item/1` — Command palette (⌘K dialog) — a modal combobox over a listbox of actions.
+- `command_separator/1` — Command palette (⌘K dialog) — a modal combobox over a listbox of actions.
+- `command_shortcut/1` — Command palette (⌘K dialog) — a modal combobox over a listbox of actions.
+
+### LanternUI.Components.DataTable
+
+- `data_table/1` — The admin data table — one Flop-driven table to replace the per-app `admin_table` copies.
+
+### LanternUI.Components.DatePicker
+
+- `date_picker/1` — Date-only picker (`YYYY-MM-DD`).
+- `date_range_picker/1` — Start/end date range, bound to two form fields.
+- `date_time_picker/1` — Date + time picker (`YYYY-MM-DDTHH:MM:SS.mmm`).
+- `time_picker/1` — Time-only picker (`HH:MM:SS.mmm`, segments only — no popover).
+
+### LanternUI.Components.DatetimeField
+
+- `datetime_field/1` — A segmented, directly-editable date/time field — the trigger primitive the date pickers compose (HeroUI-style: `2 / 3 / 2026, 8:45 AM`).
+
+### LanternUI.Components.DescriptionList
+
+- `description_list/1` — Label/value pairs for a record's detail view — the `<dl>` every show page hand-rolls.
+
+### LanternUI.Components.Dropdown
+
+- `dropdown/1` — Dropdown menu on the shared overlay runtime (anchored placement, focus return, Escape/outside dismissal, arrow-key item navigation).
+- `dropdown_button/1` — Dropdown menu on the shared overlay runtime (anchored placement, focus return, Escape/outside dismissal, arrow-key item navigation).
+- `dropdown_custom/1` — Dropdown menu on the shared overlay runtime (anchored placement, focus return, Escape/outside dismissal, arrow-key item navigation).
+- `dropdown_header/1` — Dropdown menu on the shared overlay runtime (anchored placement, focus return, Escape/outside dismissal, arrow-key item navigation).
+- `dropdown_link/1` — Dropdown menu on the shared overlay runtime (anchored placement, focus return, Escape/outside dismissal, arrow-key item navigation).
+- `dropdown_separator/1` — Dropdown menu on the shared overlay runtime (anchored placement, focus return, Escape/outside dismissal, arrow-key item navigation).
+
+### LanternUI.Components.EmptyState
+
+- `empty_state/1` — Quiet empty/zero state for tables, lists, and panels (a lantern-ui extension — Fluxon has no equivalent).
+
+### LanternUI.Components.Form
+
+- `error/1` — Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
+- `input/1` — Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
+- `label/1` — Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
+
+### LanternUI.Components.Icon
+
+- `icon/1` — Renders an icon by name.
+
+### LanternUI.Components.IconButton
+
+- `icon_button/1` — Deprecated alias of `LanternUI.Components.Button.button/1` with `label` on an `icon-*` size.
+
+### LanternUI.Components.Inspector
+
+- `inspector/1` — Sticky right-rail inspector: optional section headings and a dense `description_list`.
+- `inspector_section/1` — Sticky right-rail inspector: optional section headings and a dense `description_list`.
+- `property_row/1` — Sticky right-rail inspector: optional section headings and a dense `description_list`.
+
+### LanternUI.Components.Layout
+
+- `app_shell/1` — App shell — a full-width top bar (brand + inline context + actions) over a fixed, collapsible left sidebar and a main content column.
+- `breadcrumb_bar/1` — Compact sticky breadcrumb region for use outside `app_shell` (or when the host app still owns the outer shell).
+- `nav_group/1` — A labelled group of nav items.
+- `nav_item/1` — A sidebar nav item.
+- `nav_link/1` — A quiet link for the shell's `:sidebar_footer` — support, docs, legal.
+- `page_header/1` — Page title row — compact, goprint-density.
+
+### LanternUI.Components.ListRow
+
+- `list_row/1` — Dense issue/inbox row: leading glyph · muted mono id · truncating title · meta · trailing.
+
+### LanternUI.Components.Loading
+
+- `loading/1` — Inline loading indicator — ring spinner or staggered dots.
+
+### LanternUI.Components.LogView
+
+- `log_line/1` — Log view: monospace lines with a timestamp gutter and per-line severity.
+- `log_view/1` — Log view: monospace lines with a timestamp gutter and per-line severity.
+
+### LanternUI.Components.Menu
+
+- `menu/1` — Menu button and menubar — no Fluxon equivalent.
+- `menu_item/1` — A menu item.
+- `menu_separator/1` — Menu button and menubar — no Fluxon equivalent.
+- `menubar/1` — Menu button and menubar — no Fluxon equivalent.
+- `menubar_menu/1` — Menu button and menubar — no Fluxon equivalent.
+
+### LanternUI.Components.Message
+
+- `message/1` — Chat message rows with optional avatar, metadata, and footer.
+
+### LanternUI.Components.MessageScroller
+
+- `message_scroller/1` — Accessible, follow-aware transcript viewport for chat messages.
+- `message_scroller_item/1` — Accessible, follow-aware transcript viewport for chat messages.
+
+### LanternUI.Components.Meter
+
+- `meter/1` — Meter — a scalar measurement within a known range (`role="meter"`, WAI-ARIA APG Meter pattern).
+
+### LanternUI.Components.Modal
+
+- `modal/1` — Modal dialog on the shared overlay runtime (focus trap, Escape/outside dismissal, `prefers-reduced-motion`-aware fade).
+
+### LanternUI.Components.Navlist
+
+- `navheading/1` — A section heading inside a navlist.
+- `navlink/1` — A nav list item.
+- `navlist/1` — Vertical nav list — heading + links.
+
+### LanternUI.Components.Pagination
+
+- `pagination/1` — Pager + page-size control for paginated collections (a lantern-ui extension; Fluxon has no pagination component — this replaces flop_phoenix's pager).
+
+### LanternUI.Components.Popover
+
+- `popover/1` — Click-triggered floating panel holding arbitrary content.
+
+### LanternUI.Components.Progress
+
+- `progress/1` — Progress bar or completion ring.
+
+### LanternUI.Components.ProgressRing
+
+- `progress_ring/1` — Deprecated alias of `LanternUI.Components.Progress.progress/1` with `shape="ring"`.
+
+### LanternUI.Components.Radio
+
+- `radio/1` — Radio group for exclusive single selection.
+
+### LanternUI.Components.ResourceList
+
+- `resource_list/1` — Resource list: a simple index of resources (projects, apps, databases, buckets).
+- `resource_list_item/1` — Resource list: a simple index of resources (projects, apps, databases, buckets).
+
+### LanternUI.Components.ScrollArea
+
+- `scroll_area/1` — ScrollArea — themed scrollbar wrapper around native overflow scrolling.
+
+### LanternUI.Components.Segmented
+
+- `segmented/1` — Deprecated alias of `LanternUI.Components.Tabs.tabs_list/1` with `variant="segmented"`.
+
+### LanternUI.Components.Select
+
+- `select/1` — Select — mirrors Fluxon's `select/1` surface: a `FormField`-aware select with a rich listbox path and a `native` fallback.
+
+### LanternUI.Components.Separator
+
+- `separator/1` — Visual divider — horizontal, vertical, or labeled.
+
+### LanternUI.Components.Sheet
+
+- `sheet/1` — Slide-over panel (drawer) that enters from a screen edge.
+
+### LanternUI.Components.SidePanel
+
+- `side_panel/1` — Collapsible right-hand panel plus a toggle that remembers open/closed in `localStorage`.
+- `side_panel_toggle/1` — Collapsible right-hand panel plus a toggle that remembers open/closed in `localStorage`.
+
+### LanternUI.Components.Skeleton
+
+- `skeleton/1` — Decorative, CSS-only placeholder for content that is still loading.
+
+### LanternUI.Components.Slider
+
+- `slider/1` — Slider — a single-thumb range input built on the WAI-ARIA APG slider pattern.
+
+### LanternUI.Components.Stat
+
+- `stat_card/1` — Renders one compact summary metric.
+- `stat_grid/1` — Renders a responsive collection of summary metrics; emits nothing when empty.
+
+### LanternUI.Components.StateGlyph
+
+- `priority_glyph/1` — Flicker-shaped alias of `state_glyph/1` with `kind="priority"`.
+- `run_glyph/1` — Flicker-shaped alias of `state_glyph/1` with `kind="run"`.
+- `source_glyph/1` — Flicker-shaped alias of `state_glyph/1` with `kind="source"`.
+- `state_glyph/1` — Status circles, priority signal bars, run-pipeline, sync, and source glyphs for dense lists.
+- `status_glyph/1` — Flicker-shaped alias of `state_glyph/1` with `kind="status"`.
+- `sync_glyph/1` — Flicker-shaped alias of `state_glyph/1` with `kind="sync"`.
+
+### LanternUI.Components.Switch
+
+- `switch/1` — Toggle switch for binary settings.
+
+### LanternUI.Components.Table
+
+- `table/1` — Presentational table family — the styled substrate `data_table` composes.
+- `table_body/1` — Presentational table family — the styled substrate `data_table` composes.
+- `table_head/1` — Presentational table family — the styled substrate `data_table` composes.
+- `table_row/1` — Presentational table family — the styled substrate `data_table` composes.
+
+### LanternUI.Components.Tabs
+
+- `tabs/1` — Tabs — segmented tab list + panels.
+- `tabs_list/1` — Tabs — segmented tab list + panels.
+- `tabs_panel/1` — Tabs — segmented tab list + panels.
+
+### LanternUI.Components.Textarea
+
+- `textarea/1` — Multi-line text input.
+
+### LanternUI.Components.Theme
+
+- `theme/1` — Runtime theming — persisted `--lantern-*` token overrides.
+
+### LanternUI.Components.Timeline
+
+- `timeline/1` — Timeline: a vertical sequence of events with a marker rail.
+- `timeline_item/1` — Timeline: a vertical sequence of events with a marker rail.
+
+### LanternUI.Components.Toast
+
+- `toast_group/1` — Toast notification stack.
+
+### LanternUI.Components.Tooltip
+
+- `tooltip/1` — Tooltip - mirrors Fluxon's `tooltip/1` API with a small LiveView hook for hover/focus timing and viewport-aware placement.
+
+### LanternUI.Components.Waterfall
+
+- `waterfall/1` — Waterfall: horizontal spans laid out on ONE shared time axis, with a ruler.
+- `waterfall_lane/1` — Waterfall: horizontal spans laid out on ONE shared time axis, with a ruler.
+
+## Copy-paste recipes
+
+From docs/recipes.md and README.md (same sources the recipe tests render).
+Copy these blocks instead of inventing markup.
+
+From `docs/recipes.md` (Linear-style list row):
+
+```heex
+<.list_row
+  identifier={@ticket.identifier}
+  title={@ticket.title}
+  parent={@ticket.parent}
+  navigate={@ticket.href}
+>
+  <:leading>
+    <.priority_glyph priority={@ticket.priority} />
+    <.status_glyph status={@ticket.status} />
+  </:leading>
+  <:meta>
+    <.badge size="sm">{@ticket.tag}</.badge>
+    <.progress shape="ring" completed={@ticket.completed} scope={@ticket.scope} size="sm" />
+  </:meta>
+  <:trailing>{@ticket.date}</:trailing>
+</.list_row>
+```
+
+From `docs/recipes.md` (Flat ticket list with toolbar):
+
+```heex
+<.data_table
+  id="tickets"
+  rows={@tickets}
+  meta={@meta}
+  path="/tickets"
+  title="Tickets"
+  fill
+  views={["list"]}
+  show_checkboxes={false}
+  search_field={:title}
+  data-lantern-list-nav
+>
+  <:filter
+    field={:status}
+    label="Status"
+    options={[{"In progress (1)", "in_progress"}, {"To do (1)", "todo"}]}
+    prompt="All statuses"
+  />
+  <:list_item :let={ticket}>
+    <.list_row
+      identifier={ticket.identifier}
+      title={ticket.title}
+      parent={ticket.parent}
+      navigate={ticket.href}
+      selected={ticket.selected}
+      data-lantern-list-item
+    >
+      <:leading>
+        <.status_glyph status={ticket.status} />
+        <span>{ticket.status |> Atom.to_string() |> String.replace("_", " ")}</span>
+      </:leading>
+      <:meta>
+        <.badge size="sm">{ticket.tag}</.badge>
+      </:meta>
+      <:trailing>{ticket.date}</:trailing>
+    </.list_row>
+  </:list_item>
+</.data_table>
+```
+
+From `docs/recipes.md` (Record page with inspector rail):
+
+```heex
+<.breadcrumb_bar id="ticket-crumb">
+  <.breadcrumb home="/" items={@crumbs} />
+  <:actions label="Toggle panel">
+    <.side_panel_toggle
+      id="ticket-panel-toggle"
+      panel_id="ticket-panel"
+      panel_key="ticket"
+      open={@panel_open}
+      kbd="]"
+    />
+  </:actions>
+</.breadcrumb_bar>
+<.page_header title={@ticket.title} description={@ticket.identifier} />
+<.card title="Description">
+  {@ticket.body}
+</.card>
+<.side_panel id="ticket-panel" open={@panel_open} aria-label="Ticket properties">
+  <.inspector aria-label="Ticket">
+    <.inspector_section title="Properties">
+      <.description_list layout="dense">
+        <:item label="Status">{@ticket.status}</:item>
+        <:item label="Priority">{@ticket.priority}</:item>
+        <:item label="Tags">
+          <.badge size="sm">{@ticket.tag}</.badge>
+        </:item>
+      </.description_list>
+    </.inspector_section>
+  </.inspector>
+</.side_panel>
+```
+
+From `docs/recipes.md` (Three-column inbox):
+
+```heex
+<.card_grid>
+  <.card flush title={"Inbox · #{@inbox_count}"}>
+    <:actions>
+      <.button size="icon" variant="ghost" label="Filter" kbd="F">
+        <.icon name="funnel" />
+      </.button>
+    </:actions>
+    <.scroll_area label="Inbox" data-lantern-list-nav>
+      <.list_row
+        :for={item <- @inbox_items}
+        identifier={item.identifier}
+        title={item.title}
+        navigate={item.href}
+        selected={item.selected}
+        data-lantern-list-item
+      >
+        <:leading><.status_glyph status={item.status} /></:leading>
+        <:meta>
+          <.badge size="sm">{item.kind}</.badge>
+        </:meta>
+      </.list_row>
+    </.scroll_area>
+  </.card>
+  <.card title={@selected.title} description={@selected.meta}>
+    {@selected.body}
+  </.card>
+  <.card flush title="Properties">
+    <.inspector aria-label="Suggestion">
+      <.inspector_section title="Properties">
+        <.description_list layout="dense">
+          <:item label="Status">{@selected.status}</:item>
+          <:item label="Source">{@selected.source}</:item>
+        </.description_list>
+      </.inspector_section>
+    </.inspector>
+  </.card>
+</.card_grid>
+```
+
+From `docs/recipes.md` (Project overview):
+
+```heex
+<.page_header title={@project.name} description={@project.summary}>
+  <:actions>
+    <.progress
+      shape="ring"
+      completed={@project.completed}
+      scope={@project.scope}
+      label="Progress"
+    >
+      {@project.completed} / {@project.scope}
+    </.progress>
+  </:actions>
+</.page_header>
+<.stat_grid>
+  <:stat label="Apps" value={@stats.apps} />
+  <:stat label="Databases" value={@stats.databases} />
+  <:stat label="Environments" value={@stats.environments} />
+</.stat_grid>
+<.card flush title="Tickets">
+  <.list_row
+    :for={child <- @children}
+    identifier={child.identifier}
+    title={child.title}
+    navigate={child.href}
+  >
+    <:leading><.status_glyph status={child.status} /></:leading>
+    <:trailing>{child.date}</:trailing>
+  </.list_row>
+</.card>
+```
+
+From `docs/recipes.md` (Icon toolbar with kbd hints):
+
+```heex
+<.card>
+  <:actions>
+    <.button size="icon" label="Promote to ticket" kbd="P" variant="solid">
+      <.icon name="arrow-up-tray" />
+    </.button>
+    <.button size="icon" label="Snooze" kbd="H" variant="ghost">
+      <.icon name="clock" />
+    </.button>
+    <.button size="icon" label="Mark resolved" kbd="E" variant="ghost">
+      <.icon name="check" />
+    </.button>
+    <.button size="icon" label="More" variant="ghost">
+      <.icon name="ellipsis-horizontal" />
+    </.button>
+  </:actions>
+  Inbox thread
+</.card>
+```
+
+From `docs/recipes.md` (Capacity strip):
+
+```heex
+<.stat_grid>
+  <:stat label="Slots" value={@capacity.slots} />
+  <:stat label="Busy" value={@capacity.busy} />
+  <:stat label="Waiting" value={@capacity.waiting} />
+  <:stat label="Cost" value={@capacity.cost} />
+</.stat_grid>
+<.badge color="warning" size="sm">{@capacity.waiting} waiting</.badge>
+<.badge color="success" size="sm">{@capacity.busy} busy</.badge>
+```
+
+From `README.md` (Usage):
+
+```heex
+<LanternUI.Charts.area_chart
+  id="price-history"
+  series={[%{date: "2024-01-01", value: 24.5}, %{date: "2024-02-01", value: 27.1}]}
+  value_format={:currency}
+  height={250}
+/>
+
+<LanternUI.Charts.sparkline id="trend" series={[3, 5, 4, 6, 8, 7, 9]} />
+
+<LanternUI.Charts.bar_chart
+  id="sales"
+  series={[%{label: "Q1", value: 42}, %{label: "Q2", value: 31}]}
+/>
+
+<LanternUI.Charts.line_chart
+  id="pod-cpu"
+  series={[
+    %{label: "web-1", color: "var(--color-primary)",
+      points: [{~U[2024-11-20 14:00:00Z], 0.25}, {~U[2024-11-20 14:05:00Z], 0.31}]},
+    %{label: "web-2", points: [{~U[2024-11-20 14:00:00Z], 0.18}, {~U[2024-11-20 14:05:00Z], 0.22}]}
+  ]}
+  value_format={&"#{&1} cores"}
+/>
+```
+
+From `README.md` (Summary stats):
+
+```heex
+<.stat_card label="Open orders" value={42} icon="hero-inbox" />
+
+<.stat_grid aria-label="Order summary">
+  <:stat label="Open" value={42} />
+  <:stat label="Shipped" href={~p"/orders?status=shipped"}>{128}</:stat>
+</.stat_grid>
+
+<.stat_grid aria-label="Store health">
+  <:stat label="Products" value={@product_count} />
+  <:stat label="Low stock" value={@low_stock_count} subtitle="Needs attention" />
+  <:stat label="Orders" value={@order_count} />
+  <:stat label="Revenue" value={@formatted_revenue} />
+</.stat_grid>
+```
+
+From `README.md` (Skeleton placeholders):
+
+```heex
+<section aria-busy="true" aria-label="Loading profile">
+  <LanternUI.Components.Skeleton.skeleton
+    class="profile-avatar-placeholder"
+    style="width: 3rem; height: 3rem; border-radius: 9999px;"
+  />
+  <LanternUI.Components.Skeleton.skeleton style="width: 12rem;" />
+  <LanternUI.Components.Skeleton.skeleton style="height: 8rem; margin-top: 1rem;" />
+</section>
+```
+
+From `README.md` (Skeleton placeholders):
+
+```heex
+<.accordion id="faq" prevent_all_closed animation_duration={300}>
+  <.accordion_item id="shipping" expanded>
+    <:header>Where do you ship?</:header>
+    <:panel>Worldwide.</:panel>
+  </.accordion_item>
+  <.accordion_item id="returns" icon={false}>
+    <:header class="font-semibold">What is the return window?</:header>
+    <:panel class="prose">Thirty days.</:panel>
+  </.accordion_item>
+</.accordion>
+```
+
+From `README.md` (Skeleton placeholders):
+
+```heex
+<.button phx-click={LanternUI.open_dialog("delete-project")}>Delete…</.button>
+
+<.alert_dialog id="delete-project">
+  <:title>Delete this project?</:title>
+  <:description>This permanently deletes the project and its data.</:description>
+  <:cancel>
+    <.button phx-click={LanternUI.close_dialog("delete-project")}>Cancel</.button>
+  </:cancel>
+  <:action>
+    <.button color="danger" phx-click="delete-project">Delete project</.button>
+  </:action>
+</.alert_dialog>
+```
+
+From `README.md` (Autocomplete):
+
+```heex
+<.autocomplete field={@form[:country]} options={@countries} clearable />
+```
+
+From `README.md` (Autocomplete):
+
+```heex
+<.autocomplete
+  field={@form[:user_id]}
+  options={@user_results}
+  on_search="search_users"
+  search_threshold={2}
+  debounce={250}
+  open_on_focus
+  clearable
+>
+  <:option :let={{name, id}}>
+    <strong>{name}</strong> <small>#{id}</small>
+  </:option>
+  <:empty_state>No matching users</:empty_state>
+</.autocomplete>
+```
+
+From `README.md` (Command palette):
+
+```heex
+<.command id="cmd-k" on_search="command_search" on_select="command_select">
+  <.command_group label="Tickets">
+    <.command_item :for={t <- @results} value={t.id}>
+      {t.title}
+      <:icon><.icon name="inbox" /></:icon>
+      <:description>{t.project}</:description>
+      <:shortcut>⏎</:shortcut>
+    </.command_item>
+  </.command_group>
+  <.command_empty :if={@results == []}>No matches for “{@query}”</.command_empty>
+  <:footer>↑↓ to navigate · ⏎ to select</:footer>
+</.command>
+```
+
+## Go deeper
+
+- `llms-full.txt` — every component with attribute/slot tables, values,
+  deprecations, and tokens.
+- `mix lantern.lint` — fails on every rule above, with did-you-mean hints.
+- `skills/` — lantern-recipes, phoenix-page-design, lantern-migration,
+  lantern-ui-components. Install with `mix lantern_ui.install_skills`.
+- `docs/` — recipes, dense-app, scale (type + grey roles), behaviours.

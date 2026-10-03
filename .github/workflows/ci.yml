@@ -53,4 +53,5 @@ jobs:
 
       - run: mix test
       - run: mix lantern.lint
+      - run: mix lantern.llms --check
       - run: npm test
