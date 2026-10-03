@@ -54,6 +54,8 @@ In flex columns, an `overflow-*` child may shrink unexpectedly. Add `shrink-0` t
 
 Use `data_table` for searchable/filterable/sortable/paginated data. Use `resource_list` for small resource collections without table machinery.
 
+Grouped tables and group headers are banned; use a flat list with a status column + filter chips. When the existing UI groups rows under headers, flatten it: per-row status, rows ordered by status then recency, counts preserved in the filter.
+
 Decide explicitly:
 
 - sort fields and backing schema allowlist

@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Removed
+- **BREAKING (`group_band` banned, removed in 0.9.0): grouped lists are gone.**
+  `LanternUI.Components.GroupBand` and its registry entry, `list_row`
+  `group=`, the `data-lantern-collapse` / `data-lantern-group` client collapse
+  behaviour (and `data-lantern-collapse-scope`), the `.lui-group-band` CSS,
+  and every mention in `docs/` and `skills/` are removed. The "Grouped list
+  with toolbar" recipe is rewritten as one flat `data_table` with a status
+  column and filter chips. Rule going forward: grouped tables and group
+  headers are banned — one flat list, a status column on each row, rows
+  ordered by status then recency, and counts preserved per row or in the
+  filter chips.
+
 ## [0.8.7] - 2026-09-30
 
 ### Added

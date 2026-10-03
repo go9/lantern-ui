@@ -38,10 +38,10 @@ defmodule LanternUI.RecipesTest do
     end
   end
 
-  test "linear list row is a group_band plus the Linear field set" do
+  test "linear list row is a flat row with the Linear field set" do
     html = render_recipe(:linear_list_row)
-    assert html =~ "lui-group-band"
-    assert html =~ "In progress"
+    refute html =~ "lui-group-band"
+    refute html =~ "group_band"
     assert html =~ "lui-list-row"
     assert html =~ "#241"
     assert html =~ "Visible progress ring"
@@ -53,22 +53,25 @@ defmodule LanternUI.RecipesTest do
     assert html =~ "Sep 3"
   end
 
-  test "grouped list ships segmented view plus Filter/Display icon buttons" do
+  test "ticket list is one flat data_table with a status column and filter" do
     html = render_recipe(:grouped_list)
-    assert html =~ "lui-segmented"
-    assert html =~ "All"
-    assert html =~ "Active"
-    assert html =~ "Backlog"
-    assert html =~ ~s(aria-label="Filter")
-    assert html =~ ~s(aria-label="Display")
-    assert html =~ "lui-icon-btn-kbd"
-    assert html =~ "data-lantern-list-nav"
-    assert html =~ "data-collapsed"
-    assert html =~ ~s(data-lantern-collapse="tickets:in_progress")
-    assert html =~ ~s(data-lantern-group="tickets:in_progress")
-    assert html =~ ~s(data-lantern-persist="tickets:in_progress")
-    assert html =~ ~s(aria-expanded="true")
-    assert html =~ ~s(aria-expanded="false")
+    assert html =~ "lui-datatable"
+    assert html =~ "Tickets"
+    # status filter with counts, search, and no tabs or group bands
+    assert html =~ ~s(aria-label="Status")
+    assert html =~ "In progress (1)"
+    assert html =~ "All statuses"
+    assert html =~ ~s(aria-label="Search…")
+    refute html =~ "lui-group-band"
+    refute html =~ "data-lantern-collapse"
+    refute html =~ "data-lantern-group"
+    # every row carries its own status glyph + name and links to its record
+    assert html =~ "lui-list-row"
+    assert html =~ "in progress"
+    assert html =~ "todo"
+    assert html =~ ~s(href="/tickets/241")
+    assert html =~ ~s(href="/tickets/240")
+    assert html =~ "data-lantern-list-item"
   end
 
   test "record page puts the side_panel toggle in the breadcrumb bar" do
@@ -90,14 +93,14 @@ defmodule LanternUI.RecipesTest do
     assert html =~ "lui-inspector"
   end
 
-  test "project overview combines header, ring, stats, and grouped children" do
+  test "project overview combines header, ring, stats, and flat children" do
     html = render_recipe(:project_overview)
     assert html =~ "lantern-ui"
     assert html =~ "lui-progress-ring"
     assert html =~ "7 / 19"
     assert html =~ "lui-stat-grid"
     assert html =~ "Apps"
-    assert html =~ "lui-group-band"
+    refute html =~ "lui-group-band"
     assert html =~ "#241"
   end
 

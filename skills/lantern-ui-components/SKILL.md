@@ -10,6 +10,8 @@ metadata:
 
 LanternUI is a runtime Phoenix LiveView component library. Consumers call `use LanternUI`; components stay server-rendered, use minimal JavaScript, and theme through `--lantern-*` CSS variables.
 
+Grouped tables and group headers are banned; use a flat list with a status column + filter chips.
+
 Code wins when this guide drifts. Fix guide and code together.
 
 ## Keep component small

@@ -1,9 +1,3 @@
-<.group_band name="In progress" count={1}>
-  <:glyph><.status_glyph status={:in_progress} /></:glyph>
-  <:action navigate="/tickets/new?status=in_progress" label="New ticket in In progress">
-    <.icon name="plus" />
-  </:action>
-</.group_band>
 <.list_row
   identifier={@ticket.identifier}
   title={@ticket.title}
