@@ -24,15 +24,18 @@ defmodule LanternUI.SheetTest do
     assert html =~ ~s(id="edit")
     assert html =~ ~s(class="lui-sheet")
     assert html =~ ~s(phx-hook="LanternSheet")
+    assert html =~ ~s(data-zag)
     assert html =~ ~s(data-placement="right")
     assert html =~ ~s(data-close-on-esc="true")
-    assert html =~ ~s(data-part="backdrop")
+    assert html =~ ~s(data-scope="dialog" data-part="backdrop")
+    assert html =~ ~s(data-scope="dialog" data-part="positioner")
+    assert html =~ ~s(data-scope="dialog" data-part="content")
     assert html =~ ~s(role="dialog")
     assert html =~ ~s(aria-modal="true")
     assert html =~ "Edit theme"
     assert html =~ "BODY"
     assert html =~ "FOOT"
-    assert html =~ ~s(data-part="close")
+    assert html =~ ~s(data-scope="dialog" data-part="close-trigger")
     # closed by default (hidden attr present)
     assert html =~ "hidden"
   end
@@ -46,7 +49,7 @@ defmodule LanternUI.SheetTest do
       end)
 
     assert html =~ ~s(data-open)
-    refute html =~ ~s(data-part="close")
+    refute html =~ ~s(data-part="close-trigger")
     assert html =~ ~s(data-close-on-esc="false")
     assert html =~ ~s(data-close-on-outside="false")
   end

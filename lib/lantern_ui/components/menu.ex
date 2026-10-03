@@ -28,14 +28,17 @@ defmodule LanternUI.Components.Menu do
   across top-level items that carries an open submenu along.
 
   ARIA ownership split: the server renders `aria-expanded="false"` as a static
-  literal and every popup item `tabindex="-1"`; the `LanternMenu` /
-  `LanternMenubar` hooks own both at runtime (expanded state and the roving
-  tabindex). Focus moves by roving DOM focus, the library-wide model — not
-  `aria-activedescendant`.
+  literal and every popup item `tabindex="-1"`; the `LanternMenu` hook owns
+  both at runtime (expanded state and the roving tabindex). Focus moves by
+  roving DOM focus, the library-wide model — not `aria-activedescendant`.
+
+  `menu/1` is Zag-driven (a `@zag-js/menu` state machine, loaded on demand);
+  `menubar/1` stays on the dedicated `LanternMenubar` hook.
   """
   use Phoenix.Component
 
   alias LanternUI.Class
+  alias Phoenix.LiveView.JS
 
   attr(:id, :string,
     default: nil,
@@ -54,6 +57,26 @@ defmodule LanternUI.Components.Menu do
     doc: "Where the menu anchors relative to the trigger."
   )
 
+  attr(:controlled, :boolean,
+    default: false,
+    doc: "Server-driven open state: `open` is truth, patches flow into the machine."
+  )
+
+  attr(:open, :boolean,
+    default: nil,
+    doc: "Open state for `controlled` mode (client mode ignores it)."
+  )
+
+  attr(:on_change, :string,
+    default: nil,
+    doc: "Server event pushed on open change (`lantern:menu:set-open` replies)."
+  )
+
+  attr(:on_change_client, :string,
+    default: nil,
+    doc: "Bubbling DOM CustomEvent dispatched on open change."
+  )
+
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
   slot(:trigger,
@@ -63,43 +86,67 @@ defmodule LanternUI.Components.Menu do
   slot(:inner_block, required: true, doc: "Menu items and separators.")
 
   def menu(assigns) do
-    assigns = assign(assigns, :id, assigns.id || "lui-menu-#{System.unique_integer([:positive])}")
+    assigns =
+      assigns
+      |> assign(:id, assigns.id || "lui-menu-#{System.unique_integer([:positive])}")
+      |> assign(:open_json, Jason.encode!(assigns.open || false))
 
     ~H"""
     <div
       id={@id}
       class={Class.merge(["lui-menu", @container_class])}
       phx-hook="LanternMenu"
+      phx-mounted={JS.ignore_attributes(zag_ignored_attrs(), to: "[data-scope=\"menu\"]")}
+      data-zag
       data-placement={@placement}
+      data-controlled={@controlled || nil}
+      data-value={if @controlled, do: @open_json}
+      data-default-value={unless @controlled, do: @open_json}
+      data-disabled={@disabled || nil}
+      data-trigger-id={"#{@id}-trigger"}
+      data-content-id={"#{@id}-menu"}
+      data-on-change={@on_change}
+      data-on-change-client={@on_change_client}
       {@rest}
     >
-      <LanternUI.Components.Button.button
-        type="button"
-        id={"#{@id}-trigger"}
-        disabled={@disabled}
-        class={@trigger_class}
+      <span
+        data-scope="menu"
         data-part="trigger"
+        id={"#{@id}-trigger"}
+        class="lui-menu-trigger"
         aria-haspopup="menu"
         aria-expanded="false"
         aria-controls={"#{@id}-menu"}
       >
-        <%= if @trigger == [] do %>
-          {@label}
-          <LanternUI.Components.Icon.icon name="chevron-down" />
-        <% else %>
-          {render_slot(@trigger)}
-        <% end %>
-      </LanternUI.Components.Button.button>
+        <LanternUI.Components.Button.button
+          type="button"
+          disabled={@disabled}
+          class={@trigger_class}
+          aria-haspopup="menu"
+          aria-expanded="false"
+          aria-controls={"#{@id}-menu"}
+        >
+          <%= if @trigger == [] do %>
+            {@label}
+            <LanternUI.Components.Icon.icon name="chevron-down" />
+          <% else %>
+            {render_slot(@trigger)}
+          <% end %>
+        </LanternUI.Components.Button.button>
+      </span>
 
-      <div
-        id={"#{@id}-menu"}
-        data-part="menu"
-        hidden
-        role="menu"
-        aria-labelledby={"#{@id}-trigger"}
-        class={Class.merge(["lui-menu-panel", @class])}
-      >
-        {render_slot(@inner_block)}
+      <div data-scope="menu" data-part="positioner">
+        <div
+          id={"#{@id}-menu"}
+          data-scope="menu"
+          data-part="content"
+          hidden
+          role="menu"
+          aria-labelledby={"#{@id}-trigger"}
+          class={Class.merge(["lui-menu-panel", @class])}
+        >
+          {render_slot(@inner_block)}
+        </div>
       </div>
     </div>
     """
@@ -259,5 +306,20 @@ defmodule LanternUI.Components.Menu do
       </div>
     </div>
     """
+  end
+
+  # Attributes Zag writes after mount. LiveView must not clobber them on
+  # patches — the machine is the writer, the server copy is stale by design.
+  # Same list as the select prototype's `zag_ignored_attrs/0`. Menubar roots
+  # never carry `data-zag`, so the rule only affects menu roots.
+  defp zag_ignored_attrs do
+    ~w(
+      data-state data-orientation dir id data-disabled data-readonly
+      data-invalid data-required data-open data-focus data-focus-visible
+      data-active data-hover data-placement data-highlighted data-value
+      aria-expanded aria-controls aria-haspopup aria-labelledby aria-label
+      aria-selected aria-checked aria-disabled aria-multiselectable
+      disabled hidden role tabindex style
+    )
   end
 end

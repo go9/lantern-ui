@@ -21,10 +21,20 @@ defmodule LanternUI.Components.Dropdown do
   navigation and `dropdown_button/1` for actions.
   Hover-open and animation-tuning attrs are accepted for Fluxon compatibility;
   open/close is click/keyboard-driven and the fade is token-driven.
+
+  The menu is Zag-driven (a `@zag-js/menu` state machine, loaded on demand):
+  the hook root carries `data-zag` plus `data-scope="menu"` / `data-part`
+  anatomy, and Zag owns open state, arrow-key/Home/End navigation,
+  typeahead, and positioning. Styling stays `lui-*` tokens. Two modes:
+
+    * client (default) — Zag owns open state.
+    * server-driven (`controlled`) — the server value (`open`) is truth;
+      opens flow out through `on_change`, patches flow in.
   """
   use Phoenix.Component
 
   alias LanternUI.Class
+  alias Phoenix.LiveView.JS
 
   attr(:id, :string,
     default: nil,
@@ -55,23 +65,54 @@ defmodule LanternUI.Components.Dropdown do
 
   attr(:hover_open_delay, :integer, default: nil, doc: "accepted for Fluxon compat")
   attr(:hover_close_delay, :integer, default: nil, doc: "accepted for Fluxon compat")
+
+  attr(:controlled, :boolean,
+    default: false,
+    doc: "Server-driven open state: `open` is truth, patches flow into the machine."
+  )
+
+  attr(:open, :boolean,
+    default: nil,
+    doc: "Open state for `controlled` mode (client mode ignores it)."
+  )
+
+  attr(:on_change, :string,
+    default: nil,
+    doc: "Server event pushed on open change (`lantern:menu:set-open` replies)."
+  )
+
+  attr(:on_change_client, :string,
+    default: nil,
+    doc: "Bubbling DOM CustomEvent dispatched on open change."
+  )
+
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
   slot(:toggle, doc: "Custom trigger; defaults to a button using label.")
   slot(:inner_block, required: true, doc: "Menu items (buttons, links, separators).")
 
   def dropdown(assigns) do
     assigns =
-      assign(assigns, :id, assigns.id || "lui-dropdown-#{System.unique_integer([:positive])}")
+      assigns
+      |> assign(:id, assigns.id || "lui-dropdown-#{System.unique_integer([:positive])}")
+      |> assign(:open_json, Jason.encode!(assigns.open || false))
 
     ~H"""
     <div
       id={@id}
       class={Class.merge(["lui-dropdown", @container_class])}
       phx-hook="LanternDropdown"
+      phx-mounted={JS.ignore_attributes(zag_ignored_attrs(), to: "[data-scope=\"menu\"]")}
+      data-zag
       data-placement={@placement}
+      data-controlled={@controlled || nil}
+      data-value={if @controlled, do: @open_json}
+      data-default-value={unless @controlled, do: @open_json}
+      data-disabled={@disabled || nil}
+      data-on-change={@on_change}
+      data-on-change-client={@on_change_client}
       {@rest}
     >
-      <div data-part="trigger" class="lui-dropdown-trigger">
+      <div data-scope="menu" data-part="trigger" class="lui-dropdown-trigger">
         <%= if @toggle == [] do %>
           <LanternUI.Components.Button.button
             type="button"
@@ -88,8 +129,16 @@ defmodule LanternUI.Components.Dropdown do
         <% end %>
       </div>
 
-      <div data-part="panel" hidden role="menu" class={Class.merge(["lui-dropdown-menu", @class])}>
-        {render_slot(@inner_block)}
+      <div data-scope="menu" data-part="positioner">
+        <div
+          data-scope="menu"
+          data-part="content"
+          hidden
+          role="menu"
+          class={Class.merge(["lui-dropdown-menu", @class])}
+        >
+          {render_slot(@inner_block)}
+        </div>
       </div>
     </div>
     """
@@ -170,5 +219,19 @@ defmodule LanternUI.Components.Dropdown do
       {render_slot(@inner_block)}
     </div>
     """
+  end
+
+  # Attributes Zag writes after mount. LiveView must not clobber them on
+  # patches — the machine is the writer, the server copy is stale by design.
+  # Same list as the select prototype's `zag_ignored_attrs/0`.
+  defp zag_ignored_attrs do
+    ~w(
+      data-state data-orientation dir id data-disabled data-readonly
+      data-invalid data-required data-open data-focus data-focus-visible
+      data-active data-hover data-placement data-highlighted data-value
+      aria-expanded aria-controls aria-haspopup aria-labelledby aria-label
+      aria-selected aria-checked aria-disabled aria-multiselectable
+      disabled hidden role tabindex style
+    )
   end
 end
