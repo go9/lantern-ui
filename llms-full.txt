@@ -94,10 +94,14 @@ Accordion — a WAI-ARIA APG accordion with the Fluxon 2.3.1 composition API.
 
 - `animation_duration` (:integer, default 300) — Expand/collapse indicator transition duration in milliseconds.
 - `class` (:any) — Extra classes merged onto the accordion root.
+- `controlled` (:boolean, default false) — Server-driven value: `value` is truth, patches flow into the machine.
 - `id` (:string) — Stable accordion id.
 - `multiple` (:boolean, default false) — Allow more than one item to be expanded at once.
+- `on_change` (:string) — Server event pushed on toggle (`lantern:accordion:set-value` replies).
+- `on_change_client` (:string) — Bubbling DOM CustomEvent dispatched on toggle.
 - `prevent_all_closed` (:boolean, default false) — Keep at least one enabled item expanded.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `value` (:list) — Expanded item ids for `controlled` mode (client mode ignores it).
 Slots:
 - `:inner_block` (required) — One or more `accordion_item/1` components.
 
@@ -1294,6 +1298,8 @@ Pager + page-size control for paginated collections (a lantern-ui extension; Flu
 - `class` (:any) — Extra classes merged onto the root element.
 - `id` (:string, default "pagination") — Base id for the page-size dropdown.
 - `meta` (:map, required) — Flop.Meta or any map with current_page/total_pages/page_size/total_count
+- `on_change` (:string) — Server event pushed on page selection (`lantern:pagination:set-page` replies).
+- `on_change_client` (:string) — Bubbling DOM CustomEvent dispatched on page selection.
 - `page_size_options` (:list, default [10, 25, 50, 100]) — Choices in the page-size menu.
 - `patch_fn` (:any, required) — fn %{page: n} | %{page: 1, page_size: s} -> path
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
@@ -1608,6 +1614,7 @@ Slider — a single-thumb range input built on the WAI-ARIA APG slider pattern.
 Slider — a single-thumb range input built on the WAI-ARIA APG slider pattern.
 
 - `class` (:any) — Extra classes merged onto the root element.
+- `controlled` (:boolean, default false) — Server-driven value: `value` is truth, patches flow into the machine.
 - `description` (:string) — Helper text under the label stack.
 - `disabled` (:boolean, default false) — Render disabled and non-interactive.
 - `errors` (:list, default []) — Validation messages; derived from field when used.
@@ -1617,6 +1624,8 @@ Slider — a single-thumb range input built on the WAI-ARIA APG slider pattern.
 - `max` (:any, default 100) — Maximum value.
 - `min` (:any, default 0) — Minimum value.
 - `name` (:string) — Form input name; derived from field when omitted.
+- `on_change` (:string) — Server event pushed on commit (`lantern:slider:set-value` replies).
+- `on_change_client` (:string) — Bubbling DOM CustomEvent dispatched on commit.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through (ride on the hidden input).
 - `size` (:string, values: xs, sm, md, lg, xl, default "md") — Field density / type scale.
 - `step` (:any, default 1) — Step increment; PageUp/PageDown jump 10 steps.
@@ -1812,7 +1821,10 @@ Tabs — segmented tab list + panels.
 
 - `active_tab` (:string) — Name of the currently selected tab.
 - `class` (:any) — Extra classes merged onto the root element.
+- `controlled` (:boolean, default false) — Strict server-driven value even without `active_tab`.
 - `id` (:string) — Stable id; required to mount `LanternTabs` for arrow-key activation.
+- `on_change` (:string) — Server event pushed on selection (`lantern:tabs:set-value` replies).
+- `on_change_client` (:string) — Bubbling DOM CustomEvent dispatched on selection.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `size` (:string, values: sm, md, default "md") — Tab control density.
 - `variant` (:string, values: segmented, underline, default "segmented") — segmented is pill-style; underline is text tabs.

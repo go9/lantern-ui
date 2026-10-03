@@ -160,21 +160,30 @@ function wireMenuHook(key, componentKey, setEvent) {
       })
       el[componentKey] = component
 
+      // Controlled machines ignore api.setOpen (the prop is truth).
+      const applyOpen = (open) => {
+        if (getBoolean(el, "controlled")) {
+          component.updateProps({ ...menuLayoutProps(el), open })
+        } else {
+          component.api.setOpen(open)
+        }
+      }
+
       // Legacy parity: any menuitem click closes (links navigate, buttons
       // fire phx-click — the machine also closes on select; this covers
       // items Zag does not track).
       dom.add("click", (event) => {
         const item = event.target?.closest?.('[role="menuitem"]')
-        if (item && el.contains(item) && component.api.open) component.api.setOpen(false)
+        if (item && el.contains(item) && component.api.open) applyOpen(false)
       })
 
       dom.add(setEvent, (event) => {
-        if (typeof event.detail?.open === "boolean") component.api.setOpen(event.detail.open)
+        if (typeof event.detail?.open === "boolean") applyOpen(event.detail.open)
       })
 
       server.add(setEvent, (payload) => {
         if (!idMatches(el.id, readPayloadId(payload))) return
-        if (typeof payload?.open === "boolean") component.api.setOpen(payload.open)
+        if (typeof payload?.open === "boolean") applyOpen(payload.open)
       })
 
       return component

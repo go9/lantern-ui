@@ -186,8 +186,8 @@ defmodule LanternUI.AccordionTest do
 
       assert html =~ ~s(id="shipping-trigger")
       assert html =~ ~s(id="shipping-panel")
-      assert html =~ ~s(data-part="trigger")
-      assert html =~ ~s(data-part="panel")
+      assert html =~ ~s(data-part="item-trigger")
+      assert html =~ ~s(data-part="item-content")
       assert html =~ ~s(data-part="item")
       assert html =~ "We ship worldwide."
       assert html =~ "Thirty days."
@@ -226,9 +226,11 @@ defmodule LanternUI.AccordionTest do
     test "the root exposes the namespaced hook and every item exposes hook anatomy" do
       html = render(&basic/1)
       assert html =~ ~s(phx-hook="LanternAccordion")
+      assert html =~ ~s(data-zag)
+      assert html =~ ~s(data-scope="accordion" data-part="root")
       assert length(Floki.find(Floki.parse_fragment!(html), ~s([data-part="item"]))) == 2
-      assert length(Floki.find(Floki.parse_fragment!(html), ~s([data-part="trigger"]))) == 2
-      assert length(Floki.find(Floki.parse_fragment!(html), ~s([data-part="panel"]))) == 2
+      assert length(Floki.find(Floki.parse_fragment!(html), ~s([data-part="item-trigger"]))) == 2
+      assert length(Floki.find(Floki.parse_fragment!(html), ~s([data-part="item-content"]))) == 2
     end
   end
 end

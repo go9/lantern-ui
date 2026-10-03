@@ -164,21 +164,31 @@ export function createOnOpenChange(getEl, getLiveSocket, pushEvent, canPush) {
   }
 }
 
-export function addDialogDomEvents(dom, el, component) {
+export function addDialogDomEvents(dom, setOpen) {
   // `LanternUI.open_dialog/close_dialog` dispatch these on the root.
-  dom.add("lantern:dialog:open", () => component.api.setOpen(true))
-  dom.add("lantern:dialog:close", () => component.api.setOpen(false))
+  dom.add("lantern:dialog:open", () => setOpen(true))
+  dom.add("lantern:dialog:close", () => setOpen(false))
 }
 
-export function addDialogServerEvents(server, el, component) {
+export function addDialogServerEvents(server, el, setOpen) {
   server.add("lantern:dialog:open", (payload) => {
     if (!idMatches(el.id, readPayloadId(payload))) return
-    component.api.setOpen(true)
+    setOpen(true)
   })
   server.add("lantern:dialog:close", (payload) => {
     if (!idMatches(el.id, readPayloadId(payload))) return
-    component.api.setOpen(false)
+    setOpen(false)
   })
+}
+
+/**
+ * Programmatic open setter honoring controlled mode: a controlled machine
+ * ignores api.setOpen (the prop is truth), so route through updateProps
+ * there. `layout` rebuilds the machine props for the update.
+ */
+export function dialogSetOpen(el, component, layout, open) {
+  if (getBoolean(el, "controlled")) component.updateProps({ ...layout(el), open })
+  else component.api.setOpen(open)
 }
 
 export const LanternZagDialog = createZagLiveHook({
@@ -206,8 +216,10 @@ export const LanternZagDialog = createZagLiveHook({
     })
     el.__lanternDialog = component
 
-    addDialogDomEvents(dom, el, component)
-    addDialogServerEvents(server, el, component)
+    const layout = () => dialogLayoutProps(el, { role: getString(el, "role") || "dialog" })
+    const setOpen = (open) => dialogSetOpen(el, component, layout, open)
+    addDialogDomEvents(dom, setOpen)
+    addDialogServerEvents(server, el, setOpen)
 
     return component
   },

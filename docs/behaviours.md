@@ -72,7 +72,8 @@ Zag-driven widgets each run a `@zag-js/*` machine that ships as
 `priv/static/zag/<name>.js` — committed, minified, loaded only when a page
 mounts a `data-zag` root. One entry per widget: `select`, `tooltip`,
 `popover`, `switch`, `radio_group`, `dialog` (modal + alert_dialog),
-`sheet`, `menu` (dropdown + menu). Shared code (Zag runtime,
+`sheet`, `menu` (dropdown + menu), `accordion`, `slider`, `tabs`,
+`pagination`. Shared code (Zag runtime,
 `@floating-ui/dom`) lives in `priv/static/chunks/`, imported by the main
 bundle and the entries — never duplicated. But an app only gets the
 on-demand behaviour if its own esbuild emits the dynamic `import()` as a
@@ -103,7 +104,7 @@ Per app, two lines (no new dependency, no `Plug.Static` change —
 | goprint_registry | iife, es2022, `assets/app.js` | +`--format=esm --splitting`, script `type="module"` |
 
 Fallback: `priv/static/lantern_ui_hooks.standalone.js` is the same code as
-a single file with the Zag runtime inlined (~286KB raw / ~81KB gzip
+a single file with the Zag runtime inlined (~340KB raw / ~95KB gzip
 minified, versus ~68KB / ~17KB for the main bundle without Zag; each
 widget entry adds ~7–35KB raw / ~3–10KB gzip on the pages that mount it,
 shared chunks cached). Take it only when the app cannot serve ESM —

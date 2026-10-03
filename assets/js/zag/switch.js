@@ -177,6 +177,15 @@ export const LanternZagSwitch = createZagLiveHook({
     })
     el.__lanternSwitch = component
 
+    // Controlled machines ignore api.setChecked (the prop is truth).
+    const applyChecked = (checked) => {
+      if (getBoolean(el, "controlled")) {
+        component.updateProps({ ...switchLayoutProps(el), checked })
+      } else {
+        component.api.setChecked(checked)
+      }
+    }
+
     // Native → machine: the user's own clicks/keyboard on the checkbox.
     // Events we dispatch ourselves (machine → native sync above) are
     // flagged and ignored here so the loop terminates.
@@ -188,12 +197,12 @@ export const LanternZagSwitch = createZagLiveHook({
     })
 
     dom.add("lantern:switch:set-checked", (event) => {
-      if (typeof event.detail?.checked === "boolean") component.api.setChecked(event.detail.checked)
+      if (typeof event.detail?.checked === "boolean") applyChecked(event.detail.checked)
     })
 
     server.add("lantern:switch:set-checked", (payload) => {
       if (!idMatches(el.id, readPayloadId(payload))) return
-      if (typeof payload?.checked === "boolean") component.api.setChecked(payload.checked)
+      if (typeof payload?.checked === "boolean") applyChecked(payload.checked)
     })
 
     return component

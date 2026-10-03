@@ -196,6 +196,15 @@ export const LanternZagRadioGroup = createZagLiveHook({
     })
     el.__lanternRadioGroup = component
 
+    // Controlled machines ignore api.setValue (the prop is truth).
+    const applyValue = (value) => {
+      if (getBoolean(el, "controlled")) {
+        component.updateProps({ ...radioLayoutProps(el), value })
+      } else {
+        component.api.setValue(value)
+      }
+    }
+
     // Native → machine: the user's own clicks/keyboard on the inputs.
     // Self-dispatched sync events are flagged and ignored so the loop
     // terminates.
@@ -207,12 +216,12 @@ export const LanternZagRadioGroup = createZagLiveHook({
     })
 
     dom.add("lantern:radio:set-value", (event) => {
-      if (event.detail?.value !== undefined) component.api.setValue(event.detail.value)
+      if (event.detail?.value !== undefined) applyValue(event.detail.value)
     })
 
     server.add("lantern:radio:set-value", (payload) => {
       if (!idMatches(el.id, readPayloadId(payload))) return
-      if (payload?.value !== undefined) component.api.setValue(payload.value)
+      if (payload?.value !== undefined) applyValue(payload.value)
     })
 
     return component
