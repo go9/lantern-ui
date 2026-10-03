@@ -316,7 +316,7 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 ### LanternUI.Components.Tooltip
 
-- `tooltip/1` — Tooltip - mirrors Fluxon's `tooltip/1` API with a small LiveView hook for hover/focus timing and viewport-aware placement.
+- `tooltip/1` — Tooltip - mirrors Fluxon's `tooltip/1` API.
 
 ### LanternUI.Components.Waterfall
 

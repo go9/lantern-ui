@@ -17,6 +17,7 @@ defmodule LanternUI.Components.Radio do
 
   alias LanternUI.Class
   alias LanternUI.Components.Form
+  alias Phoenix.LiveView.JS
 
   attr(:id, :any, default: nil, doc: "Element id; derived from field or name when omitted.")
   attr(:name, :string, default: nil, doc: "Shared radio name; derived from field when omitted.")
@@ -40,6 +41,22 @@ defmodule LanternUI.Components.Radio do
   )
 
   attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
+
+  attr(:controlled, :boolean,
+    default: false,
+    doc: "Server-driven value: `value` is truth, patches flow into the machine."
+  )
+
+  attr(:on_change, :string,
+    default: nil,
+    doc: "Server event pushed on pick (`lantern:radio:set-value` replies)."
+  )
+
+  attr(:on_change_client, :string,
+    default: nil,
+    doc: "Bubbling DOM CustomEvent dispatched on pick."
+  )
+
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
   slot :radio, required: true, doc: "One exclusive option in the group." do
@@ -66,13 +83,29 @@ defmodule LanternUI.Components.Radio do
     assigns =
       assigns
       |> assign(:invalid?, assigns.errors != [])
-      |> assign(:id, assigns.id || assigns.name)
+      |> assign(
+        :id,
+        assigns.id || assigns.name || "lui-radio-#{System.unique_integer([:positive])}"
+      )
 
     ~H"""
     <fieldset
+      id={@id}
       class={Class.merge(["lui-radio-group", @class])}
+      data-scope="radio-group"
+      data-part="root"
       data-variant={@variant}
       data-disabled={@disabled || nil}
+      data-invalid={@invalid? || nil}
+      phx-hook="LanternRadio"
+      phx-mounted={JS.ignore_attributes(zag_ignored_attrs(), to: "[data-scope=\"radio-group\"]")}
+      data-zag
+      data-name={@name}
+      data-controlled={@controlled || nil}
+      data-value={if @controlled, do: to_string(@value || "")}
+      data-default-value={unless @controlled, do: to_string(@value || "")}
+      data-on-change={@on_change}
+      data-on-change-client={@on_change_client}
       {@rest}
     >
       <legend :if={@label} class="lui-radio-legend">
@@ -84,6 +117,10 @@ defmodule LanternUI.Components.Radio do
       <label
         :for={{opt, index} <- Enum.with_index(@radio)}
         class="lui-radio"
+        data-scope="radio-group"
+        data-part="item"
+        data-value={to_string(opt[:value])}
+        data-disabled-item={@disabled || opt[:disabled] || nil}
         data-disabled={@disabled || opt[:disabled] || nil}
       >
         <input
@@ -96,7 +133,12 @@ defmodule LanternUI.Components.Radio do
           class="lui-radio-input"
           aria-invalid={@invalid? && "true"}
         />
-        <span class="lui-radio-dot" aria-hidden="true"></span>
+        <span
+          class="lui-radio-dot"
+          data-scope="radio-group"
+          data-part="item-control"
+          aria-hidden="true"
+        ></span>
         <span :if={opt[:label]} class="lui-radio-texts">
           <span class="lui-radio-label">
             {opt[:label]}
@@ -110,5 +152,21 @@ defmodule LanternUI.Components.Radio do
       <Form.error :for={msg <- @errors} id={@id && "#{@id}-error"}>{msg}</Form.error>
     </fieldset>
     """
+  end
+
+  # Attributes Zag writes after mount. LiveView must not clobber them on
+  # patches — the machine is the writer, the server copy is stale by design.
+  # Same list as the select prototype's `zag_ignored_attrs/0`. Deliberately
+  # NOT ignored: `checked` on the native inputs (form state, re-asserted
+  # from machine state in `update()` instead).
+  defp zag_ignored_attrs do
+    ~w(
+      data-state data-orientation dir id data-disabled data-readonly
+      data-invalid data-required data-open data-focus data-focus-visible
+      data-active data-hover data-placement data-highlighted data-value
+      aria-expanded aria-controls aria-haspopup aria-labelledby aria-label
+      aria-selected aria-checked aria-disabled aria-multiselectable
+      disabled hidden role tabindex style
+    )
   end
 end

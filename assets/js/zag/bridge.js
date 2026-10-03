@@ -247,6 +247,60 @@ export function readUpdatedServerStringList(el, before) {
 }
 
 // ---------------------------------------------------------------------------
+// Controlled single-value binding (switch `checked`, tooltip/popover
+// `open`, radio-group `value`). Same `data-controlled` + `data-value` /
+// `data-default-value` dataset contract as the string-list binding above,
+// but for one boolean or string instead of a list.
+// ---------------------------------------------------------------------------
+
+/** Parses `data-value`/`data-default-value` as a boolean; undefined when absent/unparseable. */
+export function parseDatasetBoolean(raw) {
+  if (raw === undefined) return undefined
+  const trimmed = String(raw).trim().toLowerCase()
+  if (trimmed === "" || trimmed === "true" || trimmed === "1") return true
+  if (trimmed === "false" || trimmed === "0") return false
+  return undefined
+}
+
+/** `{ [key]: bool }` when controlled, `{ [defaultKey]: bool }` otherwise (mount). */
+export function readBooleanControlledZagProps(el, key, defaultKey) {
+  if (isZagValueControlled(el)) {
+    const value = parseDatasetBoolean(el.dataset.value)
+    return value === undefined ? {} : { [key]: value }
+  }
+  const defaultValue = parseDatasetBoolean(el.dataset.defaultValue)
+  return defaultValue === undefined ? {} : { [defaultKey]: defaultValue }
+}
+
+/** `{ [key]: bool }` only when controlled AND the server changed `data-value`. */
+export function readUpdatedServerBoolean(el, before, key) {
+  if (!isZagValueControlled(el)) return {}
+  if (!datasetKeyChanged(before, el, "value")) return {}
+  const value = parseDatasetBoolean(el.dataset.value)
+  return value === undefined ? {} : { [key]: value }
+}
+
+/**
+ * `{ value }` when controlled, `{ defaultValue }` otherwise (mount), for a
+ * single string (radio-group). Absent dataset entries mean "no opinion" so
+ * the machine default applies.
+ */
+export function readSingleStringControlledZagProps(el) {
+  if (isZagValueControlled(el)) {
+    return el.dataset.value === undefined ? {} : { value: el.dataset.value }
+  }
+  return el.dataset.defaultValue === undefined ? {} : { defaultValue: el.dataset.defaultValue }
+}
+
+/** `{ value }` only when controlled AND the server changed `data-value`. */
+export function readUpdatedServerString(el, before) {
+  if (!isZagValueControlled(el)) return {}
+  if (!datasetKeyChanged(before, el, "value")) return {}
+  if (el.dataset.value === undefined) return {}
+  return { value: el.dataset.value }
+}
+
+// ---------------------------------------------------------------------------
 // Server/client change fan-out (respond-to.ts subset)
 // ---------------------------------------------------------------------------
 

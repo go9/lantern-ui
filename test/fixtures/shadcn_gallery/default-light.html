@@ -1461,9 +1461,9 @@
    height, the rows area becomes the vertical scroll region, and the overview /
    header / chrome / pagination stay pinned and always visible. Opt-in so the
    default table keeps its natural content height. Only `.lui-table-wrap` used
-   to scroll, so a grouped list (`group_band` inside `:list_item`) grew with
-   its rows and pushed pagination below the fold. List and cards take the same
-   remaining-height + internal-scroll contract as the table wrap. */
+   to scroll, so a long list grew with its rows and pushed pagination below
+   the fold. List and cards take the same remaining-height + internal-scroll
+   contract as the table wrap. */
 .lui-datatable-fill {
   display: flex;
   flex-direction: column;
@@ -1866,7 +1866,7 @@
   font-size: var(--lantern-text);
 }
 .lui-alert[data-color="neutral"] { --lui-alert-c: var(--lantern-fg-muted); }
-.lui-alert[data-color="info"] { --lui-alert-c: var(--lantern-accent); }
+.lui-alert[data-color="info"] { --lui-alert-c: var(--lantern-info); }
 .lui-alert[data-color="success"] { --lui-alert-c: var(--lantern-success); }
 .lui-alert[data-color="warning"] { --lui-alert-c: var(--lantern-warning); }
 .lui-alert[data-color="danger"] { --lui-alert-c: var(--lantern-danger); }
@@ -2070,10 +2070,8 @@
 .lui-toasts[data-expanded="true"] { display: flex; flex-direction: column; gap: 0.5rem; }
 .lui-toasts[data-expanded="true"][data-placement^="bottom"] { flex-direction: column-reverse; }
 .lui-toasts[data-expanded="true"] .lui-toast { translate: 0 0; scale: 1; opacity: 1; }
-.lui-toast[data-kind="info"],
-.lui-toast[data-kind="accent"] {
-  --lui-toast-c: var(--lantern-accent);
-}
+.lui-toast[data-kind="accent"] { --lui-toast-c: var(--lantern-accent); }
+.lui-toast[data-kind="info"] { --lui-toast-c: var(--lantern-info); }
 .lui-toast[data-kind="success"] { --lui-toast-c: var(--lantern-success); }
 .lui-toast[data-kind="warning"] { --lui-toast-c: var(--lantern-warning); }
 .lui-toast[data-kind="danger"],
@@ -3654,7 +3652,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   outline: 2px solid var(--lantern-ring);
   outline-offset: -2px;
 }
-/* ── Dense-app primitives (list_row, group_band, inspector, icon_button,
+/* ── Dense-app primitives (list_row, inspector, icon_button,
       segmented, state_glyph, progress_ring, side_panel) ── */
 
 .lui-list-row {
@@ -3726,76 +3724,6 @@ a.lui-waterfall-lane-inner:focus-visible {
   gap: 0.375rem;
   font-size: var(--lantern-text-sm);
   color: var(--lantern-fg-muted);
-}
-
-.lui-group-band {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 2rem;
-  padding: 0 0.75rem;
-  font-size: var(--lantern-text-sm);
-  background: var(--lantern-accent-soft);
-  color: var(--lantern-fg);
-}
-.lui-group-band-main {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0;
-  color: inherit;
-  text-decoration: none;
-}
-button.lui-group-band-main {
-  border: 0;
-  margin: 0;
-  background: transparent;
-  font: inherit;
-  cursor: pointer;
-  text-align: inherit;
-}
-.lui-group-band-main:hover {
-  color: var(--lantern-fg);
-}
-.lui-group-band-chevron {
-  display: inline-flex;
-  color: var(--lantern-fg-subtle);
-}
-.lui-group-band[data-collapsed] .lui-group-band-main[data-lantern-collapse] .lui-group-band-chevron {
-  transform: rotate(-90deg);
-}
-.lui-group-band-chevron .lui-icon {
-  width: 0.875rem;
-  height: 0.875rem;
-}
-.lui-group-band-glyph {
-  display: inline-flex;
-}
-.lui-group-band-name {
-  font-weight: 500;
-}
-.lui-group-band-count {
-  font-variant-numeric: tabular-nums;
-  color: var(--lantern-fg-muted);
-}
-.lui-group-band-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.2rem;
-  border-radius: var(--lantern-radius-sm);
-  color: var(--lantern-fg-subtle);
-  text-decoration: none;
-}
-.lui-group-band-action:hover {
-  background: var(--lantern-surface-hover);
-  color: var(--lantern-fg);
-}
-.lui-group-band-action:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--lantern-ring-soft);
 }
 
 .lui-inspector {
@@ -4060,7 +3988,8 @@ button.lui-group-band-main {
   --lantern-danger-fg: #ffffff;
   --lantern-success: var(--success, #16a34a);
   --lantern-warning: var(--warning, #d97706);
-  --lantern-info: var(--info, var(--lantern-accent));
+  /* info is blue, not the brand colour: accent-as-info read as an error next to danger */
+  --lantern-info: var(--info, oklch(0.62 0.17 255));
 
   /* ── Focus ring ── */
   --lantern-ring: var(--lantern-accent);
@@ -4594,48 +4523,64 @@ button.lui-group-band-main {
 </label>
   
 
-  <div id="g-fruit-select" class="lui-select" phx-hook="LanternSelect" data-name="fruit" data-no-results="No results">
-    <select class="lui-sr-only" data-part="native" name="fruit" aria-hidden="true" tabindex="-1">
-      <option value="" selected></option>
-      <option value="apple">
-        Apple
-      </option><option value="banana">
-        Banana
-      </option><option value="cherry">
-        Cherry
-      </option>
-    </select>
-    <button type="button" id="g-fruit" class="lui-select-toggle" data-part="toggle" aria-haspopup="listbox" aria-expanded="false">
-      <span class="lui-select-value" data-part="label" data-placeholder="Select…" data-empty>
-        Select…
-      </span>
-      <svg class="lui-icon lui-select-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <div id="g-fruit-select" class="lui-select" phx-hook="LanternSelect" phx-mounted="[[&quot;ignore_attrs&quot;,{&quot;to&quot;:&quot;[data-scope=\&quot;select\&quot;]&quot;,&quot;attrs&quot;:[&quot;data-state&quot;,&quot;data-orientation&quot;,&quot;dir&quot;,&quot;id&quot;,&quot;data-disabled&quot;,&quot;data-readonly&quot;,&quot;data-invalid&quot;,&quot;data-required&quot;,&quot;data-open&quot;,&quot;data-focus&quot;,&quot;data-focus-visible&quot;,&quot;data-active&quot;,&quot;data-hover&quot;,&quot;data-placement&quot;,&quot;data-highlighted&quot;,&quot;data-value&quot;,&quot;aria-expanded&quot;,&quot;aria-controls&quot;,&quot;aria-haspopup&quot;,&quot;aria-labelledby&quot;,&quot;aria-label&quot;,&quot;aria-selected&quot;,&quot;aria-checked&quot;,&quot;aria-disabled&quot;,&quot;aria-multiselectable&quot;,&quot;disabled&quot;,&quot;hidden&quot;,&quot;role&quot;,&quot;tabindex&quot;,&quot;style&quot;]}]]" data-zag data-items="[{&quot;label&quot;:&quot;Apple&quot;,&quot;value&quot;:&quot;apple&quot;},{&quot;label&quot;:&quot;Banana&quot;,&quot;value&quot;:&quot;banana&quot;},{&quot;label&quot;:&quot;Cherry&quot;,&quot;value&quot;:&quot;cherry&quot;}]" data-default-value="[]" data-trigger-id="g-fruit" data-labelled-by="g-fruit" data-placeholder="Select…" data-name="fruit">
+    <div data-scope="select" data-part="root">
+      <select class="lui-sr-only" data-scope="select" data-part="hidden-select" name="fruit" aria-hidden="true" tabindex="-1">
+        <option value="" selected></option>
+        <option value="apple">
+          Apple
+        </option><option value="banana">
+          Banana
+        </option><option value="cherry">
+          Cherry
+        </option>
+      </select>
+      <div data-scope="select" data-part="control">
+        <button type="button" id="g-fruit" class="lui-select-toggle" data-scope="select" data-part="trigger" aria-haspopup="listbox" aria-expanded="false">
+          <span class="lui-select-value" data-scope="select" data-part="item-text" data-placeholder="Select…" data-empty>
+            Select…
+          </span>
+          <svg class="lui-icon lui-select-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
   <path d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"></path>
-</svg>
-    </button>
-    
-
-    <div class="lui-select-listbox" data-part="panel" role="listbox" hidden tabindex="-1">
-      
-      <div class="lui-select-options" data-part="options">
-        <button type="button" class="lui-select-option" role="option" data-part="option" data-value="apple" aria-selected="false" tabindex="-1">
-          <span class="lui-select-option-label">Apple</span>
-          <svg class="lui-icon lui-select-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-  <path d="m4.5 12.75 6 6 9-13.5"></path>
-</svg>
-        </button><button type="button" class="lui-select-option" role="option" data-part="option" data-value="banana" aria-selected="false" tabindex="-1">
-          <span class="lui-select-option-label">Banana</span>
-          <svg class="lui-icon lui-select-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-  <path d="m4.5 12.75 6 6 9-13.5"></path>
-</svg>
-        </button><button type="button" class="lui-select-option" role="option" data-part="option" data-value="cherry" aria-selected="false" tabindex="-1">
-          <span class="lui-select-option-label">Cherry</span>
-          <svg class="lui-icon lui-select-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-  <path d="m4.5 12.75 6 6 9-13.5"></path>
 </svg>
         </button>
       </div>
-      <p class="lui-select-noresults" data-part="no-results" hidden>No results</p>
+      
+
+      <div data-scope="select" data-part="positioner">
+        <div class="lui-select-listbox" data-scope="select" data-part="content" role="listbox" aria-labelledby="g-fruit" hidden tabindex="-1">
+          <div class="lui-select-options">
+            <button type="button" id="select:g-fruit-select:option:apple" class="lui-select-option" role="option" data-scope="select" data-part="item" data-value="apple" aria-selected="false" tabindex="-1">
+              <span class="lui-select-option-label" data-scope="select" data-part="item-text">
+                Apple
+              </span>
+              <span data-scope="select" data-part="item-indicator" class="lui-select-check">
+                <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="m4.5 12.75 6 6 9-13.5"></path>
+</svg>
+              </span>
+            </button><button type="button" id="select:g-fruit-select:option:banana" class="lui-select-option" role="option" data-scope="select" data-part="item" data-value="banana" aria-selected="false" tabindex="-1">
+              <span class="lui-select-option-label" data-scope="select" data-part="item-text">
+                Banana
+              </span>
+              <span data-scope="select" data-part="item-indicator" class="lui-select-check">
+                <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="m4.5 12.75 6 6 9-13.5"></path>
+</svg>
+              </span>
+            </button><button type="button" id="select:g-fruit-select:option:cherry" class="lui-select-option" role="option" data-scope="select" data-part="item" data-value="cherry" aria-selected="false" tabindex="-1">
+              <span class="lui-select-option-label" data-scope="select" data-part="item-text">
+                Cherry
+              </span>
+              <span data-scope="select" data-part="item-indicator" class="lui-select-check">
+                <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="m4.5 12.75 6 6 9-13.5"></path>
+</svg>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -4650,41 +4595,53 @@ button.lui-group-band-main {
 </label>
   
 
-  <div id="g-fruit-sm-select" class="lui-select" phx-hook="LanternSelect" data-name="fruit_sm" data-no-results="No results">
-    <select class="lui-sr-only" data-part="native" name="fruit_sm" aria-hidden="true" tabindex="-1">
-      <option value=""></option>
-      <option value="apple">
-        Apple
-      </option><option value="banana" selected>
-        Banana
-      </option>
-    </select>
-    <button type="button" id="g-fruit-sm" class="lui-select-toggle" data-part="toggle" aria-haspopup="listbox" aria-expanded="false">
-      <span class="lui-select-value" data-part="label" data-placeholder="Select…">
-        Banana
-      </span>
-      <svg class="lui-icon lui-select-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <div id="g-fruit-sm-select" class="lui-select" phx-hook="LanternSelect" phx-mounted="[[&quot;ignore_attrs&quot;,{&quot;to&quot;:&quot;[data-scope=\&quot;select\&quot;]&quot;,&quot;attrs&quot;:[&quot;data-state&quot;,&quot;data-orientation&quot;,&quot;dir&quot;,&quot;id&quot;,&quot;data-disabled&quot;,&quot;data-readonly&quot;,&quot;data-invalid&quot;,&quot;data-required&quot;,&quot;data-open&quot;,&quot;data-focus&quot;,&quot;data-focus-visible&quot;,&quot;data-active&quot;,&quot;data-hover&quot;,&quot;data-placement&quot;,&quot;data-highlighted&quot;,&quot;data-value&quot;,&quot;aria-expanded&quot;,&quot;aria-controls&quot;,&quot;aria-haspopup&quot;,&quot;aria-labelledby&quot;,&quot;aria-label&quot;,&quot;aria-selected&quot;,&quot;aria-checked&quot;,&quot;aria-disabled&quot;,&quot;aria-multiselectable&quot;,&quot;disabled&quot;,&quot;hidden&quot;,&quot;role&quot;,&quot;tabindex&quot;,&quot;style&quot;]}]]" data-zag data-items="[{&quot;label&quot;:&quot;Apple&quot;,&quot;value&quot;:&quot;apple&quot;},{&quot;label&quot;:&quot;Banana&quot;,&quot;value&quot;:&quot;banana&quot;}]" data-default-value="[&quot;banana&quot;]" data-trigger-id="g-fruit-sm" data-labelled-by="g-fruit-sm" data-placeholder="Select…" data-name="fruit_sm">
+    <div data-scope="select" data-part="root">
+      <select class="lui-sr-only" data-scope="select" data-part="hidden-select" name="fruit_sm" aria-hidden="true" tabindex="-1">
+        <option value=""></option>
+        <option value="apple">
+          Apple
+        </option><option value="banana" selected>
+          Banana
+        </option>
+      </select>
+      <div data-scope="select" data-part="control">
+        <button type="button" id="g-fruit-sm" class="lui-select-toggle" data-scope="select" data-part="trigger" aria-haspopup="listbox" aria-expanded="false">
+          <span class="lui-select-value" data-scope="select" data-part="item-text" data-placeholder="Select…">
+            Banana
+          </span>
+          <svg class="lui-icon lui-select-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
   <path d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"></path>
-</svg>
-    </button>
-    
-
-    <div class="lui-select-listbox" data-part="panel" role="listbox" hidden tabindex="-1">
-      
-      <div class="lui-select-options" data-part="options">
-        <button type="button" class="lui-select-option" role="option" data-part="option" data-value="apple" aria-selected="false" tabindex="-1">
-          <span class="lui-select-option-label">Apple</span>
-          <svg class="lui-icon lui-select-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-  <path d="m4.5 12.75 6 6 9-13.5"></path>
-</svg>
-        </button><button type="button" class="lui-select-option" role="option" data-part="option" data-value="banana" aria-selected="true" tabindex="-1">
-          <span class="lui-select-option-label">Banana</span>
-          <svg class="lui-icon lui-select-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-  <path d="m4.5 12.75 6 6 9-13.5"></path>
 </svg>
         </button>
       </div>
-      <p class="lui-select-noresults" data-part="no-results" hidden>No results</p>
+      
+
+      <div data-scope="select" data-part="positioner">
+        <div class="lui-select-listbox" data-scope="select" data-part="content" role="listbox" aria-labelledby="g-fruit-sm" hidden tabindex="-1">
+          <div class="lui-select-options">
+            <button type="button" id="select:g-fruit-sm-select:option:apple" class="lui-select-option" role="option" data-scope="select" data-part="item" data-value="apple" aria-selected="false" tabindex="-1">
+              <span class="lui-select-option-label" data-scope="select" data-part="item-text">
+                Apple
+              </span>
+              <span data-scope="select" data-part="item-indicator" class="lui-select-check">
+                <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="m4.5 12.75 6 6 9-13.5"></path>
+</svg>
+              </span>
+            </button><button type="button" id="select:g-fruit-sm-select:option:banana" class="lui-select-option" role="option" data-scope="select" data-part="item" data-value="banana" aria-selected="true" tabindex="-1">
+              <span class="lui-select-option-label" data-scope="select" data-part="item-text">
+                Banana
+              </span>
+              <span data-scope="select" data-part="item-indicator" class="lui-select-check">
+                <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="m4.5 12.75 6 6 9-13.5"></path>
+</svg>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -4744,7 +4701,7 @@ button.lui-group-band-main {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-902" role="alert" class="lui-alert" data-color="info">
+      <div id="lui-alert-1508" role="alert" class="lui-alert" data-color="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4761,7 +4718,7 @@ button.lui-group-band-main {
 
   
 </div>
-      <div id="lui-alert-934" role="alert" class="lui-alert" data-color="success">
+      <div id="lui-alert-1540" role="alert" class="lui-alert" data-color="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4778,7 +4735,7 @@ button.lui-group-band-main {
 
   
 </div>
-      <div id="lui-alert-966" role="alert" class="lui-alert" data-color="warning">
+      <div id="lui-alert-1572" role="alert" class="lui-alert" data-color="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4795,7 +4752,7 @@ button.lui-group-band-main {
 
   
 </div>
-      <div id="lui-alert-998" role="alert" class="lui-alert" data-color="danger">
+      <div id="lui-alert-1604" role="alert" class="lui-alert" data-color="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

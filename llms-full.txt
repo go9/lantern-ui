@@ -1299,7 +1299,11 @@ Click-triggered floating panel holding arbitrary content.
 
 - `class` (:any) — Extra classes merged onto the panel.
 - `container_class` (:any) — Extra classes on the popover root wrapper.
+- `controlled` (:boolean, default false) — Server-driven open state: `open` is truth, patches flow into the machine.
 - `id` (:string) — Stable DOM id for the overlay hook; auto-generated when omitted, mirroring Fluxon's popover (drop-in parity).
+- `on_change` (:string) — Server event pushed on open change (`lantern:popover:set-open` replies).
+- `on_change_client` (:string) — Bubbling DOM CustomEvent dispatched on open change.
+- `open` (:boolean) — Open state for `controlled` mode (client mode ignores it).
 - `open_on_focus` (:boolean, default false) — accepted for Fluxon compat; click only
 - `open_on_hover` (:boolean, default false) — accepted for Fluxon compat; click only
 - `placement` (:string, values: bottom-start, bottom-end, top-start, top-end, default "bottom-start") — Where the panel anchors relative to the trigger.
@@ -1361,6 +1365,7 @@ Radio group for exclusive single selection.
 Radio group for exclusive single selection.
 
 - `class` (:any) — Extra classes merged onto the root element.
+- `controlled` (:boolean, default false) — Server-driven value: `value` is truth, patches flow into the machine.
 - `description` (:string) — Helper text under the group label.
 - `disabled` (:boolean, default false) — Render disabled and non-interactive.
 - `errors` (:list, default []) — Validation messages; derived from field when used.
@@ -1368,6 +1373,8 @@ Radio group for exclusive single selection.
 - `id` (:any) — Element id; derived from field or name when omitted.
 - `label` (:string) — Group label above the options.
 - `name` (:string) — Shared radio name; derived from field when omitted.
+- `on_change` (:string) — Server event pushed on pick (`lantern:radio:set-value` replies).
+- `on_change_client` (:string) — Bubbling DOM CustomEvent dispatched on pick.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `sublabel` (:string) — Secondary line under the group label.
 - `value` (:any) — Currently selected option value.
@@ -1710,6 +1717,7 @@ Toggle switch for binary settings.
 - `checked_value` (:any, default "true") — Value submitted when the switch is on.
 - `class` (:any) — Extra classes merged onto the root element.
 - `color` (:string, default "accent") — On-state track color token.
+- `controlled` (:boolean, default false) — Server-driven checked state: `checked` is truth, patches flow into the machine.
 - `description` (:string) — Helper text under the label stack.
 - `disabled` (:boolean, default false) — Render disabled and non-interactive.
 - `errors` (:list, default []) — Validation messages; derived from field when used.
@@ -1717,6 +1725,8 @@ Toggle switch for binary settings.
 - `id` (:any) — Element id; derived from field when omitted.
 - `label` (:string) — Primary label text beside the switch.
 - `name` (:string) — Form input name; derived from field when omitted.
+- `on_change` (:string) — Server event pushed on toggle (`lantern:switch:set-checked` replies).
+- `on_change_client` (:string) — Bubbling DOM CustomEvent dispatched on toggle.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `size` (:string, values: sm, md, lg, default "md") — Track and thumb size.
 - `sublabel` (:string) — Secondary label line under the primary label.
@@ -1901,16 +1911,20 @@ Toast notification stack.
 
 ### LanternUI.Components.Tooltip
 
-Tooltip - mirrors Fluxon's `tooltip/1` API with a small LiveView hook for hover/focus timing and viewport-aware placement.
+Tooltip - mirrors Fluxon's `tooltip/1` API.
 
 #### `tooltip/1`
 
-Tooltip - mirrors Fluxon's `tooltip/1` API with a small LiveView hook for hover/focus timing and viewport-aware placement.
+Tooltip - mirrors Fluxon's `tooltip/1` API.
 
 - `arrow` (:boolean, default true) — Show the small pointer arrow toward the trigger.
 - `class` (:any) — Extra classes merged onto the root element.
+- `controlled` (:boolean, default false) — Server-driven open state: `open` is truth, patches flow into the machine.
 - `delay` (:integer, default 200) — Milliseconds before the tip appears on hover/focus.
 - `id` (:string) — Stable DOM id for the tooltip hook; auto-generated when omitted, mirroring Fluxon's tooltip (drop-in parity).
+- `on_change` (:string) — Server event pushed on open change (`lantern:tooltip:set-open` replies).
+- `on_change_client` (:string) — Bubbling DOM CustomEvent dispatched on open change.
+- `open` (:boolean) — Open state for `controlled` mode (client mode ignores it).
 - `placement` (:string, values: top, bottom, left, right, default "top") — Preferred side of the trigger; may flip for viewport fit.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `value` (:string) — Plain-text tip when no :content slot is given.
