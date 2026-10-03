@@ -18,6 +18,17 @@ All notable changes to this project are documented here. The format follows
   ordered by status then recency, and counts preserved per row or in the
   filter chips.
 
+### Added
+- **Opt-in `shadcn` theme preset** (flicker #3420, step 1).
+  `data-lantern-theme="shadcn"` on `<html>` (or via
+  `<Theme.theme preset="shadcn" />`) maps lantern tokens onto shadcn's neutral
+  vocabulary (background/foreground, card, popover, primary, secondary, muted,
+  accent, destructive, border, input, ring, radius, chart-1..5, sidebar-*)
+  light + dark, and moves proportions to the shadcn scale (h-9 default
+  controls, h-8 sm, rounded-xl card, rounded-md badge, headerless table head).
+  The default theme is unchanged. Gallery baseline (4 HTML + 4 screenshots,
+  default/shadcn × light/dark) lives in `test/fixtures/shadcn_gallery/`.
+
 ## [0.8.7] - 2026-09-30
 
 ### Added

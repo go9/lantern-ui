@@ -1862,6 +1862,7 @@ const LanternTheme = {
       this.config = null
     }
     this.apply()
+    this.applyPreset()
 
     this.onSet = (e) => this.set(e.detail)
     window.addEventListener("lantern:set-theme", this.onSet)
@@ -1915,6 +1916,20 @@ const LanternTheme = {
 
     if (this.config.density) html.setAttribute("data-lantern-density", this.config.density)
     else html.removeAttribute("data-lantern-density")
+  },
+
+  updated() {
+    this.applyPreset()
+  },
+
+  // Built-in preset from `<Theme.theme preset="...">`: a data attribute on
+  // <html> that the preset scope in lantern_ui_theme.css keys off. Independent
+  // of persisted overrides; a nil preset removes only the value it set.
+  applyPreset() {
+    const html = document.documentElement
+    const preset = this.el.dataset.preset
+    if (preset) html.setAttribute("data-lantern-theme", preset)
+    else if (html.getAttribute("data-lantern-theme")) html.removeAttribute("data-lantern-theme")
   },
 
   destroyed() {

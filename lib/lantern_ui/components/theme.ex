@@ -22,6 +22,12 @@ defmodule LanternUI.Components.Theme do
   `--lantern-<key>` custom properties scoped to the matching theme (class or
   system); `radius` maps to `--lantern-radius`; `density` sets
   `data-lantern-density` on `<html>`. A `nil`/empty detail resets.
+
+  Built-in presets (opt-in, never default): `preset="shadcn"` sets
+  `data-lantern-theme="shadcn"` on `<html>`, swapping lantern's tokens onto
+  shadcn's neutral vocabulary (light + dark) with shadcn proportions
+  (see `priv/static/lantern_ui_theme.css`). Or set the attribute by hand on
+  `<html>` or any subtree — no hook needed.
   """
   use Phoenix.Component
 
@@ -32,9 +38,21 @@ defmodule LanternUI.Components.Theme do
     doc: "localStorage key for persisted token overrides."
   )
 
+  attr(:preset, :string,
+    default: nil,
+    values: ["shadcn", nil],
+    doc: "Built-in theme preset. Sets data-lantern-theme on <html> via the hook."
+  )
+
   def theme(assigns) do
     ~H"""
-    <span id={@id} phx-hook="LanternTheme" data-storage-key={@storage_key} hidden></span>
+    <span
+      id={@id}
+      phx-hook="LanternTheme"
+      data-storage-key={@storage_key}
+      data-preset={@preset}
+      hidden
+    ></span>
     """
   end
 end

@@ -67,7 +67,8 @@
   --lantern-danger-fg: #ffffff;
   --lantern-success: var(--success, #16a34a);
   --lantern-warning: var(--warning, #d97706);
-  --lantern-info: var(--info, var(--lantern-accent));
+  /* info is blue, not the brand colour: accent-as-info read as an error next to danger */
+  --lantern-info: var(--info, oklch(0.62 0.17 255));
 
   /* ── Focus ring ── */
   --lantern-ring: var(--lantern-accent);
@@ -273,4 +274,187 @@
   :root {
     --lantern-duration: 0ms;
   }
+}
+
+/*
+ * ── shadcn preset (opt-in) ──────────────────────────────────────────────
+ * `<html data-lantern-theme="shadcn">` (or any subtree) swaps lantern's
+ * semantic tokens onto shadcn's neutral vocabulary — the same values as
+ * `shadcn init -p nova` (neutral base, radius 0.625rem), minus the pilot's
+ * brand-orange primary: primary stays monochrome here so each app keeps its
+ * own brand via `--primary`, exactly like the default theme.
+ *
+ * Both vocabularies are defined: `--background`, `--foreground`, `--card`,
+ * … (so shadcn-shaped markup works) and every `--lantern-*` token is
+ * re-pointed at them (so lantern components follow). Dark mode follows the
+ * `.dark` class, like shadcn — no `prefers-color-scheme` branch.
+ *
+ * Proportions move to shadcn's scale in this scope only: default control
+ * height h-9 (2.25rem), sm h-8 (2rem), card at rounded-xl, badge at
+ * rounded-md, headerless table head, alert at px-4 py-3, ring at 50%.
+ * The default theme above is untouched.
+ */
+
+[data-lantern-theme="shadcn"] {
+  /* ── shadcn vocabulary · light (neutral) ── */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+
+  /* ── lantern tokens re-pointed at the shadcn vocabulary ── */
+  --lantern-fg: var(--foreground);
+  --lantern-fg-muted: var(--muted-foreground);
+  --lantern-fg-subtle: oklch(0.708 0 0);
+  --lantern-surface: var(--background);
+  --lantern-surface-raised: var(--card);
+  --lantern-surface-sunken: var(--muted);
+  --lantern-surface-hover: var(--accent);
+  --lantern-border: var(--border);
+  --lantern-border-strong: var(--input);
+  --lantern-primary: var(--primary);
+  --lantern-primary-fg: var(--primary-foreground);
+  --lantern-secondary: var(--secondary);
+  --lantern-secondary-fg: var(--secondary-foreground);
+  /* shadcn's accent is a grey fill; lantern's accent marks the active /
+     selected / linked thing, which in shadcn is primary. */
+  --lantern-accent: var(--primary);
+  --lantern-accent-fg: var(--primary-foreground);
+  --lantern-accent-soft: color-mix(in oklab, var(--primary) 10%, transparent);
+  --lantern-danger: var(--destructive);
+  --lantern-danger-fg: var(--destructive-foreground);
+  --lantern-ring: var(--ring);
+  --lantern-ring-soft: color-mix(in oklab, var(--ring) 50%, transparent);
+  --lantern-radius: var(--radius);
+  --lantern-radius-sm: calc(var(--radius) - 4px);
+  --lantern-radius-md: calc(var(--radius) - 2px);
+  --lantern-radius-lg: var(--radius);
+
+  /* ── shadcn proportions: default h-9 ── */
+  --lantern-control-h: 2.25rem;
+  --lantern-control-px: 0.75rem;
+  --lantern-text: 0.875rem;
+  --lantern-text-sm: 0.8125rem;
+}
+
+.dark[data-lantern-theme="shadcn"],
+[data-lantern-theme="shadcn"].dark,
+.dark [data-lantern-theme="shadcn"],
+[data-lantern-theme="shadcn"] .dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+
+  --lantern-fg-subtle: oklch(0.556 0 0);
+  --lantern-accent-soft: color-mix(in oklab, var(--primary) 18%, transparent);
+}
+
+/* ── shadcn proportions per component (same scope, so the default theme
+   never sees them): sm controls at h-8, card at rounded-xl with p-6 body,
+   badge at rounded-md/text-xs, headerless table head, alert at px-4 py-3. */
+[data-lantern-theme="shadcn"] .lui-btn[data-size="sm"],
+[data-lantern-theme="shadcn"] .lui-btn[data-size="icon-sm"] {
+  height: 2rem;
+}
+[data-lantern-theme="shadcn"] .lui-btn[data-size="icon-sm"] {
+  width: 2rem;
+}
+[data-lantern-theme="shadcn"] .lui-field[data-size="sm"] .lui-input-wrap,
+[data-lantern-theme="shadcn"] .lui-field[data-size="sm"] .lui-color-wrap {
+  height: 2rem;
+}
+[data-lantern-theme="shadcn"] .lui-input::placeholder,
+[data-lantern-theme="shadcn"] .lui-textarea::placeholder,
+[data-lantern-theme="shadcn"] .lui-select-value[data-empty] {
+  color: var(--muted-foreground);
+}
+[data-lantern-theme="shadcn"] .lui-card {
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: var(--lantern-shadow);
+}
+[data-lantern-theme="shadcn"] .lui-card-body {
+  padding: 1.5rem;
+}
+[data-lantern-theme="shadcn"] .lui-card-head {
+  padding: 1.5rem 1.5rem 0;
+}
+[data-lantern-theme="shadcn"] .lui-card-foot {
+  padding: 0.75rem 1.5rem;
+}
+[data-lantern-theme="shadcn"] .lui-badge {
+  border-radius: var(--lantern-radius-md);
+}
+[data-lantern-theme="shadcn"] .lui-badge[data-size="md"] {
+  font-size: 0.75rem;
+  padding: 0 0.625rem;
+  height: 1.375rem;
+}
+[data-lantern-theme="shadcn"] .lui-th {
+  background: transparent;
+  font-weight: 500;
+}
+[data-lantern-theme="shadcn"] .lui-tr:hover {
+  background: color-mix(in oklab, var(--muted) 50%, transparent);
+}
+[data-lantern-theme="shadcn"] .lui-alert {
+  padding: 0.75rem 1rem;
+  border-radius: var(--lantern-radius-lg);
 }
