@@ -1,0 +1,64 @@
+{
+  "ticket-index": {
+    "expects": [
+      "/eval/tickets",
+      "EvalTicketsLive"
+    ]
+  },
+  "settings-form": {
+    "expects": [
+      "/eval/settings",
+      "EvalSettingsLive"
+    ]
+  },
+  "record-detail-inspector": {
+    "expects": [
+      "/eval/servers",
+      "EvalServerLive"
+    ]
+  },
+  "dashboard-stats": {
+    "expects": [
+      "/eval/overview",
+      "EvalOverviewLive"
+    ]
+  },
+  "confirm-delete-modal": {
+    "expects": [
+      "/eval/tokens",
+      "EvalTokensLive"
+    ]
+  },
+  "paginated-table-search": {
+    "expects": [
+      "/eval/people",
+      "EvalPeopleLive"
+    ]
+  },
+  "empty-loading-error": {
+    "expects": [
+      "/eval/report",
+      "EvalReportLive"
+    ]
+  },
+  "flash-toast": {
+    "expects": [
+      "/eval/notifications",
+      "EvalNotificationsLive"
+    ]
+  },
+  "onboarding-form": {
+    "expects": [
+      "/eval/onboarding",
+      "EvalOnboardingLive"
+    ]
+  },
+  "app-shell-nav": {
+    "expects": [
+      "/eval/admin",
+      "EvalAdminLive",
+      "EvalAdminUsersLive",
+      "EvalAdminBillingLive"
+    ]
+  }
+}
