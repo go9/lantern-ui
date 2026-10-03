@@ -132,13 +132,30 @@ test("j/k in an input inside the list do not move focus", () => {
   }
 })
 
-test("hooks bundle inlines floating-ui and keeps the public import surface", async () => {
-  const { readFile } = await import("node:fs/promises")
+test("split bundle shares floating-ui in one chunk and keeps the public import surface", async () => {
+  const { readFile, readdir } = await import("node:fs/promises")
   const bundle = await readFile(new URL("../../priv/static/lantern_ui_hooks.js", import.meta.url), "utf8")
+  const zag = await readFile(new URL("../../priv/static/zag/select.js", import.meta.url), "utf8")
   const source = await readFile(new URL("../../assets/js/lantern_ui_hooks.js", import.meta.url), "utf8")
+  const chunks = await readdir(new URL("../../priv/static/chunks/", import.meta.url))
+
+  // Source still reaches floating-ui through the npm package…
   assert.match(source, /from "@floating-ui\/dom"/)
+  // …but neither committed entry inlines it: both import the shared chunk.
   assert.doesNotMatch(bundle, /from "@floating-ui\/dom"/)
-  assert.match(bundle, /export \{[\s\S]*\bHooks\b/)
-  assert.match(bundle, /export \{[\s\S]*installBehaviours/)
+  assert.doesNotMatch(zag, /from "@floating-ui\/dom"/)
+  assert.match(bundle, /from\s*"\.\/chunks\/[^"]+"/)
+  assert.match(zag, /from\s*"\.\.\/chunks\/[^"]+"/)
+  // Exactly one shared chunk, and it is the only file beside the entries
+  // that carries floating-ui.
+  assert.equal(chunks.length, 1)
+  const shared = await readFile(new URL(`../../priv/static/chunks/${chunks[0]}`, import.meta.url), "utf8")
+  assert.match(shared, /getClippingRect|computePosition/)
+  // The Zag entry stays dynamically imported (on demand, never in main).
+  assert.match(bundle, /import\("\.\/zag\/select\.js"\)/)
+  assert.doesNotMatch(bundle, /LanternZagSelect|@zag-js\/select/)
+  // Public surface unchanged.
+  assert.match(bundle, /export\s*\{[^}]*\bHooks\b/)
+  assert.match(bundle, /export\s*\{[^}]*installBehaviours/)
 })
 

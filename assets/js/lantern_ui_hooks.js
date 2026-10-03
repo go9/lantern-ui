@@ -990,7 +990,7 @@ const LanternSidebar = {
 // data-multiple, options toggle without closing and one hidden name[] input
 // is maintained per selection; with a search input, options filter as you
 // type and navigation skips hidden options.
-const LanternSelect = {
+const LanternSelectLegacy = {
   mounted() {
     this.toggle = this.el.querySelector('[data-part="toggle"]')
     this.panel = this.el.querySelector('[data-part="panel"]')
@@ -1728,7 +1728,39 @@ const LanternCollapse = {
   },
 
   destroyed() {
-    this.el.removeEventListener("click", this.onClick)
+    this.cleanup.forEach((fn) => fn())
+  },
+}
+
+// `LanternSelect` serves two implementations behind one public hook name.
+// Roots carrying `data-zag` (the non-searchable rich path) run the Zag state
+// machine, loaded on demand so pages that render no Zag select ship no Zag
+// code. Everything else — notably `searchable` — stays on the legacy hook.
+const LanternSelect = {
+  mounted() {
+    if (this.el.hasAttribute("data-zag")) {
+      import("./zag/select.js").then((m) => {
+        if (!this.el.isConnected) return
+        this._zagDelegate = m.mountZagSelect(this)
+      })
+    } else {
+      LanternSelectLegacy.mounted.call(this)
+    }
+  },
+
+  beforeUpdate() {
+    if (this._zagDelegate) this._zagDelegate.beforeUpdate()
+    else if (this.el.hasAttribute("data-zag")) this._zagPendingUpdate = true
+  },
+
+  updated() {
+    if (this._zagDelegate) this._zagDelegate.updated()
+    else if (this.el.hasAttribute("data-zag")) this._zagPendingUpdate = true
+  },
+
+  destroyed() {
+    if (this._zagDelegate) this._zagDelegate.destroyed()
+    else if (!this.el.hasAttribute("data-zag")) LanternSelectLegacy.destroyed.call(this)
   },
 }
 

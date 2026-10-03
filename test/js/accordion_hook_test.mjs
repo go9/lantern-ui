@@ -2,12 +2,8 @@ import assert from "node:assert/strict"
 import { readFile } from "node:fs/promises"
 import { afterEach, test } from "node:test"
 
-const hookSource = await readFile(
-  new URL("../../priv/static/lantern_ui_hooks.js", import.meta.url),
-  "utf8"
-)
-const encodedHookSource = Buffer.from(hookSource).toString("base64")
-const hookModule = await import(`data:text/javascript;base64,${encodedHookSource}`)
+// File URL (not data:) so the bundle's static ./chunks/* import resolves.
+const hookModule = await import(new URL("../../priv/static/lantern_ui_hooks.js", import.meta.url))
 const { LanternAccordion } = hookModule
 
 class FakeEvent {

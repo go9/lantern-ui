@@ -212,16 +212,18 @@ defmodule LanternUI.ARIAConformanceTest do
              "switch now declares role=switch — promote it into the conformant block"
     end
 
-    test "select: listbox is never referenced by the combobox" do
-      html =
-        render(fn assigns ->
-          ~H"""
-          <Select.select name="channel" value="ebay" options={["eBay", "Shopify"]} />
-          """
-        end)
-
-      refute html =~ ~s(aria-controls),
-             "select now wires aria-controls — promote it into the conformant block"
+    test "select: trigger controls the listbox; the zag hook owns the idref at runtime" do
+      # Promoted from the defect list by the Zag prototype (flicker #3416):
+      # `getTriggerProps` wires `aria-controls` to the content id on mount
+      # and owns `aria-selected` on the options after that, so both are
+      # declared hook-owned. The server still renders the initial selected
+      # state as literals for the no-JS / pre-hydration paint.
+      render(fn assigns ->
+        ~H"""
+        <Select.select name="channel" value="ebay" options={["eBay", "Shopify"]} />
+        """
+      end)
+      |> assert_conformant(hook_owned: ["aria-expanded", "aria-controls", "aria-selected"])
     end
 
     test "tooltip: role=tooltip panel has no id, so nothing can describe-by it" do

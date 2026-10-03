@@ -232,9 +232,12 @@ let liveSocket = new LiveSocket("/live", Socket, { params: {/* ... */}, hooks: H
 The file you import is the esbuild bundle of `assets/js/`. Data-attribute
 behaviours (list keyboard nav, persist, collapse) install themselves on import — see
 [docs/behaviours.md](docs/behaviours.md). Overlay panels (popover, dropdown,
-select, menu, autocomplete) are placed with `@floating-ui/dom`, inlined in
-the bundle so the import path stays
-`deps/lantern_ui/priv/static/lantern_ui_hooks.js`.
+select, menu, autocomplete) are placed with `@floating-ui/dom`, shipped in
+the shared `priv/static/chunks/` file both the main bundle and the on-demand
+Zag entry import — consumers still import only
+`deps/lantern_ui/priv/static/lantern_ui_hooks.js`, plus `type="module"` +
+`--splitting` on their own esbuild when they want the Zag chunk lazy (see
+docs/behaviours.md → "On-demand Zag chunk").
 
 `sparkline` and `bar_chart` need no JavaScript. Accordion always requires the
 hook bundle above.
@@ -387,7 +390,7 @@ plain text — it is HTML-escaped before it reaches the tooltip.
 ```bash
 mix test    # Elixir: rendering, ARIA conformance, class merging
 mix lantern.lint   # optional: same check consumers run (this repo is mostly lui-* CSS)
-npm run build      # assets/js → priv/static/lantern_ui_hooks.js (commit the result)
+npm run build      # assets/js → priv/static/ (split bundle + chunks/ + zag/ + .standalone fallback; commit the result)
 npm test           # JavaScript: the committed hooks bundle against jsdom
 ```
 
