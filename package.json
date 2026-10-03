@@ -2,10 +2,10 @@
   "name": "lantern-ui-dev",
   "private": true,
   "version": "0.0.0",
-  "description": "Build + test harness for priv/static/lantern_ui_hooks.js. NOT published to npm and NOT part of the Hex package (see the `files:` whitelist in mix.exs). Consumers import the committed bundle — they do not need a JS toolchain.",
+  "description": "Build + test harness for priv/static/lantern_ui_hooks.js. NOT published to npm and NOT part of the Hex package (see the `files:` whitelist in mix.exs). Consumers import the committed bundle — they do not need a JS toolchain. Layout: lantern_ui_hooks.js + chunks/ + zag/select.js is the split on-demand build (shared floating-ui lives in chunks/); lantern_ui_hooks.standalone.js is the single-file fallback with everything inlined.",
   "type": "module",
   "scripts": {
-    "build": "esbuild assets/js/lantern_ui_hooks.js --bundle --format=esm --outfile=priv/static/lantern_ui_hooks.js --external:./zag/select.js && esbuild assets/js/zag/select.js --bundle --format=esm --outfile=priv/static/zag/select.js",
+    "build": "rm -rf priv/static/chunks priv/static/zag && esbuild assets/js/lantern_ui_hooks.js assets/js/zag/select.js --bundle --format=esm --minify --splitting --outdir=priv/static --chunk-names=chunks/[name]-[hash] && esbuild assets/js/lantern_ui_hooks.js --bundle --format=esm --minify --outfile=priv/static/lantern_ui_hooks.standalone.js",
     "test": "node --test test/js/*.mjs"
   },
   "dependencies": {
