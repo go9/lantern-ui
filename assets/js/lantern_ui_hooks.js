@@ -1625,117 +1625,34 @@ const LanternAutocomplete = {
   },
 }
 
-// Slider value engine (APG slider pattern): pointer drag on the track plus
-// Arrow/Home/End/PageUp/PageDown stepping on the role="slider" thumb. The hook
-// owns aria-valuenow/aria-valuetext and the --lui-slider-pct visual at runtime.
-// Commits write the hidden input (the real form control) and dispatch bubbling
-// input+change so phx-change and LiveViewTest's form/3 see the value — key
-// steps and drag release commit; intermediate drag moves are visual-only.
+// Slider: Zag-driven (`@zag-js/slider`, on-demand chunk). The hook root
+// carries `data-zag`; the machine owns the value, pointer drag, and keyboard
+// stepping while the native hidden input stays the form surface. Drag moves
+// update visuals only, the release commits; keyboard steps commit
+// immediately. No legacy path: every slider renders `data-zag`.
 const LanternSlider = {
   mounted() {
-    this.input = this.el.querySelector('[data-part="input"]')
-    this.track = this.el.querySelector('[data-part="track"]')
-    this.thumb = this.el.querySelector('[data-part="thumb"]')
-
-    this.onPointerDown = (e) => this.startDrag(e)
-    this.onKeydown = (e) => this.onKey(e)
-    this.el.addEventListener("pointerdown", this.onPointerDown)
-    this.thumb.addEventListener("keydown", this.onKeydown)
+    import("./zag/slider.js").then((m) => {
+      if (!this.el.isConnected) return
+      this._zagDelegate = m.mountZagSlider(this)
+    })
   },
 
-  disabled() {
-    return this.el.hasAttribute("data-disabled")
+  beforeUpdate() {
+    if (this._zagDelegate) this._zagDelegate.beforeUpdate()
+    else this._zagPendingUpdate = true
   },
 
-  bounds() {
-    const num = (key, fallback) => {
-      const v = parseFloat(this.el.dataset[key])
-      return Number.isFinite(v) ? v : fallback
-    }
-    const min = num("min", 0)
-    return { min, max: Math.max(num("max", 100), min), step: Math.abs(num("step", 1)) || 1 }
-  },
-
-  value() {
-    const v = parseFloat(this.input.value)
-    return Number.isFinite(v) ? v : this.bounds().min
-  },
-
-  // Snap to the step grid (anchored at min), clamp, and kill float drift —
-  // min 0 / step 0.1 must yield 0.3, not 0.30000000000000004.
-  snap(raw) {
-    const { min, max, step } = this.bounds()
-    const decimals = (s) => (String(s).split(".")[1] || "").length
-    const places = Math.max(decimals(step), decimals(min))
-    const v = min + Math.round((raw - min) / step) * step
-    return Math.min(max, Math.max(min, parseFloat(v.toFixed(places))))
-  },
-
-  valueFromPointer(e) {
-    const rect = this.track.getBoundingClientRect()
-    const { min, max } = this.bounds()
-    const ratio = rect.width === 0 ? 0 : (e.clientX - rect.left) / rect.width
-    return min + Math.min(1, Math.max(0, ratio)) * (max - min)
-  },
-
-  set(raw, { commit } = {}) {
-    const v = this.snap(raw)
-    const { min, max } = this.bounds()
-    this.thumb.setAttribute("aria-valuenow", String(v))
-    const tpl = this.el.dataset.valueText
-    if (tpl) this.thumb.setAttribute("aria-valuetext", tpl.replace("{value}", String(v)))
-    const pct = max === min ? 0 : ((v - min) / (max - min)) * 100
-    this.el.style.setProperty("--lui-slider-pct", `${pct}%`)
-    if (commit && this.input.value !== String(v)) {
-      this.input.value = String(v)
-      this.input.dispatchEvent(new Event("input", { bubbles: true }))
-      this.input.dispatchEvent(new Event("change", { bubbles: true }))
-    }
-  },
-
-  startDrag(e) {
-    if (this.disabled() || e.button !== 0) return
-    e.preventDefault()
-    this.thumb.focus()
-    this.el.setPointerCapture?.(e.pointerId)
-    this.set(this.valueFromPointer(e))
-
-    const move = (ev) => this.set(this.valueFromPointer(ev))
-    const stop = (ev) => {
-      this.el.removeEventListener("pointermove", move)
-      this.el.removeEventListener("pointerup", stop)
-      this.el.removeEventListener("pointercancel", stop)
-      this.set(this.valueFromPointer(ev), { commit: true })
-    }
-    this.el.addEventListener("pointermove", move)
-    this.el.addEventListener("pointerup", stop)
-    this.el.addEventListener("pointercancel", stop)
-  },
-
-  onKey(e) {
-    if (this.disabled()) return
-    const { min, max, step } = this.bounds()
-    const cur = this.value()
-    let next
-    if (e.key === "ArrowRight" || e.key === "ArrowUp") next = cur + step
-    else if (e.key === "ArrowLeft" || e.key === "ArrowDown") next = cur - step
-    else if (e.key === "Home") next = min
-    else if (e.key === "End") next = max
-    else if (e.key === "PageUp") next = cur + step * 10
-    else if (e.key === "PageDown") next = cur - step * 10
-    else return
-    e.preventDefault()
-    this.set(next, { commit: true })
+  updated() {
+    if (this._zagDelegate) this._zagDelegate.updated()
+    else this._zagPendingUpdate = true
   },
 
   destroyed() {
-    this.el.removeEventListener("pointerdown", this.onPointerDown)
-    this.thumb.removeEventListener("keydown", this.onKeydown)
+    if (this._zagDelegate) this._zagDelegate.destroyed()
   },
 }
 
-// Generic collapsible section (data-part="collapse-toggle" flips
-// data-collapsed on the hook root; persisted per element id).
 const LanternCollapse = {
   key() {
     return `lui-collapse:${this.el.id}`
@@ -2900,199 +2817,31 @@ const LanternToast = {
 
 // ── Accordion ─────────────────────────────────────────────────────────────
 //
-// Client driver for `LanternUI.Components.Accordion`. The server renders the
-// full anatomy (headers, panels, idrefs) and the initial open state; this hook
-// owns toggling and the WAI-ARIA APG accordion keyboard model — arrow-key focus
-// movement between headers can't be delivered server-side. Panels stay in the
-// DOM and are shown/hidden via the `hidden` attribute (idrefs always resolve;
-// collapsed content leaves the tab order + a11y tree). Open state is client-
-// owned after mount and re-applied across LiveView patches (which strip
-// hook-set attributes).
+// Zag-driven (`@zag-js/accordion`, on-demand chunk). The hook root carries
+// `data-zag`; the machine owns expanded state, single/multiple-open
+// enforcement, and arrow-key navigation. Item identity is the stable
+// server-rendered item id; nested accordions stay isolated. No legacy path:
+// every accordion renders `data-zag`.
 const LanternAccordion = {
-  // A nested accordion's triggers are descendants of the outer root too. Every
-  // query and delegated event must therefore verify which hook root owns it.
-  ownedTrigger(node) {
-    const trigger = node && node.closest && node.closest('[data-part="trigger"]')
-    if (!trigger || trigger.disabled) return null
-    return trigger.closest('[phx-hook="LanternAccordion"]') === this.el ? trigger : null
-  },
-
-  triggers() {
-    return Array.from(this.el.querySelectorAll('[data-part="trigger"]')).filter(
-      (trigger) => this.ownedTrigger(trigger) === trigger
-    )
-  },
-
-  isMultiple() {
-    return this.el.dataset.multiple === "true"
-  },
-
-  preventsAllClosed() {
-    return this.el.dataset.preventAllClosed === "true"
-  },
-
-  panelFor(trigger) {
-    const item = trigger.closest('[data-part="item"]')
-    if (!item || item.closest('[phx-hook="LanternAccordion"]') !== this.el) return null
-    return Array.from(item.querySelectorAll('[data-part="panel"]')).find(
-      (panel) => panel.closest('[data-part="item"]') === item
-    )
-  },
-
-  remember(trigger, open) {
-    if (trigger.id) this.stateById.set(trigger.id, open)
-    const position = this.triggers().indexOf(trigger)
-    if (position !== -1) this.stateByPosition[position] = open
-  },
-
-  setOpen(trigger, open) {
-    const item = trigger.closest('[data-part="item"]')
-    const panel = this.panelFor(trigger)
-    trigger.setAttribute("aria-expanded", String(open))
-    if (panel) panel.hidden = !open
-    if (item) item.setAttribute("data-state", open ? "open" : "closed")
-    this.remember(trigger, open)
-  },
-
-  syncAriaDisabled() {
-    const triggers = this.triggers()
-    const open = triggers.filter((trigger) => trigger.getAttribute("aria-expanded") === "true")
-    const inoperable = this.preventsAllClosed() && open.length === 1 ? open[0] : null
-    triggers.forEach((trigger) => {
-      if (trigger === inoperable) trigger.setAttribute("aria-disabled", "true")
-      else trigger.removeAttribute("aria-disabled")
-    })
-  },
-
-  enforceConstraints() {
-    const triggers = this.triggers()
-    const open = triggers.filter((trigger) => trigger.getAttribute("aria-expanded") === "true")
-    if (!this.isMultiple()) open.slice(1).forEach((trigger) => this.setOpen(trigger, false))
-    const allClosed = this.triggers().every(
-      (trigger) => trigger.getAttribute("aria-expanded") !== "true"
-    )
-    if (this.preventsAllClosed() && allClosed) {
-      const first = triggers[0]
-      if (first) this.setOpen(first, true)
-    }
-    this.syncAriaDisabled()
-  },
-
-  toggle(trigger) {
-    const open = trigger.getAttribute("aria-expanded") === "true"
-    if (open && trigger.getAttribute("aria-disabled") === "true") return
-    if (!open && !this.isMultiple()) {
-      this.triggers().forEach((item) => item !== trigger && this.setOpen(item, false))
-    }
-    this.setOpen(trigger, !open)
-    this.enforceConstraints()
-  },
-
-  focusBy(current, delta) {
-    const items = this.triggers()
-    const i = items.indexOf(current)
-    if (i === -1) return
-    const next = (i + delta + items.length) % items.length
-    items[next].focus()
-  },
-
-  captureFocus() {
-    const active = this.ownedTrigger(document.activeElement)
-    this.focusedId = active && active.id
-    this.focusedPosition = active ? this.triggers().indexOf(active) : -1
-  },
-
-  restoreFocus() {
-    if (this.focusedPosition < 0) return
-    const triggers = this.triggers()
-    const byId = triggers.find((item) => item.id === this.focusedId)
-    const trigger = byId || triggers[this.focusedPosition]
-    if (trigger) trigger.focus()
-  },
-
-  restoreState() {
-    const previousById = this.stateById
-    const previousByPosition = this.stateByPosition
-    this.stateById = new Map()
-    this.stateByPosition = []
-    this.triggers().forEach((trigger, position) => {
-      const serverOpen = trigger.getAttribute("aria-expanded") === "true"
-      const open = previousById.has(trigger.id)
-        ? previousById.get(trigger.id)
-        : (previousByPosition[position] ?? serverOpen)
-      this.setOpen(trigger, open)
-    })
-    this.enforceConstraints()
-  },
-
   mounted() {
-    // State is keyed by stable item id when available and mirrored by owned
-    // item position so Fluxon's optional/generated ids can change on a patch.
-    this.stateById = new Map()
-    this.stateByPosition = []
-    this.focusedId = null
-    this.focusedPosition = -1
-    this.triggers().forEach((trigger) => {
-      this.remember(trigger, trigger.getAttribute("aria-expanded") === "true")
+    import("./zag/accordion.js").then((m) => {
+      if (!this.el.isConnected) return
+      this._zagDelegate = m.mountZagAccordion(this)
     })
-    this.enforceConstraints()
-
-    this.onClick = (event) => {
-      const trigger = this.ownedTrigger(event.target)
-      if (trigger) this.toggle(trigger)
-    }
-
-    this.onKeydown = (event) => {
-      const trigger = this.ownedTrigger(event.target)
-      if (!trigger) return
-      const items = this.triggers()
-      switch (event.key) {
-        case "ArrowDown":
-          event.preventDefault()
-          this.focusBy(trigger, 1)
-          break
-        case "ArrowUp":
-          event.preventDefault()
-          this.focusBy(trigger, -1)
-          break
-        case "Home":
-          event.preventDefault()
-          items[0] && items[0].focus()
-          break
-        case "End":
-          event.preventDefault()
-          items[items.length - 1] && items[items.length - 1].focus()
-          break
-      }
-    }
-
-    this.el.addEventListener("click", this.onClick)
-    this.el.addEventListener("keydown", this.onKeydown)
   },
 
   beforeUpdate() {
-    this.captureFocus()
+    if (this._zagDelegate) this._zagDelegate.beforeUpdate()
+    else this._zagPendingUpdate = true
   },
 
-  // LiveView patches re-render the server's initial state and may regenerate
-  // optional ids. Reapply client-owned state by stable id, then item position.
   updated() {
-    this.restoreState()
-    this.restoreFocus()
-  },
-
-  disconnected() {
-    this.captureFocus()
-  },
-
-  reconnected() {
-    this.restoreState()
-    this.restoreFocus()
+    if (this._zagDelegate) this._zagDelegate.updated()
+    else this._zagPendingUpdate = true
   },
 
   destroyed() {
-    this.el.removeEventListener("click", this.onClick)
-    this.el.removeEventListener("keydown", this.onKeydown)
+    if (this._zagDelegate) this._zagDelegate.destroyed()
   },
 }
 
@@ -3264,7 +3013,9 @@ Hooks.LanternSidePanel = LanternSidePanel
 export { LanternSidePanel }
 
 // Tabs / segmented control: Left/Right/Up/Down/Home/End move and activate.
-const LanternTabs = {
+// Legacy keyboard path, kept for `role="radiogroup"` lists (Zag's tab
+// machine queries `role=tab`) and any other root without `data-zag`.
+const LanternTabsLegacy = {
   mounted() {
     this.onKey = (event) => this.onKeydown(event)
     this.el.addEventListener("keydown", this.onKey)
@@ -3303,9 +3054,77 @@ const LanternTabs = {
   },
 }
 
+// `LanternTabs` serves two implementations behind one public hook name.
+// Roots carrying `data-zag` (hooked tablists) run the Zag tabs machine,
+// loaded on demand; patch/navigate/URL stay the source of truth and the
+// machine never intercepts activation. Radiogroup lists and anything else
+// without `data-zag` stay on the legacy keyboard hook.
+//
+// The legacy methods are spread into this object (not `.call`ed across) so
+// any `this.*` cross-calls resolve.
+const LanternTabs = {
+  ...LanternTabsLegacy,
+
+  mounted() {
+    if (this.el.hasAttribute("data-zag")) {
+      import("./zag/tabs.js").then((m) => {
+        if (!this.el.isConnected) return
+        this._zagDelegate = m.mountZagTabs(this)
+      })
+    } else {
+      LanternTabsLegacy.mounted.call(this)
+    }
+  },
+
+  beforeUpdate() {
+    if (this._zagDelegate) this._zagDelegate.beforeUpdate()
+    else if (this.el.hasAttribute("data-zag")) this._zagPendingUpdate = true
+  },
+
+  updated() {
+    if (this._zagDelegate) this._zagDelegate.updated()
+    else if (this.el.hasAttribute("data-zag")) this._zagPendingUpdate = true
+  },
+
+  destroyed() {
+    if (this._zagDelegate) this._zagDelegate.destroyed()
+    else if (!this.el.hasAttribute("data-zag")) LanternTabsLegacy.destroyed.call(this)
+  },
+}
+
 const LanternSegmented = LanternTabs
-Hooks.LanternTabs = LanternTabs
-Hooks.LanternSegmented = LanternSegmented
-export { LanternTabs, LanternSegmented }
+
+// Pager: Zag-driven (`@zag-js/pagination`, on-demand chunk). The `<nav>`
+// root carries `data-zag`; the machine owns the page value, arrow-key
+// navigation, and aria-current bookkeeping. Links keep their
+// server-rendered patch hrefs and the machine never intercepts activation,
+// so the URL stays the source of truth (controlled). No legacy path:
+// every pager renders `data-zag`.
+const LanternPagination = {
+  mounted() {
+    import("./zag/pagination.js").then((m) => {
+      if (!this.el.isConnected) return
+      this._zagDelegate = m.mountZagPagination(this)
+    })
+  },
+
+  beforeUpdate() {
+    if (this._zagDelegate) this._zagDelegate.beforeUpdate()
+    else this._zagPendingUpdate = true
+  },
+
+  updated() {
+    if (this._zagDelegate) this._zagDelegate.updated()
+    else this._zagPendingUpdate = true
+  },
+
+  destroyed() {
+    if (this._zagDelegate) this._zagDelegate.destroyed()
+  },
+}
 
 if (typeof document !== "undefined") installBehaviours(document)
+Hooks.LanternTabs = LanternTabs
+Hooks.LanternSegmented = LanternSegmented
+Hooks.LanternPagination = LanternPagination
+export { LanternTabs, LanternSegmented, LanternPagination }

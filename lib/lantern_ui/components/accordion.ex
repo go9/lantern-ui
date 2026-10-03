@@ -19,10 +19,22 @@ defmodule LanternUI.Components.Accordion do
   Panels remain in the DOM and use `hidden` when collapsed, keeping ARIA idrefs
   valid while removing collapsed content from the tab order and accessibility
   tree. Hook-owned state is restored after LiveView patches.
+
+  The accordion is Zag-driven (a `@zag-js/accordion` state machine, loaded
+  on demand): the hook root carries `data-zag` plus `data-scope="accordion"`
+  / `data-part` anatomy, and Zag owns expanded state, open enforcement, and
+  keyboard navigation. Item identity is the stable item id. Two modes:
+
+    * client (default) — Zag owns the value from the initial `expanded`
+      flags.
+    * server-driven (`controlled`) — the server value (`value`, a list of
+      expanded item ids) is truth; toggles flow out through `on_change`,
+      patches flow in.
   """
   use Phoenix.Component
 
   alias LanternUI.Class
+  alias Phoenix.LiveView.JS
 
   attr(:id, :string, doc: "Stable accordion id. A unique id is generated when omitted.")
 
@@ -43,20 +55,52 @@ defmodule LanternUI.Components.Accordion do
     doc: "Expand/collapse indicator transition duration in milliseconds."
   )
 
+  attr(:controlled, :boolean,
+    default: false,
+    doc: "Server-driven value: `value` is truth, patches flow into the machine."
+  )
+
+  attr(:value, :list,
+    default: nil,
+    doc: "Expanded item ids for `controlled` mode (client mode ignores it)."
+  )
+
+  attr(:on_change, :string,
+    default: nil,
+    doc: "Server event pushed on toggle (`lantern:accordion:set-value` replies)."
+  )
+
+  attr(:on_change_client, :string,
+    default: nil,
+    doc: "Bubbling DOM CustomEvent dispatched on toggle."
+  )
+
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
   slot(:inner_block, required: true, doc: "One or more `accordion_item/1` components.")
 
   def accordion(assigns) do
-    assigns = assign_new(assigns, :id, fn -> generated_id("accordion") end)
+    assigns =
+      assigns
+      |> assign_new(:id, fn -> generated_id("accordion") end)
+      |> assign(:value_json, assigns.value && Jason.encode!(assigns.value))
 
     ~H"""
     <div
       id={@id}
       class={Class.merge(["lui-accordion", @class])}
       phx-hook="LanternAccordion"
+      phx-mounted={JS.ignore_attributes(zag_ignored_attrs(), to: "[data-scope=\"accordion\"]")}
+      data-zag
+      data-scope="accordion"
+      data-part="root"
       data-multiple={to_string(@multiple)}
       data-prevent-all-closed={to_string(@prevent_all_closed)}
       data-animation-duration={@animation_duration}
+      data-controlled={@controlled || nil}
+      data-value={if @controlled, do: @value_json || "[]"}
+      data-default-value={unless @controlled, do: @value_json}
+      data-on-change={@on_change}
+      data-on-change-client={@on_change_client}
       style={"--lui-accordion-duration: #{@animation_duration}ms"}
       {@rest}
     >
@@ -94,7 +138,9 @@ defmodule LanternUI.Components.Accordion do
     <div
       id={@id}
       class={Class.merge(["lui-accordion-item", @class])}
+      data-scope="accordion"
       data-part="item"
+      data-value={@id}
       data-state={if @expanded, do: "open", else: "closed"}
       {@rest}
     >
@@ -103,7 +149,8 @@ defmodule LanternUI.Components.Accordion do
           type="button"
           id={"#{@id}-trigger"}
           class={Class.merge(["lui-accordion-trigger", @header_classes])}
-          data-part="trigger"
+          data-scope="accordion"
+          data-part="item-trigger"
           aria-expanded={to_string(@expanded)}
           aria-controls={"#{@id}-panel"}
         >
@@ -128,7 +175,8 @@ defmodule LanternUI.Components.Accordion do
       <div
         id={"#{@id}-panel"}
         class="lui-accordion-panel"
-        data-part="panel"
+        data-scope="accordion"
+        data-part="item-content"
         role="region"
         aria-labelledby={"#{@id}-trigger"}
         hidden={!@expanded}
@@ -137,6 +185,20 @@ defmodule LanternUI.Components.Accordion do
       </div>
     </div>
     """
+  end
+
+  # Attributes Zag writes after mount. LiveView must not clobber them on
+  # patches — the machine is the writer, the server copy is stale by design.
+  # Same list as the select prototype's `zag_ignored_attrs/0`.
+  defp zag_ignored_attrs do
+    ~w(
+      data-state data-orientation dir id data-disabled data-readonly
+      data-invalid data-required data-open data-focus data-focus-visible
+      data-active data-hover data-placement data-highlighted data-value
+      aria-expanded aria-controls aria-haspopup aria-labelledby aria-label
+      aria-selected aria-checked aria-disabled aria-multiselectable
+      disabled hidden role tabindex style
+    )
   end
 
   defp generated_id(prefix) do

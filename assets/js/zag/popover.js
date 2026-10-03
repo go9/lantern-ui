@@ -111,13 +111,22 @@ export const LanternZagPopover = createZagLiveHook({
     })
     el.__lanternPopover = component
 
+    // Controlled machines ignore api.setOpen (the prop is truth).
+    const applyOpen = (open) => {
+      if (getBoolean(el, "controlled")) {
+        component.updateProps({ ...popoverLayoutProps(el), open })
+      } else {
+        component.api.setOpen(open)
+      }
+    }
+
     dom.add("lantern:popover:set-open", (event) => {
-      if (typeof event.detail?.open === "boolean") component.api.setOpen(event.detail.open)
+      if (typeof event.detail?.open === "boolean") applyOpen(event.detail.open)
     })
 
     server.add("lantern:popover:set-open", (payload) => {
       if (!idMatches(el.id, readPayloadId(payload))) return
-      if (typeof payload?.open === "boolean") component.api.setOpen(payload.open)
+      if (typeof payload?.open === "boolean") applyOpen(payload.open)
     })
 
     return component

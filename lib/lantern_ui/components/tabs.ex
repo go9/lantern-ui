@@ -28,6 +28,7 @@ defmodule LanternUI.Components.Tabs do
   use Phoenix.Component
 
   alias LanternUI.Class
+  alias Phoenix.LiveView.JS
 
   attr(:id, :string, default: nil, doc: "Element id for the tabs root.")
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
@@ -48,6 +49,21 @@ defmodule LanternUI.Components.Tabs do
   )
 
   attr(:active_tab, :string, default: nil, doc: "Name of the currently selected tab.")
+
+  attr(:controlled, :boolean,
+    default: false,
+    doc: "Strict server-driven value even without `active_tab`."
+  )
+
+  attr(:on_change, :string,
+    default: nil,
+    doc: "Server event pushed on selection (`lantern:tabs:set-value` replies)."
+  )
+
+  attr(:on_change_client, :string,
+    default: nil,
+    doc: "Bubbling DOM CustomEvent dispatched on selection."
+  )
 
   attr(:variant, :string,
     default: "segmented",
@@ -88,6 +104,9 @@ defmodule LanternUI.Components.Tabs do
     has_current? = not is_nil(assigns.active_tab)
 
     hooked? = is_binary(assigns.id)
+    # Zag owns hooked tablists; radiogroup lists stay on the legacy
+    # keyboard path (Zag's tab machine queries role=tab).
+    zag? = hooked? and not radio?
 
     hook =
       Map.get(rest, "phx-hook") ||
@@ -113,7 +132,13 @@ defmodule LanternUI.Components.Tabs do
                segmented? && active? && "lui-segmented-item-active",
                tab[:class]
              ]),
-           part: if(hooked?, do: if(segmented?, do: "segment", else: "tab")),
+           part:
+             cond do
+               not hooked? -> nil
+               zag? -> "trigger"
+               segmented? -> "segment"
+               true -> "tab"
+             end,
            value: if(hooked?, do: tab[:name])
          }}
       end)
@@ -124,6 +149,7 @@ defmodule LanternUI.Components.Tabs do
         radio?: radio?,
         segmented?: segmented?,
         hook: hook,
+        zag?: zag?,
         list_role: if(radio?, do: "radiogroup", else: "tablist"),
         rest: Map.drop(rest, ["role", :role, "phx-hook", :"phx-hook"])
       )
@@ -136,6 +162,14 @@ defmodule LanternUI.Components.Tabs do
       data-size={@size}
       role={@list_role}
       phx-hook={@hook}
+      phx-mounted={@zag? && JS.ignore_attributes(zag_ignored_attrs(), to: "[data-scope=\"tabs\"]")}
+      data-zag={@zag? || nil}
+      data-scope={@zag? && "tabs"}
+      data-active-tab={@active_tab}
+      data-controlled={@controlled || nil}
+      data-value={if @controlled, do: @active_tab || ""}
+      data-on-change={@on_change}
+      data-on-change-client={@on_change_client}
       {@rest}
     >
       <%= for {tab, meta} <- @items do %>
@@ -145,13 +179,14 @@ defmodule LanternUI.Components.Tabs do
           navigate={tab[:navigate]}
           href={tab[:href]}
           class={meta.class}
+          data-scope={@zag? && "tabs"}
           data-part={meta.part}
           data-value={meta.value}
           role={if @radio?, do: "radio", else: "tab"}
           aria-checked={@radio? && to_string(meta.active?)}
           aria-disabled={tab[:disabled] && "true"}
-          tabindex={meta.tabindex}
           aria-selected={unless @radio?, do: to_string(meta.active?)}
+          tabindex={meta.tabindex}
         >
           {render_slot(tab)}
         </.link>
@@ -159,11 +194,13 @@ defmodule LanternUI.Components.Tabs do
           :if={!meta.link?}
           type="button"
           class={meta.class}
+          data-scope={@zag? && "tabs"}
           data-part={meta.part}
           data-value={meta.value}
           role={if @radio?, do: "radio", else: "tab"}
           aria-checked={@radio? && to_string(meta.active?)}
           disabled={tab[:disabled]}
+          data-disabled-item={tab[:disabled] || nil}
           tabindex={meta.tabindex}
           phx-click={tab[:"phx-click"]}
           phx-value-tab={tab[:"phx-value-tab"] || unless(tab[:"phx-value-segment"], do: tab[:name])}
@@ -192,6 +229,9 @@ defmodule LanternUI.Components.Tabs do
       class={Class.merge(["lui-tabs-panel", @class])}
       role="tabpanel"
       data-tab={@name}
+      data-scope="tabs"
+      data-part="content"
+      data-value={@name}
       {@rest}
     >
       {render_slot(@inner_block)}
@@ -208,4 +248,18 @@ defmodule LanternUI.Components.Tabs do
   defp tab_index(true, _index, _has_current?), do: "0"
   defp tab_index(_active?, 0, false), do: "0"
   defp tab_index(_active?, _index, _has_current?), do: "-1"
+
+  # Attributes Zag writes after mount. LiveView must not clobber them on
+  # patches — the machine is the writer, the server copy is stale by design.
+  # Same list as the select prototype's `zag_ignored_attrs/0`.
+  defp zag_ignored_attrs do
+    ~w(
+      data-state data-orientation dir id data-disabled data-readonly
+      data-invalid data-required data-open data-focus data-focus-visible
+      data-active data-hover data-placement data-highlighted data-value
+      aria-expanded aria-controls aria-haspopup aria-labelledby aria-label
+      aria-selected aria-checked aria-disabled aria-multiselectable
+      disabled hidden role tabindex style
+    )
+  end
 end
