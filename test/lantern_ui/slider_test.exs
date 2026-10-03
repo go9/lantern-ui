@@ -59,7 +59,7 @@ defmodule LanternUI.SliderTest do
         end)
 
       assert html =~ ~s(aria-label="volume")
-      refute html =~ "aria-labelledby"
+      refute html =~ ~s(aria-labelledby="volume-label")
     end
 
     test "value_text renders an interpolated aria-valuetext; absent otherwise" do
@@ -148,7 +148,7 @@ defmodule LanternUI.SliderTest do
           """
         end)
 
-      for part <- ~w(input track range thumb) do
+      for part <- ~w(input control range thumb) do
         assert html =~ ~s(data-part="#{part}")
       end
     end

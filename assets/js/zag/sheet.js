@@ -17,6 +17,7 @@ import {
   addDialogServerEvents,
   createOnOpenChange,
   dialogLayoutProps,
+  dialogSetOpen,
   fixLabelling,
   part,
 } from "./dialog.js"
@@ -118,8 +119,10 @@ export const LanternZagSheet = createZagLiveHook({
     })
     el.__lanternSheet = component
 
-    addDialogDomEvents(dom, el, component)
-    addDialogServerEvents(server, el, component)
+    const layout = () => dialogLayoutProps(el, { role: "dialog" })
+    const setOpen = (open) => dialogSetOpen(el, component, layout, open)
+    addDialogDomEvents(dom, setOpen)
+    addDialogServerEvents(server, el, setOpen)
 
     return component
   },

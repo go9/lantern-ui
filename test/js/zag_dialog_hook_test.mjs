@@ -180,7 +180,7 @@ test("outside pointerdown dismisses a dismissible modal", async () => {
 
 test("controlled mode: the server value is strict truth", async () => {
   const ctx = mount(fixture({ mode: "controlled", open: true }))
-  const { el, component } = ctx
+  const { el, component, serverPush } = ctx
   await sleep(50)
 
   assert.equal(component().api.open, true)
@@ -189,6 +189,11 @@ test("controlled mode: the server value is strict truth", async () => {
   await sleep()
   assert.equal(component().api.open, false)
   assert.equal(content(el).hidden, true)
+
+  // open_dialog still works in controlled mode (routed through updateProps,
+  // which a controlled machine honors unlike api.setOpen).
+  serverPush("lantern:dialog:open", { id: "confirm" })
+  await waitFor(() => component().api.open === true)
 })
 
 test("initial-focus selector resolves to the machine's focus target", async () => {
