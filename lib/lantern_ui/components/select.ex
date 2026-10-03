@@ -183,8 +183,8 @@ defmodule LanternUI.Components.Select do
       assign(
         assigns,
         :search?,
-        assigns.searchable or
-          (assigns.search_threshold && length(assigns.opts) >= assigns.search_threshold) ||
+        (assigns.searchable or
+           (assigns.search_threshold && length(assigns.opts) >= assigns.search_threshold)) ||
           false
       )
 
