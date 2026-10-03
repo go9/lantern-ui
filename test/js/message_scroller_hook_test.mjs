@@ -1,9 +1,8 @@
 import assert from "node:assert/strict"
-import { readFile } from "node:fs/promises"
 import { afterEach, test } from "node:test"
 
-const source = await readFile(new URL("../../priv/static/lantern_ui_hooks.js", import.meta.url), "utf8")
-const module = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)
+// File URL (not data:) so the bundle's static ./chunks/* import resolves.
+const module = await import(new URL("../../priv/static/lantern_ui_hooks.js", import.meta.url))
 const { LanternMessageScroller } = module
 
 class Element {

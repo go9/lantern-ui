@@ -1,5 +1,4 @@
 import assert from "node:assert/strict"
-import { readFile } from "node:fs/promises"
 import test from "node:test"
 
 class FakeElement {
@@ -86,9 +85,8 @@ function fakeDocument() {
   }
 }
 
-const source = await readFile(new URL("../../priv/static/lantern_ui_hooks.js", import.meta.url), "utf8")
-const moduleUrl = `data:text/javascript;base64,${Buffer.from(source).toString("base64")}`
-const { Hooks } = await import(moduleUrl)
+// File URL (not data:) so the bundle's static ./chunks/* import resolves.
+const { Hooks } = await import(new URL("../../priv/static/lantern_ui_hooks.js", import.meta.url))
 
 function mountedSheet() {
   globalThis.document = fakeDocument()

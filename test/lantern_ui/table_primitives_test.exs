@@ -200,7 +200,9 @@ defmodule LanternUI.TablePrimitivesTest do
           """
         end)
 
-      assert html =~ ~s(<select class="lui-sr-only" data-scope="select" data-part="hidden-select" name="secret[seed_policy]")
+      assert html =~
+               ~s(<select class="lui-sr-only" data-scope="select" data-part="hidden-select" name="secret[seed_policy]")
+
       assert html =~ ~s(<option value="seal" selected>)
       assert html =~ ~s(<option value="generate">)
       assert html =~ ~s(<option value="derive">)

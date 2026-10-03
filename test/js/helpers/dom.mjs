@@ -13,15 +13,15 @@
 // of the Hex package (see the `files:` whitelist in `mix.exs`), so consumers of
 // `:lantern_ui` never see a JS toolchain.
 
-import { readFile } from "node:fs/promises"
 import { JSDOM } from "jsdom"
 
-// The bundle is an ES module. Loading it through a data: URL keeps the
-// committed priv/static file the import consumers use. Rebuild with
-// `npm run build` after editing assets/js/.
-const source = await readFile(new URL("../../../priv/static/lantern_ui_hooks.js", import.meta.url), "utf8")
+// The bundle is an ES module. It is imported through its file: URL (not a
+// data: URL) so its static `./chunks/*` imports — the shared floating-ui
+// chunk the split build extracts — resolve on disk exactly as they do for
+// consumers. Rebuild with `npm run build` after editing assets/js/.
+const bundleUrl = new URL("../../../priv/static/lantern_ui_hooks.js", import.meta.url)
 
-export const hooks = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)
+export const hooks = await import(bundleUrl)
 
 // jsdom has no layout engine, so two things the hooks legitimately rely on are
 // missing. Shimming them here — rather than weakening the hooks — keeps the
