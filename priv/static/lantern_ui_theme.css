@@ -67,7 +67,8 @@
   --lantern-danger-fg: #ffffff;
   --lantern-success: var(--success, #16a34a);
   --lantern-warning: var(--warning, #d97706);
-  --lantern-info: var(--info, var(--lantern-accent));
+  /* info is blue, not the brand colour: accent-as-info read as an error next to danger */
+  --lantern-info: var(--info, oklch(0.62 0.17 255));
 
   /* ── Focus ring ── */
   --lantern-ring: var(--lantern-accent);
