@@ -147,7 +147,7 @@ defmodule LanternUI.TablePrimitivesTest do
       assert html =~ ~s(phx-hook="LanternSelect")
       # value rides a visually-hidden native <select> (Fluxon-style) so real
       # form submission and LiveViewTest's form/3 both work.
-      assert html =~ ~s(data-part="native" name="channel")
+      assert html =~ ~s(data-part="hidden-select" name="channel")
       assert html =~ ~s(<option value="ebay" selected>)
       assert html =~ ~s(aria-haspopup="listbox")
       assert html =~ ~s(role="listbox")
@@ -200,7 +200,7 @@ defmodule LanternUI.TablePrimitivesTest do
           """
         end)
 
-      assert html =~ ~s(<select class="lui-sr-only" data-part="native" name="secret[seed_policy]")
+      assert html =~ ~s(<select class="lui-sr-only" data-scope="select" data-part="hidden-select" name="secret[seed_policy]")
       assert html =~ ~s(<option value="seal" selected>)
       assert html =~ ~s(<option value="generate">)
       assert html =~ ~s(<option value="derive">)
@@ -221,7 +221,7 @@ defmodule LanternUI.TablePrimitivesTest do
         end)
 
       assert html =~ ~s(data-multiple)
-      assert html =~ ~s(data-part="native" name="channels[]" multiple)
+      assert html =~ ~s(data-part="hidden-select" name="channels[]" multiple)
       assert html =~ ~s(<option value="ebay" selected>)
       assert html =~ ~s(<option value="shopify" selected>)
       assert html =~ "2 selected"
