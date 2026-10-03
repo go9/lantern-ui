@@ -80,6 +80,139 @@ defmodule LanternUI.LintTest do
     assert finding.hint =~ "text-meta"
   end
 
+  test "flags grouped-list markup", %{dir: dir} do
+    File.write!(Path.join(dir, "page.ex"), """
+    <.group_band title="Open">
+    <GroupBand />
+    <div class="group-band">x</div>
+    """)
+
+    rules = dir |> Lint.scan() |> Enum.map(& &1.rule) |> Enum.uniq()
+    assert rules == [:group_band]
+  end
+
+  test "flags a hand-rolled table only without a lantern table", %{dir: dir} do
+    File.write!(Path.join(dir, "hand.ex"), "<table><tr><td>x</td></tr></table>")
+
+    File.write!(Path.join(dir, "lantern.ex"), """
+    <.data_table id="t" rows={@rows}>
+    <table><tr><td>legacy</td></tr></table>
+    """)
+
+    findings = Lint.scan(dir)
+    assert [%{rule: :hand_table, path: "hand.ex"}] = findings
+  end
+
+  test "flags hand-rolled buttons, including multiline tags", %{dir: dir} do
+    File.write!(Path.join(dir, "page.heex"), """
+    <button>Save</button>
+    <button
+      type="button"
+      phx-click="close"
+    >×</button>
+    """)
+
+    findings = Lint.scan(dir)
+    assert length(findings) == 2
+    assert Enum.all?(findings, &(&1.rule == :hand_button))
+    assert Enum.map(findings, & &1.line) == [1, 2]
+  end
+
+  test "flags deprecated components with their replacement", %{dir: dir} do
+    File.write!(Path.join(dir, "page.heex"), """
+    <.icon_button label="Delete" />
+    <.segmented />
+    """)
+
+    findings = Lint.scan(dir)
+
+    assert Enum.map(findings, &{&1.rule, &1.match}) == [
+             {:deprecated_component, "<.icon_button"},
+             {:deprecated_component, "<.segmented"}
+           ]
+
+    assert hd(findings).hint =~ "button"
+    assert hd(findings).hint =~ "deprecated"
+  end
+
+  test "unknown components get did-you-mean from the eval confusables", %{dir: dir} do
+    File.write!(Path.join(dir, "page.heex"), """
+    <.stat label="Open" value={3} />
+    <.toast message="hi" />
+    """)
+
+    findings = Lint.scan(dir)
+    assert length(findings) == 2
+    assert Enum.all?(findings, &(&1.rule == :unknown_component))
+    assert hd(findings).hint =~ "stat_card"
+    assert List.last(findings).hint =~ "toast_group"
+  end
+
+  test "unknown components get a generic did-you-mean; custom names stay silent", %{dir: dir} do
+    File.write!(Path.join(dir, "page.heex"), """
+    <.buton>Save</.buton>
+    <.my_modal id="m" />
+    <.form :let={f} for={@changeset} />
+    """)
+
+    findings = Lint.scan(dir)
+    assert [%{rule: :unknown_component, match: "<.buton", hint: hint}] = findings
+    assert hint =~ "<.button>"
+  end
+
+  test "names defined in the same file are local, not guesses", %{dir: dir} do
+    File.write!(Path.join(dir, "helpers.ex"), """
+    defp sep(assigns), do: ~H|<span />|
+    def render(assigns), do: ~H|<.sep />|
+    """)
+
+    assert Lint.scan(dir) == []
+  end
+
+  test "unknown attrs on strict components get did-you-mean", %{dir: dir} do
+    File.write!(Path.join(dir, "page.heex"), """
+    <.stat_card lable="Open" value={3} />
+    """)
+
+    assert [
+             %{
+               rule: :unknown_attr,
+               match: "lable",
+               hint: hint
+             }
+           ] = Lint.scan(dir)
+
+    assert hint =~ "label"
+  end
+
+  test "attrs pass through on components with :rest, and phx/data attrs are exempt", %{
+    dir: dir
+  } do
+    File.write!(Path.join(dir, "page.heex"), """
+    <.badge color="success" phx-click="x" data-part="y" class="z">Hi</.badge>
+    <.stat_card
+      label="Open"
+      value={3}
+      data-lantern-list-item
+    />
+    """)
+
+    assert Lint.scan(dir) == []
+  end
+
+  test "allow_rules scopes one rule off matching files", %{dir: dir} do
+    File.mkdir_p!(Path.join(dir, "lib/internal"))
+    File.write!(Path.join(dir, "lib/internal/chrome.ex"), "<button>x</button>")
+    File.write!(Path.join(dir, "lib/page.ex"), "<button>y</button>")
+
+    File.write!(
+      Path.join(dir, ".lantern-lint.json"),
+      ~s|{"allow_rules": {"hand_button": ["lib/internal/**"]}}|
+    )
+
+    assert [%{path: "lib/page.ex", rule: :hand_button}] = Lint.scan(dir)
+  end
+
   test "ships named type utilities and tokens" do
     css = File.read!(Path.expand("../../priv/static/lantern_ui.css", __DIR__))
     theme = File.read!(Path.expand("../../priv/static/lantern_ui_theme.css", __DIR__))

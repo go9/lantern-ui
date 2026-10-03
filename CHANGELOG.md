@@ -39,6 +39,20 @@ All notable changes to this project are documented here. The format follows
   as   `priv/static/zag/select.js`, loaded on demand — pages without a Zag select
   load no Zag code. `native` and `searchable` paths are unchanged (searchable
   stays on the legacy hook).
+- **AI legibility package** (flicker #3415, step 2).
+  `llms.txt` + `llms-full.txt` generated from the component registry, docs,
+  and recipes (`mix lantern.llms`; CI fails when stale via `--check`),
+  shipped in the Hex package and linked from the README. `priv/AGENTS.md`
+  consumer rules template with starters per page type. New
+  `mix lantern_ui.install_skills` copies `skills/` plus the rules block
+  (catalog rendered from the live registry) into a consuming app —
+  idempotent, `--force` to overwrite skill edits. `mix lantern.lint` now
+  also fails on grouped-list markup, hand-rolled tables/buttons, deprecated
+  components, and unknown component/attr names with did-you-mean hints
+  (backed by `LanternUI.Deprecated`, the single source for overlaps with
+  eval evidence). Rule-scoped `allow_rules` config for component internals.
+  Eval prompts/inventory aligned to the non-deprecated APIs (no history
+  rewrite: `eval/results/baseline-2026-10-03.md` stands).
 - **Split, minified JS bundle with shared floating-ui.** `npm run build` now
   emits minified `lantern_ui_hooks.js` + `chunks/` (floating-ui, imported by
   both entries — no longer duplicated) + `zag/select.js` (+86KB raw / +28KB

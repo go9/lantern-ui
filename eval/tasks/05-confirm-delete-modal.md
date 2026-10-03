@@ -10,7 +10,8 @@ Add an API-token list page with a confirm-delete modal flow to the demo app.
 Requirements:
 
 1. A flat list of the tokens (name + prefix + created date), each row with
-   a delete affordance (lantern `icon_button` with `aria-label`).
+   a delete affordance (lantern `button` with `size="icon"` and an accessible
+   `label`; the old `icon_button` is deprecated).
 2. Clicking delete opens a lantern `modal` (or `alert_dialog`) asking for
    confirmation, naming the token. Confirm removes the row; cancel closes
    the dialog with no change.

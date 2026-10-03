@@ -14,7 +14,8 @@ Requirements:
 
 1. Main column: server id as heading, status shown with a lantern status
    indicator (`status_glyph` or `badge`), plus uptime and version.
-2. A side panel (lantern `side_panel` or `inspector` + `property_row`) showing
+2. A side panel (lantern `side_panel` + `inspector` with a dense
+   `description_list`; the old `property_row` is deprecated) showing
    label/value rows: Role, Region, Status, Uptime, Version.
 3. The panel can be collapsed/expanded and the main content reflows.
 4. A back link to `/eval/servers` (a stub index — a simple list of links

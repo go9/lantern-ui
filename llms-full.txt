@@ -1,0 +1,2326 @@
+# LanternUI 0.8.7 — llms-full.txt
+
+> Complete model reference. Start with the rules, then the per-module
+> component sections. No React, no JS UI libraries — server-rendered HEEx.
+
+## Rules for AI assistants
+
+1. Never switch to React or a JS component library. Build with LanternUI
+   components in HEEx.
+2. Grouped lists and group headers are banned. One flat list: a status
+   column on each row, rows ordered by status then recency, counts in the
+   rows or in filter chips. Whatever a group header would have said stays
+   visible per row or in the chips.
+3. Never hand-roll a table or button element where a component exists:
+   table/1, data_table/1, resource_list/1 for tables; button/1
+   (size="icon" for icon-only) or dialog action slots for buttons.
+4. Never use palette color classes (red-500, slate-200) or hex-in-class
+   (bg-[#fff]). Use semantic tokens: text-foreground, -soft, -softest,
+   text-muted-foreground, text-danger, bg-success, and friends.
+5. Never use arbitrary pixel values (text-[11px], w-[320px]). Dense chrome
+   is text-meta (11px), text-caption (12px), text-mono-meta. The
+   text-foreground-softer alias is deprecated; use text-foreground-soft.
+6. Copy the recipe HEEx below wherever a recipe fits. Never hand-roll
+   rows, glyphs, rings, or rails.
+7. Page layout: title and actions live in the breadcrumb bar; no tabs as a
+   default grouping mechanism; data_table fill only inside a bounded-height
+   parent; row click opens the record's own route; disable checkboxes when
+   there is no bulk action.
+8. Run `mix lantern.lint` on new code. Unknown component or attribute
+   names get a did-you-mean hint — trust it over a guess.
+
+
+## Components by module
+
+### LanternUI.Charts
+
+Native LiveView chart components — server-rendered SVG, minimal JS.
+
+#### `area_chart/1`
+
+A time-series area + line chart.
+
+- `aria_label` (:string, default "Area chart") — Accessible name for the SVG.
+- `class` (:string) — Extra classes merged onto the root element.
+- `empty_message` (:string, default "No data") — Copy shown when series is empty.
+- `height` (:integer, default 250) — SVG viewBox height in CSS pixels.
+- `id` (:string, required) — Stable DOM id for the chart root and hover hook.
+- `series` (:list, default []) — Dated points: %{date: ISO|Date, value: number}.
+- `smooth` (:boolean, default true) — Curve the line between points.
+- `value_format` (:any, default :number) — `:number` | `:currency` | a 1-arity function `(number -> String.t())`
+
+#### `bar_chart/1`
+
+A categorical bar chart.
+
+- `aria_label` (:string, default "Bar chart") — Accessible name for the SVG.
+- `class` (:string) — Extra classes merged onto the root element.
+- `empty_message` (:string, default "No data") — Copy shown when series is empty.
+- `height` (:integer, default 180) — SVG viewBox height in CSS pixels.
+- `id` (:string, required) — Stable DOM id for the chart root.
+- `series` (:list, default []) — Categories: %{label: String.t(), value: number, href: String.t() | nil}.
+- `value_format` (:any, default :number) — `:number` | `:currency` | a 1-arity function `(number -> String.t())`
+
+#### `line_chart/1`
+
+A multi-series time-series line chart with a legend and a shared crosshair tooltip.
+
+- `aria_label` (:string, default "Line chart") — Accessible name for the SVG.
+- `class` (:string) — Extra classes merged onto the root element.
+- `empty_message` (:string, default "No data") — Copy shown when series is empty.
+- `height` (:integer, default 200) — SVG viewBox height in CSS pixels.
+- `id` (:string, required) — Stable DOM id for the chart root and hover hook.
+- `legend` (:boolean, default true) — Show the series color key under the chart.
+- `series` (:list, default []) — Named series maps with points and optional color.
+- `value_format` (:any, default :number) — `:number` | `:currency` | a 1-arity function `(number -> String.t())`
+
+#### `sparkline/1`
+
+A compact trend sparkline (no axes).
+
+- `aria_label` (:string, default "Sparkline") — Accessible name for the SVG.
+- `class` (:string) — Extra classes merged onto the root element.
+- `height` (:integer, default 40) — SVG viewBox height in CSS pixels.
+- `id` (:string, required) — Stable DOM id for the sparkline SVG.
+- `series` (:list, default []) — Numeric values plotted left-to-right.
+
+### LanternUI.Components.Accordion
+
+Accordion — a WAI-ARIA APG accordion with the Fluxon 2.3.1 composition API.
+
+#### `accordion/1`
+
+Accordion — a WAI-ARIA APG accordion with the Fluxon 2.3.1 composition API.
+
+- `animation_duration` (:integer, default 300) — Expand/collapse indicator transition duration in milliseconds.
+- `class` (:any) — Extra classes merged onto the accordion root.
+- `id` (:string) — Stable accordion id.
+- `multiple` (:boolean, default false) — Allow more than one item to be expanded at once.
+- `prevent_all_closed` (:boolean, default false) — Keep at least one enabled item expanded.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — One or more `accordion_item/1` components.
+
+#### `accordion_item/1`
+
+Accordion — a WAI-ARIA APG accordion with the Fluxon 2.3.1 composition API.
+
+- `class` (:any) — Extra classes merged onto the item root.
+- `expanded` (:boolean, default false) — Whether this item starts expanded.
+- `icon` (:boolean, default true) — Whether to render the built-in chevron.
+- `id` (:string) — Stable item id used to connect its header and panel.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:header` (required) — Always-visible header content.
+  - `class` — Extra classes merged onto the header button.
+- `:panel` (required) — Expandable panel content.
+  - `class` — Extra classes merged onto the panel content wrapper.
+
+### LanternUI.Components.Alert
+
+Inline status alert.
+
+#### `alert/1`
+
+Inline status alert.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `color` (:string, values: neutral, info, success, warning, danger, default "neutral") — Semantic color; also picks the default status icon.
+- `hide_close` (:boolean, default true) — Hide the dismiss button (default).
+- `hide_icon` (:boolean, default false) — Omit the leading status icon.
+- `id` (:string) — Element id; auto-generated when omitted.
+- `on_close` (:any) — JS command run when the alert is dismissed (Fluxon parity); its presence shows the close button.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `subtitle` (:string) — Secondary line under the title.
+- `title` (:string) — Primary heading shown next to the icon.
+Slots:
+- `:icon` — Custom leading icon; overrides the color default.
+- `:inner_block` — Alert body content below the title.
+
+### LanternUI.Components.AlertDialog
+
+Semantic confirmation dialog composed on the shared modal runtime.
+
+#### `alert_dialog/1`
+
+Semantic confirmation dialog composed on the shared modal runtime.
+
+- `backdrop_class` (:any) — Extra classes on the dimmed backdrop.
+- `class` (:any) — Extra classes on the dialog panel.
+- `close_on_esc` (:boolean, default true) — Close when Escape is pressed.
+- `container_class` (:any) — Extra classes on the overlay root.
+- `id` (:string, required) — Stable DOM id used by open_dialog/close_dialog.
+- `open` (:boolean, default false) — Render already open.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:action` (required) — Confirmation control for the destructive action.
+- `:cancel` (required) — Safe cancellation control; receives initial focus.
+- `:description` (required) — Explanation of the irreversible action.
+- `:title` (required) — Concise statement of the consequence.
+
+### LanternUI.Components.Autocomplete
+
+A Fluxon-compatible autocomplete for static or LiveView-backed search.
+
+#### `autocomplete/1`
+
+A Fluxon-compatible autocomplete for static or LiveView-backed search.
+
+- `animation` (:string, default "transition duration-150 ease-in-out") — Accepted for Fluxon compatibility; currently a CSS/token-driven no-op.
+- `animation_enter` (:string, default "opacity-100 scale-100") — Accepted for Fluxon compatibility; currently a no-op.
+- `animation_leave` (:string, default "opacity-0 scale-95") — Accepted for Fluxon compatibility; currently a no-op.
+- `autofocus` (:boolean, default false) — Focus the search input on page load.
+- `class` (:any) — Extra classes merged onto the field wrapper.
+- `clearable` (:boolean, default false) — Show a button that clears the selection.
+- `debounce` (:integer, default 200) — Server-search debounce in milliseconds.
+- `description` (:string) — Description between label and control.
+- `disabled` (:boolean, default false) — Disable searching and selection.
+- `errors` (:list, default []) — Validation messages; derived from field when used.
+- `field` ({:struct, Phoenix.HTML.FormField}) — Form field; derives id, name, value, and errors.
+- `help_text` (:string) — Help line shown when there are no errors.
+- `id` (:any) — Element id; derived from field when omitted.
+- `label` (:string) — Primary label above the control.
+- `name` (:any) — Form input name; derived from field when omitted.
+- `no_results_text` (:string, default "No results") — Empty copy; an optional `%{query}` placeholder is replaced in the browser.
+- `on_search` (:string) — LiveView search event receiving `%{"query" => query}`.
+- `open_on_focus` (:boolean, default false) — Open the suggestions when focused.
+- `options` (:list, default []) — Choices as values, tuples, tuple-child groups, or `{:group, label, children}`.
+- `placeholder` (:string, default "Search…") — Placeholder shown in the search input.
+- `rest` (:global) — Form and LiveView attributes passed to the hidden value input.
+- `search_mode` (:string, values: contains, starts-with, exact, default "contains") — Static matching mode.
+- `search_threshold` (:integer, default 0) — Characters required before searching.
+- `size` (:string, values: xs, sm, md, lg, xl, default "md") — Control density and type scale.
+- `sublabel` (:string) — Secondary label beside the primary label.
+- `value` (:any) — Current selected value.
+Slots:
+- `:empty_state` — Custom content displayed when no result matches.
+  - `class` — Classes for the empty-state container.
+- `:footer` — Content at the bottom of the suggestions panel.
+  - `class` — Classes for the footer container.
+- `:header` — Content at the top of the suggestions panel.
+  - `class` — Classes for the header container.
+- `:inner_prefix` — Content inside the control before the input.
+  - `class` — Classes for the affix container.
+- `:inner_suffix` — Content inside the control after the input.
+  - `class` — Classes for the affix container.
+- `:option` — Rich option content; receives `{label, value}`.
+  - `class` — Classes for each rich option.
+- `:outer_prefix` — Content outside the control before it.
+  - `class` — Classes for the affix container.
+- `:outer_suffix` — Content outside the control after it.
+  - `class` — Classes for the affix container.
+
+### LanternUI.Components.Avatar
+
+Compact initials or fallback-content avatar.
+
+#### `avatar/1`
+
+Compact initials or fallback-content avatar.
+
+- `class` (:any) — 
+- `initials` (:string) — 
+- `rest` (:global) — 
+- `shape` (:string, values: circle, square, default "circle") — 
+- `size` (:string, values: xs, sm, md, lg, default "md") — 
+Slots:
+- `:inner_block` —
+
+### LanternUI.Components.Badge
+
+Status badge / pill.
+
+#### `badge/1`
+
+Status badge / pill.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `color` (:string, values: neutral, primary, accent, info, success, warning, danger, default "neutral") — Semantic color token for the badge surface.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: sm, md, lg, default "md") — Badge padding and type scale.
+- `variant` (:string, values: soft, solid, outline, default "soft") — Surface style: soft tint, solid fill, or outline border.
+Slots:
+- `:inner_block` (required) — Badge label content.
+
+### LanternUI.Components.Breadcrumb
+
+Compact path breadcrumb — layout chrome + file/tree navigation.
+
+#### `breadcrumb/1`
+
+Compact path breadcrumb — layout chrome + file/tree navigation.
+
+- `aria_label` (:string, default "Breadcrumb") — Accessible name for the nav landmark.
+- `class` (:any) — Extra classes merged onto the root element.
+- `home` (:string) — When set, renders a leading home-icon crumb linking here (product chrome).
+- `items` (:list, default []) — Optional list of %{label:, path: | nil} maps (alternative to :item slots).
+- `rest` (:global) — Arbitrary HTML/phx-* attributes passed through.
+- `separator` (:string) — Optional text separator between items.
+Slots:
+- `:item` — One path segment; link, button, or current page.
+  - `current` — Mark as the current page (plain text, aria-current).
+  - `navigate` — LiveView navigate target for this segment.
+  - `patch` — LiveView patch target for this segment.
+  - `href` — External or full-page href for this segment.
+  - `phx-click` — LiveView click event when rendering as a button.
+  - `phx-value-prefix` — Optional phx-value-prefix for the click event.
+  - `phx-target` — LiveView target for the click event.
+
+### LanternUI.Components.Button
+
+Buttons — Fluxon-compatible API, shadcn-caliber styling.
+
+#### `button/1`
+
+Buttons — Fluxon-compatible API, shadcn-caliber styling.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `color` (:string, values: primary, danger, warning, success, info, default "primary") — Semantic color token for the button surface.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `href` (:any) — External/full-page href; renders as a link.
+- `kbd` (:string) — Optional keyboard hint shown in the tooltip after `label`.
+- `label` (:string) — Accessible name (`aria-label`).
+- `navigate` (:string) — LiveView navigate target; renders as a link.
+- `patch` (:string) — LiveView patch target; renders as a link.
+- `rest` (:global, default %{"data-part" => "button"}) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: xs, sm, md, lg, xl, icon-xs, icon-sm, icon-md, icon, icon-lg, icon-xl, default "md") — Control height; icon-* sizes are square.
+- `variant` (:string, values: solid, soft, surface, outline, dashed, ghost, default "outline") — Surface style: solid fills, outline borders, ghost is transparent.
+Slots:
+- `:inner_block` (required) — Button label or content.
+
+#### `button_group/1`
+
+Groups buttons into a single segmented control (shared borders, joined radius).
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Buttons to join into a segmented group.
+
+### LanternUI.Components.Calendar
+
+A month-grid calendar primitive — the pane the date pickers compose.
+
+#### `calendar/1`
+
+A month-grid calendar primitive — the pane the date pickers compose.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `id` (:string, required) — Stable DOM id (state is persisted per id).
+- `max` (:string) — ISO date; later days are disabled
+- `min` (:string) — ISO date; earlier days are disabled
+- `month` ({:struct, Date}) — month to display; defaults to selected || today
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `selected` ({:struct, Date}) — Currently selected date; highlighted in the grid.
+- `week_start` (:integer, values: 0, 1, 2, 3, 4, 5, 6, default 0) — First weekday column; 0 is Sunday, 1 is Monday.
+
+### LanternUI.Components.Card
+
+A bounded panel: a titled surface that groups related content on a page.
+
+#### `card/1`
+
+A bounded panel: a titled surface that groups related content on a page.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `description` (:string) — Muted line under the heading.
+- `flush` (:boolean, default false) — Drop the body padding, for content that draws its own edges (tables, lists).
+- `icon` (:string) — Optional leading icon by the heading — a lantern icon name or a host `hero-*` name.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `title` (:string) — Card heading.
+Slots:
+- `:actions` — Right-aligned controls on the header row.
+- `:footer` — Muted strip below the body, separated by a rule.
+- `:header` — Replaces the title/description block entirely.
+- `:inner_block` (required) — Card body.
+
+#### `card_grid/1`
+
+A responsive grid of cards.
+
+- `class` (:any) — Extra classes merged onto the grid.
+- `min` (:string, default "16rem") — Minimum width a card may flex down to.
+- `rest` (:global) — Arbitrary HTML attributes passed through.
+Slots:
+- `:inner_block` (required) — `card/1` children.
+
+### LanternUI.Components.Checkbox
+
+Checkbox with label, description, and error states.
+
+#### `checkbox/1`
+
+Checkbox with label, description, and error states.
+
+- `checked` (:boolean) — Force checked state; else compares value to checked_value.
+- `checked_value` (:any, default "true") — Value submitted when the box is checked.
+- `class` (:any) — Extra classes merged onto the root element.
+- `description` (:string) — Helper text under the label stack.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `errors` (:list, default []) — Validation messages; derived from field when used.
+- `field` ({:struct, Phoenix.HTML.FormField}) — Form field; derives id, name, value, and errors.
+- `id` (:any) — Element id; derived from field when omitted.
+- `label` (:string) — Primary label text beside the control.
+- `name` (:string) — Form input name; derived from field when omitted.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `sublabel` (:string) — Secondary label line under the primary label.
+- `unchecked_value` (:any, default "false") — Hidden input value submitted when unchecked.
+- `value` (:any) — Current value used to derive checked state.
+
+### LanternUI.Components.ColorInput
+
+Native color picker paired with a hex readout.
+
+#### `color_input/1`
+
+Native color picker paired with a hex readout.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `description` (:string) — Helper text under the label stack.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `errors` (:list, default []) — Validation messages; derived from field when used.
+- `field` ({:struct, Phoenix.HTML.FormField}) — Form field; derives id, name, value, and errors.
+- `help_text` (:string) — Trailing help line under the field when no errors.
+- `id` (:any) — Element id; derived from field when omitted.
+- `label` (:string) — Primary label above the control.
+- `name` (:any) — Form input name; derived from field when omitted.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through to the color input.
+- `size` (:string, values: xs, sm, md, lg, xl, default "md") — Control density / type scale.
+- `sublabel` (:string) — Secondary label line under the primary label.
+- `value` (:any) — Current color as a `#rrggbb` hex string.
+
+### LanternUI.Components.Command
+
+Command palette (⌘K dialog) — a modal combobox over a listbox of actions.
+
+#### `command/1`
+
+Command palette (⌘K dialog) — a modal combobox over a listbox of actions.
+
+- `backdrop_class` (:any) — Extra classes on the dimmed backdrop.
+- `class` (:any) — Extra classes on the dialog panel.
+- `close_on_esc` (:boolean, default true) — Close when Escape is pressed.
+- `close_on_outside_click` (:boolean, default true) — Close when the backdrop is clicked.
+- `close_on_select` (:boolean, default true) — Close the palette after an item is chosen.
+- `container_class` (:any) — Extra classes on the overlay root.
+- `debounce` (:integer, default 200) — Search debounce in milliseconds.
+- `hotkey` (:string, default "k") — Key that opens the palette with Meta/Ctrl.
+- `id` (:string, required) — Stable DOM id used by open_dialog/close_dialog.
+- `label` (:string, default "Command palette") — Accessible name for the dialog and the results listbox.
+- `list_class` (:any) — Extra classes on the scrollable results list.
+- `loading` (:boolean, default false) — Show the loading row above the results.
+- `on_search` (:string, default "command_search") — LiveView event pushed with `%{"query" => query}`.
+- `on_select` (:string, default "command_select") — LiveView event pushed with `%{"value" => value}` when an item without its own `phx-click` is activated.
+- `open` (:boolean, default false) — Render already open (server-driven palettes).
+- `placeholder` (:string, default "Type a command or search…") — Search input placeholder.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through to the overlay root.
+- `search_on_open` (:boolean, default true) — Push `on_search` with the current query when the palette opens.
+- `target` (:any) — LiveComponent to send `on_search`/`on_select` to, as `@myself`.
+Slots:
+- `:footer` — Sticky footer under the results (hints, counts).
+- `:inner_block` (required) — Results: groups, items, separators, empty state.
+
+#### `command_empty/1`
+
+Command palette (⌘K dialog) — a modal combobox over a listbox of actions.
+
+- `class` (:any) — Extra classes merged onto the empty state.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Empty-state copy.
+
+#### `command_group/1`
+
+Command palette (⌘K dialog) — a modal combobox over a listbox of actions.
+
+- `class` (:any) — Extra classes merged onto the group.
+- `id` (:any) — Element id; auto-generated when omitted.
+- `label` (:string) — Section heading rendered above the items.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Items belonging to this group.
+
+#### `command_item/1`
+
+Command palette (⌘K dialog) — a modal combobox over a listbox of actions.
+
+- `class` (:any) — Extra classes merged onto the row.
+- `disabled` (:boolean, default false) — Render the row unselectable.
+- `id` (:any) — Element id; auto-generated when omitted.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes.
+- `value` (:any) — Value sent as `%{"value" => value}` when the item is selected.
+Slots:
+- `:description` — Secondary line under the label.
+- `:icon` — Leading icon or avatar.
+- `:inner_block` (required) — Item label.
+- `:shortcut` — Trailing keyboard hint or badge.
+
+#### `command_separator/1`
+
+Command palette (⌘K dialog) — a modal combobox over a listbox of actions.
+
+- `class` (:any) — Extra classes merged onto the separator.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+
+#### `command_shortcut/1`
+
+Command palette (⌘K dialog) — a modal combobox over a listbox of actions.
+
+- `class` (:any) — Extra classes merged onto the shortcut hint.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Keyboard hint text, e.g.
+
+### LanternUI.Components.DataTable
+
+The admin data table — one Flop-driven table to replace the per-app `admin_table` copies.
+
+#### `data_table/1`
+
+The admin data table — one Flop-driven table to replace the per-app `admin_table` copies.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `fill` (:boolean, default false) — Stretch to the parent's height (the parent must be a flex column with a definite height).
+- `flush` (:boolean, default false) — Drop the panel chrome — border, radius, shadow, raised surface — and pull the header, toolbar, cells and pagination out to the page gutter, so the table reads as the page rather than as a card sitting on it.
+- `id` (:string, required) — Stable DOM id for the table root and chrome.
+- `info_modal_id` (:string) — modal id the title's info button opens (LanternUI.open_dialog)
+- `meta` (:map, required) — Flop.Meta (or same-shaped map)
+- `page_size_options` (:list, default [10, 25, 50, 100]) — Choices for the page-size control.
+- `path` (:string, required) — base path for sort/pagination patches
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `row_id` (:any) — row -> id fn; defaults to & &1.id
+- `rows` (:list, required) — Current page of row structs/maps to render.
+- `search_field` (:atom) — Flop filter field the built-in search box binds to
+- `search_op` (:string, default "ilike") — Flop op for the search filter
+- `search_placeholder` (:string, default "Search…") — Placeholder for the toolbar search input.
+- `selected_ids` (:any, default MapSet.new([])) — MapSet (or enumerable) of selected row ids.
+- `show_checkboxes` (:boolean, default true) — Show row selection checkboxes and bulk bar.
+- `subtitle` (:string) — Secondary line under the table title.
+- `target` (:any) — LiveView target for selection and bulk events.
+- `title` (:string) — Optional table heading above the toolbar.
+- `view` (:string, values: table, cards, list, default "table") — active view.
+- `views` (:list) — Allowed views, as strings.
+Slots:
+- `:bulk_action` — Action shown in the bulk bar when rows are selected.
+  - `label` — Button label for the bulk action.
+  - `icon` — Optional leading icon name.
+  - `event` — phx-click event name fired to target.
+  - `color` — Button color token (e.g.
+- `:card` — per-row card rendering for the cards view; enables the view toggle
+- `:col` — One data column; body is rendered per row via :let.
+  - `label` — Header label for the column.
+  - `field` — Flop sort field when sortable.
+  - `sortable` — Enable sort patch links on the header.
+  - `class` — Extra classes on the header cell.
+  - `td_class` — Extra classes on body cells for this column.
+- `:empty` — Empty-state content when there are no rows.
+- `:filter` — Toolbar filter control bound to a Flop field.
+  - `field` — Flop filter field atom.
+  - `label` — Accessible/visible label for the control.
+  - `type` — 
+  - `op` — Flop filter op (e.g.
+  - `options` — Select options as values or {label, value} tuples.
+  - `prompt` — Blank/prompt option label for select filters.
+  - `placeholder` — Placeholder for text filters.
+  - `multiple` — multi-select filter (Flop op: in)
+  - `searchable` — search box in the filter's listbox
+- `:header_action` — Actions rendered in the title row (right side).
+- `:list_item` — per-row simple list rendering; enables the list view
+- `:row_action` — Per-row trailing actions cell; receives the row via :let.
+- `:stat` — Overview metric card above the table.
+  - `label` — Stat caption under or beside the value.
+  - `value` — Primary metric value to display.
+  - `icon` — Optional heroicon name shown top-right of the label row.
+  - `subtitle` — Optional muted caption under the value.
+  - `href` — Optional link target wrapping the stat.
+  - `class` — Extra classes on this stat card.
+- `:tab` — Filter preset tab in the table chrome.
+  - `label` — Tab label text.
+  - `count` — Optional badge count beside the label.
+  - `filters` — Flop filter preset, e.g.
+- `:toolbar` — Extra controls in the filter/search toolbar.
+
+### LanternUI.Components.DatePicker
+
+Date/time pickers — Fluxon-compatible API composed from LanternUI primitives.
+
+#### `date_picker/1`
+
+Date-only picker (`YYYY-MM-DD`).
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `description` (:string) — Helper text under the label stack.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `display_format` (:string) — accepted for Fluxon compat; not yet honored
+- `errors` (:list, default []) — Validation messages; derived from field when used.
+- `field` ({:struct, Phoenix.HTML.FormField}) — Form field; derives id, name, value, and errors.
+- `form` (:string) — HTML form attribute forwarded to the hidden value input (for editors outside the form element)
+- `help_text` (:string) — Trailing help line under the field when no errors.
+- `id` (:any) — Element id; derived from field when omitted.
+- `label` (:string) — Primary label above the control.
+- `max` (:string) — ISO max date; later calendar days are disabled.
+- `min` (:string) — ISO min date; earlier calendar days are disabled.
+- `name` (:any) — Form input name; derived from field when omitted.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: xs, sm, md, lg, xl, default "md") — Control density / type scale.
+- `sublabel` (:string) — Secondary label line under the primary label.
+- `value` (:any) — Canonical date string or Date struct.
+- `week_start` (:integer, values: 0, 1, 2, 3, 4, 5, 6, default 0) — First weekday column; 0 is Sunday, 1 is Monday.
+Slots:
+- `:inner_prefix` — Affix inside the control, before the segments.
+- `:inner_suffix` — Affix inside the control, after the segments.
+- `:outer_prefix` — Affix outside the control, before the wrap.
+- `:outer_suffix` — Affix outside the control, after the wrap.
+
+#### `date_range_picker/1`
+
+Start/end date range, bound to two form fields.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `display_format` (:string) — accepted for Fluxon compat; not honored
+- `end_field` ({:struct, Phoenix.HTML.FormField}, required) — Form field for the range end.
+- `id` (:any) — Element id prefix; derived from the start field when nil.
+- `label` (:string) — Primary label above the pair.
+- `max` (:any) — ISO string or Date; later days are disabled.
+- `min` (:any) — ISO string or Date; earlier days are disabled.
+- `navigation` (:string) — accepted for Fluxon compat; not honored
+- `placeholder` (:string) — accepted for Fluxon compat; not honored
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `separator` (:string, default "to") — Text rendered between the two controls.
+- `size` (:string, values: xs, sm, md, lg, xl, default "md") — Control density / type scale.
+- `start_field` ({:struct, Phoenix.HTML.FormField}, required) — Form field for the range start.
+- `week_start` (:integer, values: 0, 1, 2, 3, 4, 5, 6, default 0) — First weekday column; 0 is Sunday, 1 is Monday.
+
+#### `date_time_picker/1`
+
+Date + time picker (`YYYY-MM-DDTHH:MM:SS.mmm`).
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `description` (:string) — Helper text under the label stack.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `display_format` (:string) — accepted for Fluxon compat; not yet honored
+- `errors` (:list, default []) — Validation messages; derived from field when used.
+- `field` ({:struct, Phoenix.HTML.FormField}) — Form field; derives id, name, value, and errors.
+- `form` (:string) — HTML form attribute forwarded to the hidden value input (for editors outside the form element)
+- `help_text` (:string) — Trailing help line under the field when no errors.
+- `id` (:any) — Element id; derived from field when omitted.
+- `label` (:string) — Primary label above the control.
+- `max` (:string) — ISO max date; later calendar days are disabled.
+- `min` (:string) — ISO min date; earlier calendar days are disabled.
+- `name` (:any) — Form input name; derived from field when omitted.
+- `precision` (:atom, values: minute, second, millisecond, default :minute) — Finest time segment shown in the field.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: xs, sm, md, lg, xl, default "md") — Control density / type scale.
+- `sublabel` (:string) — Secondary label line under the primary label.
+- `time_format` (:string) — accepted for Fluxon compat; not yet honored
+- `value` (:any) — Canonical datetime string or DateTime/NaiveDateTime.
+- `week_start` (:integer, values: 0, 1, 2, 3, 4, 5, 6, default 0) — First weekday column; 0 is Sunday, 1 is Monday.
+Slots:
+- `:inner_prefix` — Affix inside the control, before the segments.
+- `:inner_suffix` — Affix inside the control, after the segments.
+- `:outer_prefix` — Affix outside the control, before the wrap.
+- `:outer_suffix` — Affix outside the control, after the wrap.
+
+#### `time_picker/1`
+
+Time-only picker (`HH:MM:SS.mmm`, segments only — no popover).
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `description` (:string) — Helper text under the label stack.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `errors` (:list, default []) — Validation messages; derived from field when used.
+- `field` ({:struct, Phoenix.HTML.FormField}) — Form field; derives id, name, value, and errors.
+- `form` (:string) — HTML form attribute forwarded to the hidden value input (for editors outside the form element)
+- `help_text` (:string) — Trailing help line under the field when no errors.
+- `id` (:any) — Element id; derived from field when omitted.
+- `label` (:string) — Primary label above the control.
+- `name` (:any) — Form input name; derived from field when omitted.
+- `precision` (:atom, values: minute, second, millisecond, default :minute) — Finest time segment shown in the field.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: xs, sm, md, lg, xl, default "md") — Control density / type scale.
+- `sublabel` (:string) — Secondary label line under the primary label.
+- `value` (:any) — Canonical time string or Time struct.
+Slots:
+- `:inner_prefix` — Affix inside the control, before the segments.
+- `:inner_suffix` — Affix inside the control, after the segments.
+- `:outer_prefix` — Affix outside the control, before the wrap.
+- `:outer_suffix` — Affix outside the control, after the wrap.
+
+### LanternUI.Components.DatetimeField
+
+A segmented, directly-editable date/time field — the trigger primitive the date pickers compose (HeroUI-style: `2 / 3 / 2026, 8:45 AM`).
+
+#### `datetime_field/1`
+
+A segmented, directly-editable date/time field — the trigger primitive the date pickers compose (HeroUI-style: `2 / 3 / 2026, 8:45 AM`).
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `form` (:string) — the form attribute forwarded to the hidden input
+- `id` (:string, required) — Stable DOM id for the datetime field hook.
+- `mode` (:atom, values: date, time, datetime, default :date) — Which segment set to show: date, time, or both.
+- `name` (:string) — omit for a non-submitting field (no name on the hidden input)
+- `nullable` (:boolean, default true) — Allow clearing all segments to empty/null.
+- `precision` (:atom, values: minute, second, millisecond, default :minute) — Finest time segment shown; coarser parts stay zeroed.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `value` (:any) — canonical string (see value contract) or nil
+Slots:
+- `:suffix` — trailing affix inside the field (e.g.
+
+### LanternUI.Components.DescriptionList
+
+Label/value pairs for a record's detail view — the `<dl>` every show page hand-rolls.
+
+#### `description_list/1`
+
+Label/value pairs for a record's detail view — the `<dl>` every show page hand-rolls.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `columns` (:integer, values: 1, 2, 3, default 2) — Pairs per row on wide viewports.
+- `layout` (:string, values: stacked, inline, dense, default "stacked") — `stacked` puts the label above the value; `inline` puts it alongside; `dense` is the inspector rail.
+- `rest` (:global) — Arbitrary HTML attributes passed through.
+Slots:
+- `:item` (required) — One label/value pair.
+  - `label` — The pair's label.
+  - `wide` — Span every column — for long free text.
+  - `class` — Extra classes merged onto this pair.
+
+### LanternUI.Components.Dropdown
+
+Dropdown menu on the shared overlay runtime (anchored placement, focus return, Escape/outside dismissal, arrow-key item navigation).
+
+#### `dropdown/1`
+
+Dropdown menu on the shared overlay runtime (anchored placement, focus return, Escape/outside dismissal, arrow-key item navigation).
+
+- `animation` (:string) — accepted for Fluxon compat
+- `animation_enter` (:string) — accepted for Fluxon compat
+- `animation_leave` (:string) — accepted for Fluxon compat
+- `class` (:any) — classes for the menu panel
+- `container_class` (:any) — Extra classes on the dropdown root wrapper.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `hover_close_delay` (:integer) — accepted for Fluxon compat
+- `hover_open_delay` (:integer) — accepted for Fluxon compat
+- `id` (:string) — Stable DOM id for the dropdown hook; auto-generated when omitted, mirroring Fluxon's dropdown (drop-in parity).
+- `label` (:string) — default toggle button text when no :toggle slot
+- `open_on_hover` (:boolean, default false) — accepted for Fluxon compat; click/keyboard only
+- `placement` (:string, values: bottom-start, bottom-end, top-start, top-end, default "bottom-start") — Where the menu anchors relative to the toggle.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `toggle_class` (:any) — Classes on the default toggle button.
+Slots:
+- `:inner_block` (required) — Menu items (buttons, links, separators).
+- `:toggle` — Custom trigger; defaults to a button using label.
+
+#### `dropdown_button/1`
+
+Dropdown menu on the shared overlay runtime (anchored placement, focus return, Escape/outside dismissal, arrow-key item navigation).
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Button menu item label.
+
+#### `dropdown_custom/1`
+
+Dropdown menu on the shared overlay runtime (anchored placement, focus return, Escape/outside dismissal, arrow-key item navigation).
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Custom non-item content inside the menu.
+
+#### `dropdown_header/1`
+
+Dropdown menu on the shared overlay runtime (anchored placement, focus return, Escape/outside dismissal, arrow-key item navigation).
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Header label content.
+
+#### `dropdown_link/1`
+
+Dropdown menu on the shared overlay runtime (anchored placement, focus return, Escape/outside dismissal, arrow-key item navigation).
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Link menu item label.
+
+#### `dropdown_separator/1`
+
+Dropdown menu on the shared overlay runtime (anchored placement, focus return, Escape/outside dismissal, arrow-key item navigation).
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+
+### LanternUI.Components.EmptyState
+
+Quiet empty/zero state for tables, lists, and panels (a lantern-ui extension — Fluxon has no equivalent).
+
+#### `empty_state/1`
+
+Quiet empty/zero state for tables, lists, and panels (a lantern-ui extension — Fluxon has no equivalent).
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `icon` (:string) — Optional leading icon name from the icon set.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `title` (:string, required) — Primary empty-state heading.
+Slots:
+- `:action` — CTA buttons or links below the description.
+- `:inner_block` — Supporting description under the title.
+
+### LanternUI.Components.Form
+
+Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
+
+#### `error/1`
+
+Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Error message text.
+
+#### `input/1`
+
+Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `description` (:string) — Helper text under the label stack.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `errors` (:list, default []) — Validation messages; derived from field when used.
+- `field` ({:struct, Phoenix.HTML.FormField}) — Form field; derives id, name, value, and errors.
+- `help_text` (:string) — Trailing help line under the field when no errors.
+- `id` (:any) — Element id; derived from field when omitted.
+- `label` (:string) — Primary label above the control.
+- `name` (:any) — Form input name; derived from field when omitted.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: xs, sm, md, lg, xl, default "md") — Control density / type scale.
+- `sublabel` (:string) — Secondary label line under the primary label.
+- `type` (:string, default "text") — HTML input type (text, email, hidden, …).
+- `value` (:any) — Current input value.
+Slots:
+- `:inner_prefix` — Affix inside the control, before the input.
+- `:inner_suffix` — Affix inside the control, after the input.
+- `:outer_prefix` — Affix outside the control, before the wrap.
+- `:outer_suffix` — Affix outside the control, after the wrap.
+
+#### `label/1`
+
+Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `description` (:string) — Helper line under the label (Fluxon parity).
+- `for` (:string) — id of the labeled control.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `sublabel` (:string) — Secondary line under the primary label text.
+Slots:
+- `:inner_block` (required) — Primary label text.
+
+### LanternUI.Components.Icon
+
+A small, curated inline-SVG icon set (Heroicons outline paths, MIT).
+
+#### `icon/1`
+
+Renders an icon by name.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `name` (:string, required, values: window, minus, funnel, map-pin, calendar-days, arrow-path, check-circle, pencil-square, magnifying-glass, trash, chevron-up, clock, printer, folder-open, chevron-right, document, view-columns, ellipsis-horizontal, bars-3, sparkles, folder, cloud, chevron-up-down, information-circle, cursor-arrow-rays, x-mark, calendar, check, chart-bar, arrow-right, arrow-up-tray, chevron-down, inbox, adjustments-horizontal, globe-alt, chevron-left, presentation-chart-line, arrow-trending-up, plus, squares-2x2, arrow-down-tray, circle-stack, exclamation-circle) — Icon key from the curated outline set.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+
+### LanternUI.Components.IconButton
+
+Deprecated alias of `LanternUI.Components.Button.button/1` with `label` on an `icon-*` size.
+
+#### `icon_button/1`
+
+Deprecated alias of `LanternUI.Components.Button.button/1` with `label` on an `icon-*` size.
+
+- `class` (:any) — Extra classes merged onto the button.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `href` (:any) — External/full-page href; renders as a link.
+- `kbd` (:string) — Optional keyboard hint shown in the tooltip after the label.
+- `label` (:string, required) — Accessible name and tooltip copy.
+- `navigate` (:string) — LiveView navigate target; renders as a link.
+- `patch` (:string) — LiveView patch target; renders as a link.
+- `rest` (:global) — HTML/`phx-*` attrs on the button.
+- `size` (:string, values: sm, md, lg, default "md") — Maps onto button icon sizes (sm/md/lg).
+- `tooltip` (:boolean, default true) — Wrap with `tooltip/1`.
+- `variant` (:string, values: ghost, outline, primary, default "ghost") — ghost is transparent; outline has a hairline; primary is solid.
+Slots:
+- `:inner_block` (required) — The icon.
+
+### LanternUI.Components.Inspector
+
+Sticky right-rail inspector: optional section headings and a dense `description_list`.
+
+#### `inspector/1`
+
+Sticky right-rail inspector: optional section headings and a dense `description_list`.
+
+- `class` (:any) — Extra classes merged onto the rail.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — `inspector_section/1` and `description_list` / `property_row/1` children.
+
+#### `inspector_section/1`
+
+Sticky right-rail inspector: optional section headings and a dense `description_list`.
+
+- `class` (:any) — Extra classes merged onto the section.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `title` (:string) — Optional uppercase section heading.
+Slots:
+- `:inner_block` (required) — Section body, usually a dense `description_list`.
+
+#### `property_row/1`
+
+Sticky right-rail inspector: optional section headings and a dense `description_list`.
+
+- `class` (:any) — Extra classes merged onto the row.
+- `label` (:string, required) — Row label (left column).
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Value: text or any inline control.
+
+### LanternUI.Components.Layout
+
+App shell — a full-width top bar (brand + inline context + actions) over a fixed, collapsible left sidebar and a main content column.
+
+#### `app_shell/1`
+
+App shell — a full-width top bar (brand + inline context + actions) over a fixed, collapsible left sidebar and a main content column.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `collapsed` (:boolean, default false) — Initial sidebar collapsed (icon-rail) state.
+- `id` (:string, required) — stable id — the collapse state is persisted per id
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:actions` — top-right of the bar (user menu, etc.)
+- `:brand` (required) — logo/name, top-left corner
+- `:breadcrumb` — compact sticky trail under the appbar (pass <.breadcrumb>)
+- `:breadcrumb_actions` — Right-side actions on the breadcrumb bar (same region as breadcrumb_bar/1 :actions).
+  - `label` — Label used when this entry collapses into the breadcrumb overflow menu.
+  - `phx-click` — LiveView click event on the overflow menu item.
+  - `phx-value-id` — Optional phx-value-id for the overflow menu item.
+  - `phx-target` — LiveView target for the overflow menu item.
+  - `disabled` — Disable the overflow menu item.
+  - `navigate` — Destination for a NAVIGATING entry.
+  - `patch` — Live-patch destination for a folded navigating entry.
+  - `href` — Plain href for a folded navigating entry.
+  - `data-confirm` — Confirmation prompt for the folded menu item.
+- `:header` — inline context after the brand (switchers, etc.)
+- `:inner_block` (required) — Main content column.
+- `:sidebar` (required) — nav_group / nav_item
+- `:sidebar_footer` — Persistent links pinned below the nav and above the collapse control (support, docs, legal).
+
+#### `breadcrumb_bar/1`
+
+Compact sticky breadcrumb region for use outside `app_shell` (or when the host app still owns the outer shell).
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `id` (:string) — Stable id for the overflow menu when multi-entry actions collapse; auto-generated when omitted.
+- `max_inline` (:integer, default 2) — How many entries render as quick buttons before the rest fold into the More menu.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:actions` — Right-side actions.
+  - `label` — Label used for this entry when it is collapsed into the overflow menu.
+  - `phx-click` — LiveView click event on the overflow menu item.
+  - `phx-value-id` — Optional phx-value-id for the overflow menu item.
+  - `phx-target` — LiveView target for the overflow menu item.
+  - `disabled` — Disable the overflow menu item.
+  - `navigate` — Destination for a NAVIGATING entry.
+  - `patch` — Live-patch destination for a folded navigating entry.
+  - `href` — Plain href for a folded navigating entry.
+  - `data-confirm` — Confirmation prompt for the folded menu item.
+- `:inner_block` (required) — Usually a single <.breadcrumb>.
+
+#### `nav_group/1`
+
+A labelled group of nav items.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `label` (:string) — Group heading; hides when the rail is collapsed.
+Slots:
+- `:inner_block` (required) — nav_item children in this group.
+
+#### `nav_item/1`
+
+A sidebar nav item.
+
+- `active` (:boolean, default false) — Highlight as the current page.
+- `badge` (:any) — A count or short marker for what is waiting behind this link.
+- `class` (:any) — Extra classes merged onto the root element.
+- `expanded` (:boolean, default false) — Initial open state when a `:subnav` is present.
+- `href` (:string) — External or full-page href; renders as a link.
+- `icon` (:string) — Leading icon.
+- `label` (:string, required) — Nav label; becomes the collapsed-rail tooltip.
+- `navigate` (:string) — LiveView navigate target; renders as a link.
+- `patch` (:string) — LiveView patch target; renders as a link.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:subnav` — Nested nav_items.
+
+#### `nav_link/1`
+
+A quiet link for the shell's `:sidebar_footer` — support, docs, legal.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `external` (:boolean, default false) — Marks the link as leaving the app: opens in a new tab and shows an outbound glyph.
+- `href` (:string) — Plain href.
+- `icon` (:string) — Optional leading icon — a lantern icon-set name or a host `hero-*` name.
+- `label` (:string, required) — Link text.
+- `navigate` (:string) — LiveView navigate target.
+- `patch` (:string) — LiveView patch target.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+
+#### `page_header/1`
+
+Page title row — compact, goprint-density.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `description` (:string) — Optional supporting line under the title.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `title` (:string) — Page heading.
+Slots:
+- `:actions` — Right-side actions (buttons, menus).
+- `:inner_block` — Optional body under the title row (rarely needed).
+
+### LanternUI.Components.ListRow
+
+Dense issue/inbox row: leading glyph · muted mono id · truncating title · meta · trailing.
+
+#### `list_row/1`
+
+Dense issue/inbox row: leading glyph · muted mono id · truncating title · meta · trailing.
+
+- `class` (:any) — Extra classes merged onto the row.
+- `href` (:any) — External or full-page href; whole row is a link.
+- `identifier` (:string) — Muted mono id shown after the leading glyph (e.g.
+- `navigate` (:string) — LiveView navigate target; whole row is a link.
+- `parent` (:string) — Optional parent title rendered muted with a › before `title`.
+- `patch` (:string) — LiveView patch target; whole row is a link.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `selected` (:boolean, default false) — Selected/active row tint.
+- `title` (:string, required) — Primary line; truncated.
+Slots:
+- `:leading` — Leading glyph (status/priority/kind).
+- `:meta` — Inline tags, counts, or other chips before the trailing column.
+- `:trailing` — Trailing column (date, assignee).
+
+### LanternUI.Components.Loading
+
+Inline loading indicator — ring spinner or staggered dots.
+
+#### `loading/1`
+
+Inline loading indicator — ring spinner or staggered dots.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `label` (:string, default "Loading") — Accessible label for aria-label and screen-reader text.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: xs, sm, md, lg, xl, default "md") — Scales ring diameter / dot size (xs ~0.75rem … xl ~2rem).
+- `variant` (:string, values: ring, dots-bounce, dots-fade, dots-scale, default "ring") — Spinner style: rotating ring or three-dot bounce/fade/scale.
+
+### LanternUI.Components.LogView
+
+Log view: monospace lines with a timestamp gutter and per-line severity.
+
+#### `log_line/1`
+
+Log view: monospace lines with a timestamp gutter and per-line severity.
+
+- `at` (:string) — Preformatted timestamp for the gutter; the component does not format time.
+- `channel` (:string) — What produced the line — a tool name, stream, or subsystem.
+- `class` (:any) — Extra classes merged onto the line root.
+- `meta` (:string) — Trailing detail, typically a duration.
+- `open` (:boolean, default false) — When `:detail` is present, start expanded.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `selected` (:boolean, default false) — Marks this line as the current selection.
+- `severity` (:atom, values: neutral, info, success, warning, error, default :neutral) — Line severity.
+Slots:
+- `:detail` — Collapsible body revealed under a native disclosure.
+- `:inner_block` (required) — The line body.
+
+#### `log_view/1`
+
+Log view: monospace lines with a timestamp gutter and per-line severity.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `id` (:string) — DOM id for the root element.
+- `label` (:string) — Optional heading pinned above the lines while they scroll.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `wrap` (:boolean, default false) — Soft-wrap long lines instead of scrolling them horizontally.
+Slots:
+- `:actions` — Controls rendered at the right of the header (filters, toggles).
+- `:inner_block` (required) — One or more `log_line/1` children.
+
+### LanternUI.Components.Menu
+
+Menu button and menubar — no Fluxon equivalent.
+
+#### `menu/1`
+
+Menu button and menubar — no Fluxon equivalent.
+
+- `class` (:any) — Extra classes on the popup menu panel.
+- `container_class` (:any) — Extra classes on the menu root wrapper.
+- `disabled` (:boolean, default false) — Render the trigger disabled.
+- `id` (:string) — Stable DOM id for the menu hook; auto-generated when omitted.
+- `label` (:string) — Trigger button text when no :trigger slot.
+- `placement` (:string, values: bottom-start, bottom-end, top-start, top-end, default "bottom-start") — Where the menu anchors relative to the trigger.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `trigger_class` (:any) — Extra classes on the trigger button.
+Slots:
+- `:inner_block` (required) — Menu items and separators.
+- `:trigger` — Custom trigger content, rendered inside the component-owned button.
+
+#### `menu_item/1`
+
+A menu item.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `disabled` (:boolean, default false) — Render disabled and skipped by arrow keys.
+- `href` (:any) — Plain href.
+- `navigate` (:string) — Live-navigate here on activation.
+- `patch` (:string) — Live-patch here on activation.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Menu item label.
+
+#### `menu_separator/1`
+
+Menu button and menubar — no Fluxon equivalent.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+
+#### `menubar/1`
+
+Menu button and menubar — no Fluxon equivalent.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `id` (:string) — Stable DOM id for the menubar hook; auto-generated when omitted.
+- `label` (:string, required) — Accessible name for the menubar (`aria-label`); required by the APG.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — `menubar_menu` entries.
+
+#### `menubar_menu/1`
+
+Menu button and menubar — no Fluxon equivalent.
+
+- `class` (:any) — Extra classes on the popup menu panel.
+- `disabled` (:boolean, default false) — Render the entry disabled.
+- `id` (:string) — Stable DOM id for this entry; auto-generated when omitted.
+- `label` (:string, required) — Top-level menubar item text.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `trigger_class` (:any) — Extra classes on the top-level item button.
+Slots:
+- `:inner_block` (required) — Menu items and separators.
+
+### LanternUI.Components.Message
+
+Chat message rows with optional avatar, metadata, and footer.
+
+#### `message/1`
+
+Chat message rows with optional avatar, metadata, and footer.
+
+- `align` (:string, values: start, end, default "start") — 
+- `class` (:any) — 
+- `rest` (:global) — 
+- `tone` (:string, values: primary, surface, default "surface") — 
+Slots:
+- `:avatar` — 
+- `:footer` — 
+- `:header` — 
+- `:inner_block` —
+
+### LanternUI.Components.MessageScroller
+
+Accessible, follow-aware transcript viewport for chat messages.
+
+#### `message_scroller/1`
+
+Accessible, follow-aware transcript viewport for chat messages.
+
+- `busy` (:boolean, default false) — 
+- `class` (:any) — 
+- `follow` (:boolean, default true) — Follow the latest message and mount at the bottom
+- `id` (:string, required) — 
+- `label` (:string, default "Messages") — 
+- `peek` (:integer, default 40) — 
+- `rest` (:global) — 
+Slots:
+- `:inner_block` (required) —
+
+#### `message_scroller_item/1`
+
+Accessible, follow-aware transcript viewport for chat messages.
+
+- `class` (:any) — 
+- `id` (:string) — 
+- `message_id` (:string) — 
+- `rest` (:global) — 
+- `scroll_anchor` (:boolean, default false) — 
+Slots:
+- `:inner_block` (required) —
+
+### LanternUI.Components.Meter
+
+Meter — a scalar measurement within a known range (`role="meter"`, WAI-ARIA APG Meter pattern).
+
+#### `meter/1`
+
+Meter — a scalar measurement within a known range (`role="meter"`, WAI-ARIA APG Meter pattern).
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `high` (:any) — Lower bound of the high region; enables optimum-based state coloring.
+- `label` (:string, default "Meter") — Accessible name for aria-label.
+- `low` (:any) — Upper bound of the low region; enables optimum-based state coloring.
+- `max` (:any, default 100) — Upper bound of the range.
+- `min` (:any, default 0) — Lower bound of the range.
+- `optimum` (:any) — Optimal value; region distance drives data-state (optimal/suboptimal/critical).
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: sm, md, lg, default "md") — Track height (sm ~0.375rem … lg ~0.75rem).
+- `value` (:any, required) — Current measurement (number).
+- `value_text` (:string) — Human-readable value for aria-valuetext (e.g.
+
+### LanternUI.Components.Modal
+
+Modal dialog on the shared overlay runtime (focus trap, Escape/outside dismissal, `prefers-reduced-motion`-aware fade).
+
+#### `modal/1`
+
+Modal dialog on the shared overlay runtime (focus trap, Escape/outside dismissal, `prefers-reduced-motion`-aware fade).
+
+- `animation` (:string) — accepted for Fluxon compat; fade is token-driven
+- `animation_enter` (:string) — accepted for Fluxon compat
+- `animation_leave` (:string) — accepted for Fluxon compat
+- `aria_describedby` (:string) — Id of the dialog description element.
+- `aria_label` (:string) — Accessible name for the dialog panel.
+- `aria_labelledby` (:string) — Id of the dialog title element.
+- `backdrop_class` (:any) — Extra classes on the dimmed backdrop.
+- `class` (:any) — Extra classes on the dialog panel.
+- `close_on_esc` (:boolean, default true) — Close when Escape is pressed.
+- `close_on_outside_click` (:boolean, default true) — Close when the backdrop is clicked.
+- `container_class` (:any) — Extra classes on the overlay root.
+- `hide_close_button` (:boolean, default false) — Hide the built-in close control.
+- `id` (:string, required) — Stable DOM id used by open_dialog/close_dialog.
+- `initial_focus` (:string) — Selector for the element or region that receives focus when opened.
+- `on_close` ({:struct, Phoenix.LiveView.JS}) — JS command run when the modal closes.
+- `on_open` ({:struct, Phoenix.LiveView.JS}) — JS command run when the modal opens.
+- `open` (:boolean, default false) — render already open (server-driven modals)
+- `placement` (:string, values: center, top, default "center") — Vertical panel placement within the viewport.
+- `prevent_closing` (:boolean, default false) — Block Escape and outside-click close.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `role` (:string, default "dialog") — ARIA role for the dialog panel.
+Slots:
+- `:inner_block` (required) — Dialog body content.
+
+### LanternUI.Components.Navlist
+
+Vertical nav list — heading + links.
+
+#### `navheading/1`
+
+A section heading inside a navlist.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Heading label content.
+
+#### `navlink/1`
+
+A nav list item.
+
+- `active` (:boolean, default false) — Highlight as the current page.
+- `class` (:any) — Extra classes merged onto the root element.
+- `href` (:string) — External or full-page href; renders as a link.
+- `icon` (:string) — Leading icon name from the icon set.
+- `navigate` (:string) — LiveView navigate target; renders as a link.
+- `patch` (:string) — LiveView patch target; renders as a link.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Link or button label content.
+
+#### `navlist/1`
+
+Vertical nav list — heading + links.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `heading` (:string) — Optional top heading rendered above the links.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — navlink / navheading children.
+
+### LanternUI.Components.Pagination
+
+Pager + page-size control for paginated collections (a lantern-ui extension; Fluxon has no pagination component — this replaces flop_phoenix's pager).
+
+#### `pagination/1`
+
+Pager + page-size control for paginated collections (a lantern-ui extension; Fluxon has no pagination component — this replaces flop_phoenix's pager).
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `id` (:string, default "pagination") — Base id for the page-size dropdown.
+- `meta` (:map, required) — Flop.Meta or any map with current_page/total_pages/page_size/total_count
+- `page_size_options` (:list, default [10, 25, 50, 100]) — Choices in the page-size menu.
+- `patch_fn` (:any, required) — fn %{page: n} | %{page: 1, page_size: s} -> path
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `show_page_size` (:boolean, default true) — Show the page-size dropdown control.
+- `sibling_count` (:integer, default 1) — Page numbers shown on each side of current.
+
+### LanternUI.Components.Popover
+
+Click-triggered floating panel holding arbitrary content.
+
+#### `popover/1`
+
+Click-triggered floating panel holding arbitrary content.
+
+- `class` (:any) — Extra classes merged onto the panel.
+- `container_class` (:any) — Extra classes on the popover root wrapper.
+- `id` (:string) — Stable DOM id for the overlay hook; auto-generated when omitted, mirroring Fluxon's popover (drop-in parity).
+- `open_on_focus` (:boolean, default false) — accepted for Fluxon compat; click only
+- `open_on_hover` (:boolean, default false) — accepted for Fluxon compat; click only
+- `placement` (:string, values: bottom-start, bottom-end, top-start, top-end, default "bottom-start") — Where the panel anchors relative to the trigger.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `target` (:string) — accepted for Fluxon compat
+Slots:
+- `:content` (required) — Panel content.
+- `:inner_block` (required) — The trigger element.
+
+### LanternUI.Components.Progress
+
+Progress bar or completion ring.
+
+#### `progress/1`
+
+Progress bar or completion ring.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `color` (:string, values: primary, accent, success, warning, danger, info, neutral, default "accent") — Semantic fill / stroke color token.
+- `completed` (:integer) — Flicker alias of ring `value`; used with `scope`.
+- `indeterminate` (:boolean, default false) — Force indeterminate bar (also true when bar value is nil).
+- `label` (:string) — Accessible name.
+- `max` (:integer) — Ring total.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `scope` (:integer) — Flicker alias of ring `max`.
+- `shape` (:string, values: bar, ring, default "bar") — `bar` is a track fill; `ring` is the SVG completion circle.
+- `shimmer` (:boolean, default false) — Animated sheen on the determinate bar fill (e.g.
+- `size` (:string, values: sm, md, lg, default "md") — Bar track height, or ring diameter (sm 28px, md 40px, lg 48px).
+- `value` (:integer) — Bar: percent 0–100 (nil is indeterminate).
+Slots:
+- `:inner_block` — Optional caption beside a ring (counts, short copy).
+
+### LanternUI.Components.ProgressRing
+
+Deprecated alias of `LanternUI.Components.Progress.progress/1` with `shape="ring"`.
+
+#### `progress_ring/1`
+
+Deprecated alias of `LanternUI.Components.Progress.progress/1` with `shape="ring"`.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `color` (:string, values: success, accent, primary, danger, warning, info, default "success") — Semantic colour of the progress stroke.
+- `completed` (:integer) — Flicker alias of `value`; used with `scope`.
+- `label` (:string) — Accessible name.
+- `max` (:integer) — Total amount.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `scope` (:integer) — Flicker alias of `max`.
+- `size` (:string, values: sm, md, default "md") — sm is 28px; md is 40px.
+- `value` (:integer) — Completed amount.
+Slots:
+- `:inner_block` — Optional caption beside the ring (counts, short copy).
+
+### LanternUI.Components.Radio
+
+Radio group for exclusive single selection.
+
+#### `radio/1`
+
+Radio group for exclusive single selection.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `description` (:string) — Helper text under the group label.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `errors` (:list, default []) — Validation messages; derived from field when used.
+- `field` ({:struct, Phoenix.HTML.FormField}) — Form field; derives id, name, value, and errors.
+- `id` (:any) — Element id; derived from field or name when omitted.
+- `label` (:string) — Group label above the options.
+- `name` (:string) — Shared radio name; derived from field when omitted.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `sublabel` (:string) — Secondary line under the group label.
+- `value` (:any) — Currently selected option value.
+- `variant` (:string, values: list, cards, default "list") — list is compact radios; cards is selectable panels.
+Slots:
+- `:radio` (required) — One exclusive option in the group.
+  - `value` — Option value submitted when selected.
+  - `label` — Primary label for this option.
+  - `sublabel` — Secondary label for this option.
+  - `description` — Helper text under this option's labels.
+  - `disabled` — Disable this option only.
+
+### LanternUI.Components.ResourceList
+
+Resource list: a simple index of resources (projects, apps, databases, buckets).
+
+#### `resource_list/1`
+
+Resource list: a simple index of resources (projects, apps, databases, buckets).
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `layout` (:atom, values: list, grid, default :list) — List (full-width rows) or grid (card layout).
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — One or more `resource_list_item/1` children.
+
+#### `resource_list_item/1`
+
+Resource list: a simple index of resources (projects, apps, databases, buckets).
+
+- `class` (:any) — Extra classes merged onto the item root.
+- `href` (:string) — External or full-page href; whole row is a link.
+- `navigate` (:string) — LiveView navigate target; whole row is a link.
+- `patch` (:string) — LiveView patch target; whole row is a link.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `subtitle` (:string) — Optional secondary line (e.g.
+- `subtitle_mono` (:boolean, default false) — Render the subtitle in the mono face.
+- `title` (:string, required) — Primary line (resource name).
+Slots:
+- `:inner_block` — Trailing meta (badges, counts).
+
+### LanternUI.Components.ScrollArea
+
+ScrollArea — themed scrollbar wrapper around native overflow scrolling.
+
+#### `scroll_area/1`
+
+ScrollArea — themed scrollbar wrapper around native overflow scrolling.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `label` (:string) — Accessible name; when set the wrapper becomes a focusable, keyboard-scrollable `role="region"`.
+- `orientation` (:string, values: vertical, horizontal, both, default "vertical") — Which axis may scroll; the other axis hides its overflow.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Scrolled content.
+
+### LanternUI.Components.Segmented
+
+Deprecated alias of `LanternUI.Components.Tabs.tabs_list/1` with `variant="segmented"`.
+
+#### `segmented/1`
+
+Deprecated alias of `LanternUI.Components.Tabs.tabs_list/1` with `variant="segmented"`.
+
+- `class` (:any) — Extra classes merged onto the group.
+- `id` (:string, required) — Stable id for the `LanternSegmented` hook.
+- `label` (:string) — Accessible name of the group (aria-label).
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: sm, md, default "sm") — Control density.
+- `value` (:any) — Value of the active segment (atom or string).
+Slots:
+- `:segment` (required) — One segment; link via patch/navigate/href or button via phx-click.
+  - `value` — 
+  - `patch` — 
+  - `navigate` — 
+  - `href` — 
+  - `disabled` — 
+  - `class` — 
+  - `phx-click` — 
+  - `phx-value` — 
+  - `phx-target` —
+
+### LanternUI.Components.Select
+
+Select — mirrors Fluxon's `select/1` surface: a `FormField`-aware select with a rich listbox path and a `native` fallback.
+
+#### `select/1`
+
+Select — mirrors Fluxon's `select/1` surface: a `FormField`-aware select with a rich listbox path and a `native` fallback.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `clearable` (:boolean, default false) — show a clear (×) button that resets the selection (Fluxon parity).
+- `controlled` (:boolean, default false) — server-driven mode: the server `value` is truth and patches flow into the Zag machine (non-searchable rich path only).
+- `description` (:string) — Helper text under the label stack.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `errors` (:list, default []) — Validation messages; derived from field when used.
+- `field` ({:struct, Phoenix.HTML.FormField}) — Form field; derives id, name, value, and errors.
+- `help_text` (:string) — Trailing help line under the field when no errors.
+- `id` (:any) — Element id.
+- `include_hidden` (:boolean, default true) — Emit a blank hidden input so empty submits.
+- `label` (:string) — Primary label above the control.
+- `max` (:integer) — max selections when multiple
+- `multiple` (:boolean, default false) — multi-select; submits name[] hidden inputs
+- `name` (:any) — Form input name; derived from field when omitted.
+- `native` (:boolean, default false) — Use a native <select> instead of the rich listbox.
+- `on_change` (:string) — server event pushed with `%{id, value}` when the Zag select value changes (non-searchable rich path only).
+- `on_change_client` (:string) — bubbling DOM CustomEvent dispatched with `%{id, value}` on Zag value changes (non-searchable rich path only).
+- `options` (:list, default []) — Choices as values or {label, value} tuples.
+- `placeholder` (:string, default "Select…") — Toggle text when nothing is selected.
+- `prompt` (:string) — blank first option (native path)
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `search_input_placeholder` (:string, default "Search…") — Placeholder for the listbox search input.
+- `search_no_results_text` (:string, default "No results") — Empty-state copy when search matches nothing.
+- `search_threshold` (:integer) — auto-enable search at N+ options
+- `searchable` (:boolean, default false) — search box inside the listbox
+- `size` (:string, values: xs, sm, md, lg, xl, default "md") — Control density / type scale.
+- `sublabel` (:string) — Secondary label line under the primary label.
+- `value` (:any) — Selected value(s); list when multiple.
+
+### LanternUI.Components.Separator
+
+Visual divider — horizontal, vertical, or labeled.
+
+#### `separator/1`
+
+Visual divider — horizontal, vertical, or labeled.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `text` (:string) — Optional centered label on a horizontal rule.
+- `vertical` (:boolean, default false) — Render a vertical divider instead of horizontal.
+
+### LanternUI.Components.Sheet
+
+Slide-over panel (drawer) that enters from a screen edge.
+
+#### `sheet/1`
+
+Slide-over panel (drawer) that enters from a screen edge.
+
+- `animation` (:string) — Accepted for Fluxon compat; slide is token-driven.
+- `animation_enter` (:string) — Accepted for Fluxon compat.
+- `animation_leave` (:string) — Accepted for Fluxon compat.
+- `backdrop_class` (:any) — Extra classes on the dimmed backdrop.
+- `class` (:any) — Extra classes on the sliding panel.
+- `close_on_esc` (:boolean, default true) — Close when Escape is pressed.
+- `close_on_outside_click` (:boolean, default true) — Close when the backdrop is clicked.
+- `container_class` (:any) — Extra classes on the overlay root.
+- `hide_close_button` (:boolean, default false) — Hide the built-in close control.
+- `id` (:string, required) — Stable DOM id used by open_dialog/close_dialog.
+- `on_close` ({:struct, Phoenix.LiveView.JS}) — JS command run when the sheet closes.
+- `on_open` ({:struct, Phoenix.LiveView.JS}) — JS command run when the sheet opens.
+- `open` (:boolean, default false) — render already open (server-driven sheets)
+- `placement` (:string, values: left, right, top, bottom, default "right") — Screen edge the panel slides in from.
+- `prevent_closing` (:boolean, default false) — Block Escape and outside-click close.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `title` (:string) — optional header title beside the close button
+Slots:
+- `:footer` — sticky footer (action buttons)
+- `:header` — custom header content (replaces `title`)
+- `:inner_block` (required) — Sheet body content.
+
+### LanternUI.Components.SidePanel
+
+Collapsible right-hand panel plus a toggle that remembers open/closed in `localStorage`.
+
+#### `side_panel/1`
+
+Collapsible right-hand panel plus a toggle that remembers open/closed in `localStorage`.
+
+- `class` (:any) — Extra classes merged onto the panel.
+- `id` (:string, required) — DOM id; referenced by the toggle's aria-controls.
+- `open` (:boolean, default false) — Whether the panel is shown.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Panel body.
+
+#### `side_panel_toggle/1`
+
+Collapsible right-hand panel plus a toggle that remembers open/closed in `localStorage`.
+
+- `class` (:any) — Extra classes merged onto the button.
+- `event` (:string, default "set_panel") — LiveView event the hook pushes on restore: `%{open: boolean}`.
+- `id` (:string, required) — DOM id for the hook.
+- `kbd` (:string) — Optional keyboard hint in the tooltip.
+- `label` (:string, default "Toggle panel") — Accessible name and tooltip.
+- `open` (:boolean, default false) — Current open state; mirrored to aria-pressed.
+- `panel_id` (:string, required) — id of the `side_panel/1` this toggle controls.
+- `panel_key` (:string, required) — localStorage key suffix, e.g.
+- `persist_event` (:string, default "side_panel") — Optional server event name the hook listens to for an explicit persist.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: sm, md, lg, default "md") — 
+- `variant` (:string, values: ghost, outline, primary, default "outline") — 
+Slots:
+- `:inner_block` — Override the default panel-split glyph.
+
+### LanternUI.Components.Skeleton
+
+Decorative, CSS-only placeholder for content that is still loading.
+
+#### `skeleton/1`
+
+Decorative, CSS-only placeholder for content that is still loading.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `label` (:string) — Opt-in polite announcement: wraps the skeleton in a `role="status"` region.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `style` (:any) — Inline CSS for custom placeholder geometry.
+- `variant` (:string, values: block, text, circle, default "block") — Placeholder shape: generic block, text line, or circle.
+
+### LanternUI.Components.Slider
+
+Slider — a single-thumb range input built on the WAI-ARIA APG slider pattern.
+
+#### `slider/1`
+
+Slider — a single-thumb range input built on the WAI-ARIA APG slider pattern.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `description` (:string) — Helper text under the label stack.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `errors` (:list, default []) — Validation messages; derived from field when used.
+- `field` ({:struct, Phoenix.HTML.FormField}) — Form field; derives id, name, value, and errors.
+- `id` (:any) — Element id.
+- `label` (:string) — Primary label above the control.
+- `max` (:any, default 100) — Maximum value.
+- `min` (:any, default 0) — Minimum value.
+- `name` (:string) — Form input name; derived from field when omitted.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through (ride on the hidden input).
+- `size` (:string, values: xs, sm, md, lg, xl, default "md") — Field density / type scale.
+- `step` (:any, default 1) — Step increment; PageUp/PageDown jump 10 steps.
+- `sublabel` (:string) — Secondary label line under the primary label.
+- `value` (:any) — Current value; clamped to min..max, defaults to min.
+- `value_text` (:string) — Template for `aria-valuetext`; `{value}` interpolates, e.g.
+
+### LanternUI.Components.Stat
+
+Compact summary metrics extracted from the data table overview.
+
+#### `stat_card/1`
+
+Renders one compact summary metric.
+
+- `class` (:any) — Extra classes merged onto the card.
+- `href` (:string) — Optional LiveView navigation target.
+- `icon` (:string) — Optional host heroicon class shown by the label.
+- `label` (:string, required) — Short caption identifying the metric.
+- `subtitle` (:string) — Optional muted context below the value.
+- `value` (:any, required) — Primary metric value to display.
+
+#### `stat_grid/1`
+
+Renders a responsive collection of summary metrics; emits nothing when empty.
+
+- `class` (:any) — Extra classes merged onto the grid.
+- `rest` (:global) — Arbitrary HTML attributes passed through to the grid.
+Slots:
+- `:stat` — A summary metric card; provide its value with the :value attribute or inner content.
+  - `label` — Short caption identifying the metric.
+  - `value` — Primary metric value; inner slot content takes precedence when present.
+  - `icon` — Optional host heroicon class shown by the label.
+  - `subtitle` — Optional muted context below the value.
+  - `href` — Optional LiveView navigation target.
+  - `class` — Extra classes merged onto this card.
+
+### LanternUI.Components.StateGlyph
+
+Status circles, priority signal bars, run-pipeline, sync, and source glyphs for dense lists.
+
+#### `priority_glyph/1`
+
+Flicker-shaped alias of `state_glyph/1` with `kind="priority"`.
+
+- `class` (:any) — Extra classes merged onto the svg.
+- `label` (:string) — Accessible name; decorative when omitted.
+- `priority` (:any, required) — Priority (atom or string).
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: sm, md, default "md") — sm is 12px; md is 14px.
+
+#### `run_glyph/1`
+
+Flicker-shaped alias of `state_glyph/1` with `kind="run"`.
+
+- `class` (:any) — Extra classes merged onto the svg.
+- `label` (:string) — Accessible name; decorative when omitted.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: sm, md, default "md") — sm is 12px; md is 14px.
+- `state` (:any, required) — Run-pipeline state (atom or string).
+
+#### `source_glyph/1`
+
+Flicker-shaped alias of `state_glyph/1` with `kind="source"`.
+
+- `class` (:any) — Extra classes merged onto the svg.
+- `label` (:string) — Accessible name; decorative when omitted.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: sm, md, default "md") — sm is 12px; md is 14px.
+- `source` (:any, required) — Source kind (atom or string).
+
+#### `state_glyph/1`
+
+Status circles, priority signal bars, run-pipeline, sync, and source glyphs for dense lists.
+
+- `class` (:any) — Extra classes merged onto the svg.
+- `kind` (:string, required, values: status, priority, run, sync, source) — Glyph set: status circles, priority bars, run-pipeline, sync, or source-kind states.
+- `label` (:string) — Accessible name.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: sm, md, default "md") — sm is 12px; md is 14px.
+- `value` (:any, required) — Set value (atom or string).
+
+#### `status_glyph/1`
+
+Flicker-shaped alias of `state_glyph/1` with `kind="status"`.
+
+- `class` (:any) — Extra classes merged onto the svg.
+- `label` (:string) — Accessible name; decorative when omitted.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: sm, md, default "md") — sm is 12px; md is 14px.
+- `status` (:any, required) — Workflow status (atom or string).
+
+#### `sync_glyph/1`
+
+Flicker-shaped alias of `state_glyph/1` with `kind="sync"`.
+
+- `class` (:any) — Extra classes merged onto the svg.
+- `label` (:string) — Accessible name; decorative when omitted.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: sm, md, default "md") — sm is 12px; md is 14px.
+- `state` (:any, required) — Sync state (atom or string).
+
+### LanternUI.Components.Switch
+
+Toggle switch for binary settings.
+
+#### `switch/1`
+
+Toggle switch for binary settings.
+
+- `checked` (:boolean) — Force on/off; else compares value to checked_value.
+- `checked_value` (:any, default "true") — Value submitted when the switch is on.
+- `class` (:any) — Extra classes merged onto the root element.
+- `color` (:string, default "accent") — On-state track color token.
+- `description` (:string) — Helper text under the label stack.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `errors` (:list, default []) — Validation messages; derived from field when used.
+- `field` ({:struct, Phoenix.HTML.FormField}) — Form field; derives id, name, value, and errors.
+- `id` (:any) — Element id; derived from field when omitted.
+- `label` (:string) — Primary label text beside the switch.
+- `name` (:string) — Form input name; derived from field when omitted.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: sm, md, lg, default "md") — Track and thumb size.
+- `sublabel` (:string) — Secondary label line under the primary label.
+- `unchecked_value` (:any, default "false") — Hidden input value submitted when off.
+- `value` (:any) — Current value used to derive checked state.
+
+### LanternUI.Components.Table
+
+Presentational table family — the styled substrate `data_table` composes.
+
+#### `table/1`
+
+Presentational table family — the styled substrate `data_table` composes.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — table_head and table_body children.
+
+#### `table_body/1`
+
+Presentational table family — the styled substrate `data_table` composes.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — table_row children.
+
+#### `table_head/1`
+
+Presentational table family — the styled substrate `data_table` composes.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:col` — Header cell content for one column.
+  - `class` — Extra classes on this header cell.
+- `:inner_block` — Optional raw thead row content after :col cells.
+
+#### `table_row/1`
+
+Presentational table family — the styled substrate `data_table` composes.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `selected` (:boolean, default false) — Highlight the row as selected.
+Slots:
+- `:cell` — One body cell in column order.
+  - `class` — Extra classes on this cell.
+- `:inner_block` — Optional raw row content after :cell cells.
+
+### LanternUI.Components.Tabs
+
+Tabs — segmented tab list + panels.
+
+#### `tabs/1`
+
+Tabs — segmented tab list + panels.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `id` (:string) — Element id for the tabs root.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — tabs_list and tabs_panel children.
+
+#### `tabs_list/1`
+
+Tabs — segmented tab list + panels.
+
+- `active_tab` (:string) — Name of the currently selected tab.
+- `class` (:any) — Extra classes merged onto the root element.
+- `id` (:string) — Stable id; required to mount `LanternTabs` for arrow-key activation.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `size` (:string, values: sm, md, default "md") — Tab control density.
+- `variant` (:string, values: segmented, underline, default "segmented") — segmented is pill-style; underline is text tabs.
+Slots:
+- `:inner_block` — Optional extra content inside the tab list.
+- `:tab` (required) — One tab trigger; link via patch/navigate/href or button via phx-click.
+  - `name` — Stable tab key; matched against active_tab.
+  - `patch` — LiveView patch URL; renders the tab as a link.
+  - `navigate` — LiveView navigate URL; renders the tab as a link.
+  - `href` — External/full-page href; renders the tab as a link.
+  - `disabled` — Disable this trigger.
+  - `class` — Extra classes on this tab trigger.
+  - `phx-click` — LiveView click event when not using patch/navigate.
+  - `phx-value-tab` — phx-value-tab payload; defaults to name.
+  - `phx-value-segment` — Legacy segmented alias payload; sent as params["segment"].
+  - `phx-target` — LiveView target for the click event.
+
+#### `tabs_panel/1`
+
+Tabs — segmented tab list + panels.
+
+- `active` (:boolean, default false) — When true, the panel is rendered.
+- `class` (:any) — Extra classes merged onto the root element.
+- `name` (:string, required) — Tab key this panel belongs to.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Panel body content.
+
+### LanternUI.Components.Textarea
+
+Multi-line text input.
+
+#### `textarea/1`
+
+Multi-line text input.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `description` (:string) — Helper text under the label stack.
+- `disabled` (:boolean, default false) — Render disabled and non-interactive.
+- `errors` (:list, default []) — Validation messages; derived from field when used.
+- `field` ({:struct, Phoenix.HTML.FormField}) — Form field; derives id, name, value, and errors.
+- `help_text` (:string) — Trailing help line under the field when no errors.
+- `id` (:any) — Element id; derived from field when omitted.
+- `label` (:string) — Primary label above the control.
+- `name` (:any) — Form input name; derived from field when omitted.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `rows` (:integer, default 4) — Visible row count for the textarea.
+- `size` (:string, values: xs, sm, md, lg, xl, default "md") — Control density / type scale.
+- `sublabel` (:string) — Secondary label line under the primary label.
+- `value` (:any) — Current text content of the textarea.
+
+### LanternUI.Components.Theme
+
+Runtime theming — persisted `--lantern-*` token overrides.
+
+#### `theme/1`
+
+Runtime theming — persisted `--lantern-*` token overrides.
+
+- `id` (:string, default "lantern-theme") — Stable DOM id for the theme hook element.
+- `preset` (:string, values: shadcn, ) — Built-in theme preset.
+- `storage_key` (:string, default "lui-theme") — localStorage key for persisted token overrides.
+
+### LanternUI.Components.Timeline
+
+Timeline: a vertical sequence of events with a marker rail.
+
+#### `timeline/1`
+
+Timeline: a vertical sequence of events with a marker rail.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `label_position` (:atom, values: inline, leading, default :inline) — Where items place `at`: `:inline` (default, inside content) or `:leading` (fixed column left of the marker rail).
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — One or more `timeline_item/1` children.
+
+#### `timeline_item/1`
+
+Timeline: a vertical sequence of events with a marker rail.
+
+- `at` (:string) — Preformatted timestamp or relative string; not formatted by the component.
+- `class` (:any) — Extra classes merged onto the item root.
+- `icon` (:string) — Optional lantern icon name rendered inside the marker instead of the plain dot.
+- `label` (:string) — State word (e.g.
+- `label_position` (:atom) — Where to place `at` (`:inline` or `:leading`).
+- `open` (:boolean, default false) — When `:detail` is present, whether the disclosure starts open.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `status` (:atom, values: done, active, pending, danger, neutral, default :neutral) — Marker status; rendered as data-status for CSS coloring.
+- `title` (:string) — Primary line (e.g.
+Slots:
+- `:detail` — Collapsible body revealed under a native disclosure.
+- `:inner_block` — Optional body/description under the title.
+- `:marker` — Custom marker content (e.g.
+
+### LanternUI.Components.Toast
+
+Toast notification stack.
+
+#### `toast_group/1`
+
+Toast notification stack.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `flash` (:map, default %{}) — Phoenix flash map; `:info` and `:error` render as toasts.
+- `id` (:string, default "lantern-toasts") — Stable DOM id for the toast stack hook.
+- `max` (:integer, default 3) — Maximum toast cards visible in the collapsed deck (1–10).
+- `placement` (:string, values: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right, default "top-right") — Corner or edge where the toast stack anchors.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+
+### LanternUI.Components.Tooltip
+
+Tooltip - mirrors Fluxon's `tooltip/1` API with a small LiveView hook for hover/focus timing and viewport-aware placement.
+
+#### `tooltip/1`
+
+Tooltip - mirrors Fluxon's `tooltip/1` API with a small LiveView hook for hover/focus timing and viewport-aware placement.
+
+- `arrow` (:boolean, default true) — Show the small pointer arrow toward the trigger.
+- `class` (:any) — Extra classes merged onto the root element.
+- `delay` (:integer, default 200) — Milliseconds before the tip appears on hover/focus.
+- `id` (:string) — Stable DOM id for the tooltip hook; auto-generated when omitted, mirroring Fluxon's tooltip (drop-in parity).
+- `placement` (:string, values: top, bottom, left, right, default "top") — Preferred side of the trigger; may flip for viewport fit.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `value` (:string) — Plain-text tip when no :content slot is given.
+Slots:
+- `:content` — Rich tip body; overrides `value` when present.
+- `:inner_block` (required) — Trigger element that shows the tip.
+
+### LanternUI.Components.Waterfall
+
+Waterfall: horizontal spans laid out on ONE shared time axis, with a ruler.
+
+#### `waterfall/1`
+
+Waterfall: horizontal spans laid out on ONE shared time axis, with a ruler.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `id` (:string) — DOM id for the root element.
+- `label` (:string) — Heading for the label column, rendered above the lane labels.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `ticks` (:list, default []) — Shared axis ruler marks: a list of `%{label: string, pct: number}`, where `pct` is a percentage of the same axis lanes position against.
+Slots:
+- `:inner_block` (required) — One or more `waterfall_lane/1` children.
+
+#### `waterfall_lane/1`
+
+Waterfall: horizontal spans laid out on ONE shared time axis, with a ruler.
+
+- `at` (:string) — Optional preformatted secondary line under the label; not formatted by the component.
+- `bar_label` (:string) — Text inside (or beside) the bar, typically a preformatted duration.
+- `class` (:any) — Extra classes merged onto the lane root.
+- `label` (:string) — Lane name, shown in the fixed label column.
+- `left` (:float, default 0.0) — Bar start as a percentage of the shared axis.
+- `navigate` (:string) — When set, the whole lane is a navigation link.
+- `patch` (:string) — When set, the whole lane is a patch link.
+- `queued` (:boolean, default false) — Lane has no position on the axis yet.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `selected` (:boolean, default false) — Marks this lane as the current selection.
+- `state_label` (:string) — State word (e.g.
+- `status` (:atom, values: done, active, pending, danger, warning, neutral, default :neutral) — Bar status, rendered as data-status for CSS coloring.
+- `width` (:float, default 0.0) — Bar length as a percentage of the shared axis.
+Slots:
+- `:icon` — Optional glyph rendered before the label.
+- `:inner_block` — Optional trailing content in the label column (badges, counts).
+
+## Copy-paste recipes
+
+From docs/recipes.md and README.md (same sources the recipe tests render).
+
+From `docs/recipes.md` (Linear-style list row):
+
+```heex
+<.list_row
+  identifier={@ticket.identifier}
+  title={@ticket.title}
+  parent={@ticket.parent}
+  navigate={@ticket.href}
+>
+  <:leading>
+    <.priority_glyph priority={@ticket.priority} />
+    <.status_glyph status={@ticket.status} />
+  </:leading>
+  <:meta>
+    <.badge size="sm">{@ticket.tag}</.badge>
+    <.progress shape="ring" completed={@ticket.completed} scope={@ticket.scope} size="sm" />
+  </:meta>
+  <:trailing>{@ticket.date}</:trailing>
+</.list_row>
+```
+
+From `docs/recipes.md` (Flat ticket list with toolbar):
+
+```heex
+<.data_table
+  id="tickets"
+  rows={@tickets}
+  meta={@meta}
+  path="/tickets"
+  title="Tickets"
+  fill
+  views={["list"]}
+  show_checkboxes={false}
+  search_field={:title}
+  data-lantern-list-nav
+>
+  <:filter
+    field={:status}
+    label="Status"
+    options={[{"In progress (1)", "in_progress"}, {"To do (1)", "todo"}]}
+    prompt="All statuses"
+  />
+  <:list_item :let={ticket}>
+    <.list_row
+      identifier={ticket.identifier}
+      title={ticket.title}
+      parent={ticket.parent}
+      navigate={ticket.href}
+      selected={ticket.selected}
+      data-lantern-list-item
+    >
+      <:leading>
+        <.status_glyph status={ticket.status} />
+        <span>{ticket.status |> Atom.to_string() |> String.replace("_", " ")}</span>
+      </:leading>
+      <:meta>
+        <.badge size="sm">{ticket.tag}</.badge>
+      </:meta>
+      <:trailing>{ticket.date}</:trailing>
+    </.list_row>
+  </:list_item>
+</.data_table>
+```
+
+From `docs/recipes.md` (Record page with inspector rail):
+
+```heex
+<.breadcrumb_bar id="ticket-crumb">
+  <.breadcrumb home="/" items={@crumbs} />
+  <:actions label="Toggle panel">
+    <.side_panel_toggle
+      id="ticket-panel-toggle"
+      panel_id="ticket-panel"
+      panel_key="ticket"
+      open={@panel_open}
+      kbd="]"
+    />
+  </:actions>
+</.breadcrumb_bar>
+<.page_header title={@ticket.title} description={@ticket.identifier} />
+<.card title="Description">
+  {@ticket.body}
+</.card>
+<.side_panel id="ticket-panel" open={@panel_open} aria-label="Ticket properties">
+  <.inspector aria-label="Ticket">
+    <.inspector_section title="Properties">
+      <.description_list layout="dense">
+        <:item label="Status">{@ticket.status}</:item>
+        <:item label="Priority">{@ticket.priority}</:item>
+        <:item label="Tags">
+          <.badge size="sm">{@ticket.tag}</.badge>
+        </:item>
+      </.description_list>
+    </.inspector_section>
+  </.inspector>
+</.side_panel>
+```
+
+From `docs/recipes.md` (Three-column inbox):
+
+```heex
+<.card_grid>
+  <.card flush title={"Inbox · #{@inbox_count}"}>
+    <:actions>
+      <.button size="icon" variant="ghost" label="Filter" kbd="F">
+        <.icon name="funnel" />
+      </.button>
+    </:actions>
+    <.scroll_area label="Inbox" data-lantern-list-nav>
+      <.list_row
+        :for={item <- @inbox_items}
+        identifier={item.identifier}
+        title={item.title}
+        navigate={item.href}
+        selected={item.selected}
+        data-lantern-list-item
+      >
+        <:leading><.status_glyph status={item.status} /></:leading>
+        <:meta>
+          <.badge size="sm">{item.kind}</.badge>
+        </:meta>
+      </.list_row>
+    </.scroll_area>
+  </.card>
+  <.card title={@selected.title} description={@selected.meta}>
+    {@selected.body}
+  </.card>
+  <.card flush title="Properties">
+    <.inspector aria-label="Suggestion">
+      <.inspector_section title="Properties">
+        <.description_list layout="dense">
+          <:item label="Status">{@selected.status}</:item>
+          <:item label="Source">{@selected.source}</:item>
+        </.description_list>
+      </.inspector_section>
+    </.inspector>
+  </.card>
+</.card_grid>
+```
+
+From `docs/recipes.md` (Project overview):
+
+```heex
+<.page_header title={@project.name} description={@project.summary}>
+  <:actions>
+    <.progress
+      shape="ring"
+      completed={@project.completed}
+      scope={@project.scope}
+      label="Progress"
+    >
+      {@project.completed} / {@project.scope}
+    </.progress>
+  </:actions>
+</.page_header>
+<.stat_grid>
+  <:stat label="Apps" value={@stats.apps} />
+  <:stat label="Databases" value={@stats.databases} />
+  <:stat label="Environments" value={@stats.environments} />
+</.stat_grid>
+<.card flush title="Tickets">
+  <.list_row
+    :for={child <- @children}
+    identifier={child.identifier}
+    title={child.title}
+    navigate={child.href}
+  >
+    <:leading><.status_glyph status={child.status} /></:leading>
+    <:trailing>{child.date}</:trailing>
+  </.list_row>
+</.card>
+```
+
+From `docs/recipes.md` (Icon toolbar with kbd hints):
+
+```heex
+<.card>
+  <:actions>
+    <.button size="icon" label="Promote to ticket" kbd="P" variant="solid">
+      <.icon name="arrow-up-tray" />
+    </.button>
+    <.button size="icon" label="Snooze" kbd="H" variant="ghost">
+      <.icon name="clock" />
+    </.button>
+    <.button size="icon" label="Mark resolved" kbd="E" variant="ghost">
+      <.icon name="check" />
+    </.button>
+    <.button size="icon" label="More" variant="ghost">
+      <.icon name="ellipsis-horizontal" />
+    </.button>
+  </:actions>
+  Inbox thread
+</.card>
+```
+
+From `docs/recipes.md` (Capacity strip):
+
+```heex
+<.stat_grid>
+  <:stat label="Slots" value={@capacity.slots} />
+  <:stat label="Busy" value={@capacity.busy} />
+  <:stat label="Waiting" value={@capacity.waiting} />
+  <:stat label="Cost" value={@capacity.cost} />
+</.stat_grid>
+<.badge color="warning" size="sm">{@capacity.waiting} waiting</.badge>
+<.badge color="success" size="sm">{@capacity.busy} busy</.badge>
+```
+
+From `README.md` (Usage):
+
+```heex
+<LanternUI.Charts.area_chart
+  id="price-history"
+  series={[%{date: "2024-01-01", value: 24.5}, %{date: "2024-02-01", value: 27.1}]}
+  value_format={:currency}
+  height={250}
+/>
+
+<LanternUI.Charts.sparkline id="trend" series={[3, 5, 4, 6, 8, 7, 9]} />
+
+<LanternUI.Charts.bar_chart
+  id="sales"
+  series={[%{label: "Q1", value: 42}, %{label: "Q2", value: 31}]}
+/>
+
+<LanternUI.Charts.line_chart
+  id="pod-cpu"
+  series={[
+    %{label: "web-1", color: "var(--color-primary)",
+      points: [{~U[2024-11-20 14:00:00Z], 0.25}, {~U[2024-11-20 14:05:00Z], 0.31}]},
+    %{label: "web-2", points: [{~U[2024-11-20 14:00:00Z], 0.18}, {~U[2024-11-20 14:05:00Z], 0.22}]}
+  ]}
+  value_format={&"#{&1} cores"}
+/>
+```
+
+From `README.md` (Summary stats):
+
+```heex
+<.stat_card label="Open orders" value={42} icon="hero-inbox" />
+
+<.stat_grid aria-label="Order summary">
+  <:stat label="Open" value={42} />
+  <:stat label="Shipped" href={~p"/orders?status=shipped"}>{128}</:stat>
+</.stat_grid>
+
+<.stat_grid aria-label="Store health">
+  <:stat label="Products" value={@product_count} />
+  <:stat label="Low stock" value={@low_stock_count} subtitle="Needs attention" />
+  <:stat label="Orders" value={@order_count} />
+  <:stat label="Revenue" value={@formatted_revenue} />
+</.stat_grid>
+```
+
+From `README.md` (Skeleton placeholders):
+
+```heex
+<section aria-busy="true" aria-label="Loading profile">
+  <LanternUI.Components.Skeleton.skeleton
+    class="profile-avatar-placeholder"
+    style="width: 3rem; height: 3rem; border-radius: 9999px;"
+  />
+  <LanternUI.Components.Skeleton.skeleton style="width: 12rem;" />
+  <LanternUI.Components.Skeleton.skeleton style="height: 8rem; margin-top: 1rem;" />
+</section>
+```
+
+From `README.md` (Skeleton placeholders):
+
+```heex
+<.accordion id="faq" prevent_all_closed animation_duration={300}>
+  <.accordion_item id="shipping" expanded>
+    <:header>Where do you ship?</:header>
+    <:panel>Worldwide.</:panel>
+  </.accordion_item>
+  <.accordion_item id="returns" icon={false}>
+    <:header class="font-semibold">What is the return window?</:header>
+    <:panel class="prose">Thirty days.</:panel>
+  </.accordion_item>
+</.accordion>
+```
+
+From `README.md` (Skeleton placeholders):
+
+```heex
+<.button phx-click={LanternUI.open_dialog("delete-project")}>Delete…</.button>
+
+<.alert_dialog id="delete-project">
+  <:title>Delete this project?</:title>
+  <:description>This permanently deletes the project and its data.</:description>
+  <:cancel>
+    <.button phx-click={LanternUI.close_dialog("delete-project")}>Cancel</.button>
+  </:cancel>
+  <:action>
+    <.button color="danger" phx-click="delete-project">Delete project</.button>
+  </:action>
+</.alert_dialog>
+```
+
+From `README.md` (Autocomplete):
+
+```heex
+<.autocomplete field={@form[:country]} options={@countries} clearable />
+```
+
+From `README.md` (Autocomplete):
+
+```heex
+<.autocomplete
+  field={@form[:user_id]}
+  options={@user_results}
+  on_search="search_users"
+  search_threshold={2}
+  debounce={250}
+  open_on_focus
+  clearable
+>
+  <:option :let={{name, id}}>
+    <strong>{name}</strong> <small>#{id}</small>
+  </:option>
+  <:empty_state>No matching users</:empty_state>
+</.autocomplete>
+```
+
+From `README.md` (Command palette):
+
+```heex
+<.command id="cmd-k" on_search="command_search" on_select="command_select">
+  <.command_group label="Tickets">
+    <.command_item :for={t <- @results} value={t.id}>
+      {t.title}
+      <:icon><.icon name="inbox" /></:icon>
+      <:description>{t.project}</:description>
+      <:shortcut>⏎</:shortcut>
+    </.command_item>
+  </.command_group>
+  <.command_empty :if={@results == []}>No matches for “{@query}”</.command_empty>
+  <:footer>↑↓ to navigate · ⏎ to select</:footer>
+</.command>
+```
+
+## Overlaps and deprecations
+
+Deprecated (warn at render, removed in 0.9.0 — deprecate, never remove
+without a major version):
+
+- `icon_button/1` is deprecated (removed in 0.9.0); use <.button size="icon" label="...">. Evidence: eval tasks 01/05 steer models to icon_button; same chrome as button/1.
+- `segmented/1` is deprecated (removed in 0.9.0); use <.tabs_list variant="segmented">. Evidence: eval tasks 01 + brief steer models to segmented; duplicate filter-chip API.
+- `progress_ring/1` is deprecated (removed in 0.9.0); use <.progress shape="ring" ...>. Evidence: duplicate of progress/1 shape="ring"; both in eval inventory.
+- `property_row/1` is deprecated (removed in 0.9.0); use <.description_list layout="dense"> with <:item>. Evidence: eval task 03 steers models to property_row; same rows as dense description_list.
+
+Names models guess that never existed (the lint answers these with
+did-you-mean):
+
+- `stat` does not exist; use <.stat_card> for one metric, <.stat_grid> for a group. Evidence: baseline 2026-10-03 run notes (stat→stat_card prompt fix).
+- `toast` does not exist; use <.toast_group> on the page + LanternUI.send_toast/3. Evidence: baseline 2026-10-03 run notes; eval tasks 02/05/08/09.
+
+Not duplicates, do not merge: table/1 vs data_table/1 vs resource_list/1
+are tiers (plain table, full list machinery, small index — see the page
+design skill); modal/1 vs alert_dialog/1 vs sheet/1 are purposes
+(general dialog, destructive confirm, edge panel); progress/1 covers bar
+and ring via shape; tabs_list/1 covers segmented via variant.
+
+
+## Tokens
+
+Type scale: text-meta (11px), text-caption (12px), text-mono-meta.
+Grey roles: text-foreground, text-foreground-soft, text-foreground-softest,
+text-muted-foreground. Semantic: text-danger, bg-danger, text-success,
+bg-success, text-warning, bg-warning. Components read --lantern-* CSS
+variables chained to host tokens; see README theming and docs/scale.md.
+Data-attribute behaviours (list keyboard nav, persist, collapse) install
+on JS import; see docs/behaviours.md. Hooks bundle:
+priv/static/lantern_ui_hooks.js.
+

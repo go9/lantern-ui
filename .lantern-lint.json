@@ -1,3 +1,8 @@
 {
-  "allow": ["test/**"]
+  "_comment": "test/** holds intentional raw-button fixtures; eval/checks.exs IS the banned-pattern detector (its regex literals would self-match); lib/lantern_ui/lint.ex defines the patterns it detects and lib/lantern_ui/llms.ex documents them for models. Component internals (components/**) render real <button>/<table> DOM by definition — the hand_* rules target app code bypassing the library, so they are scoped off there while every other rule still runs.",
+  "allow": ["test/**", "eval/checks.exs", "lib/lantern_ui/lint.ex", "lib/lantern_ui/llms.ex"],
+  "allow_rules": {
+    "hand_button": ["lib/lantern_ui/components/**"],
+    "hand_table": ["lib/lantern_ui/components/**"]
+  }
 }
