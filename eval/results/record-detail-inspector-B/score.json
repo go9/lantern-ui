@@ -1,0 +1,9 @@
+{
+  "task": "record-detail-inspector",
+  "condition": "B",
+  "model": "sonnet",
+  "demo_sha": "2bc0030ef2d15539ce670d75f61522216ab09241",
+  "auto": "SCORE: 100/100",
+  "compile": "pass",
+  "screenshot": "ok"
+}
