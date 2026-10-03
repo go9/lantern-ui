@@ -34,6 +34,7 @@ defmodule LanternUI.Recipes do
       },
       tickets: [
         %{
+          id: 241,
           title: "Visible progress ring",
           identifier: "#241",
           parent: "Dense primitives",
@@ -47,6 +48,7 @@ defmodule LanternUI.Recipes do
           selected: true
         },
         %{
+          id: 240,
           title: "Extract eight primitives",
           identifier: "#240",
           parent: nil,
@@ -61,6 +63,7 @@ defmodule LanternUI.Recipes do
         }
       ],
       scope: "all",
+      meta: %{params: %{}, current_page: 1, total_pages: 1, page_size: 20, total_count: 2},
       paths: %{
         all: "/tickets",
         active: "/tickets?scope=active",

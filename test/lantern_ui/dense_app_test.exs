@@ -5,7 +5,6 @@ defmodule LanternUI.DenseAppTest do
   import Phoenix.LiveViewTest, only: [rendered_to_string: 1]
 
   alias LanternUI.ARIAConformance
-  alias LanternUI.Components.GroupBand
   alias LanternUI.Components.IconButton
   alias LanternUI.Components.Inspector
   alias LanternUI.Components.ListRow
@@ -21,7 +20,6 @@ defmodule LanternUI.DenseAppTest do
       only: [
         :icon,
         :list_row,
-        :group_band,
         :inspector,
         :icon_button,
         :segmented,
@@ -33,7 +31,6 @@ defmodule LanternUI.DenseAppTest do
     def representative(assigns) do
       ~H"""
       <.list_row title="Row" />
-      <.group_band name="In progress" />
       <.inspector aria-label="Properties">
         <.inspector_section title="Meta">
           <.property_row label="Repo">demo</.property_row>
@@ -91,132 +88,6 @@ defmodule LanternUI.DenseAppTest do
       assert Floki.find(doc, "a.lui-list-row") != []
       assert Floki.attribute(Floki.find(doc, "a.lui-list-row"), "href") == ["/t/1"]
       assert Floki.find(doc, "a.lui-list-row[data-selected]") != []
-    end
-
-    test "group sets data-lantern-group on the row root" do
-      html =
-        render(fn assigns ->
-          ~H"""
-          <ListRow.list_row title="Go" group="tickets:in_progress" />
-          """
-        end)
-
-      doc = Floki.parse_fragment!(html)
-
-      assert Floki.attribute(Floki.find(doc, ".lui-list-row"), "data-lantern-group") == [
-               "tickets:in_progress"
-             ]
-
-      nav =
-        render(fn assigns ->
-          ~H"""
-          <ListRow.list_row title="Go" group="tickets:in_progress" navigate="/t/1" />
-          """
-        end)
-
-      nav_doc = Floki.parse_fragment!(nav)
-
-      assert Floki.attribute(Floki.find(nav_doc, "a.lui-list-row"), "data-lantern-group") == [
-               "tickets:in_progress"
-             ]
-    end
-
-    test "hidden rows do not render (collapse sets el.hidden)" do
-      css = File.read!("priv/static/lantern_ui.css")
-
-      # `.lui-list-row {display: flex}` beats the UA `[hidden]` rule, so a
-      # collapsed group would still paint its rows (#2894).
-      assert css =~ ~r/\.lui-list-row\[hidden\] \{ display: none; \}/
-      # Same bug on data_table's list_item wrapper (#2895).
-      assert css =~ ~r/\.lui-dt-list-row\[hidden\] \{ display: none; \}/
-    end
-  end
-
-  describe "group_band/1" do
-    test "renders name, count, glyph, and a plus action" do
-      html =
-        render(fn assigns ->
-          ~H"""
-          <GroupBand.group_band name="In progress" count={12}>
-            <:glyph><span class="g">G</span></:glyph>
-            <:action navigate="/new" label="New ticket in In progress">+</:action>
-          </GroupBand.group_band>
-          """
-        end)
-
-      assert html =~ "lui-group-band"
-      assert html =~ "In progress"
-      assert html =~ "12"
-      assert html =~ "g"
-      assert html =~ ~s(aria-label="New ticket in In progress")
-      assert html =~ ~s(href="/new")
-      refute html =~ "data-collapsed"
-    end
-
-    test "collapsed band with patch is an expand link and uses the right chevron" do
-      html =
-        render(fn assigns ->
-          ~H"""
-          <GroupBand.group_band name="Done" count={40} collapsed patch="/tickets?show_done=1" />
-          """
-        end)
-
-      doc = Floki.parse_fragment!(html)
-      assert Floki.find(doc, "[data-collapsed]") != []
-      assert Floki.find(doc, "a.lui-group-band-main") != []
-
-      assert Floki.attribute(Floki.find(doc, "a.lui-group-band-main"), "href") == [
-               "/tickets?show_done=1"
-             ]
-    end
-
-    test "group without a link target renders a collapse button" do
-      html =
-        render(fn assigns ->
-          ~H"""
-          <GroupBand.group_band name="In progress" count={2} group="tickets:in_progress">
-            <:glyph><span>G</span></:glyph>
-          </GroupBand.group_band>
-          """
-        end)
-
-      doc = Floki.parse_fragment!(html)
-      button = Floki.find(doc, "button.lui-group-band-main")
-      assert button != []
-      assert Floki.attribute(button, "type") == ["button"]
-      assert Floki.attribute(button, "data-lantern-collapse") == ["tickets:in_progress"]
-      assert Floki.attribute(button, "aria-expanded") == ["true"]
-      refute html =~ "data-collapsed"
-      refute html =~ "<a"
-    end
-
-    test "group + collapsed starts closed; group + patch stays a link" do
-      closed =
-        render(fn assigns ->
-          ~H"""
-          <GroupBand.group_band name="Done" group="tickets:done" collapsed />
-          """
-        end)
-
-      closed_doc = Floki.parse_fragment!(closed)
-      assert Floki.find(closed_doc, "[data-collapsed]") != []
-
-      assert Floki.attribute(
-               Floki.find(closed_doc, "button.lui-group-band-main"),
-               "aria-expanded"
-             ) ==
-               ["false"]
-
-      linked =
-        render(fn assigns ->
-          ~H"""
-          <GroupBand.group_band name="Done" group="tickets:done" collapsed patch="/tickets?show_done=1" />
-          """
-        end)
-
-      linked_doc = Floki.parse_fragment!(linked)
-      assert Floki.find(linked_doc, "a.lui-group-band-main") != []
-      assert Floki.find(linked_doc, "button.lui-group-band-main") == []
     end
   end
 
@@ -665,10 +536,9 @@ defmodule LanternUI.DenseAppTest do
   end
 
   describe "registry" do
-    test "all eight primitives import through use LanternUI" do
+    test "all seven primitives import through use LanternUI" do
       keys = LanternUI.__components__()
       assert keys[:list_row] == ListRow
-      assert keys[:group_band] == GroupBand
       assert keys[:inspector] == Inspector
       assert keys[:icon_button] == IconButton
       assert keys[:segmented] == Segmented
@@ -678,7 +548,6 @@ defmodule LanternUI.DenseAppTest do
 
       html = render(&ImporterFixture.representative/1)
       assert html =~ "lui-list-row"
-      assert html =~ "lui-group-band"
       assert html =~ "lui-inspector"
       assert html =~ "lui-icon-btn"
       assert html =~ "lui-segmented"
@@ -690,10 +559,6 @@ defmodule LanternUI.DenseAppTest do
     test "CSS uses tokens, a visible ring track, and hidden side panels" do
       css = File.read!("priv/static/lantern_ui.css")
       assert css =~ ".lui-list-row"
-      assert css =~ ".lui-group-band"
-
-      assert css =~
-               ".lui-group-band[data-collapsed] .lui-group-band-main[data-lantern-collapse] .lui-group-band-chevron"
 
       assert css =~ ".lui-inspector"
       assert css =~ ".lui-segmented"

@@ -79,7 +79,6 @@ defmodule LanternUI do
     navlist: LanternUI.Components.Navlist,
     loading: LanternUI.Components.Loading,
     list_row: LanternUI.Components.ListRow,
-    group_band: LanternUI.Components.GroupBand,
     inspector: LanternUI.Components.Inspector,
     icon_button: LanternUI.Components.IconButton,
     segmented: LanternUI.Components.Segmented,

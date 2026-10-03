@@ -16,9 +16,6 @@
   <:stat label="Environments" value={@stats.environments} />
 </.stat_grid>
 <.card flush title="Tickets">
-  <.group_band name="In progress" count={1}>
-    <:glyph><.status_glyph status={:in_progress} /></:glyph>
-  </.group_band>
   <.list_row
     :for={child <- @children}
     identifier={child.identifier}

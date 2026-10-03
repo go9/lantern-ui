@@ -539,7 +539,6 @@ defmodule LanternUI.ComponentsTest do
                :dropdown,
                :empty_state,
                :form,
-               :group_band,
                :icon,
                :icon_button,
                :inspector,
