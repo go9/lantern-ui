@@ -14,8 +14,9 @@ Requirements:
 
 1. A **flat** ticket list — one row per ticket. No grouping, no group headers.
 2. A status filter above the list (`All`, `Open`, `In progress`, `Done`) that
-   filters the rows. Use `segmented` if available, else lantern `badge`s or
-   `button`s as filter chips.
+   filters the rows. Use `tabs_list` with `variant="segmented"` for the
+   filter (the old `segmented` component is deprecated), else lantern
+   `badge`s or `button`s as filter chips.
 3. Each row shows a priority glyph, the ticket id, a status glyph, the title,
    and the updated date. Prefer `list_row` + `status_glyph`/`priority_glyph`.
 4. Clicking a row navigates to `/eval/tickets/:id` (a stub detail page —

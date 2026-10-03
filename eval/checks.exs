@@ -5,15 +5,19 @@
 # `SCORE: <total>/100` line. Exit 0 always (a zero score is data, not a crash).
 
 defmodule EvalChecks do
+  # Step-2 inventory (flicker #3415): deprecated names (icon_button,
+  # segmented, progress_ring, property_row — see LanternUI.Deprecated) and the
+  # never-existent donut_chart no longer score; the prompts steer to the
+  # replacements. Baseline results/baseline-2026-10-03.md keep the old list.
   @lantern_components ~w(
-    button icon_button badge card table data_table resource_list modal alert_dialog
+    button badge card table data_table resource_list modal alert_dialog
     toast_group form input select checkbox radio switch textarea command dropdown menu
-    popover calendar date_picker datetime_field breadcrumb empty_state card
+    popover calendar date_picker datetime_field breadcrumb empty_state
     description_list layout tabs pagination list_row status_glyph priority_glyph
-    progress progress_ring segmented state_glyph icon avatar loading skeleton
-    sheet side_panel inspector property_row navlist tooltip accordion autocomplete
+    progress state_glyph icon avatar loading skeleton
+    sheet side_panel inspector navlist tooltip accordion autocomplete
     color_input log_view message message_scroller meter scroll_area slider
-    timeline waterfall stat_card stat_grid toast_group area_chart bar_chart line_chart donut_chart sparkline
+    timeline waterfall stat_card stat_grid area_chart bar_chart line_chart sparkline
   )
 
   @palette ~r/(?:^|[\s"'([])(?:[a-z0-9-]+:)*(?:text|bg|border|ring|fill|stroke|from|to|via|outline|decoration|caret|accent|shadow|divide)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3}\b/

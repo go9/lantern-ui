@@ -294,7 +294,16 @@ defmodule LanternUI.Lint do
       if ignored_line?(text, prev) do
         []
       else
-        [%{path: rel, line: line, column: column, rule: rule, match: match, hint: hint(rule, match)}]
+        [
+          %{
+            path: rel,
+            line: line,
+            column: column,
+            rule: rule,
+            match: match,
+            hint: hint(rule, match)
+          }
+        ]
       end
     end)
   end

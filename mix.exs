@@ -43,7 +43,8 @@ defmodule LanternUI.MixProject do
     [
       licenses: ["MIT"],
       links: %{"GitHub" => @source_url},
-      files: ~w(lib priv docs skills .formatter.exs mix.exs README.md CHANGELOG.md llms.txt llms-full.txt)
+      files:
+        ~w(lib priv docs skills .formatter.exs mix.exs README.md CHANGELOG.md llms.txt llms-full.txt)
     ]
   end
 

@@ -54,7 +54,8 @@ defmodule LanternUI.Deprecated do
       %{
         component: :property_row,
         replacement: ~s|<.description_list layout="dense"> with <:item>|,
-        evidence: "eval task 03 steers models to property_row; same rows as dense description_list"
+        evidence:
+          "eval task 03 steers models to property_row; same rows as dense description_list"
       }
     ]
   end

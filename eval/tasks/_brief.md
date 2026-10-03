@@ -9,11 +9,16 @@ already a dependency — check `mix.exs` for the pinned version.
 1. **Flat lists only.** Grouped lists/tables — tinted collapsible group headers
    over row groups (`group_band`, or any hand-rolled equivalent) — are a banned
    design. Use a flat list or `data_table` plus a status column and filter chips.
-2. **Use lantern components where one exists** (`button`, `icon_button`,
-   `badge`, `card`, `table`/`data_table`, `modal`, `toast`, `form` inputs,
-   `list_row`, `status_glyph`/`priority_glyph`, `progress` ring, `segmented`,
-   `stat`, charts, `empty_state`, `skeleton`/`loading`, `breadcrumb`,
-   `navlist`, `side_panel`/`inspector`/`property_row`). Do NOT hand-roll
+2. **Use lantern components where one exists** (`button` with `size="icon"`
+   for icon-only actions, `badge`, `card`, `table`/`data_table`, `modal` /
+   `alert_dialog`, `toast_group` + `LanternUI.send_toast/3`, `form` inputs,
+   `list_row`, `status_glyph`/`priority_glyph`, `progress` with `shape="ring"`,
+   `tabs_list` with `variant="segmented"` for filter chips,
+   `stat_card`/`stat_grid`, charts, `empty_state`, `skeleton`/`loading`,
+   `breadcrumb`, `navlist`, `side_panel`/`inspector` with a dense
+   `description_list`). The old `icon_button`, `segmented`, `progress_ring`,
+   and `property_row` names are deprecated — use the replacements above.
+   There is no bare `toast` or `stat` component. Do NOT hand-roll
    `<table>`, `<button>`, dialogs, or toasts from raw HTML/Tailwind when a
    lantern component covers it.
 3. **Semantic color tokens only** (`text-foreground`, `text-muted-foreground`,

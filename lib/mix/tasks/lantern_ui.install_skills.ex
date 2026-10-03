@@ -37,7 +37,10 @@ defmodule Mix.Tasks.LanternUi.InstallSkills do
     report = LanternUI.InstallSkills.run(source, target, force: opts[:force] || false)
 
     for name <- Enum.sort(report.skills.copied), do: Mix.shell().info("skill copied: #{name}")
-    for name <- Enum.sort(report.skills.overwritten), do: Mix.shell().info("skill overwritten: #{name}")
+
+    for name <- Enum.sort(report.skills.overwritten),
+        do: Mix.shell().info("skill overwritten: #{name}")
+
     for name <- Enum.sort(report.skills.skipped), do: Mix.shell().info("skill skipped: #{name}")
     Mix.shell().info("AGENTS.md #{report.agents}: #{report.agents_path}")
   end
