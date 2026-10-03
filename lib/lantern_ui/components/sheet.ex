@@ -20,6 +20,7 @@ defmodule LanternUI.Components.Sheet do
 
   alias LanternUI.Class
   alias LanternUI.Components.Icon
+  alias Phoenix.LiveView.JS
 
   attr(:id, :string, required: true, doc: "Stable DOM id used by open_dialog/close_dialog.")
   attr(:open, :boolean, default: false, doc: "render already open (server-driven sheets)")
@@ -53,6 +54,22 @@ defmodule LanternUI.Components.Sheet do
 
   attr(:animation_enter, :string, default: nil, doc: "Accepted for Fluxon compat.")
   attr(:animation_leave, :string, default: nil, doc: "Accepted for Fluxon compat.")
+
+  attr(:controlled, :boolean,
+    default: false,
+    doc: "Strict server-driven open state: `open` is truth, patches flow into the machine."
+  )
+
+  attr(:on_change, :string,
+    default: nil,
+    doc: "Server event pushed on open change (`lantern:dialog:open/close` replies)."
+  )
+
+  attr(:on_change_client, :string,
+    default: nil,
+    doc: "Bubbling DOM CustomEvent dispatched on open change."
+  )
+
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
   slot(:header, doc: "custom header content (replaces `title`)")
@@ -65,41 +82,73 @@ defmodule LanternUI.Components.Sheet do
       id={@id}
       class={Class.merge(["lui-sheet", @container_class])}
       phx-hook="LanternSheet"
+      phx-mounted={JS.ignore_attributes(zag_ignored_attrs(), to: "[data-scope=\"dialog\"]")}
+      data-zag
       data-open={@open || nil}
+      data-controlled={@controlled || nil}
+      data-value={if @controlled, do: to_string(@open)}
+      data-default-value={unless @controlled, do: to_string(@open)}
       data-placement={@placement}
       data-close-on-esc={to_string(@close_on_esc and not @prevent_closing)}
       data-close-on-outside={to_string(@close_on_outside_click and not @prevent_closing)}
+      data-prevent-closing={@prevent_closing || nil}
+      data-on-open={@on_open}
       data-on-close={@on_close}
+      data-on-change={@on_change}
+      data-on-change-client={@on_change_client}
       hidden={!@open}
       {@rest}
     >
-      <div class={Class.merge(["lui-sheet-backdrop", @backdrop_class])} data-part="backdrop"></div>
       <div
-        class={Class.merge(["lui-sheet-panel", @class])}
-        data-part="panel"
-        role="dialog"
-        aria-modal="true"
-        aria-label={@title}
+        class={Class.merge(["lui-sheet-backdrop", @backdrop_class])}
+        data-scope="dialog"
+        data-part="backdrop"
       >
-        <header :if={@header != [] || @title || !@hide_close_button} class="lui-sheet-header">
-          <div class="lui-sheet-heading">
-            <span :if={@title && @header == []} class="lui-sheet-title">{@title}</span>
-            {render_slot(@header)}
-          </div>
-          <button
-            :if={!@hide_close_button and !@prevent_closing}
-            type="button"
-            class="lui-sheet-close"
-            data-part="close"
-            aria-label="Close"
-          >
-            <Icon.icon name="x-mark" />
-          </button>
-        </header>
-        <div class="lui-sheet-body">{render_slot(@inner_block)}</div>
-        <footer :if={@footer != []} class="lui-sheet-footer">{render_slot(@footer)}</footer>
+      </div>
+      <div data-scope="dialog" data-part="positioner">
+        <div
+          class={Class.merge(["lui-sheet-panel", @class])}
+          data-scope="dialog"
+          data-part="content"
+          role="dialog"
+          aria-modal="true"
+          aria-label={@title}
+        >
+          <header :if={@header != [] || @title || !@hide_close_button} class="lui-sheet-header">
+            <div class="lui-sheet-heading">
+              <span :if={@title && @header == []} class="lui-sheet-title">{@title}</span>
+              {render_slot(@header)}
+            </div>
+            <button
+              :if={!@hide_close_button and !@prevent_closing}
+              type="button"
+              class="lui-sheet-close"
+              data-scope="dialog"
+              data-part="close-trigger"
+              aria-label="Close"
+            >
+              <Icon.icon name="x-mark" />
+            </button>
+          </header>
+          <div class="lui-sheet-body">{render_slot(@inner_block)}</div>
+          <footer :if={@footer != []} class="lui-sheet-footer">{render_slot(@footer)}</footer>
+        </div>
       </div>
     </div>
     """
+  end
+
+  # Attributes Zag writes after mount. LiveView must not clobber them on
+  # patches — the machine is the writer, the server copy is stale by design.
+  # Same list as the select prototype's `zag_ignored_attrs/0`.
+  defp zag_ignored_attrs do
+    ~w(
+      data-state data-orientation dir id data-disabled data-readonly
+      data-invalid data-required data-open data-focus data-focus-visible
+      data-active data-hover data-placement data-highlighted data-value
+      aria-expanded aria-controls aria-haspopup aria-labelledby aria-label
+      aria-selected aria-checked aria-disabled aria-multiselectable
+      disabled hidden role tabindex style
+    )
   end
 end

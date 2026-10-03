@@ -29,6 +29,9 @@ defmodule LanternUI.AlertDialogTest do
     document = Floki.parse_fragment!(html)
 
     assert html =~ ~s(phx-hook="LanternModal")
+    assert html =~ ~s(data-zag)
+    assert html =~ ~s(role="alertdialog")
+    assert html =~ ~s(data-scope="dialog" data-part="content")
     assert html =~ ~s(data-close-on-esc="true")
     assert html =~ ~s(data-close-on-outside="false")
     assert html =~ ~s(data-initial-focus="[data-part=&#39;alert-dialog-cancel&#39;]")

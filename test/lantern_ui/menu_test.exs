@@ -87,8 +87,9 @@ defmodule LanternUI.MenuTest do
       assert Floki.attribute(root, "class") == ["lui-menu"]
       assert Floki.attribute(root, "phx-hook") == ["LanternMenu"]
       assert Floki.attribute(root, "data-placement") == ["bottom-start"]
-      assert length(Floki.find(doc, ~s([data-part="trigger"]))) == 1
-      assert length(Floki.find(doc, ~s([data-part="menu"]))) == 1
+      assert length(Floki.find(doc, ~s([data-scope="menu"][data-part="trigger"]))) == 1
+      assert length(Floki.find(doc, ~s([data-scope="menu"][data-part="positioner"]))) == 1
+      assert length(Floki.find(doc, ~s([data-scope="menu"][data-part="content"]))) == 1
     end
 
     test "the component-owned trigger carries the full menu-button ARIA contract" do
@@ -98,8 +99,10 @@ defmodule LanternUI.MenuTest do
       assert Floki.attribute(trigger, "aria-haspopup") == ["menu"]
       assert Floki.attribute(trigger, "aria-expanded") == ["false"]
       assert Floki.attribute(trigger, "aria-controls") == ["actions-menu"]
+      assert Floki.attribute(trigger, "data-scope") == ["menu"]
       assert Floki.attribute(trigger, "data-part") == ["trigger"]
-      assert Floki.attribute(trigger, "type") == ["button"]
+      # The trigger part is a wrapper; the real button lives inside it.
+      assert Floki.find(doc, ~s(#actions-trigger button[type="button"])) != []
     end
 
     test "the popup is a hidden, trigger-labelled role=menu with tabindex=-1 items" do

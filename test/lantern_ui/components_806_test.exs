@@ -84,11 +84,14 @@ defmodule LanternUI.Components806Test do
         end)
 
       assert html =~ ~s(phx-hook="LanternModal")
+      assert html =~ ~s(data-zag)
       assert html =~ ~s(hidden)
-      assert html =~ ~s(data-part="backdrop")
+      assert html =~ ~s(data-scope="dialog" data-part="backdrop")
+      assert html =~ ~s(data-scope="dialog" data-part="positioner")
+      assert html =~ ~s(data-scope="dialog" data-part="content")
       assert html =~ ~s(role="dialog")
       assert html =~ ~s(aria-modal="true")
-      assert html =~ ~s(data-part="close")
+      assert html =~ ~s(data-scope="dialog" data-part="close-trigger")
       assert html =~ "Hello"
     end
 
@@ -104,7 +107,7 @@ defmodule LanternUI.Components806Test do
       assert html =~ ~s(data-open)
       assert html =~ ~s(data-close-on-esc="false")
       assert html =~ ~s(data-close-on-outside="false")
-      refute html =~ ~s(data-part="close")
+      refute html =~ ~s(data-part="close-trigger")
     end
 
     test "open_dialog/close_dialog produce JS dispatch commands" do
@@ -138,7 +141,10 @@ defmodule LanternUI.Components806Test do
         end)
 
       assert html =~ ~s(phx-hook="LanternDropdown")
-      assert html =~ ~s(data-part="trigger")
+      assert html =~ ~s(data-zag)
+      assert html =~ ~s(data-scope="menu" data-part="trigger")
+      assert html =~ ~s(data-scope="menu" data-part="positioner")
+      assert html =~ ~s(data-scope="menu" data-part="content")
       assert html =~ ~s(role="menu")
       assert html =~ ~s(role="menuitem")
       assert html =~ ~s(role="separator")
