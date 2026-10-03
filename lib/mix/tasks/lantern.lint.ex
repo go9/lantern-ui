@@ -1,15 +1,18 @@
 defmodule Mix.Tasks.Lantern.Lint do
-  @shortdoc "Fail on arbitrary Tailwind px values, palette colors, and page-local greys"
+  @shortdoc "Fail on values and markup that bypass lantern components and tokens"
 
   @moduledoc """
   Scan `.ex` / `.exs` / `.heex` for values that bypass lantern's compact type
-  and grey scale. See `docs/scale.md`.
+  and grey scale (see `docs/scale.md`), banned grouped-list markup, hand-rolled
+  tables/buttons, deprecated components, and unknown component/attr names with
+  "did you mean" hints (see `LanternUI.Deprecated`).
 
       mix lantern.lint
       mix lantern.lint ../some-app
       mix lantern.lint --format json
 
-  Allowlist: `.lantern-lint.json` (`exclude` / `allow` globs) or a
+  Allowlist: `.lantern-lint.json` (`exclude` / `allow` globs, plus
+  `allow_rules` mapping one rule to globs skipped for that rule only) or a
   `lantern-lint:ignore` comment on the same line or the line above.
   """
 
