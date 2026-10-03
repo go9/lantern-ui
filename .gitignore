@@ -38,3 +38,9 @@ flicker.toml
 .pi/skills/
 .pi/
 .opencode/
+
+# Eval harness (flicker #3415): per-combo demo checkouts are reproducible from
+# eval/demo-pin.txt via eval/run.sh — never commit them. Scores, prompts, logs
+# and screenshots in eval/results ARE committed.
+eval/results/*/demo/
+eval/results/*/server.pid
