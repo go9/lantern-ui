@@ -2223,7 +2223,7 @@ var LanternSidebar = {
     if (this.navOpen) document.body.style.overflow = "";
   }
 };
-var LanternSelect = {
+var LanternSelectLegacy = {
   mounted() {
     this.toggle = this.el.querySelector('[data-part="toggle"]');
     this.panel = this.el.querySelector('[data-part="panel"]');
@@ -2854,7 +2854,31 @@ var LanternCollapse = {
     this.restore();
   },
   destroyed() {
-    this.el.removeEventListener("click", this.onClick);
+    this.cleanup.forEach((fn) => fn());
+  }
+};
+var LanternSelect = {
+  mounted() {
+    if (this.el.hasAttribute("data-zag")) {
+      import("./zag/select.js").then((m) => {
+        if (!this.el.isConnected) return;
+        this._zagDelegate = m.mountZagSelect(this);
+      });
+    } else {
+      LanternSelectLegacy.mounted.call(this);
+    }
+  },
+  beforeUpdate() {
+    if (this._zagDelegate) this._zagDelegate.beforeUpdate();
+    else if (this.el.hasAttribute("data-zag")) this._zagPendingUpdate = true;
+  },
+  updated() {
+    if (this._zagDelegate) this._zagDelegate.updated();
+    else if (this.el.hasAttribute("data-zag")) this._zagPendingUpdate = true;
+  },
+  destroyed() {
+    if (this._zagDelegate) this._zagDelegate.destroyed();
+    else if (!this.el.hasAttribute("data-zag")) LanternSelectLegacy.destroyed.call(this);
   }
 };
 var LanternTableChrome = {
