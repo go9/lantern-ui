@@ -1,0 +1,8 @@
+# Round-2 eval: only scores + screenshots are committed. Per-run logs,
+# prompts, checkouts, and raw tool output stay local.
+*
+!*/
+!score.json
+!score.txt
+!screenshot.png
+!.gitignore

@@ -1,4 +1,5 @@
-# Usage: elixir eval/checks.exs --expect <literal> [--expect <literal> ...] -- <file> [<file> ...]
+# Usage: elixir eval/checks.exs --expect <literal> [--expect <literal> ...]
+#          [--min-comps N] [--block NAME ...] [--lint-findings N] -- <file> ...
 #
 # Scans ONLY the given files (the runner passes the model's changed files).
 # Prints one `RULE: <name> <points>/<max> <detail>` line per rule and a final
@@ -24,7 +25,27 @@ defmodule EvalChecks do
   @hex_in_class ~r/(?:text|bg|border|ring|fill|stroke)-\[#[0-9a-fA-F]{3,8}\]/
   @arbitrary_px ~r/-\[\d+(?:\.\d+)?px\]/
 
-  def run(files, expects) do
+  # Blocks-fidelity patterns (round 2): the page structure matches a recipe
+  # block — breadcrumb-bar title/actions, flat list with status col + chips,
+  # stack spacing. Each named block is one regex over the diff.
+  @blocks %{
+    "breadcrumb" => ~r/<\.breadcrumb\b|<[A-Z][A-Za-z0-9_.]*\.breadcrumb\b|aria-label="Breadcrumb"|<\.page_header\b/,
+    "filter-chips" => ~r/<\.tabs_list\b|<[A-Z][A-Za-z0-9_.]*\.tabs_list\b|variant="segmented"/,
+    "flat-list" => ~r/<\.data_table\b|<\.resource_list\b|<\.list_row\b|<\.table\b|<[A-Z][A-Za-z0-9_.]*\.(data_table|resource_list|list_row|table)\b/,
+    "detail-inspector" => ~r/<\.inspector\b|<\.side_panel\b|<\.description_list\b|<[A-Z][A-Za-z0-9_.]*\.(inspector|side_panel|description_list)\b/,
+    "form-card" => ~r/<\.form\b|<\.input\b|<\.select\b|<\.textarea\b|<\.checkbox\b|<\.switch\b/,
+    "toast" => ~r/toast_group|send_toast/,
+    "stat-row" => ~r/<\.stat_card\b|<\.stat_grid\b|<[A-Z][A-Za-z0-9_.]*\.(stat_card|stat_grid)\b/,
+    "chart" => ~r/<\.area_chart\b|<\.bar_chart\b|<\.line_chart\b|<\.sparkline\b/,
+    "dialog" => ~r/<\.modal\b|<\.alert_dialog\b|<\.sheet\b/,
+    "empty-states" => ~r/<\.empty_state\b|<[A-Z][A-Za-z0-9_.]*\.empty_state\b/,
+    "loading" => ~r/<\.skeleton\b|<\.loading\b/,
+    "command" => ~r/<\.command\b|<\.command_group\b|<\.command_item\b/,
+    "theme" => ~r/preset="shadcn"|data-lantern-theme/,
+    "pagination" => ~r/<\.pagination\b|<[A-Z][A-Za-z0-9_.]*\.pagination\b/
+  }
+
+  def run(files, expects, opts) do
     sources =
       Enum.map(files, fn f ->
         {f, File.read!(f)}
@@ -39,7 +60,7 @@ defmodule EvalChecks do
       no_hand_button(all),
       no_palette(all),
       no_arbitrary(all),
-      lantern_usage(all),
+      lantern_usage(all, Keyword.get(opts, :min_comps, 4)),
       a11y(all),
       deliverables(all, expects)
     ]
@@ -50,6 +71,28 @@ defmodule EvalChecks do
 
     total = Enum.sum(Enum.map(results, &elem(&1, 1)))
     IO.puts("SCORE: #{total}/100")
+
+    # Gates (round 2 — reported, not part of /100 so round-1 scores stay
+    # comparable): lint findings must be 0, every required recipe block
+    # must be present.
+    blocks = Keyword.get(opts, :blocks, [])
+    missing = Enum.reject(blocks, &Regex.match?(Map.fetch!(@blocks, &1), all))
+
+    if blocks == [] do
+      IO.puts("BLOCKS: PASS no blocks required")
+    else
+      if missing == [] do
+        IO.puts("BLOCKS: PASS #{length(blocks)}/#{length(blocks)} #{Enum.join(blocks, ",")}")
+      else
+        IO.puts("BLOCKS: FAIL missing #{Enum.join(missing, ",")}")
+      end
+    end
+
+    case Keyword.get(opts, :lint_findings) do
+      nil -> IO.puts("LINT: UNKNOWN not measured")
+      0 -> IO.puts("LINT: PASS 0 findings")
+      n -> IO.puts("LINT: FAIL #{n} findings")
+    end
   end
 
   defp no_group_band(all) do
@@ -92,17 +135,18 @@ defmodule EvalChecks do
     scaled(:no_arbitrary, 10, Regex.scan(@arbitrary_px, all) |> length())
   end
 
-  defp lantern_usage(all) do
+  defp lantern_usage(all, min) do
     # Local `<.name` and remote `<Module.name` calls both count: models that
     # alias lantern modules emit the latter, and it is valid HEEx.
+    # Round 2: the bar scales to the task (manifest `min_comps`).
     used =
       @lantern_components
       |> Enum.uniq()
       |> Enum.filter(&Regex.match?(~r/(?:<\.(?:#{Regex.escape(&1)})\b|<[A-Z][A-Za-z0-9_.]*\.#{Regex.escape(&1)}\b)/, all))
 
     n = length(used)
-    pts = round(15 * min(1.0, n / 4))
-    {:lantern_usage, pts, 15, "#{n} components: #{Enum.join(Enum.take(used, 8), ",")}"}
+    pts = round(15 * min(1.0, n / max(min, 1)))
+    {:lantern_usage, pts, 15, "#{n} components (bar #{min}): #{Enum.join(Enum.take(used, 10), ",")}"}
   end
 
   defp a11y(all) do
@@ -153,21 +197,24 @@ defmodule EvalChecks do
   end
 end
 
-{expects, files} =
+{expects, opts, files} =
   case Enum.split_while(System.argv(), &(&1 != "--")) do
     {flags, ["--" | rest]} ->
-      exp =
+      {exp, opts} =
         flags
         |> Enum.chunk_every(2)
-        |> Enum.flat_map(fn
-          ["--expect", lit] -> [lit]
-          _ -> []
+        |> Enum.reduce({[], [min_comps: 4, blocks: [], lint_findings: nil]}, fn
+          ["--expect", lit], {e, o} -> {[lit | e], o}
+          ["--min-comps", n], {e, o} -> {e, Keyword.put(o, :min_comps, String.to_integer(n))}
+          ["--block", name], {e, o} -> {e, Keyword.update!(o, :blocks, &(&1 ++ [name]))}
+          ["--lint-findings", n], {e, o} -> {e, Keyword.put(o, :lint_findings, String.to_integer(n))}
+          _, acc -> acc
         end)
 
-      {exp, rest}
+      {Enum.reverse(exp), opts, rest}
 
     _ ->
-      IO.puts(:stderr, "usage: elixir checks.exs --expect LIT ... -- <file> ...")
+      IO.puts(:stderr, "usage: elixir checks.exs --expect LIT ... [--min-comps N] [--block NAME]... [--lint-findings N] -- <file> ...")
       System.halt(2)
   end
 
@@ -177,5 +224,5 @@ if files == [] do
   IO.puts("RULE: no_files 0/100 no changed files to score")
   IO.puts("SCORE: 0/100")
 else
-  EvalChecks.run(files, expects)
+  EvalChecks.run(files, expects, opts)
 end

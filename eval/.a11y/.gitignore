@@ -1,0 +1,4 @@
+# puppeteer-core + axe-core for eval/shot.js; reinstall with
+# `npm install --prefix eval/.a11y`. Never committed.
+*
+!.gitignore
