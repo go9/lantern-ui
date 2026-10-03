@@ -1,0 +1,23 @@
+<div style="max-width: 400px; margin: 3rem auto 0; display: flex; flex-direction: column; gap: 1.25rem;">
+  <.card>
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <.icon name="sparkles" />
+      <span class="lui-brand-name">Acme</span>
+    </div>
+    <.page_header title="Welcome back" description="Sign in to your workspace." />
+    <.input id="login-email" name="email" type="email" label="Email" placeholder="ada@acme.test" autocomplete="email" />
+    <.input
+      id="login-password"
+      name="password"
+      type="password"
+      label="Password"
+      placeholder="••••••••"
+      autocomplete="current-password"
+      errors={["is incorrect — try again or reset it"]}
+    />
+    <.button variant="solid">Sign in</.button>
+    <.separator text="or continue with" />
+    <.button variant="outline">Continue with SSO</.button>
+    <:footer>No account yet? Ask your workspace admin for an invite.</:footer>
+  </.card>
+</div>

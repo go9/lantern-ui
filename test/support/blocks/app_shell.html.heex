@@ -1,0 +1,38 @@
+<LanternUI.Components.Layout.app_shell id="demo-app">
+  <:brand>
+    <.icon name="sparkles" />
+    <span class="lui-brand-name">Acme</span>
+  </:brand>
+  <:header>
+    <.badge size="sm" variant="soft">Production</.badge>
+  </:header>
+  <:actions>
+    <.avatar size="sm" initials="AL" />
+  </:actions>
+  <:breadcrumb>
+    <.breadcrumb home="/" items={@shell_crumbs} />
+  </:breadcrumb>
+  <:sidebar>
+    <.nav_group label="Workspace">
+      <.nav_item label="Dashboard" icon="chart-bar" navigate="/" active />
+      <.nav_item label="Tickets" icon="document" navigate="/tickets" badge={12} />
+      <.nav_item label="Inbox" icon="inbox" navigate="/inbox" badge={3} />
+    </.nav_group>
+    <.nav_group label="Manage">
+      <.nav_item label="Projects" icon="folder" navigate="/projects" />
+      <.nav_item label="Settings" icon="adjustments-horizontal" navigate="/settings" />
+    </.nav_group>
+  </:sidebar>
+  <:sidebar_footer>
+    <.nav_link label="Documentation" icon="globe-alt" href="/docs" />
+  </:sidebar_footer>
+  <.page_header title="Tickets" description="Every request, one flat list.">
+    <:actions>
+      <.button size="sm" variant="solid">New ticket</.button>
+    </:actions>
+  </.page_header>
+  <.card title="Getting started" description="Three steps to a finished page.">
+    <p style="margin: 0;">Pick a block from the recipe index, swap the fixture assigns for the host LiveView assigns, and ship.</p>
+    <:footer>Blocks render in the default theme and the shadcn preset.</:footer>
+  </.card>
+</LanternUI.Components.Layout.app_shell>

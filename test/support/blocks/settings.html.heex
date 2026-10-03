@@ -1,0 +1,49 @@
+<div style="max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
+  <.page_header title="Settings" description="Each section saves on its own — nothing else moves." />
+  <.card title="Profile" description="How your name appears on tickets and reviews.">
+    <.input id="settings-name" name="name" label="Display name" value="Ada Lovelace" />
+    <.input
+      id="settings-email"
+      name="email"
+      type="email"
+      label="Email"
+      value="ada@acme.test"
+      help_text="Receipts and review requests land here."
+    />
+    <:footer>
+      <span>Saved 2m ago</span>
+      <.button size="sm" variant="solid">Save profile</.button>
+    </:footer>
+  </.card>
+  <.card title="Notifications" description="Pick which pings are worth interrupting you.">
+    <.switch id="settings-mentions" name="mentions" label="Mentions" checked value="true" />
+    <.switch id="settings-review" name="review_requests" label="Review requests" checked value="true" />
+    <.switch id="settings-weekly" name="weekly_digest" label="Weekly digest" value="false" />
+    <:footer>
+      <span>Saved 1h ago</span>
+      <.button size="sm" variant="solid">Save notifications</.button>
+    </:footer>
+  </.card>
+  <.card title="Appearance" description="Density and theme for this workspace.">
+    <.select
+      native
+      id="settings-theme"
+      name="theme"
+      label="Theme"
+      options={[{"System", "system"}, {"Light", "light"}, {"Dark", "dark"}]}
+      value="system"
+      prompt="Pick a theme"
+    />
+    <.textarea
+      id="settings-signature"
+      name="signature"
+      label="Review signature"
+      value="Ship it."
+      help_text="Appended to approvals you write."
+    />
+    <:footer>
+      <span>Saved yesterday</span>
+      <.button size="sm" variant="solid">Save appearance</.button>
+    </:footer>
+  </.card>
+</div>

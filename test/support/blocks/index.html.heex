@@ -1,0 +1,55 @@
+<div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
+  <.breadcrumb_bar id="tickets-crumb">
+    <.breadcrumb home="/" items={@shell_crumbs} />
+    <:actions label="New ticket" navigate="/tickets/new">
+      <.button size="sm" variant="solid" navigate="/tickets/new">New ticket</.button>
+    </:actions>
+  </.breadcrumb_bar>
+  <.data_table
+    id="tickets"
+    rows={@tickets}
+    meta={@meta}
+    path="/tickets"
+    fill
+    views={["list"]}
+    show_checkboxes={false}
+    search_field={:title}
+    data-lantern-list-nav
+  >
+    <:tab label="All" count={24} />
+    <:tab label="In progress" count={9} filters={[%{field: "status", value: "in_progress"}]} />
+    <:tab label="To do" count={11} filters={[%{field: "status", value: "todo"}]} />
+    <:tab label="Done" count={4} filters={[%{field: "status", value: "done"}]} />
+    <:filter
+      field={:status}
+      label="Status"
+      options={[{"In progress (9)", "in_progress"}, {"To do (11)", "todo"}, {"Done (4)", "done"}]}
+      prompt="All statuses"
+    />
+    <:list_item :let={ticket}>
+      <.list_row
+        identifier={ticket.identifier}
+        title={ticket.title}
+        parent={ticket.parent}
+        navigate={ticket.href}
+        selected={ticket.selected}
+        data-lantern-list-item
+      >
+        <:leading>
+          <.status_glyph status={ticket.status} />
+          <span>{ticket.status |> Atom.to_string() |> String.replace("_", " ")}</span>
+        </:leading>
+        <:meta>
+          <.badge size="sm">{ticket.tag}</.badge>
+        </:meta>
+        <:trailing>{ticket.date}</:trailing>
+      </.list_row>
+    </:list_item>
+    <:empty>
+      <.empty_state icon="document" title="No tickets match">
+        Try a different search, or create the first ticket.
+        <:action><.button size="sm" variant="solid" navigate="/tickets/new">New ticket</.button></:action>
+      </.empty_state>
+    </:empty>
+  </.data_table>
+</div>
