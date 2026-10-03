@@ -17,10 +17,23 @@ defmodule LanternUI.Components.Modal do
   with `LanternUI.open_dialog(socket, id)` / `close_dialog(socket, id)`.
   Animation-tuning attrs (`animation*`) are accepted for Fluxon compatibility;
   the fade duration comes from the `--lantern-duration` token.
+
+  The dialog is Zag-driven (a `@zag-js/dialog` state machine, loaded on
+  demand): the hook root carries `data-zag` plus `data-scope="dialog"` /
+  `data-part` anatomy, and Zag owns open state, focus trap + return, scroll
+  lock, Escape/outside dismissal, and initial focus. Styling stays `lui-*`
+  tokens. The server owns `open` via `data-open` (a patch asserting it
+  re-opens, withdrawing it closes); `controlled` makes the server value
+  strict truth with `on_change` fan-out.
+
+  Hand-rolled `LanternModal` roots without `data-zag` keep the legacy hook
+  behavior, so existing `open_dialog/close_dialog` call sites keep working;
+  new markup should use this component.
   """
   use Phoenix.Component
 
   alias LanternUI.Class
+  alias Phoenix.LiveView.JS
 
   attr(:id, :string, required: true, doc: "Stable DOM id used by open_dialog/close_dialog.")
   attr(:open, :boolean, default: false, doc: "render already open (server-driven modals)")
@@ -57,6 +70,22 @@ defmodule LanternUI.Components.Modal do
   attr(:animation, :string, default: nil, doc: "accepted for Fluxon compat; fade is token-driven")
   attr(:animation_enter, :string, default: nil, doc: "accepted for Fluxon compat")
   attr(:animation_leave, :string, default: nil, doc: "accepted for Fluxon compat")
+
+  attr(:controlled, :boolean,
+    default: false,
+    doc: "Strict server-driven open state: `open` is truth, patches flow into the machine."
+  )
+
+  attr(:on_change, :string,
+    default: nil,
+    doc: "Server event pushed on open change (`lantern:dialog:open/close` replies)."
+  )
+
+  attr(:on_change_client, :string,
+    default: nil,
+    doc: "Bubbling DOM CustomEvent dispatched on open change."
+  )
+
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
   slot(:inner_block, required: true, doc: "Dialog body content.")
 
@@ -66,36 +95,72 @@ defmodule LanternUI.Components.Modal do
       id={@id}
       class={Class.merge(["lui-modal", @container_class])}
       phx-hook="LanternModal"
+      phx-mounted={JS.ignore_attributes(zag_ignored_attrs(), to: "[data-scope=\"dialog\"]")}
+      data-zag
+      data-role={@role}
       data-open={@open || nil}
+      data-controlled={@controlled || nil}
+      data-value={if @controlled, do: to_string(@open)}
+      data-default-value={unless @controlled, do: to_string(@open)}
       data-close-on-esc={to_string(@close_on_esc and not @prevent_closing)}
       data-close-on-outside={to_string(@close_on_outside_click and not @prevent_closing)}
+      data-prevent-closing={@prevent_closing || nil}
+      data-on-open={@on_open}
+      data-on-close={@on_close}
+      data-title-id={@aria_labelledby}
+      data-description-id={@aria_describedby}
       data-initial-focus={@initial_focus}
       data-placement={@placement}
+      data-on-change={@on_change}
+      data-on-change-client={@on_change_client}
       hidden={!@open}
       {@rest}
     >
-      <div class={Class.merge(["lui-modal-backdrop", @backdrop_class])} data-part="backdrop"></div>
       <div
-        class={Class.merge(["lui-modal-panel", @class])}
-        data-part="panel"
-        role={@role}
-        aria-modal="true"
-        aria-label={@aria_label}
-        aria-labelledby={@aria_labelledby}
-        aria-describedby={@aria_describedby}
+        class={Class.merge(["lui-modal-backdrop", @backdrop_class])}
+        data-scope="dialog"
+        data-part="backdrop"
       >
-        <button
-          :if={!@hide_close_button and !@prevent_closing}
-          type="button"
-          class="lui-modal-close"
-          data-part="close"
-          aria-label="Close"
+      </div>
+      <div data-scope="dialog" data-part="positioner">
+        <div
+          class={Class.merge(["lui-modal-panel", @class])}
+          data-scope="dialog"
+          data-part="content"
+          role={@role}
+          aria-modal="true"
+          aria-label={@aria_label}
+          aria-labelledby={@aria_labelledby}
+          aria-describedby={@aria_describedby}
         >
-          <LanternUI.Components.Icon.icon name="x-mark" />
-        </button>
-        {render_slot(@inner_block)}
+          <button
+            :if={!@hide_close_button and !@prevent_closing}
+            type="button"
+            class="lui-modal-close"
+            data-scope="dialog"
+            data-part="close-trigger"
+            aria-label="Close"
+          >
+            <LanternUI.Components.Icon.icon name="x-mark" />
+          </button>
+          {render_slot(@inner_block)}
+        </div>
       </div>
     </div>
     """
+  end
+
+  # Attributes Zag writes after mount. LiveView must not clobber them on
+  # patches — the machine is the writer, the server copy is stale by design.
+  # Same list as the select prototype's `zag_ignored_attrs/0`.
+  defp zag_ignored_attrs do
+    ~w(
+      data-state data-orientation dir id data-disabled data-readonly
+      data-invalid data-required data-open data-focus data-focus-visible
+      data-active data-hover data-placement data-highlighted data-value
+      aria-expanded aria-controls aria-haspopup aria-labelledby aria-label
+      aria-selected aria-checked aria-disabled aria-multiselectable
+      disabled hidden role tabindex style
+    )
   end
 end

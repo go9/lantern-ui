@@ -1,20 +1,26 @@
 defmodule LanternUI.ZagWidgetsTest do
   @moduledoc """
-  Zag-driven widget rollout A (flicker #3416, step 2, PR A).
+  Zag-driven widget rollout A (flicker #3416, step 2, PR A + PR B).
 
-  Tooltip, popover, switch, and radio render Zag anatomy
-  (`data-scope` + `data-part`) under the unchanged public attrs and
-  `lui-*` styling, with `data-zag` marking roots the owning hook lazily
-  upgrades to a `@zag-js/*` machine. Native inputs stay the form surface
-  for switch/radio.
+  Tooltip, popover, switch, radio, modal/alert_dialog, sheet, dropdown,
+  and menu render Zag anatomy (`data-scope` + `data-part`) under the
+  unchanged public attrs and `lui-*` styling, with `data-zag` marking roots
+  the owning hook lazily upgrades to a `@zag-js/*` machine. Native inputs
+  stay the form surface for switch/radio; `LanternUI.open_dialog/2` and
+  `close_dialog/2` keep working through `lantern:dialog:*` events.
   """
   use ExUnit.Case, async: true
 
   import Phoenix.Component
   import Phoenix.LiveViewTest, only: [rendered_to_string: 1]
 
+  alias LanternUI.Components.AlertDialog
+  alias LanternUI.Components.Dropdown
+  alias LanternUI.Components.Menu
+  alias LanternUI.Components.Modal
   alias LanternUI.Components.Popover
   alias LanternUI.Components.Radio
+  alias LanternUI.Components.Sheet
   alias LanternUI.Components.Switch
   alias LanternUI.Components.Tooltip
 
@@ -171,6 +177,132 @@ defmodule LanternUI.ZagWidgetsTest do
 
       assert html =~ ~s(data-controlled)
       assert html =~ ~s(data-value="basic")
+    end
+  end
+
+  describe "modal/1 zag markup" do
+    test "hook root carries data-zag and dialog anatomy, dialog contracts intact" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Modal.modal id="m1">Hello</Modal.modal>
+          """
+        end)
+
+      assert html =~ ~s(phx-hook="LanternModal")
+      assert html =~ ~s(data-zag)
+      assert html =~ ~s(data-role="dialog")
+      assert html =~ ~s(data-default-value="false")
+      assert html =~ ~s(data-scope="dialog" data-part="backdrop")
+      assert html =~ ~s(data-scope="dialog" data-part="positioner")
+      assert html =~ ~s(data-scope="dialog" data-part="content")
+      assert html =~ ~s(data-scope="dialog" data-part="close-trigger")
+      assert html =~ ~s(role="dialog")
+      assert html =~ ~s(aria-modal="true")
+      assert html =~ "Hello"
+    end
+
+    test "controlled mode renders the server value" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Modal.modal id="m1" controlled open>Hello</Modal.modal>
+          """
+        end)
+
+      assert html =~ ~s(data-controlled)
+      assert html =~ ~s(data-value="true")
+    end
+  end
+
+  describe "alert_dialog/1 zag markup" do
+    test "composes the Zag modal with alertdialog role and real title ids" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <AlertDialog.alert_dialog id="del">
+            <:title>Delete?</:title>
+            <:description>Irreversible.</:description>
+            <:cancel><button>Cancel</button></:cancel>
+            <:action><button>Delete</button></:action>
+          </AlertDialog.alert_dialog>
+          """
+        end)
+
+      assert html =~ ~s(phx-hook="LanternModal")
+      assert html =~ ~s(data-zag)
+      assert html =~ ~s(data-role="alertdialog")
+      assert html =~ ~s(role="alertdialog")
+      assert html =~ ~s(aria-labelledby="del-title")
+      assert html =~ ~s(aria-describedby="del-description")
+      assert html =~ ~s(data-title-id="del-title")
+      assert html =~ ~s(data-description-id="del-description")
+    end
+  end
+
+  describe "sheet/1 zag markup" do
+    test "hook root carries data-zag, placement, and dialog anatomy" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Sheet.sheet id="s" placement="left" title="Edit">Body</Sheet.sheet>
+          """
+        end)
+
+      assert html =~ ~s(phx-hook="LanternSheet")
+      assert html =~ ~s(data-zag)
+      assert html =~ ~s(data-placement="left")
+      assert html =~ ~s(data-scope="dialog" data-part="backdrop")
+      assert html =~ ~s(data-scope="dialog" data-part="positioner")
+      assert html =~ ~s(data-scope="dialog" data-part="content")
+      assert html =~ ~s(role="dialog")
+      assert html =~ "Edit"
+      assert html =~ "Body"
+    end
+  end
+
+  describe "dropdown/1 zag markup" do
+    test "hook root carries data-zag and menu anatomy with role=menu" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Dropdown.dropdown id="dd" label="Actions">
+            <Dropdown.dropdown_button phx-click="go">Go</Dropdown.dropdown_button>
+          </Dropdown.dropdown>
+          """
+        end)
+
+      assert html =~ ~s(phx-hook="LanternDropdown")
+      assert html =~ ~s(data-zag)
+      assert html =~ ~s(data-scope="menu" data-part="trigger")
+      assert html =~ ~s(data-scope="menu" data-part="positioner")
+      assert html =~ ~s(data-scope="menu" data-part="content")
+      assert html =~ ~s(role="menu")
+      assert html =~ ~s(role="menuitem")
+      assert html =~ "Go"
+    end
+  end
+
+  describe "menu/1 zag markup" do
+    test "component-owned trigger keeps stable ids under menu anatomy" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Menu.menu id="file" label="File">
+            <Menu.menu_item phx-click="new">New</Menu.menu_item>
+          </Menu.menu>
+          """
+        end)
+
+      assert html =~ ~s(phx-hook="LanternMenu")
+      assert html =~ ~s(data-zag)
+      assert html =~ ~s(id="file-trigger")
+      assert html =~ ~s(id="file-menu")
+      assert html =~ ~s(data-scope="menu" data-part="trigger")
+      assert html =~ ~s(data-scope="menu" data-part="content")
+      assert html =~ ~s(role="menu")
+      assert html =~ ~s(aria-labelledby="file-trigger")
+      assert html =~ "New"
     end
   end
 end

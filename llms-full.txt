@@ -699,11 +699,15 @@ Dropdown menu on the shared overlay runtime (anchored placement, focus return, E
 - `animation_leave` (:string) — accepted for Fluxon compat
 - `class` (:any) — classes for the menu panel
 - `container_class` (:any) — Extra classes on the dropdown root wrapper.
+- `controlled` (:boolean, default false) — Server-driven open state: `open` is truth, patches flow into the machine.
 - `disabled` (:boolean, default false) — Render disabled and non-interactive.
 - `hover_close_delay` (:integer) — accepted for Fluxon compat
 - `hover_open_delay` (:integer) — accepted for Fluxon compat
 - `id` (:string) — Stable DOM id for the dropdown hook; auto-generated when omitted, mirroring Fluxon's dropdown (drop-in parity).
 - `label` (:string) — default toggle button text when no :toggle slot
+- `on_change` (:string) — Server event pushed on open change (`lantern:menu:set-open` replies).
+- `on_change_client` (:string) — Bubbling DOM CustomEvent dispatched on open change.
+- `open` (:boolean) — Open state for `controlled` mode (client mode ignores it).
 - `open_on_hover` (:boolean, default false) — accepted for Fluxon compat; click/keyboard only
 - `placement` (:string, values: bottom-start, bottom-end, top-start, top-end, default "bottom-start") — Where the menu anchors relative to the toggle.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
@@ -1081,9 +1085,13 @@ Menu button and menubar — no Fluxon equivalent.
 
 - `class` (:any) — Extra classes on the popup menu panel.
 - `container_class` (:any) — Extra classes on the menu root wrapper.
+- `controlled` (:boolean, default false) — Server-driven open state: `open` is truth, patches flow into the machine.
 - `disabled` (:boolean, default false) — Render the trigger disabled.
 - `id` (:string) — Stable DOM id for the menu hook; auto-generated when omitted.
 - `label` (:string) — Trigger button text when no :trigger slot.
+- `on_change` (:string) — Server event pushed on open change (`lantern:menu:set-open` replies).
+- `on_change_client` (:string) — Bubbling DOM CustomEvent dispatched on open change.
+- `open` (:boolean) — Open state for `controlled` mode (client mode ignores it).
 - `placement` (:string, values: bottom-start, bottom-end, top-start, top-end, default "bottom-start") — Where the menu anchors relative to the trigger.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `trigger_class` (:any) — Extra classes on the trigger button.
@@ -1222,9 +1230,12 @@ Modal dialog on the shared overlay runtime (focus trap, Escape/outside dismissal
 - `close_on_esc` (:boolean, default true) — Close when Escape is pressed.
 - `close_on_outside_click` (:boolean, default true) — Close when the backdrop is clicked.
 - `container_class` (:any) — Extra classes on the overlay root.
+- `controlled` (:boolean, default false) — Strict server-driven open state: `open` is truth, patches flow into the machine.
 - `hide_close_button` (:boolean, default false) — Hide the built-in close control.
 - `id` (:string, required) — Stable DOM id used by open_dialog/close_dialog.
 - `initial_focus` (:string) — Selector for the element or region that receives focus when opened.
+- `on_change` (:string) — Server event pushed on open change (`lantern:dialog:open/close` replies).
+- `on_change_client` (:string) — Bubbling DOM CustomEvent dispatched on open change.
 - `on_close` ({:struct, Phoenix.LiveView.JS}) — JS command run when the modal closes.
 - `on_open` ({:struct, Phoenix.LiveView.JS}) — JS command run when the modal opens.
 - `open` (:boolean, default false) — render already open (server-driven modals)
@@ -1523,8 +1534,11 @@ Slide-over panel (drawer) that enters from a screen edge.
 - `close_on_esc` (:boolean, default true) — Close when Escape is pressed.
 - `close_on_outside_click` (:boolean, default true) — Close when the backdrop is clicked.
 - `container_class` (:any) — Extra classes on the overlay root.
+- `controlled` (:boolean, default false) — Strict server-driven open state: `open` is truth, patches flow into the machine.
 - `hide_close_button` (:boolean, default false) — Hide the built-in close control.
 - `id` (:string, required) — Stable DOM id used by open_dialog/close_dialog.
+- `on_change` (:string) — Server event pushed on open change (`lantern:dialog:open/close` replies).
+- `on_change_client` (:string) — Bubbling DOM CustomEvent dispatched on open change.
 - `on_close` ({:struct, Phoenix.LiveView.JS}) — JS command run when the sheet closes.
 - `on_open` ({:struct, Phoenix.LiveView.JS}) — JS command run when the sheet opens.
 - `open` (:boolean, default false) — render already open (server-driven sheets)

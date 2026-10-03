@@ -7,7 +7,7 @@
 import assert from "node:assert/strict"
 import { afterEach, test } from "node:test"
 
-import { mountZag, sleep } from "./helpers/zag_mount.mjs"
+import { dismissOutside, mountZag, sleep, waitFor } from "./helpers/zag_mount.mjs"
 
 const { LanternZagPopover } = await import("../../assets/js/zag/popover.js")
 
@@ -65,8 +65,7 @@ test("client mode: clicking the trigger toggles the panel", async () => {
   assert.equal(content(el).hidden, true)
 })
 
-test("client mode: clicking inside the panel does not close it (surface, not menu)", async () => {
-  const { el, component } = mount(fixture())
+test("client mode: clicking inside the panel does not close it (surface, not menu)", async () => {  const { el, component } = mount(fixture())
   await sleep()
 
   el.querySelector('[data-part="trigger"] button').click()
@@ -78,6 +77,17 @@ test("client mode: clicking inside the panel does not close it (surface, not men
   )
   await sleep()
   assert.equal(component().api.open, true)
+})
+
+test("client mode: outside pointerdown dismisses the panel", async () => {
+  const { el, component, document } = mount(fixture())
+  await sleep()
+
+  el.querySelector('[data-part="trigger"] button').click()
+  await waitFor(() => component().api.open === true)
+
+  await dismissOutside(document, () => component().api.open)
+  assert.equal(content(el).hidden, true)
 })
 
 test("client mode: open change pushes a server event and dispatches a client event", async () => {

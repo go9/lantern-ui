@@ -388,7 +388,12 @@ const LanternOverlayLegacy = {
 // Roots carrying `data-zag` (popover) run the Zag state machine, loaded on
 // demand so pages that render no Zag popover ship no Zag code. Everything
 // else stays on the legacy hook.
+//
+// The legacy methods are spread into this object (not `.call`ed across) so
+// their `this.show()` / `this.hide()` cross-calls resolve.
 const LanternOverlay = {
+  ...LanternOverlayLegacy,
+
   mounted() {
     if (this.el.hasAttribute("data-zag")) {
       import("./zag/popover.js").then((m) => {
@@ -1769,6 +1774,10 @@ const LanternCollapse = {
 // machine, loaded on demand so pages that render no Zag select ship no Zag
 // code. Everything else — notably `searchable` — stays on the legacy hook.
 const LanternSelect = {
+  // Spread so the legacy path's `this.show()` / `this.hide()` cross-calls
+  // resolve (mounted/updated/destroyed below override the spread copies).
+  ...LanternSelectLegacy,
+
   mounted() {
     if (this.el.hasAttribute("data-zag")) {
       import("./zag/select.js").then((m) => {
@@ -2003,12 +2012,7 @@ const LanternTheme = {
 
 export const runtime = { position, trackPosition, trapFocus, onDismiss, installBehaviours }
 
-// ── Modal ────────────────────────────────────────────────────────────────────
-//
-// Dialog on the shared runtime. Opens/closes via DOM events dispatched by
-// LanternUI.open_dialog/close_dialog (JS commands target the element; server
-// pushes arrive as LiveView events carrying the id).
-const LanternModal = {
+const LanternModalLegacy = {
   // The SERVER owns `open` for this overlay: the component renders
   // `data-open={@open || nil}` and `hidden={!@open}` from an assign. Without
   // this, the hook only ever learns about opening in `mounted()`, so a sheet
@@ -2083,6 +2087,53 @@ const LanternModal = {
   destroyed() {
     this.cleanup.forEach((fn) => fn())
     document.body.style.overflow = ""
+  },
+}
+
+
+// ── Modal ────────────────────────────────────────────────────────────────────
+//
+// `LanternModal` serves two implementations behind one public hook name.
+// Roots carrying `data-zag` (every `<.modal>` and `<.alert_dialog>`) run the
+// Zag state machine, loaded on demand. Everything else — notably hand-rolled
+// dialog markup such as enventory_new's dismantle-modal — stays on the
+// legacy hook, so `LanternUI.open_dialog/close_dialog` keep working there.
+// `LanternModal` serves two implementations behind one public hook name.
+// Roots carrying `data-zag` (every `<.modal>` and `<.alert_dialog>`) run the
+// Zag state machine, loaded on demand. Everything else — notably hand-rolled
+// dialog markup such as enventory_new's dismantle-modal — stays on the
+// legacy hook, so `LanternUI.open_dialog/close_dialog` keep working there.
+//
+// The legacy methods are spread into this object (not `.call`ed across) so
+// their `this.show()` / `this.hide()` cross-calls resolve.
+const LanternModal = {
+  ...LanternModalLegacy,
+
+  mounted() {
+    if (this.el.hasAttribute("data-zag")) {
+      import("./zag/dialog.js").then((m) => {
+        if (!this.el.isConnected) return
+        this._zagDelegate = m.mountZagDialog(this)
+      })
+    } else {
+      LanternModalLegacy.mounted.call(this)
+    }
+  },
+
+  beforeUpdate() {
+    if (this._zagDelegate) this._zagDelegate.beforeUpdate()
+    else if (this.el.hasAttribute("data-zag")) this._zagPendingUpdate = true
+  },
+
+  updated() {
+    if (this._zagDelegate) this._zagDelegate.updated()
+    else if (this.el.hasAttribute("data-zag")) this._zagPendingUpdate = true
+    else LanternModalLegacy.updated.call(this)
+  },
+
+  destroyed() {
+    if (this._zagDelegate) this._zagDelegate.destroyed()
+    else if (!this.el.hasAttribute("data-zag")) LanternModalLegacy.destroyed.call(this)
   },
 }
 
@@ -2315,274 +2366,86 @@ const LanternCommand = {
   },
 }
 
-// Sheet: same dialog runtime as the modal, but the panel slides from an edge.
-// Exit plays the slide-out keyframe (data-closing) before hiding.
+// Sheet: Zag-driven (`@zag-js/dialog`, on-demand chunk) with the slide-from-
+// edge panel and the `data-closing` exit keyframe. Same open/close contracts
+// as the modal (`lantern:dialog:*` DOM + server events, server `data-open`
+// ownership). No legacy path: every sheet renders `data-zag`.
 const LanternSheet = {
-  // The SERVER owns `open` for this overlay: the component renders
-  // `data-open={@open || nil}` and `hidden={!@open}` from an assign. Without
-  // this, the hook only ever learns about opening in `mounted()`, so a sheet
-  // opened by a LiveView patch leaves `this.open === false` — and `hide()`
-  // starts with `if (!this.open) return`, so the close button, Escape, and the
-  // backdrop ALL silently no-op. The overlay is visible and unclosable.
-  //
-  // Follow the DOM rather than assert over it (the opposite of LanternCommand,
-  // where the hook owns the state and re-asserts `hidden`).
-  updated() {
-    const wantOpen = this.el.dataset.open != null
-    if (wantOpen === this.open) return
-
-    if (wantOpen) {
-      this.show()
-      return
-    }
-
-    // Server closed it. Reconcile WITHOUT running `data-on-close`: the server
-    // already knows, so firing it again is an echo back to the process that
-    // just told us.
-    this.open = false
-    this.cleanup.forEach((fn) => fn())
-    this.cleanup = []
-    document.body.style.overflow = ""
-    clearTimeout(this.closeTimer)
-    this.el.hidden = true
-    this.el.removeAttribute("data-closing")
-  },
   mounted() {
-    this.panel = this.el.querySelector('[data-part="panel"]')
-    this.cleanup = []
-    this.el.addEventListener("lantern:dialog:open", () => this.show())
-    this.el.addEventListener("lantern:dialog:close", () => this.hide())
-    this.handleEvent("lantern:dialog:open", ({ id }) => id === this.el.id && this.show())
-    this.handleEvent("lantern:dialog:close", ({ id }) => id === this.el.id && this.hide())
-    this.el.querySelectorAll('[data-part="close"]').forEach((btn) =>
-      btn.addEventListener("click", () => this.hide())
-    )
-    if (this.el.dataset.open != null) this.show()
+    import("./zag/sheet.js").then((m) => {
+      if (!this.el.isConnected) return
+      this._zagDelegate = m.mountZagSheet(this)
+    })
   },
 
-  show() {
-    if (this.open) return
-    this.open = true
-    clearTimeout(this.closeTimer)
-    this.el.removeAttribute("data-closing")
-    this.el.hidden = false
-    document.body.style.overflow = "hidden"
-    this.cleanup.push(trapFocus(this.panel))
-    const esc = this.el.dataset.closeOnEsc === "true"
-    const outside = this.el.dataset.closeOnOutside === "true"
-    this.cleanup.push(
-      onDismiss(this.panel, (reason) => {
-        if (reason === "escape" && !esc) return
-        if (reason === "outside" && !outside) return
-        this.hide()
-      })
-    )
+  beforeUpdate() {
+    if (this._zagDelegate) this._zagDelegate.beforeUpdate()
+    else this._zagPendingUpdate = true
   },
 
-  hide() {
-    if (!this.open) return
-    this.open = false
-    this.cleanup.forEach((fn) => fn())
-    this.cleanup = []
-    document.body.style.overflow = ""
-    // Execute the consumer command immediately, while the exit animation runs.
-    if (this.el.dataset.onClose) this.liveSocket.execJS(this.el, this.el.dataset.onClose)
-    // Play the slide-out, then hide. Reduced-motion users get the 0ms path.
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    if (reduce) {
-      this.el.hidden = true
-      return
-    }
-    this.el.setAttribute("data-closing", "")
-    this.closeTimer = setTimeout(() => {
-      this.el.hidden = true
-      this.el.removeAttribute("data-closing")
-    }, 200)
+  updated() {
+    if (this._zagDelegate) this._zagDelegate.updated()
+    else this._zagPendingUpdate = true
   },
 
   destroyed() {
-    this.cleanup.forEach((fn) => fn())
-    clearTimeout(this.closeTimer)
-    document.body.style.overflow = ""
+    if (this._zagDelegate) this._zagDelegate.destroyed()
   },
 }
 
 // ── Dropdown menu ────────────────────────────────────────────────────────────
 //
-// LanternOverlay behavior + WAI-ARIA menu keyboard interaction: ArrowUp/Down
-// move through [role=menuitem]s, Home/End jump, any item click closes.
+// Zag-driven (`@zag-js/menu`, on-demand chunk, shared with `LanternMenu`).
+// The hook root carries `data-zag`; the machine owns open state, arrow-key /
+// Home/End navigation, typeahead, and positioning. Any `[role="menuitem"]`
+// click still closes. No legacy path: every dropdown renders `data-zag`.
 const LanternDropdown = {
   mounted() {
-    this.trigger = this.el.querySelector('[data-part="trigger"]')
-    this.panel = this.el.querySelector('[data-part="panel"]')
-    if (!this.trigger || !this.panel) return
-    this.open = false
-    this.cleanup = []
-
-    this.trigger.addEventListener("click", () => (this.open ? this.hide() : this.show()))
-    this.trigger.addEventListener("keydown", (e) => {
-      if ((e.key === "ArrowDown" || e.key === "Enter") && !this.open) {
-        e.preventDefault()
-        this.show()
-      }
-    })
-
-    this.panel.addEventListener("click", (e) => {
-      if (e.target.closest('[role="menuitem"]')) this.hide()
-    })
-
-    this.panel.addEventListener("keydown", (e) => {
-      const items = this.items()
-      if (items.length === 0) return
-      const idx = items.indexOf(document.activeElement)
-      if (e.key === "ArrowDown") {
-        e.preventDefault()
-        items[Math.min(idx + 1, items.length - 1)].focus()
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault()
-        items[Math.max(idx - 1, 0)].focus()
-      } else if (e.key === "Home") {
-        e.preventDefault()
-        items[0].focus()
-      } else if (e.key === "End") {
-        e.preventDefault()
-        items[items.length - 1].focus()
-      }
+    import("./zag/menu.js").then((m) => {
+      if (!this.el.isConnected) return
+      this._zagDelegate = m.mountZagDropdown(this)
     })
   },
 
-  items() {
-    return [...this.panel.querySelectorAll('[role="menuitem"]:not([disabled]):not([data-disabled])')]
+  beforeUpdate() {
+    if (this._zagDelegate) this._zagDelegate.beforeUpdate()
+    else this._zagPendingUpdate = true
   },
 
-  show() {
-    this.open = true
-    this.panel.hidden = false
-    this.cleanup.push(trackPosition(this.trigger, this.panel, { placement: this.el.dataset.placement }))
-    this.trigger.querySelector("[aria-haspopup]")?.setAttribute("aria-expanded", "true")
-    const first = this.items()[0]
-    if (first) first.focus()
-    this.cleanup.push(onDismiss(this.panel, () => this.hide(), { anchor: this.trigger }))
-  },
-
-  hide() {
-    if (!this.open) return
-    this.open = false
-    this.cleanup.forEach((fn) => fn())
-    this.cleanup = []
-    this.panel.hidden = true
-    this.trigger.querySelector("[aria-haspopup]")?.setAttribute("aria-expanded", "false")
+  updated() {
+    if (this._zagDelegate) this._zagDelegate.updated()
+    else this._zagPendingUpdate = true
   },
 
   destroyed() {
-    this.cleanup.forEach((fn) => fn())
+    if (this._zagDelegate) this._zagDelegate.destroyed()
   },
 }
 
-// ── Menu / menubar ───────────────────────────────────────────────────────────
-//
-// Clean-room implementation of the WAI-ARIA APG menu-button and menubar
-// patterns (w3.org/WAI/ARIA/apg/patterns/menu-button/ and /patterns/menubar/),
-// on the shared overlay primitives (position, onDismiss). Focus moves by
-// roving tabindex + .focus() — the library-wide model (flicker #945); no
-// aria-activedescendant. The hooks own aria-expanded and every tabindex.
-
-// Actionable items of one popup menu, in DOM order.
-const menuItems = (menu) =>
-  [...menu.querySelectorAll('[role="menuitem"]:not([disabled]):not([data-disabled])')]
-
-// Roving tabindex: `target` becomes the one tab stop and takes focus.
-const rove = (items, target) => {
-  items.forEach((el) => el.setAttribute("tabindex", el === target ? "0" : "-1"))
-  target.focus()
-}
-
-// Shared vertical menu keyboard model: returns the item the key moves focus
-// to (ArrowDown/ArrowUp wrap per the APG; Home/End jump), or null.
-const menuNav = (key, items) => {
-  const idx = items.indexOf(document.activeElement)
-  switch (key) {
-    case "ArrowDown": return items[(idx + 1) % items.length]
-    case "ArrowUp": return items[(idx - 1 + items.length) % items.length]
-    case "Home": return items[0]
-    case "End": return items[items.length - 1]
-    default: return null
-  }
-}
-
-// Menu button: Enter/Space/click toggle (open focuses the first item),
-// ArrowDown opens on the first item, ArrowUp opens on the last. Escape closes
-// and returns focus to the trigger; Tab and item activation close.
+// Menu button: Zag-driven (`@zag-js/menu`, same on-demand chunk as the
+// dropdown). The component owns the trigger button, so the machine `ids`
+// override keeps its stable `…-trigger` / `…-menu` ids. No legacy path:
+// every menu renders `data-zag`. Menubar below stays on its dedicated hook.
 const LanternMenu = {
   mounted() {
-    this.trigger = this.el.querySelector('[data-part="trigger"]')
-    this.menu = this.el.querySelector('[data-part="menu"]')
-    if (!this.trigger || !this.menu) return
-    this.open = false
-    this.cleanup = []
-
-    this.trigger.addEventListener("click", () => (this.open ? this.hide() : this.show()))
-    this.trigger.addEventListener("keydown", (e) => {
-      if (this.open) return
-      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-        e.preventDefault()
-        this.show(e.key === "ArrowUp" ? "last" : "first")
-      }
-    })
-
-    this.menu.addEventListener("click", (e) => {
-      if (e.target.closest('[role="menuitem"]')) {
-        // APG menu button: closing via activation returns focus to the
-        // trigger (hiding while focus is inside would drop it on <body>).
-        this.hide()
-        this.trigger.focus()
-      }
-    })
-
-    this.menu.addEventListener("keydown", (e) => {
-      const items = menuItems(this.menu)
-      if (items.length === 0) return
-      const next = menuNav(e.key, items)
-      if (next) {
-        e.preventDefault()
-        rove(items, next)
-      } else if (e.key === "Tab") {
-        this.hide()
-      }
+    import("./zag/menu.js").then((m) => {
+      if (!this.el.isConnected) return
+      this._zagDelegate = m.mountZagMenu(this)
     })
   },
 
-  show(focusTarget = "first") {
-    this.open = true
-    this.menu.hidden = false
-    this.cleanup.push(trackPosition(this.trigger, this.menu, { placement: this.el.dataset.placement }))
-    this.trigger.setAttribute("aria-expanded", "true")
-    const items = menuItems(this.menu)
-    const target = focusTarget === "last" ? items[items.length - 1] : items[0]
-    if (target) rove(items, target)
-    this.cleanup.push(
-      onDismiss(
-        this.menu,
-        (reason) => {
-          this.hide()
-          if (reason === "escape") this.trigger.focus()
-        },
-        { anchor: this.trigger },
-      ),
-    )
+  beforeUpdate() {
+    if (this._zagDelegate) this._zagDelegate.beforeUpdate()
+    else this._zagPendingUpdate = true
   },
 
-  hide() {
-    if (!this.open) return
-    this.open = false
-    this.cleanup.forEach((fn) => fn())
-    this.cleanup = []
-    this.menu.hidden = true
-    this.trigger.setAttribute("aria-expanded", "false")
+  updated() {
+    if (this._zagDelegate) this._zagDelegate.updated()
+    else this._zagPendingUpdate = true
   },
 
   destroyed() {
-    this.cleanup.forEach((fn) => fn())
+    if (this._zagDelegate) this._zagDelegate.destroyed()
   },
 }
 

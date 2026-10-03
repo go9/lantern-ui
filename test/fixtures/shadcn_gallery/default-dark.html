@@ -68,6 +68,8 @@
   border: 1px solid transparent;
   cursor: pointer;
   outline: none;
+  /* Buttons render as <a> when given navigate/patch/href — never underline. */
+  text-decoration: none;
   transition:
     background-color var(--lantern-duration) var(--lantern-ease),
     border-color var(--lantern-duration) var(--lantern-ease),
@@ -3597,7 +3599,14 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-card-body-flush { padding: 0; }
 .lui-card-head + .lui-card-body-flush { margin-top: 0.85rem; }
 .lui-card-foot { padding: 0.7rem 1rem; border-top: 1px solid var(--lantern-border);
-  font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); }
+  font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted);
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+/* Vertical stack — one gap for a run of fields, sections, or cards, so pages
+   never depend on margin-collapsing or host utilities for rhythm. */
+.lui-stack { display: flex; flex-direction: column; min-width: 0; gap: var(--lui-stack-gap, 0.75rem); }
+.lui-stack[data-gap="sm"] { --lui-stack-gap: 0.5rem; }
+.lui-stack[data-gap="md"] { --lui-stack-gap: 0.75rem; }
+.lui-stack[data-gap="lg"] { --lui-stack-gap: 1.25rem; }
 /* Same flex-from-a-basis reasoning as .lui-dt-stats: `grid auto-fit` leaves
    dead cells beside a final orphan card. */
 .lui-card-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; }
@@ -3692,6 +3701,13 @@ a.lui-waterfall-lane-inner:focus-visible {
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
+  gap: 0.375rem;
+}
+/* Fixed-width status name so the id column lines up row to row. */
+.lui-list-row-status {
+  min-width: 5.5rem;
+  color: var(--lantern-fg-muted);
+  font-size: var(--lantern-text-sm);
 }
 .lui-list-row-id {
   flex-shrink: 0;
@@ -3776,6 +3792,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   color: var(--lantern-fg);
   display: flex;
   align-items: center;
+  gap: 0.375rem;
 }
 
 .lui-icon-btn-tip .lui-tooltip:not([hidden]) {
@@ -4701,7 +4718,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-1828" role="alert" class="lui-alert" data-color="info">
+      <div id="lui-alert-742" role="alert" class="lui-alert" data-color="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4718,7 +4735,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1860" role="alert" class="lui-alert" data-color="success">
+      <div id="lui-alert-774" role="alert" class="lui-alert" data-color="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4735,7 +4752,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1892" role="alert" class="lui-alert" data-color="warning">
+      <div id="lui-alert-806" role="alert" class="lui-alert" data-color="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4752,7 +4769,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1924" role="alert" class="lui-alert" data-color="danger">
+      <div id="lui-alert-838" role="alert" class="lui-alert" data-color="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

@@ -135,7 +135,7 @@ test("j/k in an input inside the list do not move focus", () => {
 test("split bundle shares floating-ui in one chunk and keeps the public import surface", async () => {
   const { readFile, readdir } = await import("node:fs/promises")
   const bundle = await readFile(new URL("../../priv/static/lantern_ui_hooks.js", import.meta.url), "utf8")
-  const zagEntries = ["select", "tooltip", "popover", "switch", "radio_group"]
+  const zagEntries = ["select", "tooltip", "popover", "switch", "radio_group", "dialog", "sheet", "menu"]
   const zagSources = await Promise.all(
     zagEntries.map((name) =>
       readFile(new URL(`../../priv/static/zag/${name}.js`, import.meta.url), "utf8")
