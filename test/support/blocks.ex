@@ -56,7 +56,7 @@ defmodule LanternUI.Blocks do
           status: :in_progress,
           tag: "ui",
           date: "Sep 3",
-          selected: true
+          selected: false
         },
         %{
           id: 240,

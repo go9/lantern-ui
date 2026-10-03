@@ -16,6 +16,8 @@ Swap the fixture assigns (`@ticket`, `@paths`, …) for the host's LiveView assi
 
 Whole pages that look finished, copied as one block. Each block is one when-to-use line plus one HEEx block built **only** from lantern components (same source as `test/support/blocks/`), and each renders in both the default theme and the shadcn preset — see `test/fixtures/blocks_gallery/` for the screenshots.
 
+Blocks inherit the host's body font and measure: the gallery fixture sets `font-family: var(--lantern-font)` on the body the way a host app does, `stack/1` owns vertical rhythm, and only the page measure (max-width, centering) stays an inline style. No Tailwind utilities anywhere — the blocks render identically with or without a host utility layer. Screenshots live in `test/fixtures/blocks_gallery/` (the HTML docs regenerate via `mix test`; only the JPEGs are committed).
+
 - **app_shell** — use this when the page needs the full frame: sidebar nav, breadcrumb trail, and content in one shell.
 - **dashboard** — use this when the page answers "where do we stand": stat cards, one chart, recent activity.
 - **index** — use this when the page is a record list: flat table, filter chips with counts, search, pagination, row click.
@@ -319,7 +321,7 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 **When to use:** The page answers "where do we stand" — a stat-cards row, one chart card, and a recent-activity card. No tabs, no custom metric grids.
 
 ```heex
-<div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
+<.stack gap="lg" style="max-width: 1120px; margin: 0 auto;">
   <.page_header title="Dashboard" description="Where the week stands at a glance.">
     <:actions>
       <.button size="sm" variant="outline">Export</.button>
@@ -348,7 +350,7 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
       <:trailing>{item.date}</:trailing>
     </.list_row>
   </.card>
-</div>
+</.stack>
 ```
 
 ## Block 3: flat index table with filter chips
@@ -356,7 +358,7 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 **When to use:** The page is a record list — one flat `data_table` with filter chips carrying counts, a status column on each row, search, pagination, row click, and an empty state. Title and the primary action live in the breadcrumb bar; no tabs, no group bands.
 
 ```heex
-<div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
+<.stack gap="lg" style="max-width: 1120px; margin: 0 auto;">
   <.breadcrumb_bar id="tickets-crumb">
     <.breadcrumb home="/" items={@shell_crumbs} />
     <:actions label="New ticket" navigate="/tickets/new">
@@ -395,7 +397,9 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
       >
         <:leading>
           <.status_glyph status={ticket.status} />
-          <span>{ticket.status |> Atom.to_string() |> String.replace("_", " ")}</span>
+          <span class="lui-list-row-status">
+            {ticket.status |> Atom.to_string() |> String.replace("_", " ")}
+          </span>
         </:leading>
         <:meta>
           <.badge size="sm">{ticket.tag}</.badge>
@@ -412,7 +416,7 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
       </.empty_state>
     </:empty>
   </.data_table>
-</div>
+</.stack>
 ```
 
 ## Block 4: detail page with inspector panel
@@ -420,7 +424,7 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 **When to use:** The page is one record — breadcrumb actions hold the panel toggle plus the edit action, a `page_header` names the record, a body card carries the content, and a collapsible side panel shows inspector sections.
 
 ```heex
-<div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
+<.stack gap="lg" style="max-width: 1120px; margin: 0 auto;">
   <.breadcrumb_bar id="ticket-crumb">
     <.breadcrumb home="/" items={@detail_crumbs} />
     <:actions label="Toggle panel">
@@ -476,7 +480,7 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
       </.inspector>
     </.side_panel>
   </div>
-</div>
+</.stack>
 ```
 
 ## Block 5: settings with one form per section
@@ -484,64 +488,70 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 **When to use:** The page edits preferences — stacked section cards, each with its own controls and its own save row in the footer, so saving one section never moves the others.
 
 ```heex
-<div style="max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
+<.stack gap="lg" style="max-width: 760px; margin: 0 auto;">
   <.page_header
     title="Settings"
     description="Each section saves on its own — nothing else moves."
   />
   <.card title="Profile" description="How your name appears on tickets and reviews.">
-    <.input id="settings-name" name="name" label="Display name" value="Ada Lovelace" />
-    <.input
-      id="settings-email"
-      name="email"
-      type="email"
-      label="Email"
-      value="ada@acme.test"
-      help_text="Receipts and review requests land here."
-    />
+    <.stack gap="md">
+      <.input id="settings-name" name="name" label="Display name" value="Ada Lovelace" />
+      <.input
+        id="settings-email"
+        name="email"
+        type="email"
+        label="Email"
+        value="ada@acme.test"
+        help_text="Receipts and review requests land here."
+      />
+    </.stack>
     <:footer>
       <span>Saved 2m ago</span>
       <.button size="sm" variant="solid">Save profile</.button>
     </:footer>
   </.card>
   <.card title="Notifications" description="Pick which pings are worth interrupting you.">
-    <.switch id="settings-mentions" name="mentions" label="Mentions" checked value="true" />
-    <.switch
-      id="settings-review"
-      name="review_requests"
-      label="Review requests"
-      checked
-      value="true"
-    />
-    <.switch id="settings-weekly" name="weekly_digest" label="Weekly digest" value="false" />
+    <.stack gap="sm">
+      <.switch id="settings-mentions" name="mentions" label="Mentions" checked value="true" />
+      <.switch
+        id="settings-review"
+        name="review_requests"
+        label="Review requests"
+        checked
+        value="true"
+      />
+      <.switch id="settings-weekly" name="weekly_digest" label="Weekly digest" value="false" />
+    </.stack>
     <:footer>
       <span>Saved 1h ago</span>
       <.button size="sm" variant="solid">Save notifications</.button>
     </:footer>
   </.card>
   <.card title="Appearance" description="Density and theme for this workspace.">
-    <.select
-      native
-      id="settings-theme"
-      name="theme"
-      label="Theme"
-      options={[{"System", "system"}, {"Light", "light"}, {"Dark", "dark"}]}
-      value="system"
-      prompt="Pick a theme"
-    />
-    <.textarea
-      id="settings-signature"
-      name="signature"
-      label="Review signature"
-      value="Ship it."
-      help_text="Appended to approvals you write."
-    />
+    <.stack gap="md">
+      <.select
+        native
+        id="settings-theme"
+        name="theme"
+        label="Theme"
+        options={[{"System", "system"}, {"Light", "light"}, {"Dark", "dark"}]}
+        value="system"
+        prompt="Pick a theme"
+      />
+      <.textarea
+        id="settings-signature"
+        name="signature"
+        label="Review signature"
+        value="Ship it."
+        help_text="Appended to approvals you write."
+      />
+    </.stack>
     <:footer>
       <span>Saved yesterday</span>
       <.button size="sm" variant="solid">Save appearance</.button>
     </:footer>
   </.card>
-</div>
+</.stack>
 ```
 
 ## Block 6: create/edit form with validation errors
@@ -549,46 +559,48 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 **When to use:** The page creates or edits one record — a single card, an error summary on top, inline errors on the failing controls, and cancel/save in the footer.
 
 ```heex
-<div style="max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
+<.stack gap="lg" style="max-width: 760px; margin: 0 auto;">
   <.breadcrumb_bar id="ticket-new-crumb">
     <.breadcrumb home="/" items={@form_crumbs} />
   </.breadcrumb_bar>
   <.card title="New ticket" description="Small, sharp titles get picked up fastest.">
-    <.alert color="danger" title="2 problems need attention">
-      Title can't be blank. Pick a status so the ticket lands in the right list.
-    </.alert>
-    <.input
-      id="ticket-title"
-      name="title"
-      label="Title"
-      placeholder="Visible progress ring"
-      value=""
-      errors={["can't be blank"]}
-    />
-    <.textarea
-      id="ticket-body"
-      name="body"
-      label="Description"
-      placeholder="What changes, and how will the reviewer see it?"
-      value=""
-      help_text="Markdown welcome. Screenshots beat paragraphs."
-    />
-    <.select
-      native
-      id="ticket-status"
-      name="status"
-      label="Status"
-      options={[{"To do", "todo"}, {"In progress", "in_progress"}, {"Done", "done"}]}
-      value=""
-      prompt="Pick a status"
-      errors={["can't be blank"]}
-    />
+    <.stack gap="md">
+      <.alert color="danger" title="2 problems need attention">
+        Title can't be blank. Pick a status so the ticket lands in the right list.
+      </.alert>
+      <.input
+        id="ticket-title"
+        name="title"
+        label="Title"
+        placeholder="Visible progress ring"
+        value=""
+        errors={["can't be blank"]}
+      />
+      <.textarea
+        id="ticket-body"
+        name="body"
+        label="Description"
+        placeholder="What changes, and how will the reviewer see it?"
+        value=""
+        help_text="Markdown welcome. Screenshots beat paragraphs."
+      />
+      <.select
+        native
+        id="ticket-status"
+        name="status"
+        label="Status"
+        options={[{"To do", "todo"}, {"In progress", "in_progress"}, {"Done", "done"}]}
+        value=""
+        prompt="Pick a status"
+        errors={["can't be blank"]}
+      />
+    </.stack>
     <:footer>
       <.button size="sm" variant="ghost" navigate="/tickets">Cancel</.button>
       <.button size="sm" variant="solid">Create ticket</.button>
     </:footer>
   </.card>
-</div>
+</.stack>
 ```
 
 ## Block 7: login page
@@ -596,33 +608,35 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 **When to use:** The page signs someone in — a centered card, one primary action, SSO second, and a muted invite line. No app shell, no sidebar.
 
 ```heex
-<div style="max-width: 400px; margin: 3rem auto 0; display: flex; flex-direction: column; gap: 1.25rem;">
+<div style="max-width: 400px; margin: 3rem auto 0;">
   <.card>
-    <div style="display: flex; align-items: center; gap: 0.5rem;">
-      <.icon name="sparkles" />
-      <span class="lui-brand-name">Acme</span>
-    </div>
-    <.page_header title="Welcome back" description="Sign in to your workspace." />
-    <.input
-      id="login-email"
-      name="email"
-      type="email"
-      label="Email"
-      placeholder="ada@acme.test"
-      autocomplete="email"
-    />
-    <.input
-      id="login-password"
-      name="password"
-      type="password"
-      label="Password"
-      placeholder="••••••••"
-      autocomplete="current-password"
-      errors={["is incorrect — try again or reset it"]}
-    />
-    <.button variant="solid" style="width: 100%;">Sign in</.button>
-    <.separator text="or continue with" />
-    <.button variant="outline" style="width: 100%;">Continue with SSO</.button>
+    <.stack gap="md">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <.icon name="sparkles" />
+        <span class="lui-brand-name">Acme</span>
+      </div>
+      <.page_header title="Welcome back" description="Sign in to your workspace." />
+      <.input
+        id="login-email"
+        name="email"
+        type="email"
+        label="Email"
+        placeholder="ada@acme.test"
+        autocomplete="email"
+      />
+      <.input
+        id="login-password"
+        name="password"
+        type="password"
+        label="Password"
+        placeholder="••••••••"
+        autocomplete="current-password"
+        errors={["is incorrect — try again or reset it"]}
+      />
+      <.button variant="solid" style="width: 100%;">Sign in</.button>
+      <.separator text="or continue with" />
+      <.button variant="outline" style="width: 100%;">Continue with SSO</.button>
+    </.stack>
     <:footer>No account yet? Ask your workspace admin for an invite.</:footer>
   </.card>
 </div>
@@ -633,7 +647,7 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 **When to use:** The page ends something — the danger card carries the trigger, an `alert_dialog` states the consequence, and the same page shows the empty, loading, and error states so none of them ships unstyled.
 
 ```heex
-<div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
+<.stack gap="lg" style="max-width: 1120px; margin: 0 auto;">
   <.page_header
     title="Danger zone"
     description="Irreversible actions wait behind a confirmation."
@@ -660,16 +674,20 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
       </.empty_state>
     </.card>
     <.card title="Loading">
-      <.loading label="Loading tickets…" />
-      <.skeleton style="height: 0.875rem; margin-top: 0.75rem;" />
-      <.skeleton style="height: 0.875rem; width: 62%; margin-top: 0.5rem;" />
+      <.stack gap="sm">
+        <.loading label="Loading tickets…" />
+        <.skeleton style="height: 0.875rem;" />
+        <.skeleton style="height: 0.875rem; width: 62%;" />
+      </.stack>
     </.card>
     <.card title="Error">
-      <.alert color="danger" title="Tickets didn't load">
-        The request timed out. Check your connection and try again.
-      </.alert>
-      <.button size="sm" variant="outline">Retry</.button>
+      <.stack gap="sm">
+        <.alert color="danger" title="Tickets didn't load">
+          The request timed out. Check your connection and try again.
+        </.alert>
+        <div><.button size="sm" variant="outline">Retry</.button></div>
+      </.stack>
     </.card>
   </.card_grid>
-</div>
+</.stack>
 ```

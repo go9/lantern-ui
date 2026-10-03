@@ -1,4 +1,4 @@
-<div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
+<.stack gap="lg" style="max-width: 1120px; margin: 0 auto;">
   <.page_header
     title="Danger zone"
     description="Irreversible actions wait behind a confirmation."
@@ -25,15 +25,19 @@
       </.empty_state>
     </.card>
     <.card title="Loading">
-      <.loading label="Loading tickets…" />
-      <.skeleton style="height: 0.875rem; margin-top: 0.75rem;" />
-      <.skeleton style="height: 0.875rem; width: 62%; margin-top: 0.5rem;" />
+      <.stack gap="sm">
+        <.loading label="Loading tickets…" />
+        <.skeleton style="height: 0.875rem;" />
+        <.skeleton style="height: 0.875rem; width: 62%;" />
+      </.stack>
     </.card>
     <.card title="Error">
-      <.alert color="danger" title="Tickets didn't load">
-        The request timed out. Check your connection and try again.
-      </.alert>
-      <.button size="sm" variant="outline">Retry</.button>
+      <.stack gap="sm">
+        <.alert color="danger" title="Tickets didn't load">
+          The request timed out. Check your connection and try again.
+        </.alert>
+        <div><.button size="sm" variant="outline">Retry</.button></div>
+      </.stack>
     </.card>
   </.card_grid>
-</div>
+</.stack>

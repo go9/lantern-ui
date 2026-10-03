@@ -41,8 +41,8 @@ defmodule LanternUI.BlocksGallery do
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>lantern-ui block: {@block}</title>
         {Phoenix.HTML.raw(
-          "<style>body { margin: 0; padding: 2rem; background: var(--lantern-surface); }" <>
-            @css <> "</style>"
+          "<style>body { margin: 0; padding: 2rem; background: var(--lantern-surface); " <>
+            "font-family: var(--lantern-font); color: var(--lantern-fg); }" <> @css <> "</style>"
         )}
       </head>
       <body>

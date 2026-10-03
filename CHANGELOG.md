@@ -21,6 +21,16 @@ All notable changes to this project are documented here. The format follows
   with light + dark screenshots in `test/fixtures/blocks_gallery/` (32 HTML +
   32 JPEG, full-page at 1000px wide).
 
+- **Vertical-rhythm pass over the blocks** (flicker #3420, step 2 review).
+  New `stack/1` layout primitive (`.lui-stack`, sm/md/lg gaps) so pages never
+  depend on margin collapsing or host utilities for rhythm — the blocks use it
+  for field groups, sections, and page columns. Also fixed: link-rendered
+  `.lui-btn` no longer underlines, `.lui-list-row-leading` and
+  `.lui-property-value` get their missing inner gaps, `.lui-card-foot` lays
+  status text and actions on one row, and new `.lui-list-row-status` keeps
+  status names in a fixed-width muted column. The blocks gallery fixture sets
+  the host body font (`var(--lantern-font)`) so screenshots are truthful.
+
 ### Removed
 - **BREAKING (`group_band` banned, removed in 0.9.0): grouped lists are gone.**
   `LanternUI.Components.GroupBand` and its registry entry, `list_row`

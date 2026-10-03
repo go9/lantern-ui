@@ -85,6 +85,9 @@ defmodule LanternUI.BlocksTest do
     assert html =~ "lui-list-row"
     assert html =~ ~s(href="/tickets/241")
     assert html =~ "data-lantern-list-item"
+    # fixed-width status column keeps rows aligned; nothing pre-selected
+    assert html =~ "lui-list-row-status"
+    refute html =~ "lui-list-row\" data-selected"
     refute html =~ "lui-group-band"
     refute html =~ "data-lantern-group"
   end
@@ -109,6 +112,7 @@ defmodule LanternUI.BlocksTest do
     assert html =~ "Appearance"
     assert html =~ ~s(id="settings-name")
     assert html =~ "lui-switch"
+    assert html =~ "lui-stack"
     assert html =~ "Save profile"
     assert html =~ "Save notifications"
     assert html =~ "Save appearance"

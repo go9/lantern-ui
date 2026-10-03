@@ -634,4 +634,36 @@ defmodule LanternUI.LayoutTest do
       assert css =~ ~r/\.lui-nav-link\s*\{/
     end
   end
+
+  describe "stack/1" do
+    test "renders a vertical stack with a gap scale and class merge" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.stack gap="lg" class="extra">
+            <span>one</span>
+            <span>two</span>
+          </Layout.stack>
+          """
+        end)
+
+      assert html =~ "lui-stack"
+      assert html =~ ~s(data-gap="lg")
+      assert html =~ "extra"
+      assert html =~ "one"
+    end
+
+    test "the stylesheet gives stacks gaps and rows their inner gaps" do
+      css = File.read!(Path.join(:code.priv_dir(:lantern_ui), "static/lantern_ui.css"))
+
+      assert css =~ ~r/\.lui-stack\[data-gap="lg"\]/
+      # Link-rendered buttons must never underline.
+      assert css =~ ~r/\.lui-btn\s*\{[^}]*text-decoration:\s*none/s
+      # Glyph + label pairs sit in flex rows that used to butt together.
+      assert css =~ ~r/\.lui-list-row-leading\s*\{[^}]*gap:/s
+      assert css =~ ~r/\.lui-property-value\s*\{[^}]*gap:/s
+      # Card footers lay status text and actions on one row.
+      assert css =~ ~r/\.lui-card-foot\s*\{[^}]*justify-content:\s*space-between/s
+    end
+  end
 end

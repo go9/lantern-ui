@@ -1,4 +1,4 @@
-<div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
+<.stack gap="lg" style="max-width: 1120px; margin: 0 auto;">
   <.breadcrumb_bar id="tickets-crumb">
     <.breadcrumb home="/" items={@shell_crumbs} />
     <:actions label="New ticket" navigate="/tickets/new">
@@ -37,7 +37,9 @@
       >
         <:leading>
           <.status_glyph status={ticket.status} />
-          <span>{ticket.status |> Atom.to_string() |> String.replace("_", " ")}</span>
+          <span class="lui-list-row-status">
+            {ticket.status |> Atom.to_string() |> String.replace("_", " ")}
+          </span>
         </:leading>
         <:meta>
           <.badge size="sm">{ticket.tag}</.badge>
@@ -54,4 +56,4 @@
       </.empty_state>
     </:empty>
   </.data_table>
-</div>
+</.stack>
