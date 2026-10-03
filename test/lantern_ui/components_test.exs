@@ -445,7 +445,7 @@ defmodule LanternUI.ComponentsTest do
   end
 
   describe "popover/1" do
-    test "renders trigger + panel on the overlay runtime, panel hidden until opened" do
+    test "renders trigger + content on the overlay runtime, panel hidden until opened" do
       html =
         render(fn assigns ->
           ~H"""
@@ -460,8 +460,10 @@ defmodule LanternUI.ComponentsTest do
 
       assert html =~ ~s(phx-hook="LanternOverlay")
       assert html =~ ~s(data-placement="bottom-end")
-      assert html =~ ~s(data-part="trigger")
-      assert html =~ ~s(data-part="panel")
+      assert html =~ ~s(data-zag)
+      assert html =~ ~s(data-scope="popover" data-part="trigger")
+      assert html =~ ~s(data-scope="popover" data-part="positioner")
+      assert html =~ ~s(data-scope="popover" data-part="content")
       assert html =~ "Filters"
       assert html =~ "Body"
       # a surface, not a menu — it holds inputs, so it must not be role=menu

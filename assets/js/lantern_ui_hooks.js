@@ -345,7 +345,7 @@ function onDismiss(el, cb, { anchor = null } = {}) {
 // panel (`data-part="panel"`), positioned via `trackPosition`, focus-trapped,
 // dismissed by Escape/outside-click. Component hooks (popover, dropdown,
 // date picker) extend this shape or use the primitives directly.
-const LanternOverlay = {
+const LanternOverlayLegacy = {
   mounted() {
     this.trigger = this.el.querySelector('[data-part="trigger"]')
     this.panel = this.el.querySelector('[data-part="panel"]')
@@ -381,6 +381,38 @@ const LanternOverlay = {
 
   destroyed() {
     this.cleanup.forEach((fn) => fn())
+  },
+}
+
+// `LanternOverlay` serves two implementations behind one public hook name.
+// Roots carrying `data-zag` (popover) run the Zag state machine, loaded on
+// demand so pages that render no Zag popover ship no Zag code. Everything
+// else stays on the legacy hook.
+const LanternOverlay = {
+  mounted() {
+    if (this.el.hasAttribute("data-zag")) {
+      import("./zag/popover.js").then((m) => {
+        if (!this.el.isConnected) return
+        this._zagDelegate = m.mountZagPopover(this)
+      })
+    } else {
+      LanternOverlayLegacy.mounted.call(this)
+    }
+  },
+
+  beforeUpdate() {
+    if (this._zagDelegate) this._zagDelegate.beforeUpdate()
+    else if (this.el.hasAttribute("data-zag")) this._zagPendingUpdate = true
+  },
+
+  updated() {
+    if (this._zagDelegate) this._zagDelegate.updated()
+    else if (this.el.hasAttribute("data-zag")) this._zagPendingUpdate = true
+  },
+
+  destroyed() {
+    if (this._zagDelegate) this._zagDelegate.destroyed()
+    else if (!this.el.hasAttribute("data-zag")) LanternOverlayLegacy.destroyed.call(this)
   },
 }
 
@@ -1965,7 +1997,7 @@ const LanternTheme = {
   },
 
   destroyed() {
-    window.removeEventListener("lantern:set-theme", this.onSet)
+    this.cleanup.forEach((fn) => fn())
   },
 }
 
@@ -2678,114 +2710,86 @@ const LanternMenubar = {
 
 // ── Tooltip ────────────────────────────────────────────────────────────────
 //
-// Hover/focus tooltip. Top/bottom reuse the shared vertical placement helper;
-// left/right are fixed-positioned directly because the shared helper only
-// supports vertical sides.
+// Zag-driven (`@zag-js/tooltip`, on-demand chunk). The hook root carries
+// `data-zag`; the machine owns open state, hover/focus timing, and
+// positioning. There is no legacy path — every tooltip renders `data-zag`.
 const LanternTooltip = {
   mounted() {
-    this.trigger = this.el.querySelector('[data-part="trigger"]')
-    this.panel = this.el.querySelector('[data-part="panel"]')
-    if (!this.trigger || !this.panel) return
-
-    this.open = false
-    this.delay = parseInt(this.el.dataset.delay || "200", 10)
-    this.onEnter = () => this.scheduleShow()
-    this.onLeave = () => this.hide()
-    this.onFocusOut = (e) => {
-      if (!this.trigger.contains(e.relatedTarget)) this.hide()
-    }
-    this.onKey = (e) => {
-      if (e.key === "Escape") this.hide()
-    }
-    this.trigger.addEventListener("mouseenter", this.onEnter)
-    this.trigger.addEventListener("focusin", this.onEnter)
-    this.trigger.addEventListener("mouseleave", this.onLeave)
-    this.trigger.addEventListener("focusout", this.onFocusOut)
-    document.addEventListener("keydown", this.onKey)
+    import("./zag/tooltip.js").then((m) => {
+      if (!this.el.isConnected) return
+      this._zagDelegate = m.mountZagTooltip(this)
+    })
   },
 
-  scheduleShow() {
-    clearTimeout(this.timer)
-    this.timer = setTimeout(() => this.show(), this.delay)
+  beforeUpdate() {
+    if (this._zagDelegate) this._zagDelegate.beforeUpdate()
+    else this._zagPendingUpdate = true
   },
 
-  show() {
-    clearTimeout(this.timer)
-    if (!this.open) {
-      this.open = true
-      this.panel.hidden = false
-      this.stopTrack = canFloat()
-        ? autoUpdate(this.trigger, this.panel, () => this.place())
-        : () => {}
-    }
-    this.place()
-  },
-
-  hide() {
-    clearTimeout(this.timer)
-    if (!this.open) return
-    this.open = false
-    this.panel.hidden = true
-    this.stopTrack?.()
-    this.stopTrack = null
-  },
-
-  place() {
-    const placement = this.el.dataset.placement || "top"
-    if (placement === "left" || placement === "right") {
-      this.placeSide(placement)
-    } else {
-      position(this.trigger, this.panel, { placement: `${placement}-start`, gap: 6 }).then((chosen) => {
-        this.centerHorizontal(String(chosen || placement).split("-")[0])
-      })
-    }
-  },
-
-  centerHorizontal(side) {
-    const a = this.trigger.getBoundingClientRect()
-    const f = this.panel.getBoundingClientRect()
-    const vw = document.documentElement.clientWidth
-    const left = Math.min(Math.max(a.left + (a.width - f.width) / 2, 8), vw - f.width - 8)
-    this.panel.style.left = `${left}px`
-    this.panel.dataset.placement = side
-    this.panel.style.setProperty("--lui-tooltip-arrow-x", `${a.left + a.width / 2 - left}px`)
-    this.panel.style.removeProperty("--lui-tooltip-arrow-y")
-  },
-
-  placeSide(preferred) {
-    const gap = 6
-    const a = this.trigger.getBoundingClientRect()
-    const f = this.panel.getBoundingClientRect()
-    const vw = document.documentElement.clientWidth
-    const vh = document.documentElement.clientHeight
-    const fitsLeft = a.left - gap - f.width >= 8
-    const fitsRight = a.right + gap + f.width <= vw - 8
-    let side = preferred
-    if (side === "left" && !fitsLeft && fitsRight) side = "right"
-    if (side === "right" && !fitsRight && fitsLeft) side = "left"
-
-    let left = side === "left" ? a.left - gap - f.width : a.right + gap
-    let top = a.top + (a.height - f.height) / 2
-    left = Math.min(Math.max(left, 8), vw - f.width - 8)
-    top = Math.min(Math.max(top, 8), vh - f.height - 8)
-
-    this.panel.style.position = "fixed"
-    this.panel.style.left = `${left}px`
-    this.panel.style.top = `${top}px`
-    this.panel.dataset.placement = side
-    this.panel.style.setProperty("--lui-tooltip-arrow-y", `${a.top + a.height / 2 - top}px`)
-    this.panel.style.removeProperty("--lui-tooltip-arrow-x")
+  updated() {
+    if (this._zagDelegate) this._zagDelegate.updated()
+    else this._zagPendingUpdate = true
   },
 
   destroyed() {
-    clearTimeout(this.timer)
-    this.hide()
-    if (!this.trigger) return
-    this.trigger.removeEventListener("mouseenter", this.onEnter)
-    this.trigger.removeEventListener("focusin", this.onEnter)
-    this.trigger.removeEventListener("mouseleave", this.onLeave)
-    this.trigger.removeEventListener("focusout", this.onFocusOut)
-    document.removeEventListener("keydown", this.onKey)
+    if (this._zagDelegate) this._zagDelegate.destroyed()
+  },
+}
+
+// ── Switch ─────────────────────────────────────────────────────────────────
+//
+// Zag-driven (`@zag-js/switch`, on-demand chunk). Native inputs stay the form
+// surface; the machine owns checked state. No legacy path — the switch was
+// hook-free before, every instance renders `data-zag`.
+const LanternSwitch = {
+  mounted() {
+    import("./zag/switch.js").then((m) => {
+      if (!this.el.isConnected) return
+      this._zagDelegate = m.mountZagSwitch(this)
+    })
+  },
+
+  beforeUpdate() {
+    if (this._zagDelegate) this._zagDelegate.beforeUpdate()
+    else this._zagPendingUpdate = true
+  },
+
+  updated() {
+    if (this._zagDelegate) this._zagDelegate.updated()
+    else this._zagPendingUpdate = true
+  },
+
+  destroyed() {
+    if (this._zagDelegate) this._zagDelegate.destroyed()
+  },
+}
+
+// ── Radio group ────────────────────────────────────────────────────────────
+//
+// Zag-driven (`@zag-js/radio-group`, on-demand chunk). Native radio inputs
+// stay the form surface; the machine owns the value and arrow-key nav.
+// No legacy path — the radio group was hook-free before, every instance
+// renders `data-zag`.
+const LanternRadio = {
+  mounted() {
+    import("./zag/radio_group.js").then((m) => {
+      if (!this.el.isConnected) return
+      this._zagDelegate = m.mountZagRadioGroup(this)
+    })
+  },
+
+  beforeUpdate() {
+    if (this._zagDelegate) this._zagDelegate.beforeUpdate()
+    else this._zagPendingUpdate = true
+  },
+
+  updated() {
+    if (this._zagDelegate) this._zagDelegate.updated()
+    else this._zagPendingUpdate = true
+  },
+
+  destroyed() {
+    if (this._zagDelegate) this._zagDelegate.destroyed()
   },
 }
 
@@ -3246,6 +3250,8 @@ export const Hooks = {
   LanternToast,
   LanternSidebar,
   LanternSelect,
+  LanternSwitch,
+  LanternRadio,
   LanternSlider,
   LanternAutocomplete,
   LanternCollapse,
@@ -3270,6 +3276,8 @@ export {
   LanternToast,
   LanternSidebar,
   LanternSelect,
+  LanternSwitch,
+  LanternRadio,
   LanternSlider,
   LanternAutocomplete,
   LanternCollapse,

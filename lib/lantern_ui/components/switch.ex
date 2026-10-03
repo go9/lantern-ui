@@ -7,11 +7,22 @@ defmodule LanternUI.Components.Switch do
 
   A hidden input always submits `unchecked_value` so forms receive a param even
   when the switch is off.
+
+  The toggle is Zag-driven (a `@zag-js/switch` state machine, loaded on
+  demand): the hook root carries `data-zag` plus `data-scope="switch"` /
+  `data-part` anatomy, and Zag owns checked state, keyboard, and ARIA while
+  the native inputs stay the form surface. Styling stays `lui-*` tokens.
+  Two modes:
+
+    * client (default) — Zag owns the value from the initial `checked`.
+    * server-driven (`controlled`) — the server value (`checked`) is truth;
+      toggles flow out through `on_change`, patches flow in.
   """
   use Phoenix.Component
 
   alias LanternUI.Class
   alias LanternUI.Components.Form
+  alias Phoenix.LiveView.JS
 
   attr(:id, :any, default: nil, doc: "Element id; derived from field when omitted.")
   attr(:name, :string, default: nil, doc: "Form input name; derived from field when omitted.")
@@ -39,6 +50,21 @@ defmodule LanternUI.Components.Switch do
 
   attr(:disabled, :boolean, default: false, doc: "Render disabled and non-interactive.")
 
+  attr(:controlled, :boolean,
+    default: false,
+    doc: "Server-driven checked state: `checked` is truth, patches flow into the machine."
+  )
+
+  attr(:on_change, :string,
+    default: nil,
+    doc: "Server event pushed on toggle (`lantern:switch:set-checked` replies)."
+  )
+
+  attr(:on_change_client, :string,
+    default: nil,
+    doc: "Bubbling DOM CustomEvent dispatched on toggle."
+  )
+
   attr(:rest, :global,
     include: ~w(form phx-change phx-target phx-click),
     doc: "Arbitrary HTML/`phx-*` attributes passed through."
@@ -65,12 +91,37 @@ defmodule LanternUI.Components.Switch do
           do: assign(a, :checked, to_string(a.value) == to_string(a.checked_value)),
           else: a
       end)
+      |> then(fn a ->
+        input_id = a.id || "lui-switch-#{System.unique_integer([:positive])}"
+
+        assign(a,
+          input_id: input_id,
+          hook_id: "#{input_id}-switch",
+          checked_json: Jason.encode!(!!a.checked)
+        )
+      end)
 
     ~H"""
-    <div class={Class.merge(["lui-switch-field", @class])}>
+    <div
+      id={@hook_id}
+      class={Class.merge(["lui-switch-field", @class])}
+      phx-hook="LanternSwitch"
+      phx-mounted={JS.ignore_attributes(zag_ignored_attrs(), to: "[data-scope=\"switch\"]")}
+      data-zag
+      data-input-id={@input_id}
+      data-controlled={@controlled || nil}
+      data-value={if @controlled, do: @checked_json}
+      data-default-value={unless @controlled, do: @checked_json}
+      data-disabled={@disabled || nil}
+      data-invalid={@invalid? || nil}
+      data-on-change={@on_change}
+      data-on-change-client={@on_change_client}
+    >
       <div class="lui-switch-row">
         <label
           class="lui-switch"
+          data-scope="switch"
+          data-part="root"
           data-size={@size}
           data-color={@color}
           data-disabled={@disabled || nil}
@@ -78,27 +129,43 @@ defmodule LanternUI.Components.Switch do
           <input type="hidden" name={@name} value={to_string(@unchecked_value)} disabled={@disabled} />
           <input
             type="checkbox"
-            id={@id}
+            id={@input_id}
             name={@name}
             value={to_string(@checked_value)}
             checked={@checked}
             disabled={@disabled}
             class="lui-switch-input"
             aria-invalid={@invalid? && "true"}
-            aria-describedby={@invalid? && @id && "#{@id}-error"}
+            aria-describedby={@invalid? && @input_id && "#{@input_id}-error"}
             {@rest}
           />
-          <span class="lui-switch-track" aria-hidden="true">
-            <span class="lui-switch-thumb"></span>
+          <span class="lui-switch-track" data-scope="switch" data-part="control" aria-hidden="true">
+            <span class="lui-switch-thumb" data-scope="switch" data-part="thumb"></span>
           </span>
         </label>
-        <Form.label :if={@label} for={@id} sublabel={@sublabel} class="lui-switch-label">
+        <Form.label :if={@label} for={@input_id} sublabel={@sublabel} class="lui-switch-label">
           {@label}
         </Form.label>
       </div>
       <p :if={@description} class="lui-description">{@description}</p>
-      <Form.error :for={msg <- @errors} id={@id && "#{@id}-error"}>{msg}</Form.error>
+      <Form.error :for={msg <- @errors} id={@input_id && "#{@input_id}-error"}>{msg}</Form.error>
     </div>
     """
+  end
+
+  # Attributes Zag writes after mount. LiveView must not clobber them on
+  # patches — the machine is the writer, the server copy is stale by design.
+  # Same list as the select prototype's `zag_ignored_attrs/0`. Deliberately
+  # NOT ignored: `checked` on the native input (form state, re-asserted from
+  # machine state in `update()` instead).
+  defp zag_ignored_attrs do
+    ~w(
+      data-state data-orientation dir id data-disabled data-readonly
+      data-invalid data-required data-open data-focus data-focus-visible
+      data-active data-hover data-placement data-highlighted data-value
+      aria-expanded aria-controls aria-haspopup aria-labelledby aria-label
+      aria-selected aria-checked aria-disabled aria-multiselectable
+      disabled hidden role tabindex style
+    )
   end
 end
