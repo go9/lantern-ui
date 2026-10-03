@@ -16,6 +16,19 @@ Origins: flicker #1404 tickets list, #1407 suggestions inbox, #1408 project hub.
 
 Grouped tables and group headers are banned; use a flat list with a status column + filter chips. Whatever a group header said (status name, count) must stay visible per row or in the filter chips with counts.
 
+## Page blocks
+
+Whole pages that look finished — copy one block from the recipe index at the top of `docs/recipes.md` ("Page blocks", same source as `test/support/blocks/`, screenshots in `test/fixtures/blocks_gallery/`). Never hand-roll a shell, dashboard, index, detail, settings, form, login, or confirm flow.
+
+- **app_shell** — the full frame: sidebar nav, breadcrumb trail, content.
+- **dashboard** — stat cards, one chart, recent activity.
+- **index** — flat table, filter chips with counts, search, pagination, row click.
+- **detail** — breadcrumb actions, body card, right inspector panel.
+- **settings** — stacked section cards, each with its own form and save row.
+- **form** — single card, inline validation errors, cancel/save footer.
+- **login** — centered card, one primary action, SSO second.
+- **destructive** — confirm dialog plus empty, loading, and error states.
+
 ## Linear-style list row
 
 **When to use:** A dense issue row — priority glyph, id, status glyph, title, tags, progress ring, date — in a flat list.

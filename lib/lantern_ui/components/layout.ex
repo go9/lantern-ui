@@ -538,4 +538,32 @@ defmodule LanternUI.Components.Layout do
     </div>
     """
   end
+
+  @doc """
+  Vertical stack — one gap for a run of fields, sections, or cards, so a page
+  never depends on margin collapsing or host utilities for its rhythm.
+
+      <.stack gap="lg">
+        <.page_header title="Settings" />
+        <.card title="Profile">…</.card>
+        <.card title="Notifications">…</.card>
+      </.stack>
+  """
+  attr(:gap, :string,
+    default: "md",
+    values: ~w(sm md lg),
+    doc: "Space between children: sm 0.5rem, md 0.75rem, lg 1.25rem."
+  )
+
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, required: true, doc: "Stacked children.")
+
+  def stack(assigns) do
+    ~H"""
+    <div class={Class.merge(["lui-stack", @class])} data-gap={@gap} {@rest}>
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
 end

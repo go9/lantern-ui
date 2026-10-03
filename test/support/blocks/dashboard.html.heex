@@ -1,0 +1,30 @@
+<.stack gap="lg" style="max-width: 1120px; margin: 0 auto;">
+  <.page_header title="Dashboard" description="Where the week stands at a glance.">
+    <:actions>
+      <.button size="sm" variant="outline">Export</.button>
+      <.button size="sm" variant="solid">New ticket</.button>
+    </:actions>
+  </.page_header>
+  <.stat_grid>
+    <:stat :for={stat <- @stats} label={stat.label} value={stat.value} subtitle={stat.subtitle} />
+  </.stat_grid>
+  <.card title="Merged per day" description="Last 14 days across 4 repos.">
+    <.area_chart
+      id="dashboard-merged"
+      series={@series}
+      height={220}
+      aria_label="Merged tickets per day"
+    />
+  </.card>
+  <.card flush title="Recent activity" description="Latest updates, most recent first.">
+    <.list_row
+      :for={item <- @activity}
+      identifier={item.identifier}
+      title={item.title}
+      navigate={item.href}
+    >
+      <:leading><.status_glyph status={item.status} /></:leading>
+      <:trailing>{item.date}</:trailing>
+    </.list_row>
+  </.card>
+</.stack>

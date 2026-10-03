@@ -1,0 +1,43 @@
+<.stack gap="lg" style="max-width: 1120px; margin: 0 auto;">
+  <.page_header
+    title="Danger zone"
+    description="Irreversible actions wait behind a confirmation."
+  />
+  <.card
+    title="Delete workspace"
+    description="Removes every ticket, inbox item, and invite. This cannot be undone."
+  >
+    <.button variant="solid" color="danger">Delete workspace…</.button>
+  </.card>
+  <.alert_dialog id="delete-workspace" open>
+    <:title>Delete this workspace?</:title>
+    <:description>
+      Every ticket, inbox item, and invite goes with it. Type the workspace name to confirm.
+    </:description>
+    <:cancel><.button variant="outline">Cancel</.button></:cancel>
+    <:action><.button variant="solid" color="danger">Delete workspace</.button></:action>
+  </.alert_dialog>
+  <.card_grid min="16rem">
+    <.card title="Empty">
+      <.empty_state icon="document" title="No tickets yet">
+        Create the first one to get the list going.
+        <:action><.button size="sm" variant="solid">New ticket</.button></:action>
+      </.empty_state>
+    </.card>
+    <.card title="Loading">
+      <.stack gap="sm">
+        <.loading label="Loading tickets…" />
+        <.skeleton style="height: 0.875rem;" />
+        <.skeleton style="height: 0.875rem; width: 62%;" />
+      </.stack>
+    </.card>
+    <.card title="Error">
+      <.stack gap="sm">
+        <.alert color="danger" title="Tickets didn't load">
+          The request timed out. Check your connection and try again.
+        </.alert>
+        <div><.button size="sm" variant="outline">Retry</.button></div>
+      </.stack>
+    </.card>
+  </.card_grid>
+</.stack>

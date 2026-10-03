@@ -6,6 +6,31 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **Page blocks: 8 shadcn-style recipes** (flicker #3420, step 2). Whole pages
+  that look finished, copied as one HEEx block built only from existing lantern
+  components: app shell + sidebar nav + breadcrumb header, dashboard (stat
+  cards, area chart, recent activity), flat index table (filter chips with
+  counts, search, pagination, row click, empty state), detail with right
+  inspector panel, settings (one form + save row per section card),
+  create/edit form with validation errors, login, and confirm-destructive
+  dialog plus empty/loading/error states. Recipe index at the top of
+  `docs/recipes.md`, shared source in `test/support/blocks/`, render tests in
+  `test/lantern_ui/blocks_test.exs`, `skills/lantern-recipes` points at the
+  index, and every block renders in the default theme and the shadcn preset
+  with light + dark screenshots in `test/fixtures/blocks_gallery/` (32 HTML +
+  32 JPEG, full-page at 1000px wide).
+
+- **Vertical-rhythm pass over the blocks** (flicker #3420, step 2 review).
+  New `stack/1` layout primitive (`.lui-stack`, sm/md/lg gaps) so pages never
+  depend on margin collapsing or host utilities for rhythm — the blocks use it
+  for field groups, sections, and page columns. Also fixed: link-rendered
+  `.lui-btn` no longer underlines, `.lui-list-row-leading` and
+  `.lui-property-value` get their missing inner gaps, `.lui-card-foot` lays
+  status text and actions on one row, and new `.lui-list-row-status` keeps
+  status names in a fixed-width muted column. The blocks gallery fixture sets
+  the host body font (`var(--lantern-font)`) so screenshots are truthful.
+
 ### Removed
 - **BREAKING (`group_band` banned, removed in 0.9.0): grouped lists are gone.**
   `LanternUI.Components.GroupBand` and its registry entry, `list_row`
