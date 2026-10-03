@@ -14,21 +14,17 @@ Swap the fixture assigns (`@ticket`, `@paths`, …) for the host's LiveView assi
 
 ## Fill list pages
 
-**When to use:** The page body is a single `data_table` — with or without `group_band` grouping. Pass `fill` (and give the parent a bounded flex height, e.g. flicker's `page_layout fill`) so the rows area scrolls inside the table and pagination stays at the bottom of the viewport. List, cards, and table views all honour this; without `fill` a grouped list grows and pushes the pager below the fold.
+**When to use:** The page body is a single `data_table`. Pass `fill` (and give the parent a bounded flex height, e.g. flicker's `page_layout fill`) so the rows area scrolls inside the table and pagination stays at the bottom of the viewport. List, cards, and table views all honour this; without `fill` a long list grows and pushes the pager below the fold.
+
+Grouped tables and group headers are banned. A page that listed rows under tinted collapsible group headers becomes one flat list: a status column on each row, rows ordered by status then recency, and quick-filter chips or a tabs-free filter. Whatever the group header said (status name, count) must stay visible per row or in the filter chips with counts.
 
 ## Linear-style list row
 
-**When to use:** A dense issue row — priority glyph, id, status glyph, title, tags, progress ring, date — sitting under a tinted group band.
+**When to use:** A dense issue row — priority glyph, id, status glyph, title, tags, progress ring, date — in a flat list.
 
 **Origin:** flicker #1404 tickets list.
 
 ```heex
-<.group_band name="In progress" count={1}>
-  <:glyph><.status_glyph status={:in_progress} /></:glyph>
-  <:action navigate="/tickets/new?status=in_progress" label="New ticket in In progress">
-    <.icon name="plus" />
-  </:action>
-</.group_band>
 <.list_row
   identifier={@ticket.identifier}
   title={@ticket.title}
@@ -47,50 +43,33 @@ Swap the fixture assigns (`@ticket`, `@paths`, …) for the host's LiveView assi
 </.list_row>
 ```
 
-## Grouped list with toolbar
+## Flat ticket list with toolbar
 
-**When to use:** A ticket index grouped into collapsible bands, with All/Active/Backlog on the left and Filter/Display icon buttons on the right.
+**When to use:** A ticket index as one flat `data_table`: a status column on each row (glyph + name), rows ordered by status then recency, a status filter with counts, and search. Title and actions live in the table header; no tabs, no group bands. Row click opens the record.
 
 **Origin:** flicker #1404 tickets list.
 
 ```heex
-<.card flush>
-  <:header>
-    <.tabs_list
-      id="tickets-scope"
-      variant="segmented"
-      size="sm"
-      active_tab={@scope}
-      aria-label="View"
-    >
-      <:tab name="all" patch={@paths.all}>All</:tab>
-      <:tab name="active" patch={@paths.active}>Active</:tab>
-      <:tab name="backlog" patch={@paths.backlog}>Backlog</:tab>
-    </.tabs_list>
-  </:header>
-  <:actions>
-    <.button size="icon" variant="ghost" label="Filter" kbd="F">
-      <.icon name="funnel" />
-    </.button>
-    <.button size="icon" variant="ghost" label="Display" kbd="D">
-      <.icon name="adjustments-horizontal" />
-    </.button>
-  </:actions>
-  <.scroll_area label="Tickets" data-lantern-list-nav>
-    <.group_band
-      name="In progress"
-      count={2}
-      group="tickets:in_progress"
-      data-lantern-persist="tickets:in_progress"
-    >
-      <:glyph><.status_glyph status={:in_progress} /></:glyph>
-      <:action navigate={@paths.new_in_progress} label="New ticket in In progress">
-        <.icon name="plus" />
-      </:action>
-    </.group_band>
+<.data_table
+  id="tickets"
+  rows={@tickets}
+  meta={@meta}
+  path="/tickets"
+  title="Tickets"
+  fill
+  views={["list"]}
+  show_checkboxes={false}
+  search_field={:title}
+  data-lantern-list-nav
+>
+  <:filter
+    field={:status}
+    label="Status"
+    options={[{"In progress (1)", "in_progress"}, {"To do (1)", "todo"}]}
+    prompt="All statuses"
+  />
+  <:list_item :let={ticket}>
     <.list_row
-      :for={ticket <- @tickets}
-      group="tickets:in_progress"
       identifier={ticket.identifier}
       title={ticket.title}
       parent={ticket.parent}
@@ -98,23 +77,17 @@ Swap the fixture assigns (`@ticket`, `@paths`, …) for the host's LiveView assi
       selected={ticket.selected}
       data-lantern-list-item
     >
-      <:leading><.status_glyph status={ticket.status} /></:leading>
+      <:leading>
+        <.status_glyph status={ticket.status} />
+        <span>{ticket.status |> Atom.to_string() |> String.replace("_", " ")}</span>
+      </:leading>
       <:meta>
         <.badge size="sm">{ticket.tag}</.badge>
       </:meta>
       <:trailing>{ticket.date}</:trailing>
     </.list_row>
-    <.group_band
-      name="Done"
-      count={40}
-      group="tickets:done"
-      collapsed
-      data-lantern-persist="tickets:done"
-    >
-      <:glyph><.status_glyph status={:done} /></:glyph>
-    </.group_band>
-  </.scroll_area>
-</.card>
+  </:list_item>
+</.data_table>
 ```
 
 ## Record page with inspector rail
@@ -203,7 +176,7 @@ Swap the fixture assigns (`@ticket`, `@paths`, …) for the host's LiveView assi
 
 ## Project overview
 
-**When to use:** Hub header, a progress ring with a stats strip, then grouped children. Do not invent a custom overview grid.
+**When to use:** Hub header, a progress ring with a stats strip, then flat children. Do not invent a custom overview grid.
 
 **Origin:** flicker #1408 project hub.
 
@@ -226,9 +199,6 @@ Swap the fixture assigns (`@ticket`, `@paths`, …) for the host's LiveView assi
   <:stat label="Environments" value={@stats.environments} />
 </.stat_grid>
 <.card flush title="Tickets">
-  <.group_band name="In progress" count={1}>
-    <:glyph><.status_glyph status={:in_progress} /></:glyph>
-  </.group_band>
   <.list_row
     :for={child <- @children}
     identifier={child.identifier}

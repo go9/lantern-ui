@@ -372,7 +372,7 @@ defmodule LanternUI.DataTableTest do
       })
 
     assert html =~ "lui-dt-list"
-    assert html =~ "data-lantern-collapse-scope"
+    refute html =~ "data-lantern-collapse-scope"
     assert html =~ "lui-dt-list-row"
     assert html =~ ~s(class="name")
     assert html =~ "Ada"

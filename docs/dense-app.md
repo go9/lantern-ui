@@ -20,28 +20,10 @@ works this release) and `side_panel_toggle`.
 </.list_row>
 ```
 
-## Group band
-
-```heex
-<.group_band
-  name="In progress"
-  count={12}
-  group="tickets:in_progress"
-  data-lantern-persist="tickets:in_progress"
->
-  <:glyph><.status_glyph status={:in_progress} /></:glyph>
-  <:action navigate={~p"/tickets/new?status=in_progress"} label="New ticket in In progress">
-    <.icon name="plus" />
-  </:action>
-</.group_band>
-<.list_row group="tickets:in_progress" identifier="#241" title="Visible progress ring" navigate={~p"/tickets/241"} />
-```
-
-`group` (with no `navigate`/`patch`/`href`) makes the name row a collapse
-button. Rows with the same `group` hide client-side, including when they
-sit in `data_table` `:list_item` wrappers — see [Behaviours](behaviours.md).
-Match `data-lantern-persist` to the group key so the collapsed set survives
-patches and reloads.
+Grouped tables and group headers are banned. A page that listed rows under
+tinted collapsible group headers becomes one flat list: a status column on
+each row, rows ordered by status then recency, and quick-filter chips or a
+tabs-free filter — see [Recipes](recipes.md).
 
 ## Inspector rail
 

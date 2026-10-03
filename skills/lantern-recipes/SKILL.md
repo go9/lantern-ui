@@ -14,19 +14,15 @@ HEEx is built only from lantern components (lantern classes and `--lantern-*` to
 
 Origins: flicker #1404 tickets list, #1407 suggestions inbox, #1408 project hub.
 
+Grouped tables and group headers are banned; use a flat list with a status column + filter chips. Whatever a group header said (status name, count) must stay visible per row or in the filter chips with counts.
+
 ## Linear-style list row
 
-**When to use:** A dense issue row — priority glyph, id, status glyph, title, tags, progress ring, date — sitting under a tinted group band.
+**When to use:** A dense issue row — priority glyph, id, status glyph, title, tags, progress ring, date — in a flat list.
 
 **Origin:** flicker #1404 tickets list.
 
 ```heex
-<.group_band name="In progress" count={1}>
-  <:glyph><.status_glyph status={:in_progress} /></:glyph>
-  <:action navigate="/tickets/new?status=in_progress" label="New ticket in In progress">
-    <.icon name="plus" />
-  </:action>
-</.group_band>
 <.list_row
   identifier={@ticket.identifier}
   title={@ticket.title}
@@ -45,50 +41,33 @@ Origins: flicker #1404 tickets list, #1407 suggestions inbox, #1408 project hub.
 </.list_row>
 ```
 
-## Grouped list with toolbar
+## Flat ticket list with toolbar
 
-**When to use:** A ticket index grouped into collapsible bands, with All/Active/Backlog on the left and Filter/Display icon buttons on the right.
+**When to use:** A ticket index as one flat `data_table`: a status column on each row (glyph + name), rows ordered by status then recency, a status filter with counts, and search. Title and actions live in the table header; no tabs, no group bands. Row click opens the record.
 
 **Origin:** flicker #1404 tickets list.
 
 ```heex
-<.card flush>
-  <:header>
-    <.tabs_list
-      id="tickets-scope"
-      variant="segmented"
-      size="sm"
-      active_tab={@scope}
-      aria-label="View"
-    >
-      <:tab name="all" patch={@paths.all}>All</:tab>
-      <:tab name="active" patch={@paths.active}>Active</:tab>
-      <:tab name="backlog" patch={@paths.backlog}>Backlog</:tab>
-    </.tabs_list>
-  </:header>
-  <:actions>
-    <.button size="icon" variant="ghost" label="Filter" kbd="F">
-      <.icon name="funnel" />
-    </.button>
-    <.button size="icon" variant="ghost" label="Display" kbd="D">
-      <.icon name="adjustments-horizontal" />
-    </.button>
-  </:actions>
-  <.scroll_area label="Tickets" data-lantern-list-nav>
-    <.group_band
-      name="In progress"
-      count={2}
-      group="tickets:in_progress"
-      data-lantern-persist="tickets:in_progress"
-    >
-      <:glyph><.status_glyph status={:in_progress} /></:glyph>
-      <:action navigate={@paths.new_in_progress} label="New ticket in In progress">
-        <.icon name="plus" />
-      </:action>
-    </.group_band>
+<.data_table
+  id="tickets"
+  rows={@tickets}
+  meta={@meta}
+  path="/tickets"
+  title="Tickets"
+  fill
+  views={["list"]}
+  show_checkboxes={false}
+  search_field={:title}
+  data-lantern-list-nav
+>
+  <:filter
+    field={:status}
+    label="Status"
+    options={[{"In progress (1)", "in_progress"}, {"To do (1)", "todo"}]}
+    prompt="All statuses"
+  />
+  <:list_item :let={ticket}>
     <.list_row
-      :for={ticket <- @tickets}
-      group="tickets:in_progress"
       identifier={ticket.identifier}
       title={ticket.title}
       parent={ticket.parent}
@@ -96,23 +75,17 @@ Origins: flicker #1404 tickets list, #1407 suggestions inbox, #1408 project hub.
       selected={ticket.selected}
       data-lantern-list-item
     >
-      <:leading><.status_glyph status={ticket.status} /></:leading>
+      <:leading>
+        <.status_glyph status={ticket.status} />
+        <span>{ticket.status |> Atom.to_string() |> String.replace("_", " ")}</span>
+      </:leading>
       <:meta>
         <.badge size="sm">{ticket.tag}</.badge>
       </:meta>
       <:trailing>{ticket.date}</:trailing>
     </.list_row>
-    <.group_band
-      name="Done"
-      count={40}
-      group="tickets:done"
-      collapsed
-      data-lantern-persist="tickets:done"
-    >
-      <:glyph><.status_glyph status={:done} /></:glyph>
-    </.group_band>
-  </.scroll_area>
-</.card>
+  </:list_item>
+</.data_table>
 ```
 
 ## Record page with inspector rail
@@ -201,7 +174,7 @@ Origins: flicker #1404 tickets list, #1407 suggestions inbox, #1408 project hub.
 
 ## Project overview
 
-**When to use:** Hub header, a progress ring with a stats strip, then grouped children. Do not invent a custom overview grid.
+**When to use:** Hub header, a progress ring with a stats strip, then flat children. Do not invent a custom overview grid.
 
 **Origin:** flicker #1408 project hub.
 
@@ -224,9 +197,6 @@ Origins: flicker #1404 tickets list, #1407 suggestions inbox, #1408 project hub.
   <:stat label="Environments" value={@stats.environments} />
 </.stat_grid>
 <.card flush title="Tickets">
-  <.group_band name="In progress" count={1}>
-    <:glyph><.status_glyph status={:in_progress} /></:glyph>
-  </.group_band>
   <.list_row
     :for={child <- @children}
     identifier={child.identifier}

@@ -36,6 +36,8 @@ Do not add tabs as default grouping mechanism.
 
 Use `data_table` when page needs sorting, search, filters, pagination, bulk actions, or several columns. Use `resource_list` for small resource indexes without table machinery.
 
+Grouped tables and group headers are banned; use a flat list with a status column + filter chips. Whatever a group header said (status name, count) must stay visible per row or in the filter chips with counts.
+
 For `data_table`, decide every capability explicitly:
 
 | Capability | Enable when |
@@ -48,7 +50,7 @@ For `data_table`, decide every capability explicitly:
 
 Sortable fields must exist in backing query/schema allowlist. Disable checkboxes when no bulk action exists.
 
-Use fill layout only when parent has bounded height and component should own body scrolling. `fill` scrolls the rows area (table body, list, or cards) internally and pins pagination; a grouped list without it pushes the pager below the fold.
+Use fill layout only when parent has bounded height and component should own body scrolling. `fill` scrolls the rows area (table body, list, or cards) internally and pins pagination; a long list without it pushes the pager below the fold.
 
 ## 5. Records get routes
 

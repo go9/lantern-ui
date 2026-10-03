@@ -38,7 +38,7 @@ the complete function and attribute surface.
   `LanternUI.Components.Loading`, `LanternUI.Components.Skeleton`, and
   `LanternUI.Components.ScrollArea`.
 - **Dense-app primitives:** `LanternUI.Components.ListRow`,
-  `LanternUI.Components.GroupBand`, `LanternUI.Components.Inspector`,
+  `LanternUI.Components.Inspector`,
   `LanternUI.Components.StateGlyph`, and `LanternUI.Components.SidePanel`.
   Icon actions, rings, segmented controls, and property rows fold into
   `Button` (`label`/`kbd`), `Progress` (`shape="ring"`), `Tabs`
