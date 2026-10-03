@@ -355,7 +355,7 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 
 ## Block 3: flat index table with filter chips
 
-**When to use:** The page is a record list — one flat `data_table` with filter chips carrying counts, a status column on each row, search, pagination, row click, and an empty state. Title and the primary action live in the breadcrumb bar; no tabs, no group bands.
+**When to use:** The page is a record list — one flat `data_table` with filter chips carrying counts, a status column on each row, search, pagination, row click, and an empty state. Title and the primary action live in the breadcrumb bar; no tabs, no group bands. `fill` pins pagination only when the parent bounds the height (see "Fill list pages" above) — without a bound the table takes its natural height.
 
 ```heex
 <.stack gap="lg" style="max-width: 1120px; margin: 0 auto;">
