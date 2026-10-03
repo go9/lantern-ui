@@ -1,0 +1,4563 @@
+<!DOCTYPE html>
+<html lang="en" data-lantern-theme="shadcn" class="">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>lantern-ui block: dashboard</title>
+    <style>body { margin: 0; padding: 2rem; background: var(--lantern-surface); }/*
+ * LanternUI component styles (namespaced `lui-*`).
+ *
+ * ALWAYS import this file when using LanternUI components.
+ *
+ * Theming comes from `--lantern-*` custom properties, defined one of two ways:
+ * - Standalone host: also import `lantern_ui_theme.css` (the default light/dark
+ *   theme + density modes).
+ * - Fluxon (or any token-bearing) host: DON'T import the theme — define a small
+ *   bridge mapping `--lantern-*` onto your host tokens instead, e.g.
+ *
+ *       :root {
+ *         --lantern-fg: var(--foreground);
+ *         --lantern-fg-muted: var(--foreground-softer);
+ *         --lantern-surface: var(--background-base);
+ *         --lantern-surface-raised: var(--card, var(--background-base));
+ *         --lantern-surface-sunken: var(--background-accent);
+ *         --lantern-surface-hover: var(--background-accent);
+ *         --lantern-border: var(--border-base);
+ *         --lantern-primary: var(--foreground);
+ *         --lantern-primary-fg: var(--background-base);
+ *         --lantern-accent: var(--primary);
+ *         --lantern-ring: var(--primary);
+ *         --lantern-danger: var(--danger);
+ *         --lantern-success: var(--success);
+ *         --lantern-warning: var(--warning);
+ *       }
+ */
+
+/* ═══ Components ══════════════════════════════════════════════════════════
+ *
+ * Namespaced (`lui-`) so LanternUI coexists with any host CSS (incl. Fluxon)
+ * with zero build step. Every value reads the tokens above; the consumer's
+ * `class=` attribute merges on top via LanternUI.Class.
+ */
+
+/* ── Icon ── */
+.lui-icon {
+  width: 1.05em;
+  height: 1.05em;
+  flex-shrink: 0;
+}
+
+/* ── Button ──
+ * Colors set --lui-c; variants derive bg/border/fg from it, so all
+ * color × variant combinations work without a compiled class matrix. */
+.lui-btn {
+  --lui-c: var(--lantern-primary);
+  --lui-c-fg: var(--lantern-primary-fg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  height: var(--lantern-control-h);
+  padding: 0 var(--lantern-control-px);
+  font-family: var(--lantern-font);
+  font-size: var(--lantern-text);
+  font-weight: 500;
+  letter-spacing: -0.006em;
+  white-space: nowrap;
+  border-radius: var(--lantern-radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color var(--lantern-duration) var(--lantern-ease),
+    border-color var(--lantern-duration) var(--lantern-ease),
+    box-shadow var(--lantern-duration) var(--lantern-ease),
+    opacity var(--lantern-duration) var(--lantern-ease);
+}
+.lui-btn[data-color="danger"]  { --lui-c: var(--lantern-danger);  --lui-c-fg: var(--lantern-danger-fg); }
+.lui-btn[data-color="warning"] { --lui-c: var(--lantern-warning); --lui-c-fg: #ffffff; }
+.lui-btn[data-color="success"] { --lui-c: var(--lantern-success); --lui-c-fg: #ffffff; }
+.lui-btn[data-color="info"]    { --lui-c: var(--lantern-accent);  --lui-c-fg: var(--lantern-accent-fg); }
+
+.lui-btn[data-variant="solid"] {
+  background: var(--lui-c);
+  color: var(--lui-c-fg);
+  box-shadow: var(--lantern-shadow);
+}
+.lui-btn[data-variant="solid"]:hover { opacity: 0.9; }
+
+.lui-btn[data-variant="soft"] {
+  background: color-mix(in oklab, var(--lui-c) 10%, transparent);
+  color: var(--lui-c);
+}
+.lui-btn[data-variant="soft"]:hover {
+  background: color-mix(in oklab, var(--lui-c) 16%, transparent);
+}
+
+.lui-btn[data-variant="surface"] {
+  background: var(--lantern-surface-sunken);
+  color: var(--lantern-fg);
+}
+.lui-btn[data-variant="surface"]:hover { background: var(--lantern-surface-hover); }
+
+.lui-btn[data-variant="outline"],
+.lui-btn[data-variant="dashed"] {
+  background: var(--lantern-surface-raised);
+  color: var(--lantern-fg);
+  border-color: var(--lantern-border);
+  box-shadow: var(--lantern-shadow);
+}
+.lui-btn[data-variant="dashed"] { border-style: dashed; }
+.lui-btn[data-variant="outline"]:hover,
+.lui-btn[data-variant="dashed"]:hover { background: var(--lantern-surface-sunken); }
+
+.lui-btn[data-variant="ghost"] {
+  background: transparent;
+  color: var(--lantern-fg);
+}
+.lui-btn[data-variant="ghost"]:hover { background: var(--lantern-surface-sunken); }
+
+.lui-btn:focus-visible,
+.lui-input-wrap:focus-within,
+.lui-cal-day:focus-visible,
+.lui-cal-nav:focus-visible {
+  border-color: var(--lantern-ring);
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft);
+}
+
+/* A link-rendered button (navigate/patch/href) can't carry the real `disabled`
+   attribute, so it declares `data-disabled` instead. Same treatment, or a
+   `<.button navigate={...} disabled>` looks and clicks as fully enabled. */
+.lui-btn[disabled],
+.lui-btn[data-disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.lui-btn[data-size="xs"] { height: 1.5rem;  padding: 0 0.5rem;  font-size: var(--lantern-text-sm); }
+.lui-btn[data-size="sm"] { height: 1.75rem; padding: 0 0.625rem; font-size: var(--lantern-text-sm); }
+.lui-btn[data-size="lg"] { height: 2.25rem; padding: 0 1rem; }
+.lui-btn[data-size="xl"] { height: 2.5rem;  padding: 0 1.25rem; font-size: 0.875rem; }
+.lui-btn[data-size^="icon"] { padding: 0; }
+.lui-btn[data-size="icon-xs"] { width: 1.5rem;  height: 1.5rem; }
+.lui-btn[data-size="icon-sm"] { width: 1.75rem; height: 1.75rem; }
+.lui-btn[data-size="icon-md"],
+.lui-btn[data-size="icon"]    { width: var(--lantern-control-h); height: var(--lantern-control-h); }
+.lui-btn[data-size="icon-lg"] { width: 2.25rem; height: 2.25rem; }
+.lui-btn[data-size="icon-xl"] { width: 2.5rem;  height: 2.5rem; }
+
+.lui-btn-group {
+  display: inline-flex;
+}
+.lui-btn-group .lui-btn:not(:first-child) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -1px;
+}
+.lui-btn-group .lui-btn:not(:last-child) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* ── Form field ── */
+.lui-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+  font-family: var(--lantern-font);
+}
+
+.lui-label {
+  font-size: var(--lantern-text);
+  font-weight: 550;
+  color: var(--lantern-fg);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.375rem;
+}
+.lui-sublabel {
+  font-size: var(--lantern-text-sm);
+  font-weight: 400;
+  color: var(--lantern-fg-muted);
+}
+.lui-description,
+.lui-help {
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted);
+  margin: 0;
+}
+.lui-error {
+  display: flex;
+  align-items: center;
+  gap: 0.3125rem;
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-danger);
+  margin: 0;
+}
+.lui-error-icon { width: 0.875rem; height: 0.875rem; }
+
+.lui-input-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.4375rem;
+}
+.lui-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  min-width: 0;
+  height: var(--lantern-control-h);
+  padding: 0 0.625rem;
+  background: var(--lantern-surface);
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius);
+  box-shadow: var(--lantern-shadow);
+  transition:
+    border-color var(--lantern-duration) var(--lantern-ease),
+    box-shadow var(--lantern-duration) var(--lantern-ease);
+}
+.lui-input-wrap[data-invalid] {
+  border-color: var(--lantern-danger);
+}
+.lui-input-wrap[data-invalid]:focus-within {
+  border-color: var(--lantern-danger);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--lantern-danger) 20%, transparent);
+}
+.lui-input-wrap[data-disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.lui-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: var(--lantern-text);
+  color: var(--lantern-fg);
+}
+.lui-input::placeholder { color: var(--lantern-fg-subtle); }
+.lui-inner-affix {
+  display: inline-flex;
+  align-items: center;
+  color: var(--lantern-fg-muted);
+  font-size: var(--lantern-text-sm);
+}
+.lui-outer-affix { display: inline-flex; align-items: center; }
+
+.lui-field[data-size="xs"] .lui-input-wrap { height: 1.5rem; }
+.lui-field[data-size="sm"] .lui-input-wrap { height: 1.75rem; }
+.lui-field[data-size="lg"] .lui-input-wrap { height: 2.25rem; }
+.lui-field[data-size="xl"] .lui-input-wrap { height: 2.5rem; }
+
+/* ── Color input ──
+ * A native <input type="color"> styled as a swatch, plus a read-only hex
+ * readout, inside the shared bordered wrap. No JS: the color input is the
+ * submitted control; the hex text mirrors its value for display. */
+.lui-color-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  height: var(--lantern-control-h);
+  padding: 0 0.625rem 0 0.375rem;
+  background: var(--lantern-surface);
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius);
+  box-shadow: var(--lantern-shadow);
+  transition:
+    border-color var(--lantern-duration) var(--lantern-ease),
+    box-shadow var(--lantern-duration) var(--lantern-ease);
+}
+.lui-color-wrap:focus-within {
+  border-color: var(--lantern-ring);
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft);
+}
+.lui-color-wrap[data-invalid] {
+  border-color: var(--lantern-danger);
+}
+.lui-color-wrap[data-invalid]:focus-within {
+  border-color: var(--lantern-danger);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--lantern-danger) 20%, transparent);
+}
+.lui-color-wrap[data-disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.lui-color-swatch {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  background: none;
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-sm);
+  cursor: pointer;
+  outline: none;
+}
+.lui-color-swatch::-webkit-color-swatch-wrapper { padding: 0; }
+.lui-color-swatch::-webkit-color-swatch {
+  border: none;
+  border-radius: calc(var(--lantern-radius-sm) - 1px);
+}
+.lui-color-swatch::-moz-color-swatch {
+  border: none;
+  border-radius: calc(var(--lantern-radius-sm) - 1px);
+}
+.lui-color-hex {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  padding: 0;
+  font-family: var(--lantern-font-mono);
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg);
+  text-transform: uppercase;
+}
+
+.lui-field[data-size="xs"] .lui-color-wrap { height: 1.5rem; }
+.lui-field[data-size="sm"] .lui-color-wrap { height: 1.75rem; }
+.lui-field[data-size="lg"] .lui-color-wrap { height: 2.25rem; }
+.lui-field[data-size="xl"] .lui-color-wrap { height: 2.5rem; }
+
+/* ── Calendar ── */
+.lui-cal {
+  display: inline-block;
+  padding: 0.75rem;
+  background: var(--lantern-surface-raised);
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-lg);
+  box-shadow: var(--lantern-shadow-md);
+  font-family: var(--lantern-font);
+  user-select: none;
+}
+.lui-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.lui-cal-title {
+  font-size: var(--lantern-text);
+  font-weight: 600;
+  color: var(--lantern-fg);
+  letter-spacing: -0.01em;
+}
+.lui-cal-nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-sm);
+  background: var(--lantern-surface-raised);
+  color: var(--lantern-fg-muted);
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--lantern-duration) var(--lantern-ease);
+}
+.lui-cal-nav:hover { background: var(--lantern-surface-sunken); color: var(--lantern-fg); }
+.lui-cal-nav .lui-icon { width: 0.875rem; height: 0.875rem; }
+
+.lui-cal-grid { display: flex; flex-direction: column; gap: 2px; }
+.lui-cal-row { display: grid; grid-template-columns: repeat(7, 2rem); gap: 2px; }
+.lui-cal-wd {
+  text-align: center;
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-subtle);
+  font-weight: 500;
+  padding: 0.25rem 0;
+}
+.lui-cal-day {
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--lantern-text);
+  font-variant-numeric: tabular-nums;
+  color: var(--lantern-fg);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--lantern-radius-sm);
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--lantern-duration) var(--lantern-ease);
+}
+.lui-cal-day:hover { background: var(--lantern-surface-sunken); }
+.lui-cal-day[data-outside] { color: var(--lantern-fg-subtle); }
+.lui-cal-day[data-today] { box-shadow: inset 0 0 0 1.5px var(--lantern-accent); }
+.lui-cal-day[aria-selected="true"] {
+  background: var(--lantern-primary);
+  color: var(--lantern-primary-fg);
+  font-weight: 600;
+}
+.lui-cal-day[disabled] {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* ── Segmented date/time field ── */
+.lui-dtf {
+  display: inline-flex;
+  flex-wrap: nowrap; /* hosts must never wrap the segments (defensive) */
+  min-width: 0;
+  align-items: center;
+  gap: 0.25rem;
+  height: var(--lantern-control-h);
+  padding: 0 0.625rem;
+  background: var(--lantern-surface);
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius);
+  box-shadow: var(--lantern-shadow);
+  font-family: var(--lantern-font);
+  font-size: var(--lantern-text);
+  font-variant-numeric: tabular-nums;
+  color: var(--lantern-fg);
+  transition:
+    border-color var(--lantern-duration) var(--lantern-ease),
+    box-shadow var(--lantern-duration) var(--lantern-ease);
+}
+.lui-dtf:focus-within {
+  border-color: var(--lantern-ring);
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft);
+}
+.lui-dtf[data-disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.lui-dtf-segs {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.lui-dtf-seg {
+  padding: 0.0625rem 0.1875rem;
+  border-radius: 0.25rem;
+  outline: none;
+  cursor: text;
+}
+.lui-dtf-seg:hover { background: var(--lantern-surface-sunken); }
+.lui-dtf-seg:focus {
+  background: var(--lantern-primary);
+  color: var(--lantern-primary-fg);
+}
+.lui-dtf-seg:not([data-set]) { color: var(--lantern-fg-subtle); }
+.lui-dtf-seg:not([data-set]):focus { color: var(--lantern-primary-fg); }
+.lui-dtf-sep {
+  color: var(--lantern-fg-subtle);
+  padding: 0 0.0625rem;
+}
+.lui-dtf-clear {
+  border: none;
+  background: none;
+  color: var(--lantern-fg-subtle);
+  font-size: var(--lantern-text);
+  line-height: 1;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+.lui-dtf-clear:hover { color: var(--lantern-danger); background: var(--lantern-surface-sunken); }
+.lui-dtf-clear svg { width: 0.9em; height: 0.9em; display: block; }
+.lui-dtf-suffix {
+  display: inline-flex;
+  align-items: center;
+  color: var(--lantern-fg-muted);
+}
+
+/* ── Picker (field + calendar popover composition) ── */
+.lui-picker {
+  position: relative;
+  display: inline-flex;
+  flex: 1;
+  min-width: 0;
+}
+.lui-picker .lui-dtf { flex: 1; }
+.lui-picker-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--lantern-fg-muted);
+  padding: 0.125rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  outline: none;
+}
+.lui-picker-toggle:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
+.lui-picker-toggle:focus-visible {
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft);
+}
+.lui-picker-toggle .lui-icon { width: 1rem; height: 1rem; }
+.lui-picker-panel {
+  z-index: 50;
+  /* position:fixed + top/left set by the runtime's position() */
+  background: var(--lantern-surface-raised);
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-lg);
+  box-shadow: var(--lantern-shadow-md);
+  padding: 0.375rem 0.75rem 0.625rem;
+}
+.lui-picker-panel .lui-cal {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0.375rem 0 0.25rem;
+}
+/* The footer's Clear covers it; the pane's own null glyph reads as noise. */
+.lui-picker-time-field .lui-dtf-clear {
+  display: none;
+}
+.lui-picker-panel .lui-picker-cal { display: block; }
+.lui-picker-time {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--lantern-border);
+}
+.lui-picker-time-label {
+  font-size: var(--lantern-text);
+  color: var(--lantern-fg);
+}
+.lui-picker-time-field {
+  background: var(--lantern-surface-sunken);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.lui-picker-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  margin-top: -0.25rem;
+  background: var(--lantern-surface-raised);
+  border: 1px solid var(--lantern-border);
+  border-top: none;
+  border-radius: 0 0 var(--lantern-radius-lg) var(--lantern-radius-lg);
+  box-shadow: var(--lantern-shadow-md);
+}
+.lui-picker-foot-space { flex: 1; }
+
+/* ── Checkbox ── */
+.lui-checkbox-field { display: flex; flex-direction: column; gap: 0.25rem; }
+.lui-checkbox-row { display: flex; align-items: flex-start; gap: 0.5rem; cursor: pointer;
+  font-size: var(--lantern-text); }
+.lui-checkbox-row[data-disabled] { opacity: 0.55; cursor: not-allowed; }
+.lui-checkbox { appearance: none; -webkit-appearance: none; margin: 0.15rem 0 0;
+  width: 1rem; height: 1rem; flex-shrink: 0; border-radius: 0.25rem;
+  border: 1px solid var(--lantern-border-strong, var(--lantern-border));
+  background: var(--lantern-surface); cursor: inherit;
+  transition: background var(--lantern-duration) var(--lantern-ease),
+    border-color var(--lantern-duration) var(--lantern-ease); }
+.lui-checkbox:checked { background: var(--lantern-accent); border-color: var(--lantern-accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3.5 8.5l3 3 6-7' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size: 0.75rem; background-position: center; background-repeat: no-repeat; }
+.lui-checkbox:focus-visible { outline: none;
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft, rgba(37, 99, 235, 0.25)); }
+.lui-checkbox-label { display: flex; flex-direction: column; gap: 0.1rem; color: var(--lantern-fg); }
+.lui-checkbox-desc { font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); }
+
+/* ── Modal ── */
+.lui-modal { position: fixed; inset: 0; z-index: 60; display: flex;
+  align-items: center; justify-content: center; padding: 1.5rem; }
+/* Respect the `hidden` attribute — an author `display` beats the UA
+   `[hidden]{display:none}`, so without this the modal is always visible
+   ("auto-opens" and can't be closed). Higher specificity than `.lui-modal`. */
+.lui-modal[hidden] { display: none; }
+.lui-modal[data-placement="top"] { align-items: flex-start; padding-top: 4.5rem; }
+.lui-modal-backdrop { position: absolute; inset: 0;
+  background: color-mix(in oklab, #000 45%, transparent);
+  animation: lui-fade var(--lantern-duration) var(--lantern-ease); }
+.lui-modal-panel { position: relative; background: var(--lantern-surface-raised);
+  color: var(--lantern-fg); border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-lg); box-shadow: var(--lantern-shadow-md);
+  padding: 1.25rem 1.5rem; max-width: 28rem; width: 100%; max-height: calc(100vh - 4rem);
+  overflow-y: auto; animation: lui-pop var(--lantern-duration) var(--lantern-ease); }
+.lui-modal-close { position: absolute; top: 0.75rem; right: 0.75rem; border: none;
+  background: none; color: var(--lantern-fg-subtle); cursor: pointer; padding: 0.25rem;
+  border-radius: var(--lantern-radius-sm); line-height: 0; }
+.lui-modal-close:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
+
+/* ── Command palette ──
+ * Dialog chrome on the modal runtime; the panel is a search header over a
+ * scrollable listbox. `data-active` is the keyboard highlight (the hook sets
+ * it), :hover is the pointer highlight — deliberately the same surface. */
+.lui-command { position: fixed; inset: 0; z-index: 60; display: flex;
+  align-items: flex-start; justify-content: center; padding: 1.5rem; }
+/* Same reason as .lui-modal[hidden]: an author `display` beats the UA rule,
+   so without this the palette is always open and cannot be closed. */
+.lui-command[hidden] { display: none; }
+@media (min-width: 640px) { .lui-command { padding-top: 12vh; } }
+.lui-command-backdrop { position: absolute; inset: 0;
+  background: color-mix(in oklab, #000 45%, transparent);
+  animation: lui-fade var(--lantern-duration) var(--lantern-ease); }
+.lui-command-panel { position: relative; display: flex; flex-direction: column;
+  width: 100%; max-width: 34rem; max-height: min(28rem, calc(100vh - 6rem));
+  overflow: hidden; background: var(--lantern-surface-raised); color: var(--lantern-fg);
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
+  box-shadow: var(--lantern-shadow-md); font-family: var(--lantern-font);
+  animation: lui-pop var(--lantern-duration) var(--lantern-ease); }
+.lui-command-header { display: flex; align-items: center; gap: 0.6rem; flex: none;
+  padding: 0 0.85rem; height: 3rem; border-bottom: 1px solid var(--lantern-border); }
+.lui-command-search-icon { color: var(--lantern-fg-subtle); flex-shrink: 0; font-size: 1.05em; }
+.lui-command-input { flex: 1; min-width: 0; height: 100%; padding: 0; border: none;
+  background: none; outline: none; color: var(--lantern-fg); font-family: inherit;
+  font-size: var(--lantern-text); }
+.lui-command-input::placeholder { color: var(--lantern-fg-subtle); }
+.lui-command-esc { flex: none; padding: 0.1rem 0.35rem; border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-sm); background: var(--lantern-surface-sunken);
+  color: var(--lantern-fg-subtle); font-family: var(--lantern-font-mono);
+  font-size: 0.7rem; line-height: 1.4; }
+.lui-command-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0.35rem; }
+.lui-command-list:empty { display: none; }
+.lui-command-group { display: block; }
+.lui-command-group + .lui-command-group { margin-top: 0.25rem; }
+.lui-command-group-label { padding: 0.45rem 0.6rem 0.25rem; color: var(--lantern-fg-subtle);
+  font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.lui-command-item { display: flex; align-items: center; gap: 0.6rem; width: 100%;
+  padding: 0.45rem 0.6rem; border: none; background: none; border-radius: var(--lantern-radius-sm);
+  color: var(--lantern-fg); font-family: inherit; font-size: var(--lantern-text);
+  text-align: left; cursor: pointer; }
+.lui-command-item[hidden] { display: none; }
+.lui-command-item:hover, .lui-command-item[data-active] { outline: none;
+  background: var(--lantern-surface-sunken); }
+.lui-command-item[disabled] { opacity: 0.5; cursor: not-allowed; }
+.lui-command-item[disabled]:hover { background: none; }
+.lui-command-item-icon { display: inline-flex; align-items: center; flex: none;
+  color: var(--lantern-fg-muted); }
+.lui-command-item-body { display: flex; flex-direction: column; gap: 0.1rem;
+  flex: 1; min-width: 0; }
+.lui-command-item-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lui-command-item-description { color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lui-command-shortcut { flex: none; margin-left: auto; padding: 0.1rem 0.35rem;
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm);
+  background: var(--lantern-surface-sunken); color: var(--lantern-fg-subtle);
+  font-family: var(--lantern-font-mono); font-size: 0.7rem; line-height: 1.4; }
+.lui-command-separator { height: 1px; margin: 0.3rem -0.35rem;
+  background: var(--lantern-border); }
+.lui-command-empty { padding: 1.75rem 0.6rem; color: var(--lantern-fg-muted);
+  font-size: var(--lantern-text-sm); text-align: center; }
+.lui-command-empty[hidden] { display: none; }
+.lui-command-loading { display: flex; align-items: center; justify-content: center; flex: none;
+  padding: 0.5rem; }
+.lui-command-loading[hidden] { display: none; }
+.lui-command-spinner { width: 0.9rem; height: 0.9rem; border: 2px solid var(--lantern-border);
+  border-top-color: var(--lantern-accent); border-radius: 999px;
+  animation: lui-spin 0.7s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .lui-command-spinner { animation-duration: 1.5s; }
+  .lui-command-panel, .lui-command-backdrop { animation: none; }
+}
+.lui-command-footer { flex: none; display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.5rem 0.85rem; border-top: 1px solid var(--lantern-border);
+  color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
+
+/* Alert dialog: semantic confirmation anatomy on the modal runtime. */
+.lui-alert-dialog { max-width: 26rem; }
+.lui-alert-dialog-title { margin: 0; color: var(--lantern-fg);
+  font-size: var(--lantern-text-lg, 1.125rem); font-weight: 600; line-height: 1.35; }
+.lui-alert-dialog-description { margin-top: 0.5rem; color: var(--lantern-fg-muted);
+  font-size: var(--lantern-text-sm); line-height: 1.5; }
+.lui-alert-dialog-actions { display: flex; justify-content: flex-end;
+  gap: var(--lantern-gap, 0.5rem); margin-top: 1.25rem; }
+.lui-alert-dialog-cancel, .lui-alert-dialog-action { display: contents; }
+@media (max-width: 480px) {
+  .lui-alert-dialog-actions { flex-direction: column; }
+}
+@keyframes lui-fade { from { opacity: 0; } }
+@keyframes lui-pop { from { opacity: 0; transform: scale(0.97); } }
+
+/* ── Dropdown menu ── */
+.lui-date-range-row { display: flex; align-items: center; gap: 0.5rem; }
+.lui-date-range-sep { color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
+.lui-popover { display: inline-block; position: relative; }
+.lui-popover-panel { z-index: 50; padding: 0;
+  background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md);
+  animation: lui-pop var(--lantern-duration) var(--lantern-ease); }
+.lui-dropdown { display: inline-block; position: relative; }
+.lui-dropdown-menu { z-index: 50; min-width: 11rem; padding: 0.25rem;
+  background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md);
+  animation: lui-pop var(--lantern-duration) var(--lantern-ease); }
+.lui-dropdown-header { padding: 0.375rem 0.625rem; font-size: var(--lantern-text-sm);
+  font-weight: 600; color: var(--lantern-fg-muted); white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; }
+.lui-dropdown-separator { height: 1px; margin: 0.25rem -0.25rem;
+  background: var(--lantern-border); }
+.lui-dropdown-item { display: flex; align-items: center; gap: 0.5rem; width: 100%;
+  box-sizing: border-box; padding: 0.375rem 0.625rem; border: none; background: none;
+  text-align: left; text-decoration: none; font-size: var(--lantern-text);
+  font-family: inherit; color: var(--lantern-fg); border-radius: var(--lantern-radius-sm);
+  cursor: pointer; }
+.lui-dropdown-item:hover, .lui-dropdown-item:focus-visible { outline: none;
+  background: var(--lantern-surface-sunken); }
+.lui-dropdown-item[disabled], .lui-dropdown-item[data-disabled] { opacity: 0.5;
+  cursor: not-allowed; }
+.lui-dropdown-item[data-danger] { color: var(--lantern-danger); }
+.lui-dropdown-custom { padding: 0.375rem 0.625rem; }
+
+/* ── Menu / menubar (APG menu-button + menubar patterns) ── */
+.lui-menu { display: inline-block; position: relative; }
+.lui-menu-panel { z-index: 50; min-width: 11rem; padding: 0.25rem;
+  background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md);
+  animation: lui-pop var(--lantern-duration) var(--lantern-ease); }
+.lui-menu-item { display: flex; align-items: center; gap: 0.5rem; width: 100%;
+  box-sizing: border-box; padding: 0.375rem 0.625rem; border: none; background: none;
+  text-align: left; text-decoration: none; font-size: var(--lantern-text);
+  font-family: inherit; color: var(--lantern-fg); border-radius: var(--lantern-radius-sm);
+  cursor: pointer; }
+.lui-menu-item:hover, .lui-menu-item:focus-visible { outline: none;
+  background: var(--lantern-surface-sunken); }
+.lui-menu-item[disabled], .lui-menu-item[data-disabled] { opacity: 0.5;
+  cursor: not-allowed; }
+.lui-menu-item[data-danger] { color: var(--lantern-danger); }
+.lui-menu-separator { height: 1px; margin: 0.25rem -0.25rem;
+  background: var(--lantern-border); }
+.lui-menubar { display: flex; align-items: center; gap: 0.125rem; }
+.lui-menubar-entry { position: relative; }
+.lui-menubar-trigger { border: none; background: none; font-family: inherit;
+  font-size: var(--lantern-text); color: var(--lantern-fg);
+  padding: 0.375rem 0.625rem; border-radius: var(--lantern-radius-sm); cursor: pointer; }
+.lui-menubar-trigger:hover, .lui-menubar-trigger:focus-visible { outline: none;
+  background: var(--lantern-surface-sunken); }
+.lui-menubar-trigger[aria-expanded="true"] { background: var(--lantern-surface-sunken); }
+.lui-menubar-trigger[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Breadcrumb (dense chrome — ~1/3 prior footprint) ── */
+.lui-breadcrumb { min-width: 0; line-height: 1; overflow: visible; }
+.lui-breadcrumb-list { display: flex; flex-wrap: nowrap; align-items: center; gap: 0;
+  list-style: none; margin: 0; padding: 0; font-size: 0.6875rem; line-height: 1.15;
+  min-width: 0; overflow-x: auto; }
+.lui-breadcrumb-item { display: inline-flex; align-items: center; gap: 0; min-width: 0;
+  flex: none; }
+.lui-breadcrumb-sep { display: inline-flex; align-items: center; color: var(--lantern-fg-subtle);
+  user-select: none; flex: none; margin: 0 0.05rem; }
+.lui-breadcrumb-icon { width: 0.75rem; height: 0.75rem; display: block; flex: none; }
+.lui-breadcrumb-chevron { width: 0.7rem; height: 0.7rem; opacity: 0.65; }
+.lui-breadcrumb-home { display: inline-flex; align-items: center; justify-content: center;
+  color: var(--lantern-fg-muted); border-radius: var(--lantern-radius-sm);
+  padding: 0.05rem; line-height: 0; text-decoration: none; }
+.lui-breadcrumb-home:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
+.lui-breadcrumb-link { border: none; background: none; padding: 0.05rem 0.15rem;
+  font: inherit; font-size: 0.6875rem; font-weight: 500; color: var(--lantern-fg-muted);
+  text-decoration: none; cursor: pointer; border-radius: var(--lantern-radius-sm);
+  max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  line-height: 1.15; }
+.lui-breadcrumb-link:hover { color: var(--lantern-fg);
+  background: var(--lantern-surface-sunken); }
+/* The current (last) crumb IS the page title — hosts no longer render a separate
+   heading — so it reads as one: bold, a step up in size from the trail links,
+   full foreground. The width cap is generous because a title should not ellipsis
+   at a name length that a heading would have shown in full. */
+.lui-breadcrumb-current { color: var(--lantern-fg); font-weight: 600; font-size: 0.8125rem;
+  padding: 0.05rem 0.15rem; max-width: 24rem; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; line-height: 1.25; letter-spacing: -0.006em; }
+
+/* ── Empty state ── */
+.lui-empty { display: flex; flex-direction: column; align-items: center; gap: 0.375rem;
+  padding: 2.5rem 1.5rem; text-align: center; }
+.lui-empty-icon { width: 1.75rem; height: 1.75rem; color: var(--lantern-fg-subtle); }
+.lui-empty-title { margin: 0; font-size: var(--lantern-text); font-weight: 600;
+  color: var(--lantern-fg); }
+.lui-empty-desc { margin: 0; font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted); max-width: 26rem; }
+.lui-empty-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lui-modal-backdrop, .lui-modal-panel, .lui-dropdown-menu, .lui-menu-panel, .lui-popover-panel { animation: none; }
+}
+
+/* ── App shell (top bar + fixed sidebar + main) ── */
+.lui-app { --lui-sidebar-w: 15rem; --lui-appbar-h: 3.25rem;
+  min-height: 100vh; background: var(--lantern-surface); color: var(--lantern-fg);
+  font-family: var(--lantern-font); }
+.lui-app[data-collapsed] { --lui-sidebar-w: 3.5rem; }
+
+/* Top bar */
+.lui-appbar { position: fixed; top: 0; left: 0; right: 0; height: var(--lui-appbar-h); z-index: 30;
+  display: flex; align-items: center; gap: 0.75rem; padding: 0 1rem;
+  background: var(--lantern-surface); border-bottom: 1px solid var(--lantern-border); }
+.lui-appbar-toggle { display: none; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-left: -0.5rem; width: 2.5rem; height: 2.5rem; padding: 0;
+  border: none; background: none;
+  color: var(--lantern-fg-muted); cursor: pointer; border-radius: var(--lantern-radius-sm);
+  font-size: 1.25rem; }
+.lui-appbar-toggle:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
+.lui-appbar-brand { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;
+  font-family: var(--lantern-font-brand, var(--lantern-font)); font-weight: 600;
+  font-size: 0.9375rem; letter-spacing: -0.01em; color: var(--lantern-fg); white-space: nowrap; }
+.lui-appbar-brand .lui-icon { color: var(--lantern-accent); font-size: 1.15rem; }
+.lui-appbar-header { display: flex; align-items: center; gap: 0.4rem; min-width: 0;
+  color: var(--lantern-fg-muted); font-size: 0.8125rem; }
+.lui-appbar-actions { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
+
+/* Compact sticky breadcrumb region under the appbar (layout chrome).
+   Full-width sticky strip; inside app_shell it only bleeds horizontally so it
+   never slides under the fixed appbar (that was clipping titles/crumbs).
+   With :actions, trail left + actions right (Linear action bar). Multi-entry
+   actions past the first collapse into a More menu when the bar is narrow. */
+.lui-app-breadcrumb {
+  flex: none;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  width: 100%;
+  /* The bar carries the page title now (the last crumb), so it is the page's
+     header chrome rather than a thin trail: room to breathe, and tall enough
+     that the trail and the action buttons centre against each other. */
+  min-height: 2.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--lantern-border);
+  background: var(--lantern-surface);
+  box-sizing: border-box;
+  overflow: visible;
+  container-type: inline-size;
+  container-name: lui-breadcrumb;
+}
+/* Horizontal full-bleed only — keep top flush with main, no negative top margin */
+.lui-app-main > .lui-app-breadcrumb {
+  /* `width: auto`, because the base rule sets `width: 100%` and that is what a
+     negative margin cannot stretch: the bar kept the content width and simply
+     slid 1.5rem left, bleeding past the left edge and stopping 3rem short of
+     the right one. Auto lets the negative margins do what they are here for. */
+  width: auto;
+  margin: 0 -1.5rem 0.75rem;
+  padding: 0.5rem 1.5rem;
+}
+.lui-app-breadcrumb-trail {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+}
+.lui-app-breadcrumb-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  flex: none;
+  margin-left: auto;
+  min-width: 0;
+}
+.lui-app-breadcrumb-action {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+/* Overflow menu hidden while the bar is wide enough for every action entry. */
+/* Two-stage action bar. At normal width: up to :max_inline quick buttons, and
+   the More menu holds only what is past the cap. As the bar narrows, the quick
+   buttons hide and their menu entries reveal, so every action stays reachable
+   and none is ever visible in both places at once. The menu always renders all
+   entries; visibility is decided here. */
+.lui-app-breadcrumb-overflow { display: inline-flex; }
+.lui-app-breadcrumb-overflow[data-has-folded="false"] { display: none; }
+.lui-app-breadcrumb-more-item[data-inline="true"] { display: none; }
+.lui-app-breadcrumb-more { display: inline-flex; }
+.lui-app-breadcrumb-more-trigger {
+  min-width: 1.75rem;
+  padding-inline: 0.35rem;
+}
+/* Narrow bar: quick buttons collapse into the menu, which now shows every
+   entry. Keyed off the bar's own inline size, not the viewport, so the same
+   component behaves correctly inside a rail or a split pane. */
+@container lui-breadcrumb (max-width: 34rem) {
+  .lui-app-breadcrumb-action { display: none; }
+  .lui-app-breadcrumb-overflow,
+  .lui-app-breadcrumb-overflow[data-has-folded="false"] { display: inline-flex; }
+  .lui-app-breadcrumb-more-item[data-inline="true"] { display: flex; }
+}
+
+/* Page title row — dense, not a marketing hero */
+.lui-page-header { margin: 0 0 0.35rem; overflow: visible; }
+.lui-page-header-row {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+}
+.lui-page-header-text { min-width: 0; flex: 1 1 12rem; overflow: visible; }
+.lui-page-title {
+  margin: 0; font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.005em;
+  line-height: 1.25; color: var(--lantern-fg);
+  font-family: var(--lantern-font);
+  overflow: visible; text-transform: none;
+}
+.lui-page-desc {
+  margin: 0.1rem 0 0; font-size: 0.75rem; line-height: 1.3;
+  color: var(--lantern-fg-muted); max-width: 42rem;
+}
+.lui-page-header-actions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; flex: none;
+}
+
+/* Sidebar (below the bar, fixed) */
+.lui-app-body { padding-top: var(--lui-appbar-h); }
+.lui-app-sidebar { position: fixed; top: var(--lui-appbar-h); bottom: 0; left: 0;
+  width: var(--lui-sidebar-w); z-index: 20; display: flex; flex-direction: column;
+  background: var(--lantern-surface); border-right: 1px solid var(--lantern-border);
+  overflow-x: hidden; transition: width var(--lantern-duration) var(--lantern-ease); }
+.lui-app-nav { flex: 1; min-height: 0; overflow-y: auto; padding: 0.75rem 0.6rem; }
+.lui-app-sidebar-foot { border-top: 1px solid var(--lantern-border); padding: 0.5rem 0.6rem; }
+.lui-collapse-btn { display: flex; align-items: center; gap: 0.6rem; width: 100%;
+  padding: 0.4rem 0.5rem; border: none; background: none; color: var(--lantern-fg-muted);
+  font-size: 0.8125rem; font-weight: 500; border-radius: var(--lantern-radius-sm); cursor: pointer;
+  font-family: inherit; }
+.lui-collapse-btn:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
+.lui-collapse-icon { font-size: 1.05rem; flex-shrink: 0;
+  transition: transform var(--lantern-duration) var(--lantern-ease); }
+
+/* Main (cleared past the fixed sidebar) */
+.lui-app-main { margin-left: var(--lui-sidebar-w); padding: 1.5rem 1.5rem 4rem; min-width: 0;
+  transition: margin-left var(--lantern-duration) var(--lantern-ease); }
+/* When the dense breadcrumb strip is first, don't also pay top padding: the
+   strip's own 0.5rem padding is the breathing room, and it sits flush under the
+   fixed appbar. */
+.lui-app-main:has(> .lui-app-breadcrumb) { padding-top: 0; }
+
+/* Desktop: bound the shell to the viewport and make MAIN the scroll region — a
+   flex column whose height is the space below the fixed bar. Normal pages scroll
+   inside main exactly as before (the bar is already position:fixed), and a
+   `.lui-datatable-fill` child now has a bounded flex parent to fill, so full-height
+   tables with pinned header/overview/pagination work inside app_shell. Mobile
+   (<=768px, sidebar becomes a drawer) keeps natural page scroll. */
+@media (min-width: 769px) {
+  .lui-app { height: 100vh; overflow: hidden; }
+  .lui-app-main { box-sizing: border-box; height: calc(100vh - var(--lui-appbar-h));
+    overflow-y: auto; display: flex; flex-direction: column; }
+  /* The 4rem bottom gutter is sized for scrolling content. A `.lui-datatable-fill`
+     is a full-height panel, so that gutter becomes a dead band under it (the
+     pinned pagination stops ~4rem short of the viewport). When main holds a fill
+     table — as a direct child or nested in a page wrapper — match the bottom
+     gutter to the sides so the table reaches the bottom. A child combinator
+     misses the nested case (flicker's `page_layout fill` wraps the table). */
+  .lui-app-main:has(.lui-datatable-fill) { padding-bottom: 1.5rem; }
+}
+
+/* Nav */
+.lui-nav-group { margin-bottom: 1rem; }
+.lui-nav-group-label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--lantern-fg-subtle); padding: 0 0.5rem; margin-bottom: 0.25rem;
+  white-space: nowrap; }
+.lui-nav-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.5rem;
+  border-radius: var(--lantern-radius-sm); font-size: 0.8125rem; font-weight: 500; line-height: 1.3;
+  color: var(--lantern-fg-muted); text-decoration: none; white-space: nowrap; cursor: pointer;
+  background: none; border: none; width: 100%; text-align: left; box-sizing: border-box; }
+.lui-nav-item:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
+.lui-nav-item-active { color: var(--lantern-accent); font-weight: 600;
+  background: var(--lantern-accent-soft); }
+.lui-nav-item-active:hover { color: var(--lantern-accent); background: var(--lantern-accent-soft); }
+.lui-nav-item-icon { font-size: 1.05rem; flex-shrink: 0; }
+/* A host heroicon (hero-*) renders as a CSS-mask span whose own hero-* class sets
+   a larger default size (and loads after this file); constrain it to match
+   lantern's inline icons. Two classes on the element out-specify the single
+   `.hero-*` class regardless of source order. Scoped to the mask marker so
+   lantern's SVG icons (sized by font-size) are untouched. */
+.lui-nav-item-icon.lui-nav-item-icon-mask { width: 1.15rem; height: 1.15rem; }
+.lui-nav-item-label { overflow: hidden; text-overflow: ellipsis; }
+
+/* A count on a nav item. `margin-left: auto` parks it at the end of the row so
+   several of them line up down the nav, and `flex-shrink: 0` means a long label
+   ellipsises rather than squeezing the number it is competing with. When the
+   item also owns a subnav chevron, the badge takes the auto margin and the
+   chevron follows it. */
+.lui-nav-item-badge { margin-left: auto; flex-shrink: 0; min-width: 1.3rem;
+  padding: 0 0.35rem; border-radius: 999px; font-size: 0.6875rem; font-weight: 600;
+  line-height: 1.3rem; text-align: center; font-variant-numeric: tabular-nums;
+  background: var(--lantern-accent); color: var(--lantern-accent-fg); }
+
+/* Expandable nav_item (`:subnav` slot): a toggle with a chevron over a
+   grid-rows-based slide panel — client-side via JS.toggle_attribute on
+   data-expanded (Fluxon-parity nesting). */
+.lui-nav-sub-chevron { margin-left: auto; font-size: 0.75rem; flex-shrink: 0;
+  color: var(--lantern-fg-subtle);
+  transition: transform var(--lantern-duration) var(--lantern-ease); }
+.lui-nav-item[data-expanded] .lui-nav-sub-chevron { transform: rotate(90deg); }
+.lui-nav-sub-panel { display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows var(--lantern-duration) var(--lantern-ease); }
+.lui-nav-item[data-expanded] + .lui-nav-sub-panel { grid-template-rows: 1fr; }
+.lui-nav-sub-inner { overflow: hidden; margin-left: 0.85rem; padding-left: 0.5rem;
+  border-left: 1px solid var(--lantern-border); }
+
+/* A parent that owns a subnav is a disclosure, not a destination: "the current
+   page is in here". Painting it with the same filled background as the child
+   that IS current stacks two identical blocks against each other and neither
+   one reads as the answer. The parent keeps the accent colour and the weight;
+   the fill belongs to the leaf you are actually on. */
+.lui-nav-sub > .lui-nav-item-active,
+.lui-nav-sub > .lui-nav-item-active:hover { background: none; }
+.lui-nav-sub > .lui-nav-item-active:hover { background: var(--lantern-surface-sunken); }
+.lui-nav-sub > .lui-nav-item-active .lui-nav-sub-chevron { color: var(--lantern-accent); }
+
+/* Which segment of the rail you are on. The border lives on the container, so
+   the active child overlays its own segment rather than trying to colour part
+   of someone else's border. */
+.lui-nav-sub-inner .lui-nav-item { position: relative; }
+.lui-nav-sub-inner .lui-nav-item-active::before {
+  content: ""; position: absolute; left: -0.5rem; margin-left: -1px;
+  top: 0.15rem; bottom: 0.15rem; width: 2px; border-radius: 1px;
+  background: var(--lantern-accent); }
+
+/* Collapsed rail: hide text, center icons, flip the collapse chevron. Desktop
+   only — the mobile drawer has room for the full labels. */
+@media (min-width: 769px) {
+  .lui-app[data-collapsed] .lui-nav-item-label,
+  .lui-app[data-collapsed] .lui-nav-group-label,
+  .lui-app[data-collapsed] .lui-brand-name,
+  .lui-app[data-collapsed] .lui-nav-sub-chevron,
+  .lui-app[data-collapsed] .lui-collapse-label { display: none; }
+  /* On the rail, don't expand the subnav panel. */
+  .lui-app[data-collapsed] .lui-nav-sub-panel { grid-template-rows: 0fr; }
+  .lui-app[data-collapsed] .lui-nav-item { justify-content: center; padding-inline: 0;
+    position: relative; }
+  /* On the rail a count has nowhere to sit and nothing to sit beside, so it
+     becomes a dot on the icon. The number stays in the markup for anyone
+     reading the tooltip or the accessibility tree. */
+  .lui-app[data-collapsed] .lui-nav-item-badge { position: absolute;
+    top: 0.2rem; right: 0.85rem; margin-left: 0; min-width: 0; padding: 0;
+    width: 0.5rem; height: 0.5rem; font-size: 0; line-height: 0;
+    box-shadow: 0 0 0 2px var(--lantern-surface); }
+  .lui-app[data-collapsed] .lui-collapse-btn { justify-content: center; }
+  .lui-app[data-collapsed] .lui-collapse-icon { transform: rotate(180deg); }
+  .lui-app[data-collapsed] .lui-nav-group { margin-bottom: 0.5rem; }
+}
+
+/* Scrim: only ever painted behind the open mobile drawer. */
+.lui-app-scrim { display: none; position: fixed; inset: var(--lui-appbar-h) 0 0 0; z-index: 19;
+  background: rgb(0 0 0 / 0.45); }
+
+/* Narrow viewports: the sidebar becomes an off-canvas drawer behind the
+   hamburger in the bar. The rail width is ignored here — a drawer shows labels. */
+@media (max-width: 768px) {
+  .lui-appbar-toggle { display: inline-flex; }
+  .lui-app-sidebar, .lui-app[data-collapsed] .lui-app-sidebar { width: min(17rem, 82vw);
+    z-index: 20; transform: translateX(-100%); visibility: hidden;
+    transition: transform var(--lantern-duration) var(--lantern-ease),
+      visibility 0s linear var(--lantern-duration); }
+  .lui-app[data-nav-open] .lui-app-sidebar { transform: none; visibility: visible;
+    transition: transform var(--lantern-duration) var(--lantern-ease); }
+  .lui-app[data-nav-open] .lui-app-scrim { display: block; }
+  .lui-app-main, .lui-app[data-collapsed] .lui-app-main { margin-left: 0;
+    padding: 1.25rem 1.25rem 4rem; }
+  /* Main's side padding drops to 1.25rem here, so the strip's bleed has to drop
+     with it — left at 1.5rem it hung a quarter rem off both edges. */
+  .lui-app-main > .lui-app-breadcrumb { margin-inline: -1.25rem;
+    padding-inline: 1.25rem; }
+  .lui-app-sidebar-foot { display: none; }
+}
+
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  .lui-app-sidebar, .lui-app[data-collapsed] .lui-app-sidebar,
+  .lui-app[data-nav-open] .lui-app-sidebar { transition: none; }
+}
+
+/* ── Badge ── */
+.lui-badge { display: inline-flex; align-items: center; gap: 0.3em; font-weight: 600;
+  border-radius: 999px; border: 1px solid transparent; white-space: nowrap;
+  font-variant-numeric: tabular-nums; }
+.lui-badge[data-size="sm"] { font-size: 0.6875rem; padding: 0 0.5rem; height: 1.125rem; }
+.lui-badge[data-size="md"] { font-size: 0.71875rem; padding: 0 0.5625rem; height: 1.25rem; }
+.lui-badge[data-size="lg"] { font-size: 0.8125rem; padding: 0 0.7rem; height: 1.5rem; }
+.lui-badge[data-variant="soft"] { background: var(--lui-badge-c-soft); color: var(--lui-badge-c); }
+.lui-badge[data-variant="solid"] { background: var(--lui-badge-c); color: var(--lantern-primary-fg); }
+.lui-badge[data-variant="outline"] { border-color: var(--lantern-border); color: var(--lantern-fg); background: transparent; }
+.lui-badge[data-color="neutral"] { --lui-badge-c: var(--lantern-fg-muted); --lui-badge-c-soft: var(--lantern-surface-sunken); }
+/* Neutral's soft fill IS the sunken surface, so on a plain row the pill has no
+   edge and, in a column where every other value is a coloured badge, the
+   neutral ones read as unstyled text. A hairline restores the shape without
+   adding a colour; box-shadow so the box does not change size. */
+.lui-badge[data-color="neutral"][data-variant="soft"] { color: var(--lantern-fg);
+  box-shadow: inset 0 0 0 1px var(--lantern-border); }
+.lui-badge[data-color="primary"] { --lui-badge-c: var(--lantern-primary); --lui-badge-c-soft: var(--lantern-surface-sunken); }
+.lui-badge[data-color="primary"][data-variant="solid"] { color: var(--lantern-primary-fg); }
+.lui-badge[data-color="accent"] { --lui-badge-c: var(--lantern-accent); --lui-badge-c-soft: var(--lantern-accent-soft); }
+.lui-badge[data-color="accent"][data-variant="solid"] { color: var(--lantern-accent-fg); }
+.lui-badge[data-color="info"] { --lui-badge-c: var(--lantern-accent); --lui-badge-c-soft: var(--lantern-accent-soft); }
+.lui-badge[data-color="success"] { --lui-badge-c: var(--lantern-success); --lui-badge-c-soft: color-mix(in oklab, var(--lantern-success) 13%, transparent); }
+.lui-badge[data-color="warning"] { --lui-badge-c: var(--lantern-warning); --lui-badge-c-soft: color-mix(in oklab, var(--lantern-warning) 14%, transparent); }
+.lui-badge[data-color="danger"] { --lui-badge-c: var(--lantern-danger); --lui-badge-c-soft: color-mix(in oklab, var(--lantern-danger) 12%, transparent); }
+.lui-badge[data-variant="solid"] { color: #fff; }
+
+/* ── Table ── */
+.lui-table-wrap { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius);
+  overflow-x: auto; background: var(--lantern-surface-raised); }
+.lui-table { width: 100%; border-collapse: collapse; font-size: var(--lantern-text); }
+/* Row height is set by the tallest thing in a cell, which in a table with row
+   actions is the trigger button rather than the text — so the vertical padding
+   is what is left to give, and at 0.5rem it was giving too much: a 30px control
+   in a 48px row. Trimmed to 0.35rem the row lands near 43px, in the band the
+   reference tables sit in, without touching the shared button sizes. The
+   horizontal padding is unchanged; the columns were never the crowded part. */
+.lui-th { background: var(--lantern-surface-sunken); color: var(--lantern-fg-muted);
+  font-size: var(--lantern-text-sm); font-weight: 550; text-align: left;
+  padding: 0.35rem 0.7rem; border-bottom: 1px solid var(--lantern-border); white-space: nowrap; }
+.lui-td { padding: 0.35rem 0.7rem; border-bottom: 1px solid var(--lantern-border);
+  color: var(--lantern-fg); }
+.lui-tr:last-child .lui-td { border-bottom: none; }
+.lui-tr:hover { background: var(--lantern-surface-hover); }
+.lui-tr-selected, .lui-tr-selected:hover { background: var(--lantern-accent-soft); }
+.lui-td-num, .lui-th-num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ── Tabs ── */
+.lui-tabs-list { display: inline-flex; align-items: center; }
+.lui-tabs-list[data-variant="segmented"] { background: var(--lantern-surface-sunken);
+  border: 1px solid var(--lantern-border);
+  border-radius: calc(var(--lantern-radius) + 1px); padding: 3px; gap: 2px; }
+.lui-tab { display: inline-flex; align-items: center; gap: 0.35rem; border: none; background: none;
+  color: var(--lantern-fg-muted); font-weight: 500; cursor: pointer; text-decoration: none;
+  white-space: nowrap; font-family: inherit; }
+.lui-tabs-list[data-size="md"] .lui-tab { font-size: var(--lantern-text); padding: 0.25rem 0.7rem; }
+.lui-tabs-list[data-size="sm"] .lui-tab { font-size: var(--lantern-text-sm); padding: 0.2rem 0.55rem; }
+.lui-tabs-list[data-variant="segmented"] .lui-tab { border-radius: var(--lantern-radius-sm); }
+.lui-tabs-list[data-variant="segmented"] .lui-tab-active { background: var(--lantern-surface-raised);
+  color: var(--lantern-fg); font-weight: 600; box-shadow: var(--lantern-shadow); }
+.lui-tabs-list[data-variant="underline"] { gap: 1rem; border-bottom: 1px solid var(--lantern-border);
+  width: 100%; }
+.lui-tabs-list[data-variant="underline"] .lui-tab { padding: 0.45rem 0.1rem;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.lui-tabs-list[data-variant="underline"] .lui-tab-active { color: var(--lantern-fg);
+  border-bottom-color: var(--lantern-accent); font-weight: 600; }
+.lui-tab .lui-badge { margin-left: 0.1rem; }
+.lui-tab-active .lui-badge { color: var(--lantern-accent); }
+.lui-tabs-panel { margin-top: 0.9rem; }
+
+/* ── Select ── */
+.lui-select { position: relative; }
+.lui-select-toggle { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  width: 100%; height: var(--lantern-control-h); padding: 0 var(--lantern-control-px);
+  font-size: var(--lantern-text); font-family: inherit; text-align: left;
+  background: var(--lantern-surface); color: var(--lantern-fg);
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius);
+  box-shadow: var(--lantern-shadow); cursor: pointer; }
+.lui-select-toggle:focus-visible { outline: none; border-color: var(--lantern-ring);
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft); }
+.lui-select-toggle:disabled { opacity: 0.5; cursor: not-allowed; }
+.lui-select-value[data-empty] { color: var(--lantern-fg-subtle); }
+.lui-select-caret { color: var(--lantern-fg-subtle); flex-shrink: 0; font-size: 0.9em; }
+.lui-select-clear { position: absolute; top: 50%; right: 1.85rem; transform: translateY(-50%);
+  display: inline-flex; align-items: center; justify-content: center; padding: 0.125rem;
+  color: var(--lantern-fg-subtle); background: transparent; border: 0; border-radius: 0.25rem;
+  cursor: pointer; font-size: 0.8em; line-height: 0; }
+.lui-select-clear:hover { color: var(--lantern-fg); }
+.lui-select-listbox { position: fixed; z-index: 70; max-height: 16rem; overflow-y: auto;
+  background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius); box-shadow: var(--lantern-shadow-md); padding: 0.25rem; }
+.lui-select-option { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  width: 100%; padding: 0.35rem 0.6rem; font-size: var(--lantern-text); font-family: inherit;
+  text-align: left; background: none; border: none; border-radius: var(--lantern-radius-sm);
+  color: var(--lantern-fg); cursor: pointer; }
+.lui-select-option:hover, .lui-select-option:focus-visible { outline: none;
+  background: var(--lantern-surface-sunken); }
+/* The hidden attribute must beat the class's display:flex — same rule the
+   modal needs (search filtering sets option.hidden). */
+.lui-select-option[hidden] { display: none; }
+.lui-select-check { visibility: hidden; color: var(--lantern-accent); font-size: 0.9em; }
+.lui-select-option[aria-selected="true"] .lui-select-check { visibility: visible; }
+.lui-autocomplete { position: relative; }
+.lui-autocomplete-control { display: flex; align-items: center; gap: 0.5rem;
+  width: 100%; height: var(--lantern-control-h); padding: 0 var(--lantern-control-px);
+  background: var(--lantern-surface); color: var(--lantern-fg);
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius);
+  box-shadow: var(--lantern-shadow); box-sizing: border-box; }
+.lui-autocomplete-control:focus-within { border-color: var(--lantern-ring);
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft); }
+.lui-autocomplete-input { flex: 1; min-width: 0; border: none; background: none; outline: none;
+  font-size: var(--lantern-text); font-family: inherit; color: var(--lantern-fg);
+  padding: 0; height: 100%; }
+.lui-autocomplete-input::placeholder { color: var(--lantern-fg-subtle); }
+.lui-autocomplete-input:disabled { opacity: 0.5; cursor: not-allowed; }
+.lui-autocomplete-row { display: flex; align-items: center; gap: 0.5rem; }
+.lui-autocomplete-row .lui-autocomplete-control { flex: 1; min-width: 0; }
+.lui-autocomplete-affix { display: inline-flex; align-items: center; flex: none; color: var(--lantern-fg-muted); }
+.lui-autocomplete-outer { min-height: var(--lantern-control-h); }
+.lui-autocomplete-clear { display: inline-flex; align-items: center; justify-content: center;
+  width: 1.5rem; height: 1.5rem; padding: 0; border: 0; border-radius: var(--lantern-radius-sm);
+  background: transparent; color: var(--lantern-fg-muted); cursor: pointer; }
+.lui-autocomplete-clear:hover { background: var(--lantern-surface-sunken); color: var(--lantern-fg); }
+.lui-autocomplete-header, .lui-autocomplete-footer { padding: 0.45rem 0.6rem;
+  color: var(--lantern-fg-muted); font-size: 0.875em; }
+.lui-autocomplete-header { border-bottom: 1px solid var(--lantern-border); }
+.lui-autocomplete-footer { border-top: 1px solid var(--lantern-border); }
+.lui-autocomplete-group { padding: 0.45rem 0.6rem 0.25rem; color: var(--lantern-fg-subtle);
+  font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.lui-autocomplete-group[data-depth="1"] { padding-left: 1rem; }
+.lui-autocomplete-group[data-depth="2"] { padding-left: 1.4rem; }
+.lui-select-option[data-depth="1"] { padding-left: 1rem; }
+.lui-select-option[data-depth="2"] { padding-left: 1.4rem; }
+.lui-select-option[data-active] { outline: none; background: var(--lantern-surface-sunken); }
+.lui-autocomplete-loading { display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.75rem; color: var(--lantern-fg-muted); font-size: 0.875em; }
+.lui-autocomplete-loading[hidden] { display: none; }
+.lui-autocomplete-spinner { width: 0.9rem; height: 0.9rem; border: 2px solid var(--lantern-border);
+  border-top-color: var(--lantern-accent); border-radius: 999px; animation: lui-spin 0.7s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .lui-autocomplete-spinner { animation-duration: 1.5s; } }
+.lui-select-native-wrap { position: relative; display: block; }
+.lui-select-native { appearance: none; width: 100%; height: var(--lantern-control-h);
+  padding: 0 1.9rem 0 var(--lantern-control-px); font-size: var(--lantern-text);
+  font-family: inherit; background: var(--lantern-surface); color: var(--lantern-fg);
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius);
+  box-shadow: var(--lantern-shadow); cursor: pointer; }
+.lui-select-native:focus-visible { outline: none; border-color: var(--lantern-ring);
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft); }
+.lui-select-native-wrap .lui-select-caret { position: absolute; right: 0.6rem; top: 50%;
+  transform: translateY(-50%); pointer-events: none; }
+.lui-invalid { border-color: var(--lantern-danger); }
+
+/* ── Pagination ── */
+.lui-pagination { display: flex; align-items: center; gap: 0.75rem; font-size: var(--lantern-text-sm); }
+.lui-pagination-count { color: var(--lantern-fg-muted); margin-right: auto;
+  font-variant-numeric: tabular-nums; }
+.lui-pager { display: inline-flex; gap: 3px; }
+.lui-pg { display: inline-flex; align-items: center; justify-content: center; min-width: 1.75rem;
+  height: 1.75rem; padding: 0 0.4rem; border: 1px solid var(--lantern-border);
+  background: var(--lantern-surface); color: var(--lantern-fg);
+  border-radius: var(--lantern-radius-sm); font-size: var(--lantern-text-sm);
+  font-variant-numeric: tabular-nums; text-decoration: none; cursor: pointer; font-family: inherit; }
+.lui-pg:hover { background: var(--lantern-surface-sunken); }
+.lui-pg-current, .lui-pg-current:hover { background: var(--lantern-primary);
+  color: var(--lantern-primary-fg); border-color: var(--lantern-primary); font-weight: 600; }
+.lui-pg-disabled { opacity: 0.4; pointer-events: none; }
+.lui-pg-gap { color: var(--lantern-fg-subtle); padding: 0 0.2rem; align-self: center; }
+.lui-pg-size { gap: 0.35rem; padding: 0 0.6rem; white-space: nowrap; }
+.lui-dropdown-item[data-selected] { color: var(--lantern-accent); font-weight: 600; }
+
+/* ── Data table ── */
+.lui-dt-header { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  margin-bottom: 0.75rem; }
+.lui-dt-title { font-size: 0.95rem; font-weight: 650; letter-spacing: -0.01em; margin: 0;
+  color: var(--lantern-fg); }
+.lui-dt-header-actions { display: flex; align-items: center; gap: 0.5rem; }
+.lui-dt-toolbar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; }
+.lui-dt-bulkbar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem;
+  padding: 0.4rem 0.6rem; background: var(--lantern-accent-soft);
+  border: 1px solid color-mix(in oklab, var(--lantern-accent) 25%, transparent);
+  border-radius: var(--lantern-radius); }
+.lui-dt-bulkcount { font-size: var(--lantern-text-sm); font-weight: 600; color: var(--lantern-accent);
+  margin-right: 0.25rem; font-variant-numeric: tabular-nums; }
+.lui-th-check, .lui-td-check { width: 2rem; text-align: center; }
+.lui-th-actions, .lui-td-actions { width: 2.25rem; text-align: right; }
+.lui-th-sort { display: inline-flex; align-items: center; gap: 0.25rem; color: inherit;
+  text-decoration: none; cursor: pointer; }
+.lui-th-sort:hover { color: var(--lantern-fg); }
+.lui-th-sort-icon { color: var(--lantern-accent); font-size: 0.85em; min-width: 0.7em; }
+.lui-td-empty { padding: 2rem 1rem; }
+.lui-dt-pagination { margin-top: 0.6rem; }
+
+/* ── Stat cards / data table chrome ── */
+.lui-dt-overview { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
+  background: var(--lantern-surface-raised); margin-bottom: 0.75rem; overflow: hidden; }
+.lui-dt-overview-head { display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 0.45rem 0.8rem; background: none; border: none; cursor: pointer;
+  font-family: inherit; font-size: var(--lantern-text-sm); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em; color: var(--lantern-fg-muted); }
+.lui-dt-overview-head:hover { background: var(--lantern-surface-sunken); }
+.lui-dt-overview-chev { transition: transform var(--lantern-duration) var(--lantern-ease); }
+.lui-dt-overview[data-collapsed] .lui-dt-overview-chev { transform: rotate(-90deg); }
+.lui-dt-overview[data-collapsed] .lui-dt-stats { display: none; }
+/* flex-wrap rather than `grid auto-fit`: with auto-fit, a row that can hold N
+   columns leaves N-1 dead cells beside the final orphan (e.g. 4 stats in a
+   3-column row). Flexing from the same basis keeps equal widths when they fit
+   on one row, and lets the last row stretch to fill instead of gapping. */
+.lui-dt-stats { display: flex; flex-wrap: wrap;
+  gap: 1px; background: var(--lantern-border); border-top: 1px solid var(--lantern-border); }
+.lui-stat-grid { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
+  overflow: hidden; }
+.lui-dt-stat { flex: 1 1 9.5rem; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem;
+  padding: 0.7rem 0.8rem;
+  background: var(--lantern-surface-raised); text-decoration: none; }
+.lui-dt-stat:hover { background: var(--lantern-surface-hover); }
+.lui-dt-stat:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: -2px; }
+.lui-dt-stat-static { pointer-events: none; }
+.lui-dt-stat-label { font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); }
+.lui-dt-stat-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
+.lui-dt-stat-icon { flex: none; width: 1rem; height: 1rem; color: var(--lantern-fg-muted); }
+.lui-dt-stat-value { min-width: 0; max-width: 100%; overflow-wrap: anywhere;
+  font-size: 1.2rem; font-weight: 650; letter-spacing: -0.02em;
+  color: var(--lantern-fg); font-variant-numeric: tabular-nums; }
+.lui-dt-stat-sub { font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); margin-top: 0.1rem; }
+.lui-dt-tabsrow { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem; }
+.lui-dt-viewtoggle { margin-left: auto; display: inline-flex; border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-sm); overflow: hidden; }
+.lui-vt { display: inline-flex; align-items: center; justify-content: center; width: 1.9rem;
+  height: 1.7rem; color: var(--lantern-fg-muted); text-decoration: none;
+  font-size: var(--lantern-text-sm); background: var(--lantern-surface); }
+.lui-vt:hover { color: var(--lantern-fg); background: var(--lantern-surface-hover); }
+.lui-vt-active { background: var(--lantern-surface-sunken); color: var(--lantern-fg); }
+.lui-vt-icon { width: 0.95rem; height: 0.95rem; }
+.lui-dt-chrome { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; flex: 1; }
+.lui-dt-search { display: flex; align-items: center; gap: 0.45rem; height: var(--lantern-control-h);
+  padding: 0 var(--lantern-control-px); min-width: 15rem; background: var(--lantern-surface);
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius);
+  box-shadow: var(--lantern-shadow); color: var(--lantern-fg-subtle); }
+.lui-dt-search:focus-within { border-color: var(--lantern-ring);
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft); }
+.lui-dt-search input { flex: 1; border: none; background: none; outline: none;
+  font-size: var(--lantern-text); font-family: inherit; color: var(--lantern-fg); }
+.lui-dt-search input::placeholder { color: var(--lantern-fg-subtle); }
+.lui-dt-filter { width: auto; }
+.lui-dt-filter .lui-select-native { width: auto; }
+/* Grid view. The tile keeps its border — it is the thing being bounded — but
+   loses the raised fill and shadow so it reads as an index entry rather than
+   a floating panel. The wrapper's own outline is dropped in the [data-view]
+   rules below, so there is one box per item instead of a box around boxes.
+   align-content: start is load-bearing. In fill mode the grid gets a definite
+   height from the page, and grid's default `normal` align-content behaves as
+   `stretch` — which inflates the auto rows to fill it, so a 107px tile became
+   244px and any mt-auto footer floated ~114px below its content. */
+.lui-dt-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 0.5rem; align-content: start; }
+.lui-dt-card { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-md);
+  background: var(--lantern-surface); padding: 0.625rem 0.75rem; box-sizing: border-box;
+  min-width: 0; }
+.lui-dt-card:hover { background: var(--lantern-surface-hover); }
+
+/* List view: headerless index rows (name left, meta/actions right) */
+/* Neither simple index view is a panel. A bordered, shadowed card around a plain
+   list of names is the table chrome this view exists to remove, so the root sheds
+   it and the rows sit directly on the page separated by hairlines. The grid gets
+   the same treatment: its tiles carry their own borders, so a panel around them
+   is a box drawn around boxes. */
+.lui-datatable[data-view="list"],
+.lui-datatable[data-view="cards"] { border: none; border-radius: 0;
+  background: transparent; box-shadow: none; overflow: visible; }
+.lui-datatable[data-view="list"] .lui-dt-header,
+.lui-datatable[data-view="list"] .lui-dt-chromerow,
+.lui-datatable[data-view="cards"] .lui-dt-header,
+.lui-datatable[data-view="cards"] .lui-dt-chromerow { padding-inline: 0; }
+/* Breathing room under the chrome row's hairline. At padding 0 the first row of
+   tiles butts its border straight into that divider, which reads as a rendering
+   fault rather than a boundary. */
+.lui-datatable[data-view="cards"] .lui-dt-cards { padding: 0.75rem 0 0; }
+
+.lui-dt-list { display: flex; flex-direction: column; }
+/* Separators only between rows (no leading or trailing rule) */
+.lui-dt-list-row + .lui-dt-list-row { border-top: 1px solid var(--lantern-border); }
+.lui-dt-list-row { display: flex; align-items: center; gap: 1rem; min-width: 0;
+  min-height: 2.5rem; padding: 0.45rem 0.15rem; box-sizing: border-box; }
+/* Same class of bug as .lui-list-row[hidden]: author `display: flex` beats UA [hidden]. */
+.lui-dt-list-row[hidden] { display: none; }
+.lui-dt-list-row:hover { background: var(--lantern-surface-hover); }
+.lui-dt-list-main { flex: 1; min-width: 0; }
+.lui-dt-list-actions { flex-shrink: 0; display: flex; align-items: center; gap: 0.375rem;
+  position: relative; z-index: 1; }
+
+/* ── Data table toolbar rework ── */
+.lui-dt-toolbar { justify-content: flex-end; }
+.lui-dt-chrome { flex: 0 1 auto; justify-content: flex-end; }
+.lui-dt-filterpanel { padding: 0.5rem 0.6rem; min-width: 14rem; display: flex;
+  flex-direction: column; gap: 0.55rem; }
+.lui-dt-filterrow { display: flex; flex-direction: column; gap: 0.2rem; }
+.lui-dt-filterlabel { font-size: var(--lantern-text-sm); font-weight: 550;
+  color: var(--lantern-fg-muted); }
+.lui-dt-clearfilters { display: inline-flex; align-items: center; gap: 0.3rem;
+  align-self: flex-start; border: none; background: none; padding: 0.1rem 0;
+  font-size: var(--lantern-text-sm); font-family: inherit; color: var(--lantern-fg-muted);
+  cursor: pointer; }
+.lui-dt-clearfilters:hover { color: var(--lantern-danger); }
+.lui-dt-selectall { border: none; background: none; padding: 0; font-family: inherit;
+  font-size: var(--lantern-text-sm); font-weight: 550; color: var(--lantern-accent);
+  cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+
+/* ── Data table title section ── */
+.lui-dt-titles { display: flex; flex-direction: column; gap: 0.1rem; }
+.lui-dt-titlerow { display: flex; align-items: center; gap: 0.35rem; }
+.lui-dt-info { display: inline-flex; border: none; background: none; padding: 0.1rem;
+  color: var(--lantern-fg-subtle); cursor: pointer; border-radius: var(--lantern-radius-sm);
+  font-size: 1rem; line-height: 0; }
+.lui-dt-info:hover { color: var(--lantern-accent); }
+.lui-dt-subtitle { margin: 0; font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); }
+
+/* ── Data table card shell ── */
+.lui-datatable { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
+  background: var(--lantern-surface-raised); overflow: hidden; box-shadow: var(--lantern-shadow); }
+.lui-datatable .lui-dt-header { margin-bottom: 0; padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--lantern-border); }
+.lui-datatable .lui-dt-overview { border: none; border-radius: 0; margin-bottom: 0;
+  border-bottom: 1px solid var(--lantern-border); }
+.lui-dt-chromerow { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+  padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--lantern-border); }
+.lui-dt-spacer { flex: 1; }
+/* Standing alone the bulk bar is a rounded accent callout floating above the
+   table. Inside a datatable it is a chrome row like the toolbar and the
+   pagination — flush, full width, square — and an accent wash on a strip that
+   shape is a slab, sitting directly under a segmented control of much the same
+   colour. It keeps the ordinary hairline and lets the count, which is already
+   in the accent, say that a selection is live. */
+.lui-datatable .lui-dt-bulkbar { margin-bottom: 0; border: none; border-radius: 0;
+  background: transparent;
+  border-bottom: 1px solid var(--lantern-border); }
+.lui-datatable .lui-table-wrap { border: none; border-radius: 0; }
+
+/* A row's hover and selected states are rounded bands, not full-bleed slabs.
+   `border-collapse: collapse` hands every border and corner to the TABLE, so a
+   radius on a row or a cell is dropped on the floor — hence separate borders
+   with zero spacing, which draws the same hairlines (only the cells' bottom
+   edges are ever set, so nothing doubles up) while letting the outer cells
+   round. The tint moves from the row to its cells for the same reason: a
+   `border-radius` on a `tr` is not reliably honoured. */
+.lui-datatable .lui-table { border-collapse: separate; border-spacing: 0; }
+.lui-datatable .lui-tr:hover { background: transparent; }
+.lui-datatable .lui-tr:hover .lui-td { background: var(--lantern-surface-hover); }
+/* A run of selected rows is one band, not a stack of cards. Every row rounding
+   on its own turns a block of them into separate tiles with the page showing
+   through the dividers, so the corners a row shares with a selected neighbour
+   are squared and the hairline between them goes. The tint is mixed into the
+   surface rather than laid over it as a translucent wash, so it does not
+   deepen where it meets the hover state. */
+.lui-datatable .lui-tr-selected .lui-td,
+.lui-datatable .lui-tr-selected:hover .lui-td {
+  background: color-mix(in oklab, var(--lantern-accent) 12%, var(--lantern-surface));
+}
+.lui-datatable .lui-tr-selected:has(+ .lui-tr-selected) .lui-td {
+  border-bottom-color: transparent;
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
+.lui-datatable .lui-tr-selected + .lui-tr-selected .lui-td {
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+}
+.lui-datatable .lui-tr .lui-td:first-child {
+  border-start-start-radius: var(--lantern-radius-sm);
+  border-end-start-radius: var(--lantern-radius-sm);
+}
+.lui-datatable .lui-tr .lui-td:last-child {
+  border-start-end-radius: var(--lantern-radius-sm);
+  border-end-end-radius: var(--lantern-radius-sm);
+}
+/* Inside a datatable the column header drops its tint. Standing alone the table
+   is a bordered, rounded box and the sunken band reads as its cap; full-bleed in
+   a card it is a hard-cornered slab jammed into the card's edge, in the same
+   colour as the segmented tabs sitting rounded and inset directly above it. The
+   hairline under it already says "header", and every other chrome row here —
+   the toolbar, the bulk bar, the pagination — is a hairline and nothing else.
+   The surface is stated rather than dropped because in fill mode the header is
+   sticky and rows must not show through it. */
+.lui-datatable .lui-th { background: var(--lantern-surface-raised); }
+
+/* Fill mode (`<.data_table fill>`): the datatable stretches to its flex parent's
+   height, the rows area becomes the vertical scroll region, and the overview /
+   header / chrome / pagination stay pinned and always visible. Opt-in so the
+   default table keeps its natural content height. Only `.lui-table-wrap` used
+   to scroll, so a long list grew with its rows and pushed pagination below
+   the fold. List and cards take the same remaining-height + internal-scroll
+   contract as the table wrap. */
+.lui-datatable-fill {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+}
+.lui-datatable-fill > .lui-dt-overview,
+.lui-datatable-fill > .lui-dt-header,
+.lui-datatable-fill > .lui-dt-chromerow,
+.lui-datatable-fill > .lui-dt-bulkbar,
+.lui-datatable-fill > .lui-dt-pagination {
+  flex: none;
+}
+.lui-datatable-fill > .lui-table-wrap,
+.lui-datatable-fill > .lui-dt-list,
+.lui-datatable-fill > .lui-dt-cards {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
+}
+/* List/cards drop the panel and set overflow:visible so rows sit on the page.
+   In fill mode the root is a bounded flex column; clip so a tall grouped list
+   cannot paint past the pinned pagination. */
+.lui-datatable-fill[data-view="list"],
+.lui-datatable-fill[data-view="cards"] {
+  overflow: hidden;
+}
+/* In fill mode the wrap is the scroll region, so the column header would scroll
+   away with the rows. Pin it. `.lui-table` uses border-collapse: collapse, and a
+   collapsed border belongs to the TABLE rather than to the cell, so it does not
+   travel with a sticky th — the hairline is redrawn as an inset shadow, which
+   does. The cell's own bottom border has to go with it: left in place it kept
+   painting one pixel below the shadow, and the header ended up underlined at
+   twice the weight of every row divider beneath it. It is zeroed by colour
+   rather than by `none` so collapsed-border resolution still picks this edge
+   and a neighbour's border cannot surface in its place. The th carries an
+   opaque surface, so rows cannot show through it. */
+.lui-datatable-fill > .lui-table-wrap .lui-th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  border-bottom-color: transparent;
+  box-shadow: inset 0 -1px 0 var(--lantern-border);
+}
+.lui-datatable .lui-dt-cards { padding: 0.9rem; }
+.lui-datatable .lui-dt-pagination { margin-top: 0; padding: 0.55rem 0.9rem;
+  border-top: 1px solid var(--lantern-border); }
+
+/* Flush (`<.data_table flush>`): the de-panelling the list and card views get
+   from their data-view, for the TABLE view, which has no such hook. Border,
+   radius, shadow and raised surface go; the header, toolbar, bulk bar, cells and
+   pagination come out to the page gutter, so the table reads as the page rather
+   than as a card sitting on it. The rows have to move with the chrome, or the
+   first column starts 0.7rem inside a header that starts at 0 and the left edge
+   reads as a misprint — but only the OUTER edges are zeroed, since the padding
+   between columns is doing real work. Every selector is doubled up on
+   `.lui-datatable` because it has to outrank the panel rules above, which are
+   written against that class and come later in this sheet. */
+.lui-datatable.lui-datatable-flush { border: none; border-radius: 0;
+  background: transparent; box-shadow: none; overflow: visible; }
+.lui-datatable.lui-datatable-flush .lui-dt-header,
+.lui-datatable.lui-datatable-flush .lui-dt-chromerow,
+.lui-datatable.lui-datatable-flush .lui-dt-pagination,
+.lui-datatable.lui-datatable-flush .lui-dt-bulkbar { padding-inline: 0; }
+/* The outer cells used to sit at the gutter on zero padding. That leaves a
+   rounded row highlight starting on the first glyph, so the padding comes back
+   and the table is pulled out by the same amount — the text still lands on the
+   gutter, and the band has somewhere to turn its corner. */
+.lui-datatable.lui-datatable-flush { --lui-dt-bleed: 0.6rem; }
+.lui-datatable.lui-datatable-flush .lui-table-wrap {
+  margin-inline: calc(var(--lui-dt-bleed) * -1);
+}
+.lui-datatable.lui-datatable-flush .lui-th:first-child,
+.lui-datatable.lui-datatable-flush .lui-td:first-child { padding-left: var(--lui-dt-bleed); }
+.lui-datatable.lui-datatable-flush .lui-th:last-child,
+.lui-datatable.lui-datatable-flush .lui-td:last-child { padding-right: var(--lui-dt-bleed); }
+.lui-datatable.lui-datatable-flush .lui-dt-cards { padding: 0.75rem 0 0; }
+
+/* The wrap carries the raised surface that makes a standalone table a panel, and
+   flush takes the panel away — so left alone it stays a hard-cornered raised
+   rectangle bleeding to the page gutter, which is the slab flush exists to get
+   rid of. Give the page back its own surface. The header cell cannot simply go
+   transparent with it: in fill mode it is sticky and rows scroll underneath, so
+   it is painted in that same page surface instead, opaque and invisible. */
+.lui-datatable.lui-datatable-flush .lui-table-wrap { background: transparent; }
+.lui-datatable.lui-datatable-flush .lui-th { background: var(--lantern-surface); }
+.lui-dt-filtertext { height: 1.9rem; padding: 0 0.55rem; font-size: var(--lantern-text-sm);
+  font-family: inherit; background: var(--lantern-surface); color: var(--lantern-fg);
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm);
+  width: 100%; box-sizing: border-box; }
+.lui-dt-filtertext:focus-visible { outline: none; border-color: var(--lantern-ring);
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft); }
+.lui-dt-filterrange { display: flex; align-items: center; gap: 0.35rem; }
+.lui-dt-rangesep { color: var(--lantern-fg-subtle); }
+
+/* ── Select: search + multi ── */
+.lui-select-search { display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.5rem;
+  margin-bottom: 0.25rem; border-bottom: 1px solid var(--lantern-border);
+  color: var(--lantern-fg-subtle); }
+.lui-select-search input { flex: 1; border: none; background: none; outline: none;
+  font-size: var(--lantern-text-sm); font-family: inherit; color: var(--lantern-fg);
+  padding: 0.15rem 0; }
+.lui-select-search input::placeholder { color: var(--lantern-fg-subtle); }
+.lui-select-options { max-height: 12rem; overflow-y: auto; }
+.lui-select-noresults { margin: 0; padding: 0.5rem 0.6rem; font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-subtle); }
+
+/* ── Switch ── */
+.lui-switch-field { display: flex; flex-direction: column; gap: 0.25rem; }
+.lui-switch-row { display: flex; align-items: flex-start; gap: 0.625rem; }
+.lui-switch {
+  --lui-switch-h: 1.35rem;
+  --lui-switch-w: 2.35rem;
+  --lui-switch-pad: 0.125rem;
+  --lui-switch-thumb: calc(var(--lui-switch-h) - var(--lui-switch-pad) * 2);
+  --lui-switch-travel: calc(var(--lui-switch-w) - var(--lui-switch-h));
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  cursor: pointer;
+  line-height: 0;
+}
+.lui-switch[data-size="sm"] {
+  --lui-switch-h: 1.1rem;
+  --lui-switch-w: 1.9rem;
+  --lui-switch-pad: 0.1rem;
+}
+.lui-switch[data-size="md"] {
+  --lui-switch-h: 1.35rem;
+  --lui-switch-w: 2.35rem;
+  --lui-switch-pad: 0.125rem;
+}
+.lui-switch[data-size="lg"] {
+  --lui-switch-h: 1.6rem;
+  --lui-switch-w: 2.8rem;
+  --lui-switch-pad: 0.15rem;
+}
+.lui-switch[data-disabled] { opacity: 0.55; cursor: not-allowed; }
+.lui-switch-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.lui-switch-track {
+  display: inline-flex;
+  align-items: center;
+  width: var(--lui-switch-w);
+  height: var(--lui-switch-h);
+  padding: var(--lui-switch-pad);
+  border-radius: 999px;
+  background: var(--lantern-border);
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  transition: background-color var(--lantern-duration) var(--lantern-ease),
+    box-shadow var(--lantern-duration) var(--lantern-ease);
+}
+.lui-switch-thumb {
+  display: block;
+  width: var(--lui-switch-thumb);
+  height: var(--lui-switch-thumb);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: var(--lantern-shadow);
+  transition: transform var(--lantern-duration) var(--lantern-ease);
+}
+.lui-switch-input:checked ~ .lui-switch-track {
+  background: var(--lantern-accent);
+}
+.lui-switch[data-color="primary"] .lui-switch-input:checked ~ .lui-switch-track {
+  background: var(--lantern-primary);
+}
+.lui-switch[data-color="danger"] .lui-switch-input:checked ~ .lui-switch-track {
+  background: var(--lantern-danger);
+}
+.lui-switch[data-color="success"] .lui-switch-input:checked ~ .lui-switch-track {
+  background: var(--lantern-success);
+}
+.lui-switch[data-color="warning"] .lui-switch-input:checked ~ .lui-switch-track {
+  background: var(--lantern-warning);
+}
+.lui-switch[data-color="info"] .lui-switch-input:checked ~ .lui-switch-track,
+.lui-switch[data-color="accent"] .lui-switch-input:checked ~ .lui-switch-track {
+  background: var(--lantern-accent);
+}
+.lui-switch-input:checked ~ .lui-switch-track .lui-switch-thumb {
+  transform: translateX(var(--lui-switch-travel));
+}
+.lui-switch-input:focus-visible ~ .lui-switch-track {
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft);
+}
+.lui-switch-label { cursor: pointer; font-weight: 500; }
+
+/* ── Slider ──────────────────────────────────────────────────────────── */
+.lui-slider {
+  --lui-slider-pct: 0%;
+  --lui-slider-h: 0.375rem;
+  --lui-slider-thumb: 1rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: var(--lantern-control-h);
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.lui-slider[data-disabled] { opacity: 0.55; cursor: not-allowed; }
+.lui-slider-track {
+  position: relative;
+  width: 100%;
+  height: var(--lui-slider-h);
+  border-radius: 999px;
+  background: var(--lantern-border);
+}
+.lui-slider-range {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--lui-slider-pct);
+  border-radius: inherit;
+  background: var(--lantern-accent);
+}
+.lui-slider[data-invalid] .lui-slider-range { background: var(--lantern-danger); }
+.lui-slider-thumb {
+  position: absolute;
+  top: 50%;
+  left: var(--lui-slider-pct);
+  width: var(--lui-slider-thumb);
+  height: var(--lui-slider-thumb);
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: var(--lantern-surface);
+  border: 1px solid var(--lantern-border-strong);
+  box-shadow: var(--lantern-shadow);
+  box-sizing: border-box;
+}
+.lui-slider-thumb:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft);
+}
+
+/* ── Radio ── */
+.lui-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  font-family: var(--lantern-font);
+}
+.lui-radio-legend {
+  font-size: var(--lantern-text);
+  font-weight: 550;
+  color: var(--lantern-fg);
+  padding: 0;
+  margin-bottom: 0.15rem;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.375rem;
+}
+.lui-radio {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  cursor: pointer;
+  font-size: var(--lantern-text);
+  color: var(--lantern-fg);
+}
+.lui-radio[data-disabled] { opacity: 0.55; cursor: not-allowed; }
+.lui-radio-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.lui-radio-dot {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--lantern-border-strong, var(--lantern-border));
+  background: var(--lantern-surface);
+  box-sizing: border-box;
+  transition: border-color var(--lantern-duration) var(--lantern-ease),
+    box-shadow var(--lantern-duration) var(--lantern-ease),
+    background var(--lantern-duration) var(--lantern-ease);
+  position: relative;
+}
+.lui-radio-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0.2rem;
+  border-radius: 999px;
+  background: var(--lantern-accent);
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity var(--lantern-duration) var(--lantern-ease),
+    transform var(--lantern-duration) var(--lantern-ease);
+}
+.lui-radio-input:checked + .lui-radio-dot {
+  border-color: var(--lantern-accent);
+}
+.lui-radio-input:checked + .lui-radio-dot::after { opacity: 1; transform: scale(1); }
+.lui-radio-input:focus-visible + .lui-radio-dot {
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft);
+}
+.lui-radio-texts { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.lui-radio-label { display: inline-flex; align-items: baseline; gap: 0.35rem; font-weight: 500; }
+.lui-radio-desc { font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); }
+.lui-radio-group[data-variant="cards"] {
+  gap: 0.5rem;
+}
+.lui-radio-group[data-variant="cards"] .lui-radio {
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius);
+  background: var(--lantern-surface-raised);
+  box-shadow: var(--lantern-shadow);
+  transition: border-color var(--lantern-duration) var(--lantern-ease),
+    background var(--lantern-duration) var(--lantern-ease),
+    box-shadow var(--lantern-duration) var(--lantern-ease);
+}
+.lui-radio-group[data-variant="cards"] .lui-radio:has(.lui-radio-input:checked) {
+  border-color: var(--lantern-accent);
+  background: color-mix(in oklab, var(--lantern-accent) 8%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--lantern-accent) 30%, transparent);
+}
+.lui-radio-group[data-variant="cards"] .lui-radio:has(.lui-radio-input:focus-visible) {
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft);
+}
+
+/* ── Textarea ── */
+.lui-textarea {
+  display: block;
+  width: 100%;
+  min-height: 5rem;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 0.5rem 0.625rem;
+  font-family: inherit;
+  font-size: var(--lantern-text);
+  line-height: 1.45;
+  color: var(--lantern-fg);
+  background: var(--lantern-surface);
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius);
+  box-shadow: var(--lantern-shadow);
+  outline: none;
+  transition: border-color var(--lantern-duration) var(--lantern-ease),
+    box-shadow var(--lantern-duration) var(--lantern-ease);
+}
+.lui-textarea::placeholder { color: var(--lantern-fg-subtle); }
+.lui-textarea:focus-visible {
+  border-color: var(--lantern-ring);
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft);
+}
+.lui-textarea[data-invalid] { border-color: var(--lantern-danger); }
+.lui-textarea[data-invalid]:focus-visible {
+  border-color: var(--lantern-danger);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--lantern-danger) 20%, transparent);
+}
+.lui-textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.lui-field[data-size="xs"] .lui-textarea { font-size: 0.75rem; padding: 0.35rem 0.5rem; }
+.lui-field[data-size="sm"] .lui-textarea { font-size: var(--lantern-text-sm); padding: 0.4rem 0.55rem; }
+.lui-field[data-size="lg"] .lui-textarea { font-size: 0.875rem; padding: 0.6rem 0.75rem; }
+.lui-field[data-size="xl"] .lui-textarea { font-size: 0.9375rem; padding: 0.7rem 0.85rem; }
+
+/* ── Alert ── */
+.lui-alert {
+  --lui-alert-c: var(--lantern-fg-muted);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 0.55rem 0.7rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--lantern-radius);
+  border: 1px solid color-mix(in oklab, var(--lui-alert-c) 45%, var(--lantern-border));
+  background: color-mix(in oklab, var(--lui-alert-c) 14%, var(--lantern-surface-raised));
+  color: var(--lantern-fg);
+  font-family: var(--lantern-font);
+  font-size: var(--lantern-text);
+}
+.lui-alert[data-color="neutral"] { --lui-alert-c: var(--lantern-fg-muted); }
+.lui-alert[data-color="info"] { --lui-alert-c: var(--lantern-info); }
+.lui-alert[data-color="success"] { --lui-alert-c: var(--lantern-success); }
+.lui-alert[data-color="warning"] { --lui-alert-c: var(--lantern-warning); }
+.lui-alert[data-color="danger"] { --lui-alert-c: var(--lantern-danger); }
+.lui-alert-icon {
+  display: inline-flex;
+  color: var(--lui-alert-c);
+  line-height: 0;
+  margin-top: 0.1rem;
+}
+.lui-alert-icon .lui-icon { width: 1.15rem; height: 1.15rem; }
+.lui-alert-body { min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.lui-alert-title {
+  font-weight: 600;
+  font-size: var(--lantern-text);
+  color: var(--lantern-fg);
+  letter-spacing: -0.006em;
+}
+.lui-alert-subtitle {
+  margin: 0;
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted);
+}
+.lui-alert-body > :not(.lui-alert-title):not(.lui-alert-subtitle) {
+  color: var(--lantern-fg-muted);
+  font-size: var(--lantern-text-sm);
+}
+.lui-alert-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  padding: 0.15rem;
+  margin: -0.1rem -0.15rem 0 0;
+  border-radius: var(--lantern-radius-sm);
+  color: var(--lantern-fg-subtle);
+  cursor: pointer;
+  line-height: 0;
+}
+.lui-alert-close:hover {
+  color: var(--lantern-fg);
+  background: color-mix(in oklab, var(--lantern-fg) 6%, transparent);
+}
+.lui-alert-close .lui-icon { width: 1rem; height: 1rem; }
+
+/* ── Separator ── */
+.lui-separator {
+  display: block;
+  width: 100%;
+  height: 0;
+  border: none;
+  border-top: 1px solid var(--lantern-border);
+  margin: 0;
+}
+.lui-separator[data-vertical] {
+  display: inline-block;
+  width: 0;
+  height: auto;
+  align-self: stretch;
+  border-top: none;
+  border-left: 1px solid var(--lantern-border);
+}
+.lui-separator:has(.lui-separator-text) {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: auto;
+  border: none;
+  width: 100%;
+}
+.lui-separator:has(.lui-separator-text)::before,
+.lui-separator:has(.lui-separator-text)::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--lantern-border);
+}
+.lui-separator-text {
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted);
+  white-space: nowrap;
+}
+
+/* ── Tooltip ── */
+.lui-tooltip-wrap {
+  display: inline-flex;
+  position: relative;
+  font-family: var(--lantern-font);
+}
+.lui-tooltip-trigger {
+  display: inline-flex;
+  min-width: 0;
+}
+.lui-tooltip-trigger:focus-visible {
+  outline: 2px solid var(--lantern-ring);
+  outline-offset: 2px;
+  border-radius: var(--lantern-radius-sm);
+}
+.lui-tooltip {
+  position: fixed;
+  z-index: 70;
+  display: inline-flex;
+  align-items: center;
+  max-width: min(18rem, calc(100vw - 1rem));
+  padding: 0.35rem 0.55rem;
+  font-family: var(--lantern-font);
+  font-size: var(--lantern-text-sm);
+  line-height: 1.35;
+  color: var(--lantern-fg);
+  background: var(--lantern-surface-raised);
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-lg);
+  box-shadow: var(--lantern-shadow-md);
+  pointer-events: none;
+  animation: lui-tooltip-in var(--lantern-duration) var(--lantern-ease);
+}
+.lui-tooltip[hidden] { display: none; }
+.lui-tooltip-arrow {
+  position: absolute;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--lantern-surface-raised);
+  border: 1px solid var(--lantern-border);
+  transform: rotate(45deg);
+}
+.lui-tooltip[data-placement="top"] .lui-tooltip-arrow {
+  left: var(--lui-tooltip-arrow-x, 50%);
+  bottom: -0.285rem;
+  transform: translateX(-50%) rotate(45deg);
+  border-left: none;
+  border-top: none;
+}
+.lui-tooltip[data-placement="bottom"] .lui-tooltip-arrow {
+  left: var(--lui-tooltip-arrow-x, 50%);
+  top: -0.285rem;
+  transform: translateX(-50%) rotate(45deg);
+  border-right: none;
+  border-bottom: none;
+}
+.lui-tooltip[data-placement="left"] .lui-tooltip-arrow {
+  top: var(--lui-tooltip-arrow-y, 50%);
+  right: -0.285rem;
+  transform: translateY(-50%) rotate(45deg);
+  border-left: none;
+  border-bottom: none;
+}
+.lui-tooltip[data-placement="right"] .lui-tooltip-arrow {
+  top: var(--lui-tooltip-arrow-y, 50%);
+  left: -0.285rem;
+  transform: translateY(-50%) rotate(45deg);
+  border-right: none;
+  border-top: none;
+}
+@keyframes lui-tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(1px);
+  }
+}
+
+/* ── Toasts ── */
+.lui-toasts {
+  position: fixed;
+  z-index: 80;
+  display: grid;
+  width: min(24rem, calc(100vw - 1rem));
+  pointer-events: none;
+  font-family: var(--lantern-font);
+  --lui-toast-step: 0.65rem;
+  --lui-toast-direction: 1;
+}
+.lui-toasts[hidden] { display: none; }
+.lui-toast-layer { display: contents; }
+.lui-toasts[data-placement^="top"] { top: 0.75rem; }
+.lui-toasts[data-placement^="bottom"] { bottom: 0.75rem; --lui-toast-direction: -1; }
+.lui-toasts[data-placement$="left"] { left: 0.75rem; }
+.lui-toasts[data-placement$="right"] { right: 0.75rem; }
+.lui-toasts[data-placement$="center"] { left: 50%; transform: translateX(-50%); }
+.lui-toast {
+  --lui-toast-c: var(--lantern-accent);
+  position: relative;
+  grid-area: 1 / 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--lantern-fg);
+  background: var(--lantern-surface);
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-lg);
+  box-shadow: var(--lantern-shadow-md);
+  pointer-events: auto;
+  z-index: calc(10 - var(--toast-index, 0));
+  translate: 0 calc(var(--lui-toast-direction) * var(--toast-index, 0) * var(--lui-toast-step));
+  scale: calc(1 - var(--toast-index, 0) * 0.035);
+  opacity: calc(1 - var(--toast-index, 0) * 0.18);
+  transition: translate 400ms cubic-bezier(0.21, 1.02, 0.73, 1),
+    scale 400ms cubic-bezier(0.21, 1.02, 0.73, 1), opacity 400ms cubic-bezier(0.21, 1.02, 0.73, 1),
+    height 400ms cubic-bezier(0.21, 1.02, 0.73, 1);
+}
+.lui-toast[data-stack-hidden="true"] { opacity: 0; pointer-events: none; }
+/* Collapsed deck: cards behind the front one show only their edge, not their content. */
+.lui-toasts:not([data-expanded="true"]) .lui-toast[data-stack-back="true"] > * { visibility: hidden; }
+.lui-toasts[data-expanded="true"] { display: flex; flex-direction: column; gap: 0.5rem; }
+.lui-toasts[data-expanded="true"][data-placement^="bottom"] { flex-direction: column-reverse; }
+.lui-toasts[data-expanded="true"] .lui-toast { translate: 0 0; scale: 1; opacity: 1; }
+.lui-toast[data-kind="accent"] { --lui-toast-c: var(--lantern-accent); }
+.lui-toast[data-kind="info"] { --lui-toast-c: var(--lantern-info); }
+.lui-toast[data-kind="success"] { --lui-toast-c: var(--lantern-success); }
+.lui-toast[data-kind="warning"] { --lui-toast-c: var(--lantern-warning); }
+.lui-toast[data-kind="danger"],
+.lui-toast[data-kind="error"] {
+  --lui-toast-c: var(--lantern-danger);
+}
+.lui-toast-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.65rem 0.35rem 0.8rem;
+  background: var(--lantern-surface);
+  border-bottom: 1px solid var(--lantern-border);
+}
+.lui-toast-body {
+  position: relative;
+  display: block;
+  min-width: 0;
+  padding: 0.65rem 0.8rem;
+  background: var(--lantern-surface);
+}
+.lui-toast-title {
+  font-size: var(--lantern-text);
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--lui-toast-c);
+}
+.lui-toast-message {
+  margin: 0;
+  font-size: var(--lantern-text-sm);
+  line-height: 1.4;
+  font-weight: 500;
+  white-space: pre-line;
+  color: var(--lantern-fg);
+}
+.lui-toast-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 1.5rem;
+  padding: 0;
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-sm);
+  background: var(--lantern-surface);
+  color: var(--lantern-fg-subtle);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+}
+.lui-toast-close:hover {
+  color: var(--lantern-fg);
+  background: var(--lantern-surface-sunken);
+}
+.lui-toast:not(:has(.lui-toast-header)) .lui-toast-close { position: absolute; top: 0.35rem; right: 0.35rem; }
+.lui-toast:not(:has(.lui-toast-header)) .lui-toast-message { padding-right: 1.75rem; }
+.lui-toast-actions { display: flex; justify-content: flex-end; padding: 0 0.65rem 0.65rem; background: var(--lantern-surface); }
+.lui-toast-actions .lui-btn { min-height: 2rem; }
+.lui-toast-progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 0.2rem;
+  transform: scaleX(1);
+  transform-origin: left;
+  background: linear-gradient(90deg, color-mix(in oklab, var(--lui-toast-c) 65%, var(--lantern-surface)), var(--lui-toast-c));
+  animation: lui-toast-progress var(--duration, 4000ms) linear forwards;
+  animation-play-state: running;
+}
+.lui-toast[data-paused="true"] .lui-toast-progress,
+.lui-toasts[data-paused="true"] .lui-toast-progress { animation-play-state: paused; }
+.lui-toast[data-duration="0"] .lui-toast-progress { display: none; }
+.lui-toast-in { animation: lui-toast-in 400ms cubic-bezier(0.21, 1.02, 0.73, 1); }
+.lui-toast-out { animation: lui-toast-out 400ms cubic-bezier(0.06, 0.71, 0.55, 1) forwards; }
+@keyframes lui-toast-in {
+  from { opacity: 0; translate: 0 calc(var(--lui-toast-direction) * -0.5rem); }
+}
+@keyframes lui-toast-out {
+  50% { opacity: 0; }
+  to { opacity: 0; height: 0; margin-block: 0; padding-block: 0; border-width: 0; }
+}
+@keyframes lui-toast-progress { to { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .lui-toast, .lui-toast-in, .lui-toast-out, .lui-toast-progress { animation: none; transition: none; }
+}
+
+/* ── Sheet (slide-over) ── */
+.lui-sheet { position: fixed; inset: 0; z-index: 65; }
+/* Author display beats the UA [hidden]{display:none}; guard it. */
+.lui-sheet[hidden] { display: none; }
+.lui-sheet-backdrop { position: absolute; inset: 0; background: rgb(0 0 0 / 0.4);
+  animation: lui-fade-in var(--lantern-duration) var(--lantern-ease); }
+.lui-sheet[data-closing] .lui-sheet-backdrop { animation: lui-fade-out 200ms var(--lantern-ease) forwards; }
+.lui-sheet-panel { position: absolute; display: flex; flex-direction: column;
+  background: var(--lantern-surface-raised); box-shadow: var(--lantern-shadow-md);
+  overflow: hidden; }
+/* Edge anchoring + size per placement. */
+.lui-sheet[data-placement="right"] .lui-sheet-panel { top: 0; right: 0; height: 100%;
+  width: min(28rem, 100%); border-left: 1px solid var(--lantern-border); animation: lui-sheet-in-right var(--lantern-duration) var(--lantern-ease); }
+.lui-sheet[data-placement="left"] .lui-sheet-panel { top: 0; left: 0; height: 100%;
+  width: min(28rem, 100%); border-right: 1px solid var(--lantern-border); animation: lui-sheet-in-left var(--lantern-duration) var(--lantern-ease); }
+.lui-sheet[data-placement="top"] .lui-sheet-panel { top: 0; left: 0; width: 100%;
+  max-height: 85vh; border-bottom: 1px solid var(--lantern-border); animation: lui-sheet-in-top var(--lantern-duration) var(--lantern-ease); }
+.lui-sheet[data-placement="bottom"] .lui-sheet-panel { bottom: 0; left: 0; width: 100%;
+  max-height: 85vh; border-top: 1px solid var(--lantern-border); animation: lui-sheet-in-bottom var(--lantern-duration) var(--lantern-ease); }
+/* Exit slides. */
+.lui-sheet[data-closing][data-placement="right"] .lui-sheet-panel { animation: lui-sheet-out-right 200ms var(--lantern-ease) forwards; }
+.lui-sheet[data-closing][data-placement="left"] .lui-sheet-panel { animation: lui-sheet-out-left 200ms var(--lantern-ease) forwards; }
+.lui-sheet[data-closing][data-placement="top"] .lui-sheet-panel { animation: lui-sheet-out-top 200ms var(--lantern-ease) forwards; }
+.lui-sheet[data-closing][data-placement="bottom"] .lui-sheet-panel { animation: lui-sheet-out-bottom 200ms var(--lantern-ease) forwards; }
+
+.lui-sheet-header { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  padding: 0.85rem 1rem; border-bottom: 1px solid var(--lantern-border); flex-shrink: 0; }
+.lui-sheet-heading { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
+.lui-sheet-title { font-size: 0.95rem; font-weight: 650; letter-spacing: -0.01em; color: var(--lantern-fg); }
+.lui-sheet-close { display: inline-flex; border: none; background: none; padding: 0.25rem; cursor: pointer;
+  color: var(--lantern-fg-muted); border-radius: var(--lantern-radius-sm); line-height: 0; }
+.lui-sheet-close:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
+.lui-sheet-body { flex: 1; overflow-y: auto; padding: 1rem; }
+.lui-sheet-footer { display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem;
+  padding: 0.75rem 1rem; border-top: 1px solid var(--lantern-border); flex-shrink: 0;
+  background: var(--lantern-surface-raised); }
+
+@keyframes lui-fade-in { from { opacity: 0; } }
+@keyframes lui-fade-out { to { opacity: 0; } }
+@keyframes lui-sheet-in-right { from { transform: translateX(100%); } }
+@keyframes lui-sheet-out-right { to { transform: translateX(100%); } }
+@keyframes lui-sheet-in-left { from { transform: translateX(-100%); } }
+@keyframes lui-sheet-out-left { to { transform: translateX(-100%); } }
+@keyframes lui-sheet-in-top { from { transform: translateY(-100%); } }
+@keyframes lui-sheet-out-top { to { transform: translateY(-100%); } }
+@keyframes lui-sheet-in-bottom { from { transform: translateY(100%); } }
+@keyframes lui-sheet-out-bottom { to { transform: translateY(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .lui-sheet-panel, .lui-sheet-backdrop { animation: none !important; }
+}
+
+/* ── Screen-reader only ── */
+.lui-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Navlist ── */
+.lui-navlist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.lui-navlist-heading {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--lantern-fg-subtle, var(--lantern-fg-muted));
+  padding: 0 0.5rem;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+}
+
+/* Space stacked nav sections apart, so a section heading that follows a prior
+   group has breathing room above it. The first section is untouched. */
+.lui-navlist + .lui-navlist {
+  margin-top: 1rem;
+}
+.lui-navlink {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--lantern-radius-sm);
+  font-size: var(--lantern-text-sm, 0.8125rem);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--lantern-fg-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  box-sizing: border-box;
+}
+.lui-navlink:hover {
+  color: var(--lantern-fg);
+  background: var(--lantern-surface-sunken);
+}
+.lui-navlink-active {
+  color: var(--lantern-accent);
+  font-weight: 600;
+  background: var(--lantern-accent-soft);
+}
+.lui-navlink-active:hover {
+  color: var(--lantern-accent);
+  background: var(--lantern-accent-soft);
+}
+.lui-navlink-icon {
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+/* ── Loading ── */
+.lui-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  vertical-align: middle;
+  --lui-loading-size: 1.25rem;
+}
+.lui-loading[data-size="xs"] { --lui-loading-size: 0.75rem; }
+.lui-loading[data-size="sm"] { --lui-loading-size: 1rem; }
+.lui-loading[data-size="md"] { --lui-loading-size: 1.25rem; }
+.lui-loading[data-size="lg"] { --lui-loading-size: 1.5rem; }
+.lui-loading[data-size="xl"] { --lui-loading-size: 2rem; }
+
+.lui-loading-ring {
+  display: block;
+  box-sizing: border-box;
+  width: var(--lui-loading-size);
+  height: var(--lui-loading-size);
+  border: 2px solid var(--lantern-border, currentColor);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: lui-spin 0.6s linear infinite;
+}
+
+.lui-loading-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--lui-loading-size) * 0.25);
+  height: var(--lui-loading-size);
+}
+.lui-loading-dot {
+  display: block;
+  width: calc(var(--lui-loading-size) * 0.28);
+  height: calc(var(--lui-loading-size) * 0.28);
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* dots-bounce */
+.lui-loading[data-variant="dots-bounce"] .lui-loading-dot {
+  animation: lui-loading-bounce 0.6s ease-in-out infinite;
+}
+.lui-loading[data-variant="dots-bounce"] .lui-loading-dot:nth-child(2) {
+  animation-delay: 0.12s;
+}
+.lui-loading[data-variant="dots-bounce"] .lui-loading-dot:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+/* dots-fade */
+.lui-loading[data-variant="dots-fade"] .lui-loading-dot {
+  animation: lui-loading-fade 0.8s ease-in-out infinite;
+}
+.lui-loading[data-variant="dots-fade"] .lui-loading-dot:nth-child(2) {
+  animation-delay: 0.16s;
+}
+.lui-loading[data-variant="dots-fade"] .lui-loading-dot:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+/* dots-scale */
+.lui-loading[data-variant="dots-scale"] .lui-loading-dot {
+  animation: lui-loading-scale 0.7s ease-in-out infinite;
+}
+.lui-loading[data-variant="dots-scale"] .lui-loading-dot:nth-child(2) {
+  animation-delay: 0.14s;
+}
+.lui-loading[data-variant="dots-scale"] .lui-loading-dot:nth-child(3) {
+  animation-delay: 0.28s;
+}
+
+@keyframes lui-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes lui-loading-bounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-40%); }
+}
+@keyframes lui-loading-fade {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+@keyframes lui-loading-scale {
+  0%, 80%, 100% { transform: scale(0.65); }
+  40% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lui-loading-ring,
+  .lui-loading-dot {
+    animation: none !important;
+  }
+}
+
+/* ── Progress ── */
+.lui-progress {
+  --lui-progress-h: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: var(--lui-progress-h);
+  border-radius: var(--lantern-radius);
+  background: var(--lantern-surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--lantern-border);
+  box-sizing: border-box;
+}
+.lui-progress[data-size="sm"] { --lui-progress-h: 0.375rem; }
+.lui-progress[data-size="md"] { --lui-progress-h: 0.5rem; }
+.lui-progress[data-size="lg"] { --lui-progress-h: 0.75rem; }
+
+.lui-progress-fill {
+  position: relative;
+  height: 100%;
+  min-width: 0.5rem;
+  border-radius: inherit;
+  background: var(--lantern-accent);
+  transition: width var(--lantern-duration) var(--lantern-ease);
+  overflow: hidden;
+}
+.lui-progress[data-color="primary"] .lui-progress-fill { background: var(--lantern-primary); }
+.lui-progress[data-color="accent"] .lui-progress-fill { background: var(--lantern-accent); }
+.lui-progress[data-color="success"] .lui-progress-fill { background: var(--lantern-success); }
+.lui-progress[data-color="warning"] .lui-progress-fill { background: var(--lantern-warning); }
+.lui-progress[data-color="danger"] .lui-progress-fill { background: var(--lantern-danger); }
+.lui-progress[data-color="info"] .lui-progress-fill { background: var(--lantern-info); }
+.lui-progress[data-color="neutral"] .lui-progress-fill { background: var(--lantern-border-strong); }
+
+/* shimmer (determinate, active work) */
+.lui-progress[data-shimmer="true"] .lui-progress-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgb(255 255 255 / 0) 0%,
+    rgb(255 255 255 / 0.4) 50%,
+    rgb(255 255 255 / 0) 100%
+  );
+  animation: lui-progress-shimmer 1.15s ease-in-out infinite;
+}
+@keyframes lui-progress-shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+/* indeterminate */
+.lui-progress[data-state="indeterminate"] .lui-progress-fill {
+  width: 40%;
+  min-width: 0;
+  animation: lui-progress-indeterminate 1.4s ease-in-out infinite;
+}
+@keyframes lui-progress-indeterminate {
+  from { transform: translateX(-60%); }
+  to { transform: translateX(260%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lui-progress-fill {
+    transition: none;
+  }
+  .lui-progress[data-shimmer="true"] .lui-progress-fill::after,
+  .lui-progress[data-state="indeterminate"] .lui-progress-fill {
+    animation: none !important;
+  }
+}
+
+/* ── Meter ── */
+.lui-meter {
+  --lui-meter-h: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: var(--lui-meter-h);
+  border-radius: var(--lantern-radius);
+  background: var(--lantern-surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--lantern-border);
+  box-sizing: border-box;
+}
+.lui-meter[data-size="sm"] { --lui-meter-h: 0.375rem; }
+.lui-meter[data-size="md"] { --lui-meter-h: 0.5rem; }
+.lui-meter[data-size="lg"] { --lui-meter-h: 0.75rem; }
+
+.lui-meter-fill {
+  height: 100%;
+  min-width: 0.5rem;
+  border-radius: inherit;
+  background: var(--lantern-accent);
+  transition: width var(--lantern-duration) var(--lantern-ease);
+}
+.lui-meter[data-state="optimal"] .lui-meter-fill { background: var(--lantern-success); }
+.lui-meter[data-state="suboptimal"] .lui-meter-fill { background: var(--lantern-warning); }
+.lui-meter[data-state="critical"] .lui-meter-fill { background: var(--lantern-danger); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lui-meter-fill {
+    transition: none;
+  }
+}
+
+/* ── Accordion ──
+ * Server renders the anatomy + initial open state; the LanternAccordion hook
+ * toggles panels and drives the APG keyboard model. Panels stay in the DOM and
+ * are hidden via [hidden] so idrefs resolve and collapsed content leaves the
+ * tab order. Only the chevron animates (reduced-motion disables it). */
+.lui-accordion {
+  background: var(--lantern-surface-raised);
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius);
+  overflow: hidden;
+}
+.lui-accordion-item + .lui-accordion-item { border-top: 1px solid var(--lantern-border); }
+
+.lui-accordion-header { margin: 0; }
+
+.lui-accordion-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem var(--lantern-control-px);
+  background: transparent;
+  border: none;
+  font-family: var(--lantern-font);
+  font-size: var(--lantern-text);
+  font-weight: 500;
+  color: var(--lantern-fg);
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--lantern-duration) var(--lantern-ease);
+}
+.lui-accordion-trigger:hover { background: var(--lantern-surface-hover); }
+.lui-accordion-trigger:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--lantern-ring);
+}
+.lui-accordion-trigger[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.lui-accordion-title { flex: 1; min-width: 0; }
+
+.lui-accordion-icon {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
+  color: var(--lantern-fg-muted);
+  transition: transform var(--lui-accordion-duration, 300ms) var(--lantern-ease);
+}
+.lui-accordion-trigger[aria-expanded="true"] .lui-accordion-icon { transform: rotate(180deg); }
+
+.lui-accordion-panel[hidden] { display: none; }
+.lui-accordion-body {
+  padding: 0 var(--lantern-control-px) 0.85rem;
+  font-size: var(--lantern-text);
+  color: var(--lantern-fg-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lui-accordion-trigger,
+  .lui-accordion-icon { transition: none; }
+}
+
+/* Chat kit */
+.lui-avatar { display: inline-flex; align-items: center; justify-content: center; flex: none; overflow: hidden; background: var(--lantern-surface-raised); color: var(--lantern-fg-muted); border: 1px solid var(--lantern-border); font-weight: 600; line-height: 1; }
+.lui-avatar[data-shape="circle"] { border-radius: 999px; }
+.lui-avatar[data-shape="square"] { border-radius: var(--lantern-radius-sm); }
+.lui-avatar[data-size="xs"] { width: var(--lantern-chat-avatar-xs); height: var(--lantern-chat-avatar-xs); font-size: 0.625rem; }
+.lui-avatar[data-size="sm"] { width: 2rem; height: 2rem; font-size: 0.75rem; }
+.lui-avatar[data-size="md"] { width: 2.5rem; height: 2.5rem; font-size: 0.875rem; }
+.lui-avatar[data-size="lg"] { width: 3rem; height: 3rem; font-size: 1rem; }
+.lui-message { display: flex; gap: var(--lantern-space-md, 0.75rem); align-items: flex-end; }
+.lui-message[data-align="end"] { flex-direction: row-reverse; }
+.lui-message-body { display: flex; flex-direction: column; gap: var(--lantern-space-xs, 0.25rem); max-width: var(--lantern-chat-message-max-width); align-items: flex-start; }
+.lui-message[data-align="end"] .lui-message-body { align-items: flex-end; }
+.lui-message-bubble { padding: var(--lantern-space-sm, 0.5rem) var(--lantern-space-md, 0.75rem); border: 1px solid var(--lantern-border); background: var(--lantern-surface-raised); color: var(--lantern-fg); border-radius: var(--lantern-radius); border-bottom-left-radius: var(--lantern-radius-sm); box-shadow: var(--lantern-shadow); }
+.lui-message[data-align="end"] .lui-message-bubble { border-bottom-left-radius: var(--lantern-radius); border-bottom-right-radius: var(--lantern-radius-sm); }
+.lui-message-bubble[data-tone="primary"] { background: var(--lantern-primary); color: var(--lantern-primary-fg); border-color: transparent; }
+.lui-message-header { font-size: 0.75rem; color: var(--lantern-fg-muted); }
+.lui-message-footer { font-size: 0.6875rem; color: var(--lantern-fg-subtle); }
+.lui-message-avatar { align-self: flex-end; }
+.lui-message-scroller { position: relative; display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.lui-message-scroller-viewport { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--lantern-border) transparent; }
+.lui-message-scroller-viewport::-webkit-scrollbar { width: 0.5rem; }
+.lui-message-scroller-viewport::-webkit-scrollbar-thumb { background: var(--lantern-border); border-radius: 999px; }
+.lui-message-scroller-content { display: flex; flex-direction: column; gap: var(--lantern-space-md, 0.75rem); padding: var(--lantern-space-md, 0.75rem) var(--lantern-space-md, 0.75rem) var(--lantern-chat-scroller-padding-bottom); }
+.lui-message-scroller-item { content-visibility: auto; contain-intrinsic-size: auto var(--lantern-chat-item-intrinsic-height); }
+.lui-message-scroller-raft { position: absolute; inset-inline: 0; bottom: var(--lantern-space-md, 0.75rem); display: flex; justify-content: center; pointer-events: none; }
+/* Keep visibility delayed until the fade-out finishes, then hide the button. */
+.lui-message-scroller-button { pointer-events: auto; display: inline-flex; align-items: center; gap: var(--lantern-space-xs, 0.25rem); padding: var(--lantern-space-xs, 0.25rem) var(--lantern-space-sm, 0.5rem); background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border); color: var(--lantern-fg); box-shadow: var(--lantern-shadow); border-radius: 999px; opacity: 0; visibility: hidden; transform: translateY(var(--lantern-chat-button-offset)); transition: opacity var(--lantern-duration) var(--lantern-ease), transform var(--lantern-duration) var(--lantern-ease), visibility var(--lantern-chat-button-visibility-duration) linear var(--lantern-duration); }
+.lui-message-scroller-button[data-active="true"] { opacity: 1; visibility: visible; transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lui-message-scroller-button { transition: none; }
+}
+
+/* ── Skeleton ── */
+.lui-skeleton {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 1rem;
+  border-radius: var(--lantern-radius-sm, 0.375rem);
+  background: var(--lantern-surface-sunken, var(--background-accent, #e5e7eb));
+  animation: lui-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.lui-skeleton[data-variant="text"] {
+  height: 1em;
+}
+
+.lui-skeleton[data-variant="circle"] {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+}
+
+.lui-skeleton-status {
+  display: block;
+}
+
+@keyframes lui-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lui-skeleton {
+    animation: none;
+  }
+}
+
+/* ── ScrollArea ──
+ * Native overflow scrolling with a themed scrollbar. `scrollbar-width` /
+ * `scrollbar-color` where supported; `::-webkit-scrollbar` for WebKit. The
+ * browser still owns wheel/touch/momentum and hides the bar when nothing
+ * overflows. */
+.lui-scroll-area {
+  --lui-sb-thumb: var(--lantern-scrollbar-thumb, var(--lantern-border-strong, var(--lantern-border)));
+  --lui-sb-track: var(--lantern-scrollbar-track, transparent);
+  --lui-sb-size: var(--lantern-scrollbar-size, 0.5rem);
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--lui-sb-thumb) var(--lui-sb-track);
+}
+.lui-scroll-area[data-orientation="vertical"]   { overflow: hidden auto; }
+.lui-scroll-area[data-orientation="horizontal"] { overflow: auto hidden; }
+
+.lui-scroll-area:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--lantern-ring-soft);
+}
+
+.lui-scroll-area::-webkit-scrollbar {
+  width: var(--lui-sb-size);
+  height: var(--lui-sb-size);
+}
+.lui-scroll-area::-webkit-scrollbar-track { background: var(--lui-sb-track); }
+.lui-scroll-area::-webkit-scrollbar-thumb {
+  background: var(--lui-sb-thumb);
+  border-radius: 9999px;
+}
+
+/* ── Timeline ──
+ * Vertical event sequence: fixed marker rail on the left, content column with
+ * min-width: 0 so long titles truncate. Connector is a real element; CSS hides
+ * it on the last item (no caller flag). Status colors the marker only; the
+ * label text carries state for grayscale legibility. Optional leading `at`
+ * column, custom marker slot, and native details disclosure for :detail. */
+.lui-timeline {
+  --lui-timeline-label-w: 5.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  container-type: inline-size;
+  container-name: lui-timeline;
+}
+
+.lui-timeline-item {
+  --lui-timeline-marker-col: 1.25rem;
+  --lui-timeline-dot-size: 0.5rem;
+  display: grid;
+  grid-template-columns: var(--lui-timeline-marker-col) minmax(0, 1fr);
+  column-gap: 0.625rem;
+  position: relative;
+}
+
+/* Leading timestamps: fixed-width column left of the marker rail */
+.lui-timeline-item[data-label-position="leading"] {
+  grid-template-columns:
+    var(--lui-timeline-label-w) var(--lui-timeline-marker-col) minmax(0, 1fr);
+}
+
+.lui-timeline-item[data-label-position="leading"] > .lui-timeline-at {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: end;
+  align-self: start;
+  padding-right: 0.25rem;
+  margin-top: 0.2rem;
+  /* The rail is a fixed-width column and every item is its own grid, so it
+     cannot be widened to fit the longest timestamp without the rails going
+     ragged down the list. A nowrap label longer than the column does not
+     clip — justify-self: end pushes the overflow out the left side and it
+     escapes the card entirely. Let it wrap onto a second line instead, and
+     keep it inside its column. */
+  max-width: 100%;
+  white-space: normal;
+  text-align: right;
+  text-wrap: balance;
+}
+
+.lui-timeline-item[data-label-position="leading"] > .lui-timeline-marker {
+  grid-column: 2;
+}
+
+.lui-timeline-item[data-label-position="leading"] > .lui-timeline-content {
+  grid-column: 3;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "title"
+    "label"
+    "body";
+}
+
+.lui-timeline-marker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: var(--lui-timeline-marker-col);
+  min-height: 100%;
+}
+
+.lui-timeline-dot {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--lui-timeline-dot-size);
+  height: var(--lui-timeline-dot-size);
+  margin-top: 0.35rem;
+  border-radius: 9999px;
+  background: var(--lantern-border);
+  color: var(--lantern-fg-muted);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.lui-timeline-dot .lui-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* Icon markers need a bit more room than the plain dot */
+.lui-timeline-dot:has(.lui-icon) {
+  width: 1rem;
+  height: 1rem;
+  background: transparent;
+  color: var(--lantern-border);
+}
+
+/* Custom :marker slot (e.g. avatar): CSS owns size so rail alignment holds */
+.lui-timeline-dot[data-slot="marker"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.15rem;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+}
+
+.lui-timeline-dot[data-slot="marker"] > * {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.lui-timeline-item[data-status="done"] .lui-timeline-dot {
+  background: var(--lantern-success);
+  color: var(--lantern-success);
+}
+.lui-timeline-item[data-status="active"] .lui-timeline-dot {
+  background: var(--lantern-accent);
+  color: var(--lantern-accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--lantern-accent) 28%, transparent);
+}
+.lui-timeline-item[data-status="pending"] .lui-timeline-dot {
+  background: var(--lantern-fg-muted);
+  color: var(--lantern-fg-muted);
+}
+.lui-timeline-item[data-status="danger"] .lui-timeline-dot {
+  background: var(--lantern-danger);
+  color: var(--lantern-danger);
+}
+.lui-timeline-item[data-status="neutral"] .lui-timeline-dot {
+  background: var(--lantern-border);
+  color: var(--lantern-border);
+}
+
+.lui-timeline-item[data-status="done"] .lui-timeline-dot:has(.lui-icon),
+.lui-timeline-item[data-status="active"] .lui-timeline-dot:has(.lui-icon),
+.lui-timeline-item[data-status="pending"] .lui-timeline-dot:has(.lui-icon),
+.lui-timeline-item[data-status="danger"] .lui-timeline-dot:has(.lui-icon),
+.lui-timeline-item[data-status="neutral"] .lui-timeline-dot:has(.lui-icon),
+.lui-timeline-item[data-status="done"] .lui-timeline-dot[data-slot="marker"],
+.lui-timeline-item[data-status="active"] .lui-timeline-dot[data-slot="marker"],
+.lui-timeline-item[data-status="pending"] .lui-timeline-dot[data-slot="marker"],
+.lui-timeline-item[data-status="danger"] .lui-timeline-dot[data-slot="marker"],
+.lui-timeline-item[data-status="neutral"] .lui-timeline-dot[data-slot="marker"] {
+  background: transparent;
+}
+
+.lui-timeline-item[data-status="active"] .lui-timeline-dot[data-slot="marker"] {
+  box-shadow: none;
+}
+
+.lui-timeline-connector {
+  flex: 1 1 auto;
+  width: 1px;
+  min-height: 0.5rem;
+  margin: 0.25rem 0 0;
+  background: var(--lantern-border);
+}
+
+.lui-timeline-item:last-child .lui-timeline-connector {
+  display: none;
+}
+
+.lui-timeline-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title at"
+    "label at"
+    "body  body";
+  column-gap: 0.75rem;
+  row-gap: 0.125rem;
+  min-width: 0;
+  padding-bottom: 0.875rem;
+}
+
+.lui-timeline-item:last-child .lui-timeline-content {
+  padding-bottom: 0;
+}
+
+/* Collapsible entry: details fills the content grid; summary reuses title/at areas */
+.lui-timeline-details {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.lui-timeline-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title at"
+    "label at";
+  column-gap: 0.75rem;
+  row-gap: 0.125rem;
+  cursor: pointer;
+  list-style: none;
+  min-width: 0;
+}
+
+.lui-timeline-summary::-webkit-details-marker {
+  display: none;
+}
+
+.lui-timeline-item[data-label-position="leading"] .lui-timeline-summary {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "title"
+    "label";
+}
+
+.lui-timeline-detail {
+  min-width: 0;
+  margin-top: 0.375rem;
+}
+
+.lui-timeline-title {
+  grid-area: title;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--lantern-text-sm);
+  font-weight: 600;
+  color: var(--lantern-fg);
+  line-height: 1.35;
+}
+
+.lui-timeline-label {
+  grid-area: label;
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted);
+  line-height: 1.35;
+}
+
+.lui-timeline-at {
+  grid-area: at;
+  align-self: start;
+  font-family: var(--lantern-font-mono);
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted);
+  white-space: nowrap;
+  line-height: 1.35;
+}
+
+.lui-timeline-body {
+  grid-area: body;
+  min-width: 0;
+  margin-top: 0.125rem;
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted);
+  line-height: 1.45;
+}
+
+/* In a narrow column — a side panel, a card beside a main column — an absolute
+   timestamp in the right-hand slot leaves the title a few characters and an
+   ellipsis. Below that width the time drops under the title instead: the event
+   is what you are scanning for, and it gets the full line. */
+@container lui-timeline (max-width: 24rem) {
+  .lui-timeline-content,
+  .lui-timeline-summary {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "title"
+      "label"
+      "at"
+      "body";
+  }
+
+  .lui-timeline-item:not([data-label-position="leading"]) > .lui-timeline-content > .lui-timeline-at,
+  .lui-timeline-summary > .lui-timeline-at {
+    text-align: left;
+  }
+}
+
+/* When details is present, body sits under the disclosure */
+.lui-timeline-content:has(> .lui-timeline-details) {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "details"
+    "body";
+}
+
+.lui-timeline-content:has(> .lui-timeline-details) > .lui-timeline-details {
+  grid-area: details;
+}
+
+.lui-timeline-content:has(> .lui-timeline-details) > .lui-timeline-body {
+  grid-area: body;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lui-timeline-dot {
+    transition: none;
+  }
+}
+
+/* ── Resource list ──
+ * Simple resource index (projects, apps, buckets). List layout: full-width
+ * rows with hairline separators BETWEEN items only. Grid layout: auto-fill
+ * card grid. Whole row is the hit target when linked. No JS. */
+.lui-resource-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lui-resource-list[data-layout="list"] {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Separators only between rows (no leading or trailing rule) */
+.lui-resource-list[data-layout="list"] > .lui-resource-list-item + .lui-resource-list-item {
+  border-top: 1px solid var(--lantern-border);
+}
+
+.lui-resource-list[data-layout="grid"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 0.75rem;
+}
+
+.lui-resource-list[data-layout="grid"] > .lui-resource-list-item {
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius);
+  background: var(--lantern-surface-raised, var(--lantern-surface));
+  min-width: 0;
+}
+
+.lui-resource-list-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+  box-sizing: border-box;
+  color: inherit;
+  text-decoration: none;
+  font-family: inherit;
+}
+
+.lui-resource-list[data-layout="list"] .lui-resource-list-row {
+  padding: 0.75rem 0.5rem;
+  min-height: 3rem;
+}
+
+.lui-resource-list[data-layout="list"] .lui-resource-list-row:hover {
+  background: var(--lantern-surface-hover);
+}
+
+.lui-resource-list[data-layout="grid"] .lui-resource-list-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.625rem;
+  padding: 1rem;
+  height: 100%;
+}
+
+.lui-resource-list[data-layout="grid"] .lui-resource-list-row:hover {
+  background: var(--lantern-surface-hover);
+}
+
+a.lui-resource-list-row:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft);
+  border-radius: var(--lantern-radius-sm);
+}
+
+.lui-resource-list[data-layout="grid"] a.lui-resource-list-row:focus-visible {
+  border-radius: var(--lantern-radius);
+}
+
+.lui-resource-list-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.lui-resource-list-title {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--lantern-text);
+  font-weight: 600;
+  color: var(--lantern-fg);
+  line-height: 1.35;
+}
+
+.lui-resource-list-subtitle {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted);
+  line-height: 1.35;
+}
+/* Mono is opt-in, not the default: per the Machine-Value Rule the mono face means
+   "the system produced this value". A slug, domain, or bucket name earns it; a
+   human-written subtitle does not, and defaulting to mono would say the wrong
+   thing about the latter. */
+.lui-resource-list-subtitle[data-mono="true"] {
+  font-family: var(--lantern-font-mono);
+}
+
+.lui-resource-list-meta {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* List: title/meta on one line, meta right-aligned */
+.lui-resource-list[data-layout="list"] .lui-resource-list-meta {
+  margin-left: auto;
+}
+
+/* Grid: meta stacks under the title block */
+.lui-resource-list[data-layout="grid"] .lui-resource-list-meta {
+  margin-left: 0;
+}
+
+/* ── Waterfall ──
+ * Horizontal spans on ONE shared axis. Two columns: a fixed label column and a
+ * track column whose width is identical on the ruler, on the gridline layer,
+ * and on every lane — that identity is the component's whole claim, so all
+ * three use the same grid template. Gridlines are ONE layer stacked under the
+ * lanes (same grid cell, lower z-index), not per-lane copies: copies can drift,
+ * a shared layer cannot. Percentages come from the caller; this file never does
+ * time math. Queued lanes are pinned right and dashed, never given a fake
+ * position. */
+.lui-waterfall {
+  --lui-waterfall-label-w: 11rem;
+  --lui-waterfall-lane-h: 1.75rem;
+  --lui-waterfall-gap: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lui-waterfall-ruler,
+.lui-waterfall-body,
+.lui-waterfall-lane-inner {
+  display: grid;
+  grid-template-columns: var(--lui-waterfall-label-w) minmax(0, 1fr);
+  column-gap: var(--lui-waterfall-gap);
+  align-items: center;
+}
+
+.lui-waterfall-ruler {
+  height: 1.5rem;
+  border-bottom: 1px solid var(--lantern-border);
+  margin-bottom: 0.25rem;
+}
+
+.lui-waterfall-ruler-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lantern-fg-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lui-waterfall-ruler-track {
+  position: relative;
+  height: 100%;
+  min-width: 0;
+}
+
+.lui-waterfall-tick {
+  position: absolute;
+  bottom: 0;
+  width: 0;
+  height: 0.375rem;
+  border-left: 1px solid var(--lantern-border);
+}
+
+.lui-waterfall-tick-label {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0;
+  transform: translateX(-50%);
+  font-family: var(--lantern-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.625rem;
+  line-height: 1;
+  color: var(--lantern-fg-subtle);
+  white-space: nowrap;
+}
+
+/* The first and last tick labels would overhang the track and clip against the
+ * label column / the container edge; nudge them inward instead of centering. */
+.lui-waterfall-tick:first-child .lui-waterfall-tick-label {
+  transform: none;
+}
+.lui-waterfall-tick:last-child .lui-waterfall-tick-label {
+  transform: translateX(-100%);
+}
+
+/* One grid cell holds both layers: the gridlines sit in the track column only,
+ * the lanes span the full width and paint over them. */
+.lui-waterfall-body > .lui-waterfall-grid {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  height: 100%;
+  min-width: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.lui-waterfall-body > .lui-waterfall-lanes {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  z-index: 1;
+}
+
+.lui-waterfall-lanes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lui-waterfall-lane {
+  min-width: 0;
+}
+
+.lui-waterfall-lane-inner {
+  /* Same containment reason as `.lui-log-view`: the lane's `.lui-sr-only`
+     state label must not escape to the initial containing block. */
+  position: relative;
+  padding: 0.25rem 0;
+  border-radius: var(--lantern-radius-sm);
+  color: inherit;
+  text-decoration: none;
+}
+
+a.lui-waterfall-lane-inner:hover {
+  background: var(--lantern-surface-hover);
+}
+
+a.lui-waterfall-lane-inner:focus-visible {
+  outline: 2px solid var(--lantern-ring);
+  outline-offset: -2px;
+}
+
+.lui-waterfall-lane[data-selected="true"] > .lui-waterfall-lane-inner {
+  background: var(--lantern-surface-hover);
+  box-shadow: inset 2px 0 0 0 var(--lantern-accent);
+}
+
+.lui-waterfall-lane-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  min-width: 0;
+  padding-left: 0.5rem;
+}
+
+.lui-waterfall-lane-name {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--lantern-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lui-waterfall-lane-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+/* The caller owns the glyph, so size it here rather than trusting whatever
+ * icon component the host app hands us. */
+.lui-waterfall-lane-icon > * {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.lui-waterfall-lane-at,
+.lui-waterfall-lane-extra {
+  font-size: 0.6875rem;
+  color: var(--lantern-fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lui-waterfall-lane-track {
+  position: relative;
+  display: block;
+  height: var(--lui-waterfall-lane-h);
+  min-width: 0;
+}
+
+.lui-waterfall-gridline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  /* Full height of the lane stack, not of one lane. */
+  width: 0;
+  border-left: 1px dashed
+    color-mix(in oklab, var(--lantern-border) 70%, transparent);
+  pointer-events: none;
+}
+
+.lui-waterfall-bar {
+  position: absolute;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  padding: 0 0.375rem;
+  border-radius: var(--lantern-radius-sm);
+  background: var(--lantern-surface-sunken);
+  color: var(--lantern-fg-muted);
+  overflow: hidden;
+}
+
+.lui-waterfall-bar-label {
+  font-family: var(--lantern-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.6875rem;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Queued: pinned to the right edge, dashed, no position claimed on the axis. */
+.lui-waterfall-bar[data-queued="true"] {
+  right: 0;
+  left: auto;
+  border: 1px dashed var(--lantern-border-strong);
+  background: transparent;
+  color: var(--lantern-fg-subtle);
+}
+
+.lui-waterfall-lane[data-status="done"] .lui-waterfall-bar:not([data-queued]) {
+  background: color-mix(in oklab, var(--lantern-success) 22%, transparent);
+  color: var(--lantern-success);
+}
+/* Active work gets its own token: hosts whose accent resolves near danger red
+ * (flicker's orange-red) override it so "running" never reads as "failing".
+ * The accent stays the default for everyone else. */
+.lui-waterfall-lane[data-status="active"] .lui-waterfall-bar:not([data-queued]) {
+  background: color-mix(
+    in oklab,
+    var(--lui-waterfall-active, var(--lantern-accent)) 22%,
+    transparent
+  );
+  color: var(--lui-waterfall-active, var(--lantern-accent));
+}
+.lui-waterfall-lane[data-status="danger"] .lui-waterfall-bar:not([data-queued]) {
+  background: color-mix(in oklab, var(--lantern-danger) 22%, transparent);
+  color: var(--lantern-danger);
+}
+.lui-waterfall-lane[data-status="warning"] .lui-waterfall-bar:not([data-queued]) {
+  background: color-mix(in oklab, var(--lantern-warning) 25%, transparent);
+  color: var(--lantern-warning);
+}
+.lui-waterfall-lane[data-status="pending"] .lui-waterfall-bar:not([data-queued]) {
+  background: var(--lantern-surface-sunken);
+  color: var(--lantern-fg-muted);
+}
+
+/* An in-flight bar has no known end; the fade says "still running" without
+ * claiming a width the caller does not have. */
+.lui-waterfall-lane[data-status="active"] .lui-waterfall-bar:not([data-queued])::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  width: 1.5rem;
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in oklab, var(--lui-waterfall-active, var(--lantern-accent)) 30%, transparent)
+  );
+}
+
+@media (max-width: 40rem) {
+  .lui-waterfall {
+    --lui-waterfall-label-w: 6.5rem;
+  }
+}
+
+/* ── Log view ──
+ * Monospace lines with a timestamp gutter and severity banding. The scroll box
+ * is the ROOT, so a long line scrolls inside the component and never pushes
+ * the document sideways; the header is sticky against that scroll. Severity is
+ * a left edge plus a tint, and the component also renders an sr-only word so
+ * the state is never carried by color alone. */
+.lui-log-view {
+  --lui-log-view-gutter-w: 5.5rem;
+  --lui-log-view-channel-w: 8rem;
+  /* Contains absolutely-positioned descendants — notably the per-line
+     `.lui-sr-only` severity labels. Without it they resolve against the
+     initial containing block, so their static offsets inside a scrolled
+     400-line log inflate the DOCUMENT's scroll height and the whole app
+     shell grows a second scrollbar. Measured, not theorised. */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  background: var(--lantern-surface);
+  color: var(--lantern-fg);
+}
+
+.lui-log-view-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.375rem 0.75rem;
+  border-bottom: 1px solid var(--lantern-border);
+  background: var(--lantern-surface);
+}
+
+.lui-log-view-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lantern-fg-subtle);
+}
+
+.lui-log-view-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.lui-log-view-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lui-log-line {
+  border-left: 2px solid transparent;
+  min-width: 0;
+}
+
+.lui-log-line-row {
+  display: grid;
+  grid-template-columns:
+    var(--lui-log-view-gutter-w) var(--lui-log-view-channel-w)
+    minmax(0, 1fr) auto;
+  column-gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.1875rem 0.75rem;
+  font-family: var(--lantern-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+/* A line with no timestamp or channel must not shift its body out of the
+ * column the lines above it established, so the cells are placed explicitly
+ * rather than flowing. */
+.lui-log-line-at {
+  grid-column: 1;
+  color: var(--lantern-fg-subtle);
+  white-space: nowrap;
+}
+
+.lui-log-line-channel {
+  grid-column: 2;
+  color: var(--lantern-fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lui-log-line-body {
+  grid-column: 3;
+  min-width: 0;
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lui-log-line-meta {
+  grid-column: 4;
+  color: var(--lantern-fg-subtle);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.lui-log-view[data-wrap="true"] .lui-log-line-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: visible;
+}
+
+.lui-log-line-details > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.lui-log-line-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.lui-log-line-details > summary:focus-visible {
+  outline: 2px solid var(--lantern-ring);
+  outline-offset: -2px;
+}
+
+.lui-log-line-details[open] > summary {
+  background: var(--lantern-surface-hover);
+}
+
+.lui-log-line-detail {
+  padding: 0.5rem 0.75rem 0.625rem
+    calc(var(--lui-log-view-gutter-w) + 0.75rem);
+  font-family: var(--lantern-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--lantern-fg-muted);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--lantern-surface-sunken);
+  border-top: 1px solid var(--lantern-border);
+}
+
+.lui-log-line:hover {
+  background: var(--lantern-surface-hover);
+}
+
+.lui-log-line[data-selected="true"] {
+  border-left-color: var(--lantern-accent);
+  background: var(--lantern-surface-hover);
+}
+
+.lui-log-line[data-severity="error"] {
+  border-left-color: var(--lantern-danger);
+  background: color-mix(in oklab, var(--lantern-danger) 8%, transparent);
+}
+.lui-log-line[data-severity="error"] .lui-log-line-body {
+  color: var(--lantern-danger);
+}
+
+.lui-log-line[data-severity="warning"] {
+  border-left-color: var(--lantern-warning);
+  background: color-mix(in oklab, var(--lantern-warning) 8%, transparent);
+}
+
+.lui-log-line[data-severity="success"] {
+  border-left-color: color-mix(in oklab, var(--lantern-success) 60%, transparent);
+}
+
+.lui-log-line[data-severity="info"] {
+  border-left-color: color-mix(in oklab, var(--lantern-accent) 60%, transparent);
+}
+
+@media (max-width: 48rem) {
+  .lui-log-view {
+    --lui-log-view-gutter-w: 4rem;
+    --lui-log-view-channel-w: 5rem;
+  }
+}
+
+/* ═══ Dense type scale (see docs/scale.md) ═══
+ *
+ * Named replacements for `text-[11px]` on ticket rows, inspectors, and rails.
+ * Pixel values on purpose: rem would shrink under a 14px density root, which
+ * is exactly why hosts were writing arbitrary px. Comfortable density bumps
+ * the tokens; these classes follow. Grey roles live in lantern_ui_compat.css
+ * (`text-foreground` / `-soft` / `-softest` / `text-muted-foreground`).
+ */
+.text-meta {
+  font-size: var(--lantern-text-meta, 11px);
+  line-height: var(--lantern-text-meta-leading, 1.25);
+  letter-spacing: var(--lantern-text-meta-tracking, 0.01em);
+}
+.text-caption {
+  font-size: var(--lantern-text-caption, 12px);
+  line-height: var(--lantern-text-caption-leading, 1.35);
+  letter-spacing: var(--lantern-text-caption-tracking, 0.005em);
+}
+.text-mono-meta {
+  font-family: var(--lantern-font-mono, ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, monospace);
+  font-size: var(--lantern-text-mono-meta, 11px);
+  line-height: var(--lantern-text-mono-meta-leading, 1.25);
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── card ──────────────────────────────────────────────────────────────────
+   A titled surface. The head is only drawn when there is something to put in
+   it, so a bare <.card> is just a padded panel. */
+.lui-card { display: flex; flex-direction: column; min-width: 0;
+  background: var(--lantern-surface-raised);
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg); }
+.lui-card-head { display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 0.75rem; padding: 0.85rem 1rem 0; }
+.lui-card-headtext { min-width: 0; }
+.lui-card-title { display: flex; align-items: center; gap: 0.45rem; margin: 0;
+  font-size: var(--lantern-text); font-weight: 600; color: var(--lantern-fg);
+  letter-spacing: -0.01em; }
+.lui-card-desc { margin: 0.2rem 0 0; font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted); }
+.lui-card-icon { flex: none; width: 1rem; height: 1rem; color: var(--lantern-fg-muted); }
+/* The host's own `hero-*` class supplies the mask; lantern only sizes it —
+   same contract as .lui-nav-item-icon-mask. */
+.lui-card-icon.lui-card-icon-mask { width: 1rem; height: 1rem; }
+.lui-card-actions { flex: none; display: flex; align-items: center; gap: 0.4rem; }
+.lui-card-body { padding: 1rem; min-width: 0; }
+/* Content that draws its own edges meets the card's border instead of floating
+   inside its padding; the head keeps its own spacing above it. */
+.lui-card-body-flush { padding: 0; }
+.lui-card-head + .lui-card-body-flush { margin-top: 0.85rem; }
+.lui-card-foot { padding: 0.7rem 1rem; border-top: 1px solid var(--lantern-border);
+  font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); }
+/* Same flex-from-a-basis reasoning as .lui-dt-stats: `grid auto-fit` leaves
+   dead cells beside a final orphan card. */
+.lui-card-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.lui-card-grid > * { flex: 1 1 var(--lui-card-min, 16rem); min-width: 0; }
+
+/* ── description list ──────────────────────────────────────────────────── */
+.lui-dl { display: grid; gap: 0.85rem 1.5rem; margin: 0; min-width: 0; }
+.lui-dl-cols-1 { grid-template-columns: minmax(0, 1fr); }
+.lui-dl-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.lui-dl-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.lui-dl-row { min-width: 0; }
+.lui-dl-wide { grid-column: 1 / -1; }
+.lui-dl-label { font-size: var(--lantern-text-sm); font-weight: 500;
+  color: var(--lantern-fg-muted); }
+.lui-dl-value { margin: 0.15rem 0 0; min-width: 0; font-size: var(--lantern-text);
+  color: var(--lantern-fg); overflow-wrap: anywhere; }
+.lui-dl-inline .lui-dl-row { display: grid; grid-template-columns: minmax(0, 8rem) minmax(0, 1fr);
+  align-items: baseline; gap: 0.75rem; }
+.lui-dl-inline .lui-dl-value { margin: 0; }
+@media (max-width: 640px) {
+  .lui-dl-cols-2, .lui-dl-cols-3 { grid-template-columns: minmax(0, 1fr); }
+  .lui-dl-inline .lui-dl-row { grid-template-columns: minmax(0, 1fr); gap: 0.15rem; }
+}
+
+/* ── sidebar footer links ──────────────────────────────────────────────── */
+.lui-app-sidebar-links { border-top: 1px solid var(--lantern-border);
+  padding: 0.4rem 0.6rem; display: flex; flex-direction: column; gap: 0.05rem; }
+.lui-nav-link { display: flex; align-items: center; gap: 0.6rem; padding: 0.3rem 0.5rem;
+  border-radius: var(--lantern-radius-sm); color: var(--lantern-fg-muted);
+  font-size: 0.8125rem; text-decoration: none; }
+.lui-nav-link:hover { color: var(--lantern-fg); background: var(--lantern-surface-hover); }
+.lui-nav-link:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: -2px; }
+.lui-nav-link-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lui-nav-link-out { flex: none; width: 0.75rem; height: 0.75rem; margin-left: auto;
+  opacity: 0.6; transform: rotate(-45deg); }
+/* The rail has no room for text-only links, and these carry no active state
+   worth showing as an icon. */
+.lui-app[data-collapsed] .lui-app-sidebar-links { display: none; }
+
+/* ── charts: a bar that is a link ───────────────────────────────────────── */
+/* The chart draws its own colours inline, so only the states an inline style
+   cannot express live here. The hit area is the whole column; the bar under it
+   is what lights up, so hovering the empty air above a short bar still tells
+   you which one you are about to follow. */
+.lui-bar-link { cursor: pointer; }
+.lui-bar-link rect { transition: opacity var(--lantern-duration) var(--lantern-ease); }
+.lui-bar-link:hover rect, .lui-bar-link:focus-visible rect { opacity: 1; }
+.lui-bar-link:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: 2px; }
+
+/* ── data-attribute behaviours (no page-local hook) ─────────────────────── */
+[data-lantern-list-item]:focus-visible {
+  outline: 2px solid var(--lantern-ring);
+  outline-offset: -2px;
+}
+/* ── Dense-app primitives (list_row, inspector, icon_button,
+      segmented, state_glyph, progress_ring, side_panel) ── */
+
+.lui-list-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  height: 2.25rem;
+  width: 100%;
+  padding: 0 0.75rem;
+  box-sizing: border-box;
+  font-size: var(--lantern-text);
+  color: var(--lantern-fg);
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: background-color var(--lantern-duration) var(--lantern-ease);
+}
+/* Same reason as .lui-modal[hidden]: the author `display: flex` above beats
+   the UA `[hidden]` rule, so a collapsed group (LanternCollapse sets
+   `el.hidden`) would still render its rows. */
+.lui-list-row[hidden] { display: none; }
+.lui-list-row + .lui-list-row {
+  box-shadow: inset 0 1px 0 var(--lantern-border);
+}
+.lui-list-row:hover {
+  background: var(--lantern-surface-hover);
+}
+.lui-list-row[data-selected] {
+  background: var(--lantern-accent-soft);
+}
+.lui-list-row:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--lantern-ring);
+}
+.lui-list-row-leading {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+.lui-list-row-id {
+  flex-shrink: 0;
+  min-width: 2.75rem;
+  font-family: var(--lantern-font-mono);
+  font-size: var(--lantern-text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--lantern-fg-subtle);
+}
+.lui-list-row-title {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lui-list-row-parent {
+  color: var(--lantern-fg-subtle);
+  font-weight: 400;
+  margin-right: 0.25rem;
+}
+.lui-list-row-name {
+  font-weight: 500;
+}
+.lui-list-row-meta,
+.lui-list-row-trailing {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted);
+}
+
+.lui-inspector {
+  display: flex;
+  flex-direction: column;
+  width: 18rem;
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--lantern-border);
+  background: var(--lantern-surface-raised);
+  font-size: var(--lantern-text-sm);
+}
+.lui-inspector-section {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--lantern-border);
+}
+.lui-inspector-section:last-child {
+  border-bottom: 0;
+}
+.lui-inspector-heading {
+  margin: 0 0 0.5rem;
+  font-size: var(--lantern-text-sm);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lantern-fg-subtle);
+}
+.lui-inspector-list {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  gap: 0.35rem 0.75rem;
+  margin: 0;
+  align-items: center;
+}
+.lui-property-row {
+  display: contents;
+}
+.lui-property-label {
+  margin: 0;
+  min-height: 1.75rem;
+  color: var(--lantern-fg-muted);
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+}
+.lui-property-value {
+  min-width: 0;
+  margin: 0;
+  min-height: 1.75rem;
+  color: var(--lantern-fg);
+  display: flex;
+  align-items: center;
+}
+
+.lui-icon-btn-tip .lui-tooltip:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.lui-icon-btn-kbd {
+  font-family: var(--lantern-font-mono);
+  font-size: 0.7em;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid var(--lantern-border);
+  border-radius: 0.25rem;
+  color: var(--lantern-fg-subtle);
+}
+
+.lui-segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--lantern-surface-sunken);
+  border: 1px solid var(--lantern-border);
+  border-radius: calc(var(--lantern-radius) + 1px);
+}
+.lui-segmented-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--lantern-fg-muted);
+  font-family: inherit;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  border-radius: var(--lantern-radius-sm);
+}
+.lui-segmented[data-size="sm"] .lui-segmented-item {
+  font-size: var(--lantern-text-sm);
+  padding: 0.2rem 0.55rem;
+}
+.lui-segmented[data-size="md"] .lui-segmented-item {
+  font-size: var(--lantern-text);
+  padding: 0.25rem 0.7rem;
+}
+.lui-segmented-item-active {
+  background: var(--lantern-surface-raised);
+  color: var(--lantern-fg);
+  font-weight: 600;
+  box-shadow: var(--lantern-shadow);
+}
+.lui-segmented-item:hover:not(.lui-segmented-item-active) {
+  color: var(--lantern-fg);
+}
+.lui-segmented-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--lantern-ring-soft);
+}
+.lui-segmented-item[disabled],
+.lui-segmented-item[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.lui-state-glyph {
+  flex-shrink: 0;
+  display: block;
+}
+.lui-state-glyph[data-size="sm"] { width: 0.75rem; height: 0.75rem; }
+.lui-state-glyph[data-size="md"] { width: 0.875rem; height: 0.875rem; }
+.lui-state-glyph[data-kind="status"][data-value="backlog"] { color: var(--lantern-fg-subtle); }
+.lui-state-glyph[data-kind="status"][data-value="todo"],
+.lui-state-glyph[data-kind="status"][data-value="selected_for_dev"] { color: var(--lantern-fg-muted); }
+.lui-state-glyph[data-kind="status"][data-value="in_progress"] { color: var(--lantern-warning); }
+.lui-state-glyph[data-kind="status"][data-value="done"] { color: var(--lantern-success); }
+.lui-state-glyph[data-kind="status"][data-value="cancelled"] { color: var(--lantern-fg-subtle); }
+.lui-state-glyph[data-kind="priority"][data-value="urgent"] { color: var(--lantern-danger); }
+.lui-state-glyph[data-kind="priority"][data-value="high"] { color: var(--lantern-warning); }
+.lui-state-glyph[data-kind="priority"][data-value="medium"] { color: var(--lantern-fg-muted); }
+.lui-state-glyph[data-kind="priority"][data-value="low"],
+.lui-state-glyph[data-kind="priority"][data-value="none"] { color: var(--lantern-fg-subtle); }
+.lui-state-glyph[data-kind="run"][data-value="queued"] { color: var(--lantern-fg-subtle); }
+.lui-state-glyph[data-kind="run"][data-value="claiming_env"] { color: var(--lantern-fg-muted); }
+.lui-state-glyph[data-kind="run"][data-value="running"] { color: var(--lantern-warning); }
+.lui-state-glyph[data-kind="run"][data-value="verifying"] { color: var(--lantern-info, var(--lantern-accent)); }
+.lui-state-glyph[data-kind="run"][data-value="passed"] { color: var(--lantern-success); }
+.lui-state-glyph[data-kind="run"][data-value="failed"] { color: var(--lantern-danger); }
+.lui-state-glyph[data-kind="run"][data-value="blocked"] { color: var(--lantern-warning); }
+.lui-state-glyph[data-kind="sync"][data-value="empty"] { color: var(--lantern-fg-subtle); }
+.lui-state-glyph[data-kind="sync"][data-value="syncing"] { color: var(--lantern-warning); }
+.lui-state-glyph[data-kind="sync"][data-value="live"] { color: var(--lantern-success); }
+.lui-state-glyph[data-kind="sync"][data-value="failed"] { color: var(--lantern-danger); }
+.lui-state-glyph[data-kind="source"] { color: var(--lantern-fg-muted); }
+
+.lui-progress-ring {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.lui-progress-ring-svg {
+  flex-shrink: 0;
+  transform: rotate(-90deg);
+}
+.lui-progress-ring[data-size="sm"] .lui-progress-ring-svg { width: 1.75rem; height: 1.75rem; }
+.lui-progress-ring[data-size="md"] .lui-progress-ring-svg { width: 2.5rem; height: 2.5rem; }
+.lui-progress-ring[data-size="lg"] .lui-progress-ring-svg { width: 3rem; height: 3rem; }
+.lui-progress-ring-track {
+  fill: none;
+  stroke: var(--lantern-border-strong);
+  stroke-width: 2.5;
+}
+.lui-progress-ring-value {
+  fill: none;
+  stroke: var(--lantern-success);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.lui-progress-ring[data-color="accent"] .lui-progress-ring-value { stroke: var(--lantern-accent); }
+.lui-progress-ring[data-color="primary"] .lui-progress-ring-value { stroke: var(--lantern-primary); }
+.lui-progress-ring[data-color="danger"] .lui-progress-ring-value { stroke: var(--lantern-danger); }
+.lui-progress-ring[data-color="warning"] .lui-progress-ring-value { stroke: var(--lantern-warning); }
+.lui-progress-ring[data-color="info"] .lui-progress-ring-value { stroke: var(--lantern-info, var(--lantern-accent)); }
+.lui-progress-ring-label {
+  font-size: var(--lantern-text-sm);
+  color: var(--lantern-fg-muted);
+}
+
+.lui-side-panel {
+  display: flex;
+  flex-direction: column;
+  width: 18rem;
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--lantern-border);
+  background: var(--lantern-surface-raised);
+  font-size: var(--lantern-text-sm);
+}
+.lui-side-panel[hidden] {
+  display: none;
+}
+
+/*
+ * LanternUI design tokens + default theme.
+ *
+ * Components read every value from a `--lantern-*` custom property. Here each
+ * `--lantern-*` color chains through the matching FLUXON semantic token (the
+ * same names a flicker theme is defined in) and then a hard fallback:
+ *
+ *     --lantern-fg: var(--foreground, #09090b);
+ *     --lantern-surface: var(--background-base, #ffffff);
+ *     --lantern-accent: var(--primary, oklch(0.637 0.192 38));
+ *
+ * So a Fluxon/flicker theme — which sets `--primary`, `--foreground`,
+ * `--background-base`, `--border-base`, … — flows straight into LanternUI with
+ * NO bridge and NO component changes. The fallbacks preserve the standalone
+ * look when those host tokens are absent.
+ *
+ * FLUXON TOKEN MAP (lantern ← fluxon):
+ *   fg ← foreground · fg-muted ← foreground-soft · fg-subtle ← foreground-softer
+ *   surface ← background-base · surface-raised ← surface
+ *   surface-sunken/hover ← background-accent · border ← border-base
+ *   primary/accent ← primary · primary-fg/accent-fg ← foreground-primary
+ *   accent-soft ← primary-soft · danger/success/warning/info ← same
+ *
+ * COLOR MODEL (shadcn-style, standalone): `primary` is monochrome (near-black
+ * light / white dark); `accent` is coral. Under a flicker theme both pick up
+ * the brand `--primary`, matching flicker's single-brand look.
+ *
+ * WHEN TO IMPORT: standalone / embedded tools / the demo — import for a full
+ * light+dark theme. In a Fluxon host you MAY still import it; the host's tokens
+ * win through the chain. Recolor by overriding any `--lantern-*` OR any Fluxon
+ * token on `:root`/`.dark`/a subtree.
+ *
+ * THEMING SURFACES: light = `:root`; `.dark` (or system dark unless `.light`)
+ * flips. Density: default shadcn-compact; `data-lantern-density="comfortable"`
+ * for a roomier scale.
+ */
+
+:root {
+  /* ── Color · foreground ← fluxon foreground* ── */
+  --lantern-fg: var(--foreground, #09090b);
+  --lantern-fg-muted: var(--foreground-soft, #71717a);
+  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #a1a1aa));
+
+  /* ── Color · surfaces ← fluxon background-base / surface / background-accent ── */
+  --lantern-surface: var(--background-base, #ffffff);
+  --lantern-surface-raised: var(--surface, #ffffff);
+  --lantern-surface-sunken: var(--background-accent, #f4f4f5);
+  --lantern-surface-hover: var(--background-accent, #f4f4f5);
+
+  /* ── Color · lines ← fluxon border-base ── */
+  --lantern-border: var(--border-base, #e4e4e7);
+  --lantern-border-strong: var(--border-base, #d4d4d8);
+
+  /* ── Color · primary ← fluxon primary (monochrome fallback standalone) ── */
+  --lantern-primary: var(--primary, #18181b);
+  --lantern-primary-fg: var(--foreground-primary, #fafafa);
+
+  /* ── Color · secondary ← fluxon background-accent ── */
+  --lantern-secondary: var(--background-accent, #f4f4f5);
+  --lantern-secondary-fg: var(--foreground, #18181b);
+
+  /* ── Color · accent + status ← fluxon primary / status tokens ── */
+  --lantern-accent: var(--primary, oklch(0.637 0.192 38));
+  --lantern-accent-fg: var(--foreground-primary, #ffffff);
+  --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 12%, transparent));
+  --lantern-danger: var(--danger, #dc2626);
+  --lantern-danger-fg: #ffffff;
+  --lantern-success: var(--success, #16a34a);
+  --lantern-warning: var(--warning, #d97706);
+  /* info is blue, not the brand colour: accent-as-info read as an error next to danger */
+  --lantern-info: var(--info, oklch(0.62 0.17 255));
+
+  /* ── Focus ring ── */
+  --lantern-ring: var(--lantern-accent);
+  --lantern-ring-soft: color-mix(in oklab, var(--lantern-ring) 25%, transparent);
+
+  /* ── Radius ── */
+  --lantern-radius-sm: 0.375rem;
+  --lantern-radius-md: 0.5rem;
+  --lantern-radius-lg: 0.625rem;
+
+  /* ── Spacing ── */
+  --lantern-space-xs: 0.25rem;
+  --lantern-space-sm: 0.5rem;
+  --lantern-space-md: 0.75rem;
+  --lantern-space-lg: 1rem;
+
+  /* ── Chat kit ── */
+  --lantern-chat-avatar-xs: 1.5rem;
+  --lantern-chat-message-max-width: 85%;
+  --lantern-chat-scroller-padding-bottom: 4rem;
+  --lantern-chat-item-intrinsic-height: 96px;
+  --lantern-chat-button-offset: 0.25rem;
+
+  /* ── Shadows ── */
+  --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+
+  /* ── Typography ── */
+  --lantern-font: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+  --lantern-font-brand: var(--lantern-font);
+  --lantern-font-mono: var(--font-mono, ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, monospace);
+
+  /* ── Motion ── */
+  --lantern-duration: 150ms;
+  --lantern-chat-button-visibility-duration: 0s;
+  --lantern-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Density (default = shadcn-compact) ── */
+  --lantern-control-h: 2rem;
+  --lantern-control-px: 0.75rem;
+  --lantern-text: 0.8125rem;
+  --lantern-text-sm: 0.75rem;
+  --lantern-text-meta: 11px;
+  --lantern-text-meta-leading: 1.25;
+  --lantern-text-meta-tracking: 0.01em;
+  --lantern-text-caption: 12px;
+  --lantern-text-caption-leading: 1.35;
+  --lantern-text-caption-tracking: 0.005em;
+  --lantern-text-mono-meta: 11px;
+  --lantern-text-mono-meta-leading: 1.25;
+  --lantern-gap: 0.4375rem;
+  --lantern-radius: var(--lantern-radius-md);
+}
+
+/* Roomier scale for content-first hosts. */
+[data-lantern-density="comfortable"] {
+  --lantern-control-h: 2.25rem;
+  --lantern-control-px: 1rem;
+  --lantern-text: 0.875rem;
+  --lantern-text-sm: 0.8125rem;
+  --lantern-text-meta: 12px;
+  --lantern-text-caption: 13px;
+  --lantern-text-mono-meta: 12px;
+  --lantern-gap: 0.5rem;
+  --lantern-space-xs: 0.25rem;
+  --lantern-space-sm: 0.5rem;
+  --lantern-space-md: 0.75rem;
+  --lantern-space-lg: 1rem;
+  --lantern-chat-avatar-xs: 1.5rem;
+  --lantern-chat-message-max-width: 85%;
+  --lantern-chat-scroller-padding-bottom: 4rem;
+  --lantern-chat-item-intrinsic-height: 96px;
+  --lantern-chat-button-offset: 0.25rem;
+}
+
+/* Light theme — explicit opt-in via `.light`, re-asserting the chain so a
+   subtree can force light even under system dark. */
+.light {
+  --lantern-fg: var(--foreground, #09090b);
+  --lantern-fg-muted: var(--foreground-soft, #71717a);
+  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #a1a1aa));
+
+  --lantern-surface: var(--background-base, #ffffff);
+  --lantern-surface-raised: var(--surface, #ffffff);
+  --lantern-surface-sunken: var(--background-accent, #f4f4f5);
+  --lantern-surface-hover: var(--background-accent, #f4f4f5);
+
+  --lantern-border: var(--border-base, #e4e4e7);
+  --lantern-border-strong: var(--border-base, #d4d4d8);
+
+  --lantern-primary: var(--primary, #18181b);
+  --lantern-primary-fg: var(--foreground-primary, #fafafa);
+
+  --lantern-secondary: var(--background-accent, #f4f4f5);
+  --lantern-secondary-fg: var(--foreground, #18181b);
+
+  --lantern-accent: var(--primary, oklch(0.637 0.192 38));
+  --lantern-accent-fg: var(--foreground-primary, #ffffff);
+  --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 12%, transparent));
+  --lantern-danger: var(--danger, #dc2626);
+  --lantern-success: var(--success, #16a34a);
+  --lantern-warning: var(--warning, #d97706);
+
+  /* ── Spacing ── */
+  --lantern-space-xs: 0.25rem;
+  --lantern-space-sm: 0.5rem;
+  --lantern-space-md: 0.75rem;
+  --lantern-space-lg: 1rem;
+  --lantern-chat-avatar-xs: 1.5rem;
+  --lantern-chat-message-max-width: 85%;
+  --lantern-chat-scroller-padding-bottom: 4rem;
+  --lantern-chat-item-intrinsic-height: 96px;
+  --lantern-chat-button-offset: 0.25rem;
+
+  --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Dark theme — explicit opt-in via `.dark`. Same Fluxon token names; their
+   dark-scoped values win when a flicker dark theme is present, else the dark
+   fallbacks apply. */
+.dark {
+  --lantern-fg: var(--foreground, #fafafa);
+  --lantern-fg-muted: var(--foreground-soft, #a1a1aa);
+  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #71717a));
+
+  --lantern-surface: var(--background-base, #09090b);
+  --lantern-surface-raised: var(--surface, #0c0c0e);
+  --lantern-surface-sunken: var(--background-accent, #18181b);
+  --lantern-surface-hover: var(--background-accent, #26262a);
+
+  --lantern-border: var(--border-base, #26262a);
+  --lantern-border-strong: var(--border-base, #3f3f46);
+
+  --lantern-primary: var(--primary, #fafafa);
+  --lantern-primary-fg: var(--foreground-primary, #18181b);
+
+  --lantern-secondary: var(--background-accent, #27272a);
+  --lantern-secondary-fg: var(--foreground, #fafafa);
+
+  --lantern-accent: var(--primary, oklch(0.685 0.182 39));
+  --lantern-accent-fg: var(--foreground-primary, #ffffff);
+  --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 22%, transparent));
+  --lantern-danger: var(--danger, #ef4444);
+  --lantern-success: var(--success, #22c55e);
+  --lantern-warning: var(--warning, #f59e0b);
+
+  /* ── Spacing ── */
+  --lantern-space-xs: 0.25rem;
+  --lantern-space-sm: 0.5rem;
+  --lantern-space-md: 0.75rem;
+  --lantern-space-lg: 1rem;
+
+  --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
+}
+
+/* System dark — applies unless the host explicitly opts into `.light`. */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --lantern-fg: var(--foreground, #fafafa);
+    --lantern-fg-muted: var(--foreground-soft, #a1a1aa);
+    --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #71717a));
+
+    --lantern-surface: var(--background-base, #09090b);
+    --lantern-surface-raised: var(--surface, #0c0c0e);
+    --lantern-surface-sunken: var(--background-accent, #18181b);
+    --lantern-surface-hover: var(--background-accent, #26262a);
+
+    --lantern-border: var(--border-base, #26262a);
+    --lantern-border-strong: var(--border-base, #3f3f46);
+
+    --lantern-primary: var(--primary, #fafafa);
+    --lantern-primary-fg: var(--foreground-primary, #18181b);
+
+    --lantern-secondary: var(--background-accent, #27272a);
+    --lantern-secondary-fg: var(--foreground, #fafafa);
+
+    --lantern-accent: var(--primary, oklch(0.685 0.182 39));
+    --lantern-accent-fg: var(--foreground-primary, #ffffff);
+    --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 22%, transparent));
+    --lantern-danger: var(--danger, #ef4444);
+    --lantern-success: var(--success, #22c55e);
+    --lantern-warning: var(--warning, #f59e0b);
+
+    /* ── Spacing ── */
+    --lantern-space-xs: 0.25rem;
+    --lantern-space-sm: 0.5rem;
+    --lantern-space-md: 0.75rem;
+    --lantern-space-lg: 1rem;
+    --lantern-chat-avatar-xs: 1.5rem;
+    --lantern-chat-message-max-width: 85%;
+    --lantern-chat-scroller-padding-bottom: 4rem;
+    --lantern-chat-item-intrinsic-height: 96px;
+    --lantern-chat-button-offset: 0.25rem;
+
+    --lantern-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+    --lantern-shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --lantern-duration: 0ms;
+  }
+}
+
+/*
+ * ── shadcn preset (opt-in) ──────────────────────────────────────────────
+ * `<html data-lantern-theme="shadcn">` (or any subtree) swaps lantern's
+ * semantic tokens onto shadcn's neutral vocabulary — the same values as
+ * `shadcn init -p nova` (neutral base, radius 0.625rem), minus the pilot's
+ * brand-orange primary: primary stays monochrome here so each app keeps its
+ * own brand via `--primary`, exactly like the default theme.
+ *
+ * Both vocabularies are defined: `--background`, `--foreground`, `--card`,
+ * … (so shadcn-shaped markup works) and every `--lantern-*` token is
+ * re-pointed at them (so lantern components follow). Dark mode follows the
+ * `.dark` class, like shadcn — no `prefers-color-scheme` branch.
+ *
+ * Proportions move to shadcn's scale in this scope only: default control
+ * height h-9 (2.25rem), sm h-8 (2rem), card at rounded-xl, badge at
+ * rounded-md, headerless table head, alert at px-4 py-3, ring at 50%.
+ * The default theme above is untouched.
+ */
+
+[data-lantern-theme="shadcn"] {
+  /* ── shadcn vocabulary · light (neutral) ── */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+
+  /* ── lantern tokens re-pointed at the shadcn vocabulary ── */
+  --lantern-fg: var(--foreground);
+  --lantern-fg-muted: var(--muted-foreground);
+  --lantern-fg-subtle: oklch(0.708 0 0);
+  --lantern-surface: var(--background);
+  --lantern-surface-raised: var(--card);
+  --lantern-surface-sunken: var(--muted);
+  --lantern-surface-hover: var(--accent);
+  --lantern-border: var(--border);
+  --lantern-border-strong: var(--input);
+  --lantern-primary: var(--primary);
+  --lantern-primary-fg: var(--primary-foreground);
+  --lantern-secondary: var(--secondary);
+  --lantern-secondary-fg: var(--secondary-foreground);
+  /* shadcn's accent is a grey fill; lantern's accent marks the active /
+     selected / linked thing, which in shadcn is primary. */
+  --lantern-accent: var(--primary);
+  --lantern-accent-fg: var(--primary-foreground);
+  --lantern-accent-soft: color-mix(in oklab, var(--primary) 10%, transparent);
+  --lantern-danger: var(--destructive);
+  --lantern-danger-fg: var(--destructive-foreground);
+  --lantern-ring: var(--ring);
+  --lantern-ring-soft: color-mix(in oklab, var(--ring) 50%, transparent);
+  --lantern-radius: var(--radius);
+  --lantern-radius-sm: calc(var(--radius) - 4px);
+  --lantern-radius-md: calc(var(--radius) - 2px);
+  --lantern-radius-lg: var(--radius);
+
+  /* ── shadcn proportions: default h-9 ── */
+  --lantern-control-h: 2.25rem;
+  --lantern-control-px: 0.75rem;
+  --lantern-text: 0.875rem;
+  --lantern-text-sm: 0.8125rem;
+}
+
+.dark[data-lantern-theme="shadcn"],
+[data-lantern-theme="shadcn"].dark,
+.dark [data-lantern-theme="shadcn"],
+[data-lantern-theme="shadcn"] .dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+
+  --lantern-fg-subtle: oklch(0.556 0 0);
+  --lantern-accent-soft: color-mix(in oklab, var(--primary) 18%, transparent);
+}
+
+/* ── shadcn proportions per component (same scope, so the default theme
+   never sees them): sm controls at h-8, card at rounded-xl with p-6 body,
+   badge at rounded-md/text-xs, headerless table head, alert at px-4 py-3. */
+[data-lantern-theme="shadcn"] .lui-btn[data-size="sm"],
+[data-lantern-theme="shadcn"] .lui-btn[data-size="icon-sm"] {
+  height: 2rem;
+}
+[data-lantern-theme="shadcn"] .lui-btn[data-size="icon-sm"] {
+  width: 2rem;
+}
+[data-lantern-theme="shadcn"] .lui-field[data-size="sm"] .lui-input-wrap,
+[data-lantern-theme="shadcn"] .lui-field[data-size="sm"] .lui-color-wrap {
+  height: 2rem;
+}
+[data-lantern-theme="shadcn"] .lui-input::placeholder,
+[data-lantern-theme="shadcn"] .lui-textarea::placeholder,
+[data-lantern-theme="shadcn"] .lui-select-value[data-empty] {
+  color: var(--muted-foreground);
+}
+[data-lantern-theme="shadcn"] .lui-card {
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: var(--lantern-shadow);
+}
+[data-lantern-theme="shadcn"] .lui-card-body {
+  padding: 1.5rem;
+}
+[data-lantern-theme="shadcn"] .lui-card-head {
+  padding: 1.5rem 1.5rem 0;
+}
+[data-lantern-theme="shadcn"] .lui-card-foot {
+  padding: 0.75rem 1.5rem;
+}
+[data-lantern-theme="shadcn"] .lui-badge {
+  border-radius: var(--lantern-radius-md);
+}
+[data-lantern-theme="shadcn"] .lui-badge[data-size="md"] {
+  font-size: 0.75rem;
+  padding: 0 0.625rem;
+  height: 1.375rem;
+}
+[data-lantern-theme="shadcn"] .lui-th {
+  background: transparent;
+  font-weight: 500;
+}
+[data-lantern-theme="shadcn"] .lui-tr:hover {
+  background: color-mix(in oklab, var(--muted) 50%, transparent);
+}
+[data-lantern-theme="shadcn"] .lui-alert {
+  padding: 0.75rem 1rem;
+  border-radius: var(--lantern-radius-lg);
+}
+</style>
+  </head>
+  <body>
+    <div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
+  <div class="lui-page-header">
+  <div class="lui-page-header-row">
+    <div class="lui-page-header-text">
+      <h1 class="lui-page-title">Dashboard</h1>
+      <p class="lui-page-desc">Where the week stands at a glance.</p>
+    </div>
+    <div class="lui-page-header-actions">
+      
+      
+
+<button class="lui-btn" data-variant="outline" data-color="primary" data-size="sm" data-part="button">
+  Export
+</button>
+      
+
+<button class="lui-btn" data-variant="solid" data-color="primary" data-size="sm" data-part="button">
+  New ticket
+</button>
+    
+    </div>
+  </div>
+  
+    
+</div>
+  <div class="lui-dt-stats lui-stat-grid">
+  
+<div class="lui-dt-stat lui-dt-stat-static">
+  <div class="lui-dt-stat-head">
+  <span class="lui-dt-stat-label">Open tickets</span>
+  
+</div>
+<span class="lui-dt-stat-value">128</span>
+<span class="lui-dt-stat-sub">+12 this week</span>
+</div>
+<div class="lui-dt-stat lui-dt-stat-static">
+  <div class="lui-dt-stat-head">
+  <span class="lui-dt-stat-label">In progress</span>
+  
+</div>
+<span class="lui-dt-stat-value">34</span>
+<span class="lui-dt-stat-sub">8 owners</span>
+</div>
+<div class="lui-dt-stat lui-dt-stat-static">
+  <div class="lui-dt-stat-head">
+  <span class="lui-dt-stat-label">Merged today</span>
+  
+</div>
+<span class="lui-dt-stat-value">19</span>
+<span class="lui-dt-stat-sub">across 4 repos</span>
+</div>
+<div class="lui-dt-stat lui-dt-stat-static">
+  <div class="lui-dt-stat-head">
+  <span class="lui-dt-stat-label">P95 review lag</span>
+  
+</div>
+<span class="lui-dt-stat-value">3.2h</span>
+<span class="lui-dt-stat-sub">-0.4h vs last week</span>
+</div>
+</div>
+  <section class="lui-card">
+  <div class="lui-card-head">
+    <div class="lui-card-headtext">
+      
+      <h2 class="lui-card-title">
+        
+        Merged per day
+      </h2>
+      <p class="lui-card-desc">Last 14 days across 4 repos.</p>
+    </div>
+    
+  </div>
+  <div class="lui-card-body ">
+    
+    <div id="dashboard-merged" class="">
+  <div id="dashboard-merged-hover" phx-hook="ChartHover" data-points="[{&quot;x&quot;:46.0,&quot;y&quot;:157.6,&quot;p&quot;:&quot;4&quot;,&quot;d&quot;:&quot;Sep 20, 2026&quot;},{&quot;x&quot;:95.2,&quot;y&quot;:130.3,&quot;p&quot;:&quot;7&quot;,&quot;d&quot;:&quot;Sep 21, 2026&quot;},{&quot;x&quot;:144.5,&quot;y&quot;:148.5,&quot;p&quot;:&quot;5&quot;,&quot;d&quot;:&quot;Sep 22, 2026&quot;},{&quot;x&quot;:193.7,&quot;y&quot;:112.1,&quot;p&quot;:&quot;9&quot;,&quot;d&quot;:&quot;Sep 23, 2026&quot;},{&quot;x&quot;:242.9,&quot;y&quot;:84.8,&quot;p&quot;:&quot;12&quot;,&quot;d&quot;:&quot;Sep 24, 2026&quot;},{&quot;x&quot;:292.2,&quot;y&quot;:121.2,&quot;p&quot;:&quot;8&quot;,&quot;d&quot;:&quot;Sep 25, 2026&quot;},{&quot;x&quot;:341.4,&quot;y&quot;:93.9,&quot;p&quot;:&quot;11&quot;,&quot;d&quot;:&quot;Sep 26, 2026&quot;},{&quot;x&quot;:390.6,&quot;y&quot;:66.6,&quot;p&quot;:&quot;14&quot;,&quot;d&quot;:&quot;Sep 27, 2026&quot;},{&quot;x&quot;:439.8,&quot;y&quot;:103.0,&quot;p&quot;:&quot;10&quot;,&quot;d&quot;:&quot;Sep 28, 2026&quot;},{&quot;x&quot;:489.1,&quot;y&quot;:75.7,&quot;p&quot;:&quot;13&quot;,&quot;d&quot;:&quot;Sep 29, 2026&quot;},{&quot;x&quot;:538.3,&quot;y&quot;:48.4,&quot;p&quot;:&quot;16&quot;,&quot;d&quot;:&quot;Sep 30, 2026&quot;},{&quot;x&quot;:587.5,&quot;y&quot;:84.8,&quot;p&quot;:&quot;12&quot;,&quot;d&quot;:&quot;Oct 1, 2026&quot;},{&quot;x&quot;:636.8,&quot;y&quot;:57.5,&quot;p&quot;:&quot;15&quot;,&quot;d&quot;:&quot;Oct 2, 2026&quot;},{&quot;x&quot;:686.0,&quot;y&quot;:21.1,&quot;p&quot;:&quot;19&quot;,&quot;d&quot;:&quot;Oct 3, 2026&quot;}]" data-top="12" data-bottom="194">
+    <svg viewBox="0 0 700 220" role="img" aria-label="Merged tickets per day" style="display:block;width:100%;height:auto;font-family:inherit;color:var(--lantern-fg, var(--foreground, #111827))">
+      <g stroke="currentColor" stroke-opacity="0.08">
+        <line x1="46" x2="686" y1="194.0" y2="194.0"></line><line x1="46" x2="686" y1="148.5" y2="148.5"></line><line x1="46" x2="686" y1="103.0" y2="103.0"></line><line x1="46" x2="686" y1="57.5" y2="57.5"></line><line x1="46" x2="686" y1="12.0" y2="12.0"></line>
+      </g>
+      <g fill="currentColor" fill-opacity="0.5" font-size="11">
+        <text x="38" y="197.0" text-anchor="end">0</text><text x="38" y="151.5" text-anchor="end">5</text><text x="38" y="106.0" text-anchor="end">10</text><text x="38" y="60.5" text-anchor="end">15</text><text x="38" y="15.0" text-anchor="end">20</text>
+        <text x="46.0" y="212" text-anchor="start">
+          Sep 20
+        </text><text x="193.7" y="212" text-anchor="middle">
+          Sep 23
+        </text><text x="390.6" y="212" text-anchor="middle">
+          Sep 27
+        </text><text x="538.3" y="212" text-anchor="middle">
+          Sep 30
+        </text><text x="686.0" y="212" text-anchor="end">
+          Oct 3
+        </text>
+      </g>
+      <g style="color:var(--lantern-accent, var(--color-primary-500, #3b82f6))">
+        <defs>
+          <linearGradient id="dashboard-merged-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="currentColor" stop-opacity="0.25"></stop>
+            <stop offset="100%" stop-color="currentColor" stop-opacity="0"></stop>
+          </linearGradient>
+        </defs>
+        <path d="M46.0,157.6 C54.2,153.1 78.8,131.8 95.2,130.3 C111.6,128.8 128.1,151.5 144.5,148.5 C160.9,145.5 177.3,122.7 193.7,112.1 C210.1,101.5 226.5,83.3 242.9,84.8 C259.3,86.3 275.7,119.7 292.2,121.2 C308.6,122.7 325.0,103.0 341.4,93.9 C357.8,84.8 374.2,65.1 390.6,66.6 C407.0,68.1 423.4,101.5 439.8,103.0 C456.3,104.5 472.7,84.8 489.1,75.7 C505.5,66.6 521.9,46.9 538.3,48.4 C554.7,49.9 571.1,83.3 587.5,84.8 C603.9,86.3 620.4,68.1 636.8,57.5 C653.2,46.9 677.8,27.2 686.0,21.1 L686.0,194.0 L46.0,194.0 Z" fill="url(#dashboard-merged-grad)"></path>
+        <path d="M46.0,157.6 C54.2,153.1 78.8,131.8 95.2,130.3 C111.6,128.8 128.1,151.5 144.5,148.5 C160.9,145.5 177.3,122.7 193.7,112.1 C210.1,101.5 226.5,83.3 242.9,84.8 C259.3,86.3 275.7,119.7 292.2,121.2 C308.6,122.7 325.0,103.0 341.4,93.9 C357.8,84.8 374.2,65.1 390.6,66.6 C407.0,68.1 423.4,101.5 439.8,103.0 C456.3,104.5 472.7,84.8 489.1,75.7 C505.5,66.6 521.9,46.9 538.3,48.4 C554.7,49.9 571.1,83.3 587.5,84.8 C603.9,86.3 620.4,68.1 636.8,57.5 C653.2,46.9 677.8,27.2 686.0,21.1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"></path>
+      </g>
+      <g class="lantern-hover" style="opacity:0;color:var(--lantern-accent, var(--color-primary-500, #3b82f6))"></g>
+    </svg>
+  </div>
+  
+</div>
+  
+  </div>
+  
+</section>
+  <section class="lui-card">
+  <div class="lui-card-head">
+    <div class="lui-card-headtext">
+      
+      <h2 class="lui-card-title">
+        
+        Recent activity
+      </h2>
+      <p class="lui-card-desc">Latest updates, most recent first.</p>
+    </div>
+    
+  </div>
+  <div class="lui-card-body lui-card-body-flush">
+    
+    <a href="/tickets/241" data-phx-link="redirect" data-phx-link-state="push" class="lui-list-row">
+  <span class="lui-list-row-leading"><svg class="lui-state-glyph" viewBox="0 0 14 14" fill="none" data-kind="status" data-value="in_progress" data-size="md" aria-hidden="true">
+  
+      <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5"></circle>
+      <path d="M7 3.5a3.5 3.5 0 0 1 0 7z" fill="currentColor"></path>
+    
+</svg></span>
+  <span class="lui-list-row-id">#241</span>
+  <span class="lui-list-row-title">
+    
+    <span class="lui-list-row-name">Visible progress ring</span>
+  </span>
+  
+  <span class="lui-list-row-trailing">2h ago</span>
+</a>
+<a href="/tickets/240" data-phx-link="redirect" data-phx-link-state="push" class="lui-list-row">
+  <span class="lui-list-row-leading"><svg class="lui-state-glyph" viewBox="0 0 14 14" fill="none" data-kind="status" data-value="todo" data-size="md" aria-hidden="true">
+  
+      <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5"></circle>
+    
+</svg></span>
+  <span class="lui-list-row-id">#240</span>
+  <span class="lui-list-row-title">
+    
+    <span class="lui-list-row-name">Extract eight primitives</span>
+  </span>
+  
+  <span class="lui-list-row-trailing">5h ago</span>
+</a>
+<a href="/tickets/239" data-phx-link="redirect" data-phx-link-state="push" class="lui-list-row">
+  <span class="lui-list-row-leading"><svg class="lui-state-glyph" viewBox="0 0 14 14" fill="none" data-kind="status" data-value="done" data-size="md" aria-hidden="true">
+  
+      <circle cx="7" cy="7" r="6.25" fill="currentColor"></circle>
+      <path d="M4.4 7.2l1.8 1.8 3.5-3.7" stroke="var(--lantern-surface, #fff)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    
+</svg></span>
+  <span class="lui-list-row-id">#239</span>
+  <span class="lui-list-row-title">
+    
+    <span class="lui-list-row-name">Hub dashboard grouping</span>
+  </span>
+  
+  <span class="lui-list-row-trailing">1d ago</span>
+</a>
+
+  
+  </div>
+  
+</section>
+</div>
+  </body>
+</html>

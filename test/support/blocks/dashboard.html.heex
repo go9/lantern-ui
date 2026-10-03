@@ -9,7 +9,12 @@
     <:stat :for={stat <- @stats} label={stat.label} value={stat.value} subtitle={stat.subtitle} />
   </.stat_grid>
   <.card title="Merged per day" description="Last 14 days across 4 repos.">
-    <.area_chart id="dashboard-merged" series={@series} height={220} aria_label="Merged tickets per day" />
+    <.area_chart
+      id="dashboard-merged"
+      series={@series}
+      height={220}
+      aria_label="Merged tickets per day"
+    />
   </.card>
   <.card flush title="Recent activity" description="Latest updates, most recent first.">
     <.list_row

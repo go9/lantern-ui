@@ -4,6 +4,9 @@ defmodule LanternUI.BlocksTest do
   import Phoenix.LiveViewTest, only: [rendered_to_string: 1]
 
   alias LanternUI.Blocks
+  alias LanternUI.BlocksGallery
+
+  @gallery_dir "test/fixtures/blocks_gallery"
 
   @heex_dir Path.expand("../support/blocks", __DIR__)
 
@@ -140,5 +143,30 @@ defmodule LanternUI.BlocksTest do
     assert html =~ "Loading tickets"
     assert html =~ "didn&#39;t load"
     assert html =~ "Retry"
+  end
+
+  describe "gallery baseline" do
+    test "writes every block in all four theme documents" do
+      File.mkdir_p!(@gallery_dir)
+
+      variants = [
+        {"default", nil, false},
+        {"default", nil, true},
+        {"shadcn", "shadcn", false},
+        {"shadcn", "shadcn", true}
+      ]
+
+      for block <- Blocks.names(), {label, theme, dark} <- variants do
+        mode = if dark, do: "dark", else: "light"
+        name = "#{block}-#{label}-#{mode}.html"
+
+        html =
+          BlocksGallery.document(%{__changed__: nil, block: block, theme: theme, dark: dark})
+          |> rendered_to_string()
+
+        assert html =~ "lantern-ui block: #{block}", "missing block marker in #{name}"
+        File.write!(Path.join(@gallery_dir, name), html)
+      end
+    end
   end
 end

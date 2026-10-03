@@ -306,7 +306,9 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
     </:actions>
   </.page_header>
   <.card title="Getting started" description="Three steps to a finished page.">
-    <p style="margin: 0;">Pick a block from the recipe index, swap the fixture assigns for the host LiveView assigns, and ship.</p>
+    <p style="margin: 0;">
+      Pick a block from the recipe index, swap the fixture assigns for the host LiveView assigns, and ship.
+    </p>
     <:footer>Blocks render in the default theme and the shadcn preset.</:footer>
   </.card>
 </LanternUI.Components.Layout.app_shell>
@@ -328,7 +330,12 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
     <:stat :for={stat <- @stats} label={stat.label} value={stat.value} subtitle={stat.subtitle} />
   </.stat_grid>
   <.card title="Merged per day" description="Last 14 days across 4 repos.">
-    <.area_chart id="dashboard-merged" series={@series} height={220} aria_label="Merged tickets per day" />
+    <.area_chart
+      id="dashboard-merged"
+      series={@series}
+      height={220}
+      aria_label="Merged tickets per day"
+    />
   </.card>
   <.card flush title="Recent activity" description="Latest updates, most recent first.">
     <.list_row
@@ -399,7 +406,9 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
     <:empty>
       <.empty_state icon="document" title="No tickets match">
         Try a different search, or create the first ticket.
-        <:action><.button size="sm" variant="solid" navigate="/tickets/new">New ticket</.button></:action>
+        <:action>
+          <.button size="sm" variant="solid" navigate="/tickets/new">New ticket</.button>
+        </:action>
       </.empty_state>
     </:empty>
   </.data_table>
@@ -428,37 +437,45 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
     </:actions>
   </.breadcrumb_bar>
   <.page_header title={@ticket.title} description={@ticket.identifier} />
-  <.card title="Description">
-    {@ticket.body}
-    <:footer>
-      <.progress shape="ring" completed={@ticket.completed} scope={@ticket.scope} size="sm" label="Completion">
-        {@ticket.completed} / {@ticket.scope}
-      </.progress>
-    </:footer>
-  </.card>
-  <.side_panel id="ticket-panel" open={@panel_open} aria-label="Ticket properties">
-    <.inspector aria-label="Ticket">
-      <.inspector_section title="Properties">
-        <.description_list layout="dense">
-          <:item label="Status">
-            <.status_glyph status={@ticket.status} /> in progress
-          </:item>
-          <:item label="Priority">
-            <.priority_glyph priority={@ticket.priority} /> high
-          </:item>
-          <:item label="Tags">
-            <.badge size="sm">{@ticket.tag}</.badge>
-          </:item>
-        </.description_list>
-      </.inspector_section>
-      <.inspector_section title="People">
-        <.description_list layout="dense">
-          <:item label="Owner">Ada Lovelace</:item>
-          <:item label="Reviewer">Grace Hopper</:item>
-        </.description_list>
-      </.inspector_section>
-    </.inspector>
-  </.side_panel>
+  <div style="display: flex; gap: 1.25rem; align-items: flex-start;">
+    <.card title="Description" style="flex: 1; min-width: 0;">
+      {@ticket.body}
+      <:footer>
+        <.progress
+          shape="ring"
+          completed={@ticket.completed}
+          scope={@ticket.scope}
+          size="sm"
+          label="Completion"
+        >
+          {@ticket.completed} / {@ticket.scope}
+        </.progress>
+      </:footer>
+    </.card>
+    <.side_panel id="ticket-panel" open={@panel_open} aria-label="Ticket properties">
+      <.inspector aria-label="Ticket">
+        <.inspector_section title="Properties">
+          <.description_list layout="dense">
+            <:item label="Status">
+              <.status_glyph status={@ticket.status} /> in progress
+            </:item>
+            <:item label="Priority">
+              <.priority_glyph priority={@ticket.priority} /> high
+            </:item>
+            <:item label="Tags">
+              <.badge size="sm">{@ticket.tag}</.badge>
+            </:item>
+          </.description_list>
+        </.inspector_section>
+        <.inspector_section title="People">
+          <.description_list layout="dense">
+            <:item label="Owner">Ada Lovelace</:item>
+            <:item label="Reviewer">Grace Hopper</:item>
+          </.description_list>
+        </.inspector_section>
+      </.inspector>
+    </.side_panel>
+  </div>
 </div>
 ```
 
@@ -468,7 +485,10 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 
 ```heex
 <div style="max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
-  <.page_header title="Settings" description="Each section saves on its own — nothing else moves." />
+  <.page_header
+    title="Settings"
+    description="Each section saves on its own — nothing else moves."
+  />
   <.card title="Profile" description="How your name appears on tickets and reviews.">
     <.input id="settings-name" name="name" label="Display name" value="Ada Lovelace" />
     <.input
@@ -486,7 +506,13 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
   </.card>
   <.card title="Notifications" description="Pick which pings are worth interrupting you.">
     <.switch id="settings-mentions" name="mentions" label="Mentions" checked value="true" />
-    <.switch id="settings-review" name="review_requests" label="Review requests" checked value="true" />
+    <.switch
+      id="settings-review"
+      name="review_requests"
+      label="Review requests"
+      checked
+      value="true"
+    />
     <.switch id="settings-weekly" name="weekly_digest" label="Weekly digest" value="false" />
     <:footer>
       <span>Saved 1h ago</span>
@@ -577,7 +603,14 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
       <span class="lui-brand-name">Acme</span>
     </div>
     <.page_header title="Welcome back" description="Sign in to your workspace." />
-    <.input id="login-email" name="email" type="email" label="Email" placeholder="ada@acme.test" autocomplete="email" />
+    <.input
+      id="login-email"
+      name="email"
+      type="email"
+      label="Email"
+      placeholder="ada@acme.test"
+      autocomplete="email"
+    />
     <.input
       id="login-password"
       name="password"
@@ -587,9 +620,9 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
       autocomplete="current-password"
       errors={["is incorrect — try again or reset it"]}
     />
-    <.button variant="solid">Sign in</.button>
+    <.button variant="solid" style="width: 100%;">Sign in</.button>
     <.separator text="or continue with" />
-    <.button variant="outline">Continue with SSO</.button>
+    <.button variant="outline" style="width: 100%;">Continue with SSO</.button>
     <:footer>No account yet? Ask your workspace admin for an invite.</:footer>
   </.card>
 </div>
@@ -601,13 +634,21 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 
 ```heex
 <div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
-  <.page_header title="Danger zone" description="Irreversible actions wait behind a confirmation." />
-  <.card title="Delete workspace" description="Removes every ticket, inbox item, and invite. This cannot be undone.">
+  <.page_header
+    title="Danger zone"
+    description="Irreversible actions wait behind a confirmation."
+  />
+  <.card
+    title="Delete workspace"
+    description="Removes every ticket, inbox item, and invite. This cannot be undone."
+  >
     <.button variant="solid" color="danger">Delete workspace…</.button>
   </.card>
   <.alert_dialog id="delete-workspace" open>
     <:title>Delete this workspace?</:title>
-    <:description>Every ticket, inbox item, and invite goes with it. Type the workspace name to confirm.</:description>
+    <:description>
+      Every ticket, inbox item, and invite goes with it. Type the workspace name to confirm.
+    </:description>
     <:cancel><.button variant="outline">Cancel</.button></:cancel>
     <:action><.button variant="solid" color="danger">Delete workspace</.button></:action>
   </.alert_dialog>

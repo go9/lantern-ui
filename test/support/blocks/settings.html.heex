@@ -1,5 +1,8 @@
 <div style="max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
-  <.page_header title="Settings" description="Each section saves on its own — nothing else moves." />
+  <.page_header
+    title="Settings"
+    description="Each section saves on its own — nothing else moves."
+  />
   <.card title="Profile" description="How your name appears on tickets and reviews.">
     <.input id="settings-name" name="name" label="Display name" value="Ada Lovelace" />
     <.input
@@ -17,7 +20,13 @@
   </.card>
   <.card title="Notifications" description="Pick which pings are worth interrupting you.">
     <.switch id="settings-mentions" name="mentions" label="Mentions" checked value="true" />
-    <.switch id="settings-review" name="review_requests" label="Review requests" checked value="true" />
+    <.switch
+      id="settings-review"
+      name="review_requests"
+      label="Review requests"
+      checked
+      value="true"
+    />
     <.switch id="settings-weekly" name="weekly_digest" label="Weekly digest" value="false" />
     <:footer>
       <span>Saved 1h ago</span>

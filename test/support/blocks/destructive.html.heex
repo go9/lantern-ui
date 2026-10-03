@@ -1,11 +1,19 @@
 <div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem;">
-  <.page_header title="Danger zone" description="Irreversible actions wait behind a confirmation." />
-  <.card title="Delete workspace" description="Removes every ticket, inbox item, and invite. This cannot be undone.">
+  <.page_header
+    title="Danger zone"
+    description="Irreversible actions wait behind a confirmation."
+  />
+  <.card
+    title="Delete workspace"
+    description="Removes every ticket, inbox item, and invite. This cannot be undone."
+  >
     <.button variant="solid" color="danger">Delete workspace…</.button>
   </.card>
   <.alert_dialog id="delete-workspace" open>
     <:title>Delete this workspace?</:title>
-    <:description>Every ticket, inbox item, and invite goes with it. Type the workspace name to confirm.</:description>
+    <:description>
+      Every ticket, inbox item, and invite goes with it. Type the workspace name to confirm.
+    </:description>
     <:cancel><.button variant="outline">Cancel</.button></:cancel>
     <:action><.button variant="solid" color="danger">Delete workspace</.button></:action>
   </.alert_dialog>
