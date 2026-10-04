@@ -130,6 +130,27 @@ run_combo() {
       echo "pin checkout failed"; echo '{"error":"pin checkout failed"}' > "$out/score.json"; return 0; }
   fi
 
+  # Round 2 evaluates current lantern-ui rather than the demo's 0.8.3 Hex pin.
+  python3 - "$demo/mix.exs" <<'PY'
+from pathlib import Path
+import sys
+p = Path(sys.argv[1])
+s = p.read_text()
+old = '''      # lantern and lantern_s3 still pin lantern_ui from git. Mix requires the
+      # hex pin to override those so this app stays on the published 0.8.3.
+      {:lantern_ui, "~> 0.8.3", override: true},'''
+new = '''      # Round-2 eval pin: row navigation, persistent chips, current lint and recipes.
+      {:lantern_ui, github: "go9/lantern-ui", ref: "1d5d4e02a950d9631fbfa008c13cf1d369ac113a", override: true},'''
+if old in s:
+    p.write_text(s.replace(old, new))
+elif new not in s:
+    raise SystemExit(f'could not repin lantern_ui dependency in {p}')
+PY
+  rm -f "$demo/mix.lock"
+  (cd "$demo" && mix deps.get > "$out/repin.log" 2>&1) || {
+    echo "lantern-ui git repin failed (see repin.log)"; echo '{"error":"lantern-ui git repin failed"}' > "$out/score.json"; return 0; }
+  lantern_ui_sha="$(cd "$demo" && git -C deps/lantern_ui rev-parse HEAD)"
+
   # Build prompt: brief + task + condition appendix (+ docs bundles for B/C).
   {
     cat "$EVAL_DIR/tasks/_brief.md"
@@ -274,7 +295,7 @@ except Exception:
 import json
 json.dump({
   'task': '$task', 'condition': '$cond', 'rep': $REP, 'model': '$MODEL',
-  'demo_sha': '$DEMO_PIN', 'auto': '''$score'''.strip(),
+  'demo_sha': '$DEMO_PIN', 'lantern_ui_sha': '$lantern_ui_sha', 'auto': '''$score'''.strip(),
   'compile': '$compile', 'lint': '$lint', 'blocks': '''$blocks'''.strip(),
   'axe': '$axe', 'screenshot': '$shot',
 }, open('$out/score.json', 'w'), indent=2)

@@ -1,14 +1,14 @@
 {
-  "task": "themed-preview",
-  "condition": "C",
-  "rep": 1,
+  "task": "ticket-index",
+  "condition": "A",
+  "rep": 2,
   "model": "sonnet",
   "demo_sha": "2bc0030ef2d15539ce670d75f61522216ab09241",
   "lantern_ui_sha": "1d5d4e02a950d9631fbfa008c13cf1d369ac113a",
-  "auto": "SCORE: 100/100",
+  "auto": "SCORE: 96/100",
   "compile": "pass",
   "lint": "0 findings",
-  "blocks": "PASS 4/4 theme,stat-row,flat-list,form-card",
-  "axe": "2 violations",
+  "blocks": "PASS 2/2 filter-chips,flat-list",
+  "axe": "1 violations",
   "screenshot": "ok"
 }
