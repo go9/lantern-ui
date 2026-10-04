@@ -63,10 +63,13 @@ test("dropdown: clicking the trigger toggles; item click closes", async () => {
   await waitFor(() => component().api.open === true)
   assert.equal(content(el).hidden, false)
   assert.equal(content(el).getAttribute("role"), "menu")
+  // The toggle's expanded state is delegate-owned too (#3448 audit).
+  assert.equal(el.querySelector("[aria-haspopup]").getAttribute("aria-expanded"), "true")
 
   el.querySelector('[role="menuitem"]').click()
   await waitFor(() => component().api.open === false)
   assert.equal(content(el).hidden, true)
+  assert.equal(el.querySelector("[aria-haspopup]").getAttribute("aria-expanded"), "false")
 })
 
 test("dropdown: ArrowDown on the focused trigger opens on the first item", async () => {
