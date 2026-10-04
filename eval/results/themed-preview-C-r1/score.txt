@@ -1,0 +1,2 @@
+RULE: no_files 0/100 no changed files to score
+SCORE: 0/100
