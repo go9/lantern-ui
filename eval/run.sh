@@ -177,6 +177,7 @@ run_combo() {
   # Build.
   compile="$prev_compile"
   if [ "$SKIP_BUILD" -eq 0 ]; then
+    (cd "$demo" && mise x -- elixir --version > "$out/toolchain.log" 2>&1)
     if (cd "$demo" && mise x -- mix deps.get > "$out/build.log" 2>&1 \
         && mise x -- mix compile >> "$out/build.log" 2>&1); then
       compile="pass"
