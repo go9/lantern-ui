@@ -154,6 +154,7 @@ defmodule LanternUI.Components.Command do
     <div
       id={@id}
       class={Class.merge(["lui-command", @container_class])}
+      popover="manual"
       phx-hook="LanternCommand"
       data-open={@open || nil}
       data-hotkey={@hotkey}

@@ -23,6 +23,8 @@ mix format --check-formatted          # CI runs Elixir 1.19 / OTP 28; older Elix
 mix lantern.lint                      # banned patterns / unknown components
 mix lantern.llms --check              # llms.txt must be regenerated when component docs change
 npm run build                         # rebuild committed bundles
+# floating-panel matrix (needs Chrome + puppeteer-core): see header of test/qa/run.mjs
+# MIX_ENV=test PORT=4013 mix run test/qa/server.exs & ; BASE=http://127.0.0.1:4013 node test/qa/run.mjs
 ```
 
 ## Rules

@@ -35,6 +35,8 @@ defmodule LanternUI.MixProject do
       {:phoenix_live_view, "~> 1.0"},
       {:jason, "~> 1.0"},
       {:floki, ">= 0.30.0", only: :test},
+      # test/qa floating-panel matrix host (never part of the package).
+      {:bandit, "~> 1.5", only: :test},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false}
     ]
   end

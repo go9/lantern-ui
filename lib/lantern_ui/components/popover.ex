@@ -115,7 +115,7 @@ defmodule LanternUI.Components.Popover do
         {render_slot(@inner_block)}
       </div>
 
-      <div data-scope="popover" data-part="positioner">
+      <div data-scope="popover" data-part="positioner" popover="manual">
         <div
           data-scope="popover"
           data-part="content"

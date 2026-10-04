@@ -81,6 +81,7 @@ defmodule LanternUI.Components.Sheet do
     <div
       id={@id}
       class={Class.merge(["lui-sheet", @container_class])}
+      popover="manual"
       phx-hook="LanternSheet"
       phx-mounted={JS.ignore_attributes(zag_ignored_attrs(), to: "[data-scope=\"dialog\"]")}
       data-zag

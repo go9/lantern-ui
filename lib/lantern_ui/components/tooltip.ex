@@ -84,7 +84,7 @@ defmodule LanternUI.Components.Tooltip do
       <span data-scope="tooltip" data-part="trigger" class="lui-tooltip-trigger" tabindex="0">
         {render_slot(@inner_block)}
       </span>
-      <span data-scope="tooltip" data-part="positioner">
+      <span data-scope="tooltip" data-part="positioner" popover="manual">
         <span data-scope="tooltip" data-part="content" class="lui-tooltip" role="tooltip" hidden>
           <%= if @content != [] do %>
             {render_slot(@content)}

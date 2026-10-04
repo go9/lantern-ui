@@ -37,6 +37,7 @@ import {
   readUpdatedServerBoolean,
 } from "./bridge.js"
 
+import { floating, syncLayer } from "../layer.js"
 const SCOPE = "menu"
 
 const part = (name) => `[data-scope="${SCOPE}"][data-part="${name}"]`
@@ -88,7 +89,10 @@ export class LanternMenuMachine extends Component {
     }
 
     const positioner = this.el.querySelector(part("positioner"))
-    if (positioner) this.spreadProps(positioner, this.api.getPositionerProps())
+    if (positioner) {
+      this.spreadProps(positioner, this.api.getPositionerProps())
+      syncLayer(positioner, this.api.open)
+    }
 
     const content = this.el.querySelector(part("content"))
     if (content) {
@@ -111,7 +115,7 @@ function menuLayoutProps(el) {
     id: el.id,
     disabled: getBoolean(el, "disabled"),
     dir: getDir(el),
-    positioning: { placement: getString(el, "placement") || "bottom-start" },
+    positioning: floating({ placement: getString(el, "placement") || "bottom-start" }),
   }
   const triggerId = getString(el, "triggerId")
   const contentId = getString(el, "contentId")

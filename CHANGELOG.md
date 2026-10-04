@@ -7,6 +7,28 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Fixed
+- **Floating panels are no longer clipped, covered, or stranded** (flicker #3480).
+  Select, searchable select, dropdown, menu, user menu, popover, tooltip,
+  autocomplete, date picker, command palette, modal and sheet were clipped by a
+  parent `overflow: hidden` / scroller / sticky bar, hidden under a dialog (their
+  `z-index` 50 sat below the modal's 60), left behind by `transform` ancestors, or
+  opened off-screen at the viewport edge. Root causes: Zag's popper defaulted to
+  `position: absolute` inside the clipping ancestor; legacy hook panels had no
+  size cap and a stale `min-width`; the Zag tooltip content was a second `fixed`
+  box inside its positioner, leaving the positioned box 0x0 so flip/shift never
+  saw its size; and every overlay stacked on bare page z-indexes. Now every panel
+  lives in the browser top layer (`popover="manual"`, shown/hidden by the new
+  `layer.js`), is positioned `fixed` against the viewport with flip + shift,
+  gutter and viewport padding, is capped to the room on screen
+  (`--available-height` / `--available-width`, scrolling inside), and follows its
+  trigger on scroll, resize and LiveView patches. A panel opened from a dialog is
+  above the dialog and does not close it; toasts are re-raised above panels.
+  Dialogs themselves also enter the top layer, so a modal inside a `transform`ed
+  or clipped ancestor still covers the viewport. Where the Popover API is missing
+  the panels stay `position: fixed` on the new z-index ladder.
+- `test/qa/run.mjs` re-runs the whole matrix (10 components x 16 layout contexts x
+  1440/390 wide, real mouse events, `elementFromPoint` clip checks) against
+  `test/qa/server.exs`; see the header of `run.mjs`.
 - **Dialogs (`modal`, `alert_dialog`, `sheet`) no longer close on server patches,
   `phx-submit`, or the click after a patch** (flicker #3453). Three causes, all fixed:
   the hook closed a client-opened dialog whenever a patch arrived without
@@ -42,6 +64,9 @@ All notable changes to this project are documented here. The format follows
   (e.g. sidebar items) did nothing. Cleanup lists are now optional-chained.
 
 ### Added
+- Layering tokens in `lantern_ui_theme.css`: `--lantern-z-sticky`, `-sidebar`,
+  `-appbar`, `-dropdown`, `-modal`, `-sheet`, `-popover`, `-tooltip`, `-toast`
+  (low to high). Every `lui-*` `z-index` reads them.
 - **`data_table` row links: `row_navigate`, `row_patch`, `row_click`.** Each takes a
   `row -> value` fn. `row_navigate`/`row_patch` (path) stretch one real anchor over every
   row in list and table views, so Enter, middle-click and open-in-new-tab work and

@@ -301,7 +301,7 @@ defmodule LanternUI.Components.Select do
             <Icon.icon name="x-mark" />
           </button>
 
-          <div data-scope="select" data-part="positioner">
+          <div data-scope="select" data-part="positioner" popover="manual">
             <div
               class="lui-select-listbox"
               data-scope="select"
@@ -443,6 +443,7 @@ defmodule LanternUI.Components.Select do
         <div
           class="lui-select-listbox"
           data-part="panel"
+          popover="manual"
           role="listbox"
           aria-multiselectable={@multiple && "true"}
           hidden

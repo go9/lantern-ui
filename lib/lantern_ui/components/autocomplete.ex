@@ -228,6 +228,7 @@ defmodule LanternUI.Components.Autocomplete do
           id={"#{@id}-listbox"}
           class="lui-select-listbox"
           data-part="panel"
+          popover="manual"
           role="listbox"
           aria-label={@label || @placeholder || "Suggestions"}
           hidden

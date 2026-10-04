@@ -94,6 +94,7 @@ defmodule LanternUI.Components.Modal do
     <div
       id={@id}
       class={Class.merge(["lui-modal", @container_class])}
+      popover="manual"
       phx-hook="LanternModal"
       phx-mounted={JS.ignore_attributes(zag_ignored_attrs(), to: "[data-scope=\"dialog\"]")}
       data-zag

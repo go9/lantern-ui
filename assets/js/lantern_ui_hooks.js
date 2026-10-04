@@ -14,7 +14,8 @@
 // All geometry is computed in Elixir; the hook only reads the embedded point list
 // (viewBox coordinates) and paints the hover layer. No chart library, no React.
 
-import { computePosition, flip, offset, shift, autoUpdate } from "@floating-ui/dom"
+import { computePosition, flip, offset, shift, size, autoUpdate } from "@floating-ui/dom"
+import { enterLayer, leaveLayer, FLOATING } from "./layer.js"
 import { installBehaviours } from "./behaviours.js"
 
 export { installBehaviours }
@@ -244,11 +245,15 @@ function canFloat() {
   return typeof window !== "undefined" && typeof window.getComputedStyle === "function"
 }
 
+// Panels that match their trigger's width (searchable select, autocomplete):
+// live-tracks the trigger, but never wider than the room on screen.
+const TRIGGER_WIDTH = "min(var(--reference-width, 0px), var(--available-width, 100vw))"
+
 // Position `floating` relative to `anchor` via @floating-ui/dom (flip + shift).
 // Placement is "bottom-start" | "bottom-end" | "top-start" | "top-end". Returns
 // a promise of the chosen placement. `trackPosition` keeps it attached while
 // the overlay is open (scroll / resize / layout).
-function position(anchor, floating, { placement = "bottom-start", gap = 4 } = {}) {
+function position(anchor, floating, { placement = "bottom-start", gap = FLOATING.gutter } = {}) {
   if (!anchor || !floating) return Promise.resolve(placement)
   // Fix before measuring. A panel still in normal flow takes space next to its
   // trigger and the first open lands in the wrong place (see the previous
@@ -259,10 +264,24 @@ function position(anchor, floating, { placement = "bottom-start", gap = 4 } = {}
   floating.style.left = "0px"
   if (!canFloat()) return Promise.resolve(placement)
 
+  const pad = FLOATING.overflowPadding
   return computePosition(anchor, floating, {
     placement,
-    strategy: "fixed",
-    middleware: [offset(gap), flip(), shift({ padding: 8 })],
+    strategy: FLOATING.strategy,
+    middleware: [
+      offset(gap),
+      flip({ padding: pad }),
+      shift({ padding: pad }),
+      // Cap the panel to the room left on the chosen side; it scrolls inside.
+      size({
+        padding: pad,
+        apply({ availableHeight, availableWidth, rects }) {
+          floating.style.setProperty("--reference-width", `${Math.round(rects.reference.width)}px`)
+          floating.style.setProperty("--available-height", `${Math.max(Math.floor(availableHeight), 96)}px`)
+          floating.style.setProperty("--available-width", `${Math.floor(availableWidth)}px`)
+        },
+      }),
+    ],
   }).then(({ x, y, placement: placed }) => {
     floating.style.left = `${x}px`
     floating.style.top = `${y}px`
@@ -270,14 +289,22 @@ function position(anchor, floating, { placement = "bottom-start", gap = 4 } = {}
   })
 }
 
+// Keeps `floating` attached to `anchor` while open: top layer (never clipped by
+// an ancestor), re-placed on scroll of any ancestor, resize, and layout shift
+// (including LiveView patches that move the trigger). Returns the cleanup.
 function trackPosition(anchor, floating, opts) {
+  enterLayer(floating)
   if (!canFloat()) {
     position(anchor, floating, opts)
-    return () => {}
+    return () => leaveLayer(floating)
   }
-  return autoUpdate(anchor, floating, () => {
+  const stop = autoUpdate(anchor, floating, () => {
     position(anchor, floating, opts)
   })
+  return () => {
+    stop()
+    leaveLayer(floating)
+  }
 }
 
 const FOCUSABLE =
@@ -1092,7 +1119,7 @@ const LanternSelectLegacy = {
     this.open = true
     this.panel.hidden = false
     this.cleanup.push(trackPosition(this.toggle, this.panel, { placement: "bottom-start" }))
-    this.panel.style.minWidth = `${this.toggle.offsetWidth}px`
+    this.panel.style.minWidth = TRIGGER_WIDTH
     this.toggle.setAttribute("aria-expanded", "true")
     if (this.search) {
       this.search.value = ""
@@ -1392,7 +1419,7 @@ const LanternAutocomplete = {
   positionPanel() {
     if (!this.panel || !this.input) return
     position(this.control || this.input, this.panel, { placement: "bottom-start" })
-    this.panel.style.minWidth = `${(this.control || this.input).offsetWidth}px`
+    this.panel.style.minWidth = TRIGGER_WIDTH
   },
 
   armDismissal() {
@@ -2228,6 +2255,7 @@ const LanternCommand = {
     if (this.open) return
     this.open = true
     this.el.hidden = false
+    enterLayer(this.el)
     document.body.style.overflow = "hidden"
     if (this.input) this.input.value = ""
     this.setActive(-1)
@@ -2251,6 +2279,7 @@ const LanternCommand = {
     this.cleanup?.forEach((fn) => fn())
     this.cleanup = []
     this.setActive(-1)
+    leaveLayer(this.el)
     this.el.hidden = true
     document.body.style.overflow = ""
   },
@@ -2665,6 +2694,8 @@ const LanternToast = {
     this.handleEvent("lantern:toast", (toast) => this.add(toast))
     this.el.querySelectorAll(".lui-toast").forEach((toast) => this.initializeToast(toast))
     this.syncTimers()
+    // Top layer, like every other overlay; re-raised above panels opened later.
+    enterLayer(this.el)
   },
 
   updated() {

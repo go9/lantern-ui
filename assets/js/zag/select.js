@@ -37,6 +37,7 @@ import {
   syncInputFormAssociation,
 } from "./bridge.js"
 
+import { floating, syncLayer } from "../layer.js"
 const SCOPE = "select"
 
 const part = (name) => `[data-scope="${SCOPE}"][data-part="${name}"]`
@@ -181,6 +182,7 @@ export class LanternSelect extends Component {
       const el = this.el.querySelector(part(name))
       if (!el) continue
       this.spreadProps(el, this.api[partPropsMethod(name)]())
+      if (name === "positioner") syncLayer(el, this.api.open)
     }
 
     const contentEl = this.el.querySelector(part("content"))
@@ -216,7 +218,7 @@ function selectLayoutProps(el) {
     dir: getDir(el),
     name: getString(el, "name"),
     form: getString(el, "form"),
-    positioning: { placement: "bottom-start", sameWidth: true },
+    positioning: floating({ placement: "bottom-start", sameWidth: true }),
   }
   const triggerId = getString(el, "triggerId")
   if (triggerId) props.ids = { trigger: triggerId }
