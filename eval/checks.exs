@@ -1,4 +1,5 @@
-# Usage: elixir eval/checks.exs --expect <literal> [--expect <literal> ...] -- <file> [<file> ...]
+# Usage: elixir eval/checks.exs --expect <literal> [--expect <literal> ...]
+#          [--min-comps N] [--block NAME ...] [--lint-findings N] -- <file> ...
 #
 # Scans ONLY the given files (the runner passes the model's changed files).
 # Prints one `RULE: <name> <points>/<max> <detail>` line per rule and a final
@@ -24,7 +25,54 @@ defmodule EvalChecks do
   @hex_in_class ~r/(?:text|bg|border|ring|fill|stroke)-\[#[0-9a-fA-F]{3,8}\]/
   @arbitrary_px ~r/-\[\d+(?:\.\d+)?px\]/
 
-  def run(files, expects) do
+  # Blocks-fidelity checks (round 2): the page structure matches a recipe
+  # block — breadcrumb-bar title/actions, flat list with status col + chips,
+  # stack spacing. Component blocks match local `<.name` AND remote
+  # `<Module.name` calls (aliasing lantern modules is valid HEEx); the rest
+  # are literal attribute/text patterns.
+  @block_components %{
+    "breadcrumb" => ~w(breadcrumb page_header),
+    "filter-chips" => ~w(tabs_list),
+    "flat-list" => ~w(data_table resource_list list_row table),
+    "detail-inspector" => ~w(inspector side_panel description_list),
+    "form-card" => ~w(form input select textarea checkbox switch),
+    "stat-row" => ~w(stat_card stat_grid),
+    "chart" => ~w(area_chart bar_chart line_chart sparkline),
+    "dialog" => ~w(modal alert_dialog sheet),
+    "empty-states" => ~w(empty_state),
+    "loading" => ~w(skeleton loading),
+    "command" => ~w(command command_group command_item),
+    "pagination" => ~w(pagination)
+  }
+
+  @block_patterns %{
+    "toast" => ~r/toast_group|send_toast/,
+    # data-lantern-theme only: the demo pins lantern_ui 0.8.3 whose theme
+    # component has no `preset` attr (it compiles but is silently ignored),
+    # so only the hand-set attribute proves the preset is applied.
+    "theme" => ~r/data-lantern-theme/
+  }
+
+  defp block_hit?(all, name) do
+    cond do
+      # Filter chips: segmented tabs_list, or lantern badges/buttons as chips.
+      name == "filter-chips" ->
+        Regex.match?(~r/<\.tabs_list\b|<[A-Z][A-Za-z0-9_.]*\.tabs_list\b|variant="segmented"/, all)
+
+      Map.has_key?(@block_patterns, name) ->
+        Regex.match?(Map.fetch!(@block_patterns, name), all)
+
+      Map.has_key?(@block_components, name) ->
+        Enum.any?(Map.fetch!(@block_components, name), fn comp ->
+          Regex.match?(~r/<\.#{comp}\b|<[A-Z][A-Za-z0-9_.]*\.#{comp}\b/, all)
+        end)
+
+      true ->
+        raise "unknown block: #{name}"
+    end
+  end
+
+  def run(files, expects, opts) do
     sources =
       Enum.map(files, fn f ->
         {f, File.read!(f)}
@@ -39,7 +87,7 @@ defmodule EvalChecks do
       no_hand_button(all),
       no_palette(all),
       no_arbitrary(all),
-      lantern_usage(all),
+      lantern_usage(all, Keyword.get(opts, :min_comps, 4)),
       a11y(all),
       deliverables(all, expects)
     ]
@@ -50,6 +98,28 @@ defmodule EvalChecks do
 
     total = Enum.sum(Enum.map(results, &elem(&1, 1)))
     IO.puts("SCORE: #{total}/100")
+
+    # Gates (round 2 — reported, not part of /100 so round-1 scores stay
+    # comparable): lint findings must be 0, every required recipe block
+    # must be present.
+    blocks = Keyword.get(opts, :blocks, [])
+    missing = Enum.reject(blocks, &block_hit?(all, &1))
+
+    if blocks == [] do
+      IO.puts("BLOCKS: PASS no blocks required")
+    else
+      if missing == [] do
+        IO.puts("BLOCKS: PASS #{length(blocks)}/#{length(blocks)} #{Enum.join(blocks, ",")}")
+      else
+        IO.puts("BLOCKS: FAIL missing #{Enum.join(missing, ",")}")
+      end
+    end
+
+    case Keyword.get(opts, :lint_findings) do
+      nil -> IO.puts("LINT: UNKNOWN not measured")
+      0 -> IO.puts("LINT: PASS 0 findings")
+      n -> IO.puts("LINT: FAIL #{n} findings")
+    end
   end
 
   defp no_group_band(all) do
@@ -92,17 +162,18 @@ defmodule EvalChecks do
     scaled(:no_arbitrary, 10, Regex.scan(@arbitrary_px, all) |> length())
   end
 
-  defp lantern_usage(all) do
+  defp lantern_usage(all, min) do
     # Local `<.name` and remote `<Module.name` calls both count: models that
     # alias lantern modules emit the latter, and it is valid HEEx.
+    # Round 2: the bar scales to the task (manifest `min_comps`).
     used =
       @lantern_components
       |> Enum.uniq()
       |> Enum.filter(&Regex.match?(~r/(?:<\.(?:#{Regex.escape(&1)})\b|<[A-Z][A-Za-z0-9_.]*\.#{Regex.escape(&1)}\b)/, all))
 
     n = length(used)
-    pts = round(15 * min(1.0, n / 4))
-    {:lantern_usage, pts, 15, "#{n} components: #{Enum.join(Enum.take(used, 8), ",")}"}
+    pts = round(15 * min(1.0, n / max(min, 1)))
+    {:lantern_usage, pts, 15, "#{n} components (bar #{min}): #{Enum.join(Enum.take(used, 10), ",")}"}
   end
 
   defp a11y(all) do
@@ -153,21 +224,24 @@ defmodule EvalChecks do
   end
 end
 
-{expects, files} =
+{expects, opts, files} =
   case Enum.split_while(System.argv(), &(&1 != "--")) do
     {flags, ["--" | rest]} ->
-      exp =
+      {exp, opts} =
         flags
         |> Enum.chunk_every(2)
-        |> Enum.flat_map(fn
-          ["--expect", lit] -> [lit]
-          _ -> []
+        |> Enum.reduce({[], [min_comps: 4, blocks: [], lint_findings: nil]}, fn
+          ["--expect", lit], {e, o} -> {[lit | e], o}
+          ["--min-comps", n], {e, o} -> {e, Keyword.put(o, :min_comps, String.to_integer(n))}
+          ["--block", name], {e, o} -> {e, Keyword.update!(o, :blocks, &(&1 ++ [name]))}
+          ["--lint-findings", n], {e, o} -> {e, Keyword.put(o, :lint_findings, String.to_integer(n))}
+          _, acc -> acc
         end)
 
-      {exp, rest}
+      {Enum.reverse(exp), opts, rest}
 
     _ ->
-      IO.puts(:stderr, "usage: elixir checks.exs --expect LIT ... -- <file> ...")
+      IO.puts(:stderr, "usage: elixir checks.exs --expect LIT ... [--min-comps N] [--block NAME]... [--lint-findings N] -- <file> ...")
       System.halt(2)
   end
 
@@ -177,5 +251,5 @@ if files == [] do
   IO.puts("RULE: no_files 0/100 no changed files to score")
   IO.puts("SCORE: 0/100")
 else
-  EvalChecks.run(files, expects)
+  EvalChecks.run(files, expects, opts)
 end

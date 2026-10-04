@@ -1,0 +1,13 @@
+{
+  "task": "ops-dashboard",
+  "condition": "A",
+  "rep": 1,
+  "model": "sonnet",
+  "demo_sha": "2bc0030ef2d15539ce670d75f61522216ab09241",
+  "auto": "SCORE: 98/100",
+  "compile": "pass",
+  "lint": "0 findings",
+  "blocks": "FAIL missing pagination,filter-chips",
+  "axe": "1 violations",
+  "screenshot": "ok"
+}

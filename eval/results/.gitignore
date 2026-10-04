@@ -1,0 +1,10 @@
+# Round-2 eval: only scores + screenshots are committed. Per-run logs,
+# prompts, checkouts, and raw tool output stay local.
+demo/
+*.log
+prompt.txt
+changed.txt
+clone.log
+lint.json
+axe.json
+server.pid

@@ -1,64 +1,98 @@
 {
   "ticket-index": {
-    "expects": [
-      "/eval/tickets",
-      "EvalTicketsLive"
-    ]
+    "expects": ["/eval/tickets", "EvalTicketsLive"],
+    "min_comps": 4,
+    "blocks": ["filter-chips", "flat-list"]
   },
   "settings-form": {
-    "expects": [
-      "/eval/settings",
-      "EvalSettingsLive"
-    ]
+    "expects": ["/eval/settings", "EvalSettingsLive"],
+    "min_comps": 4,
+    "blocks": ["form-card"]
   },
   "record-detail-inspector": {
-    "expects": [
-      "/eval/servers",
-      "EvalServerLive"
-    ]
+    "expects": ["/eval/servers", "EvalServerLive"],
+    "min_comps": 4,
+    "blocks": ["breadcrumb", "detail-inspector"]
   },
   "dashboard-stats": {
-    "expects": [
-      "/eval/overview",
-      "EvalOverviewLive"
-    ]
+    "expects": ["/eval/overview", "EvalOverviewLive"],
+    "min_comps": 4,
+    "blocks": ["stat-row", "chart"]
   },
   "confirm-delete-modal": {
-    "expects": [
-      "/eval/tokens",
-      "EvalTokensLive"
-    ]
+    "expects": ["/eval/tokens", "EvalTokensLive"],
+    "min_comps": 4,
+    "blocks": ["dialog"]
   },
   "paginated-table-search": {
-    "expects": [
-      "/eval/people",
-      "EvalPeopleLive"
-    ]
+    "expects": ["/eval/people", "EvalPeopleLive"],
+    "min_comps": 4,
+    "blocks": ["flat-list", "pagination", "filter-chips"]
   },
   "empty-loading-error": {
-    "expects": [
-      "/eval/report",
-      "EvalReportLive"
-    ]
+    "expects": ["/eval/report", "EvalReportLive"],
+    "min_comps": 4,
+    "blocks": ["flat-list", "empty-states", "loading"]
   },
   "flash-toast": {
-    "expects": [
-      "/eval/notifications",
-      "EvalNotificationsLive"
-    ]
+    "expects": ["/eval/notifications", "EvalNotificationsLive"],
+    "min_comps": 4,
+    "blocks": ["toast"]
   },
   "onboarding-form": {
-    "expects": [
-      "/eval/onboarding",
-      "EvalOnboardingLive"
-    ]
+    "expects": ["/eval/onboarding", "EvalOnboardingLive"],
+    "min_comps": 4,
+    "blocks": ["form-card"]
   },
   "app-shell-nav": {
+    "expects": ["/eval/admin", "EvalAdminLive", "EvalAdminUsersLive", "EvalAdminBillingLive"],
+    "min_comps": 4,
+    "blocks": ["breadcrumb", "flat-list"]
+  },
+  "ticket-flow": {
     "expects": [
-      "/eval/admin",
-      "EvalAdminLive",
-      "EvalAdminUsersLive",
-      "EvalAdminBillingLive"
-    ]
+      "/eval/flow/tickets",
+      "/eval/flow/tickets/:id",
+      "EvalTicketFlowLive",
+      "EvalTicketFlowDetailLive",
+      "EvalTicketFlowEditLive"
+    ],
+    "min_comps": 6,
+    "blocks": ["breadcrumb", "filter-chips", "flat-list", "detail-inspector", "form-card", "toast"]
+  },
+  "settings-tabs": {
+    "expects": ["/eval/settings-tabs", "EvalSettingsTabsLive"],
+    "min_comps": 5,
+    "blocks": ["breadcrumb", "form-card", "toast"]
+  },
+  "ops-dashboard": {
+    "expects": ["/eval/ops", "EvalOpsLive"],
+    "min_comps": 6,
+    "blocks": ["stat-row", "chart", "flat-list", "pagination", "filter-chips"]
+  },
+  "command-palette": {
+    "expects": ["/eval/palette", "EvalPaletteLive"],
+    "min_comps": 4,
+    "blocks": ["command", "flat-list"]
+  },
+  "themed-preview": {
+    "expects": ["/eval/themed", "EvalThemedLive"],
+    "min_comps": 5,
+    "blocks": ["theme", "stat-row", "flat-list", "form-card"]
+  },
+  "undo-delete": {
+    "expects": ["/eval/inbox-undo", "EvalUndoLive"],
+    "min_comps": 5,
+    "blocks": ["filter-chips", "flat-list", "toast", "empty-states"]
+  },
+  "wizard": {
+    "expects": ["/eval/wizard", "EvalWizardLive"],
+    "min_comps": 5,
+    "blocks": ["breadcrumb", "form-card", "toast"]
+  },
+  "state-matrix": {
+    "expects": ["/eval/users-report", "EvalUsersReportLive"],
+    "min_comps": 5,
+    "blocks": ["filter-chips", "flat-list", "empty-states", "loading"]
   }
 }

@@ -1,0 +1,13 @@
+{
+  "task": "undo-delete",
+  "condition": "C",
+  "rep": 1,
+  "model": "sonnet",
+  "demo_sha": "2bc0030ef2d15539ce670d75f61522216ab09241",
+  "auto": "SCORE: 100/100",
+  "compile": "pass",
+  "lint": "0 findings",
+  "blocks": "PASS 4/4 filter-chips,flat-list,toast,empty-states",
+  "axe": "2 violations",
+  "screenshot": "ok"
+}
