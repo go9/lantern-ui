@@ -82,6 +82,9 @@ test("client mode: expanded flags are the initial value; clicking toggles", asyn
   assert.deepEqual(component().api.value.map(String), ["ret"])
   assert.equal(panel(el, "ret").hidden, false)
   assert.equal(panel(el, "ship").hidden, true)
+  // Trigger expanded state follows the panels (#3448 audit).
+  assert.equal(el.querySelector("#ret-trigger").getAttribute("aria-expanded"), "true")
+  assert.equal(el.querySelector("#ship-trigger").getAttribute("aria-expanded"), "false")
 })
 
 test("client mode: toggle pushes a server event and dispatches a client event", async () => {

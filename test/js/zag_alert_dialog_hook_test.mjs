@@ -19,16 +19,18 @@ afterEach(() => {
 })
 
 function fixture({ id = "delete-project", open = false } = {}) {
+  // Mirrors `AlertDialog` → `Modal.modal` HEEx: `hidden` lives on the ROOT,
+  // never on the content — Zag owns both after mount (flicker #3448).
   return `
   <div id="${id}" data-zag data-default-value="${open}"
     ${open ? `data-open=""` : ""} data-role="alertdialog"
     data-close-on-esc="true" data-close-on-outside="false"
     data-title-id="${id}-title" data-description-id="${id}-description"
-    data-initial-focus="[data-part='alert-dialog-cancel'] button">
+    data-initial-focus="[data-part='alert-dialog-cancel'] button"${open ? "" : " hidden"}>
     <div data-scope="dialog" data-part="backdrop" class="lui-modal-backdrop"></div>
     <div data-scope="dialog" data-part="positioner">
       <div data-scope="dialog" data-part="content" class="lui-modal-panel lui-alert-dialog"
-        role="alertdialog" aria-modal="true" aria-labelledby="${id}-title" aria-describedby="${id}-description" hidden>
+        role="alertdialog" aria-modal="true" aria-labelledby="${id}-title" aria-describedby="${id}-description">
         <h2 id="${id}-title" class="lui-alert-dialog-title">Delete this project?</h2>
         <div id="${id}-description" class="lui-alert-dialog-description">This cannot be undone.</div>
         <div class="lui-alert-dialog-actions">
@@ -81,6 +83,8 @@ test("alertdialog keeps its role and real title/description labelling", async ()
   openDialog(el)
   await waitFor(() => component().api.open === true)
 
+  assert.equal(el.hidden, false, "root is visible while open")
+  assert.equal(content(el).hidden, false)
   assert.equal(content(el).getAttribute("role"), "alertdialog")
   assert.equal(content(el).getAttribute("aria-labelledby"), "delete-project-title")
   assert.equal(content(el).getAttribute("aria-describedby"), "delete-project-description")
@@ -109,10 +113,13 @@ test("outside pointerdown never dismisses an alert dialog; Escape does", async (
   pointerdown(document, outside)
   await sleep(50)
   assert.equal(component().api.open, true)
+  assert.equal(el.hidden, false, "root stays visible while open")
   assert.equal(content(el).hidden, false)
 
   document.dispatchEvent(
     new document.defaultView.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })
   )
   await waitFor(() => component().api.open === false)
+  assert.equal(el.hidden, true, "root hides on close")
+  assert.equal(content(el).hidden, true)
 })

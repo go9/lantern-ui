@@ -118,7 +118,7 @@ test("link tabs keep navigating: machine never preventDefaults activation", asyn
 })
 
 test("selection pushes a server event and dispatches a client event", async () => {
-  const { el, pushEvent, clientEvents } = mount(
+  const { el, pushEvent, clientEvents, component, patch } = mount(
     fixture({ extraRoot: `data-on-change="scope_changed" data-on-change-client="tab-picked"` }),
     "scope"
   )
@@ -131,6 +131,17 @@ test("selection pushes a server event and dispatches a client event", async () =
   assert.deepEqual(pushEvent, [{ event: "scope_changed", payload: { id: "scope", value: "active" } }])
   assert.equal(clientEvents.length, 1)
   assert.deepEqual(clientEvents[0].detail, { id: "scope", value: "active" })
+
+  // Tabs are server-driven (`data-active-tab`): the machine holds until the
+  // server patch flows in — then selection state is DOM truth, not just
+  // machine state (#3448 audit).
+  patch((root) => root.setAttribute("data-active-tab", "active"))
+  await waitFor(() => component().api.value === "active")
+  const trigger = (name) => el.querySelector(`[data-part="trigger"][data-value="${name}"]`)
+  assert.equal(trigger("active").getAttribute("aria-selected"), "true")
+  assert.equal(trigger("active").getAttribute("tabindex"), "0")
+  assert.equal(trigger("all").getAttribute("aria-selected"), "false")
+  assert.equal(trigger("all").getAttribute("tabindex"), "-1")
 })
 
 test("server set-value drives the machine with id scoping", async () => {
