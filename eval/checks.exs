@@ -47,7 +47,10 @@ defmodule EvalChecks do
 
   @block_patterns %{
     "toast" => ~r/toast_group|send_toast/,
-    "theme" => ~r/preset="shadcn"|data-lantern-theme/
+    # data-lantern-theme only: the demo pins lantern_ui 0.8.3 whose theme
+    # component has no `preset` attr (it compiles but is silently ignored),
+    # so only the hand-set attribute proves the preset is applied.
+    "theme" => ~r/data-lantern-theme/
   }
 
   defp block_hit?(all, name) do
