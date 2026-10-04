@@ -118,13 +118,15 @@ defmodule LanternUI.Components.Modal do
     >
       <div
         class={Class.merge(["lui-modal-backdrop", @backdrop_class])}
+        id={"dialog:#{@id}:backdrop"}
         data-scope="dialog"
         data-part="backdrop"
       >
       </div>
-      <div data-scope="dialog" data-part="positioner">
+      <div id={"dialog:#{@id}:positioner"} data-scope="dialog" data-part="positioner">
         <div
           class={Class.merge(["lui-modal-panel", @class])}
+          id={"dialog:#{@id}:content"}
           data-scope="dialog"
           data-part="content"
           role={@role}
@@ -137,6 +139,7 @@ defmodule LanternUI.Components.Modal do
             :if={!@hide_close_button and !@prevent_closing}
             type="button"
             class="lui-modal-close"
+            id={"dialog:#{@id}:close"}
             data-scope="dialog"
             data-part="close-trigger"
             aria-label="Close"

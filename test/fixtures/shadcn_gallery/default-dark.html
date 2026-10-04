@@ -1166,6 +1166,10 @@
 .lui-select-listbox { position: fixed; z-index: 70; max-height: 16rem; overflow-y: auto;
   background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
   border-radius: var(--lantern-radius); box-shadow: var(--lantern-shadow-md); padding: 0.25rem; }
+/* Zag select: the positioner already tracks the trigger (width + start edge);
+   a fixed listbox inside it would shrink to its content and ignore both. */
+[data-scope="select"][data-part="positioner"] > .lui-select-listbox {
+  position: static; width: 100%; box-sizing: border-box; }
 .lui-select-option { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
   width: 100%; padding: 0.35rem 0.6rem; font-size: var(--lantern-text); font-family: inherit;
   text-align: left; background: none; border: none; border-radius: var(--lantern-radius-sm);
@@ -4730,7 +4734,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-709" role="alert" class="lui-alert" data-color="info">
+      <div id="lui-alert-32804" role="alert" class="lui-alert" data-color="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4747,7 +4751,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-741" role="alert" class="lui-alert" data-color="success">
+      <div id="lui-alert-32836" role="alert" class="lui-alert" data-color="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4764,7 +4768,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-773" role="alert" class="lui-alert" data-color="warning">
+      <div id="lui-alert-32868" role="alert" class="lui-alert" data-color="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4781,7 +4785,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-805" role="alert" class="lui-alert" data-color="danger">
+      <div id="lui-alert-32900" role="alert" class="lui-alert" data-color="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

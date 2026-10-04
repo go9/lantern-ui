@@ -1160,6 +1160,10 @@
 .lui-select-listbox { position: fixed; z-index: 70; max-height: 16rem; overflow-y: auto;
   background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
   border-radius: var(--lantern-radius); box-shadow: var(--lantern-shadow-md); padding: 0.25rem; }
+/* Zag select: the positioner already tracks the trigger (width + start edge);
+   a fixed listbox inside it would shrink to its content and ignore both. */
+[data-scope="select"][data-part="positioner"] > .lui-select-listbox {
+  position: static; width: 100%; box-sizing: border-box; }
 .lui-select-option { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
   width: 100%; padding: 0.35rem 0.6rem; font-size: var(--lantern-text); font-family: inherit;
   text-align: left; background: none; border: none; border-radius: var(--lantern-radius-sm);

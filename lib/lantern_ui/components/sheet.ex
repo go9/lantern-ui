@@ -101,13 +101,15 @@ defmodule LanternUI.Components.Sheet do
     >
       <div
         class={Class.merge(["lui-sheet-backdrop", @backdrop_class])}
+        id={"dialog:#{@id}:backdrop"}
         data-scope="dialog"
         data-part="backdrop"
       >
       </div>
-      <div data-scope="dialog" data-part="positioner">
+      <div id={"dialog:#{@id}:positioner"} data-scope="dialog" data-part="positioner">
         <div
           class={Class.merge(["lui-sheet-panel", @class])}
+          id={"dialog:#{@id}:content"}
           data-scope="dialog"
           data-part="content"
           role="dialog"
@@ -123,6 +125,7 @@ defmodule LanternUI.Components.Sheet do
               :if={!@hide_close_button and !@prevent_closing}
               type="button"
               class="lui-sheet-close"
+              id={"dialog:#{@id}:close"}
               data-scope="dialog"
               data-part="close-trigger"
               aria-label="Close"
