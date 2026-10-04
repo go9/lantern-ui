@@ -1,0 +1,8 @@
+# Eval harness runtime: node_modules + per-run checkouts/logs stay local.
+# Only scores + screenshots are committed (see results/.gitignore).
+node_modules/
+package-lock.json
+.a11y/
+shot-node-error.log
+server2.log
+server2.pid

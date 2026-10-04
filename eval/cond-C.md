@@ -17,9 +17,11 @@ the runner. Use all of it:
 
 Before finishing you MUST run `mix lantern.lint` on your new code and fix
 every finding until it reports 0 findings. The lint ships inside the
-`lantern_ui` Hex package — no extra dependency needed. A run with lint
-findings still on the board fails the task, even if it compiles. Verify
-with `mix compile` as well. Leave the server stopped.
+`lantern_ui` Hex package — no extra dependency needed. The demo tree has a
+few pre-existing findings in files you did not touch — fix only findings in
+YOUR files and ignore the rest. A run with lint findings still on the board
+in your own files fails the task, even if it compiles. Verify with
+`mix compile` as well. Leave the server stopped.
 
 The runner appends these files after this appendix:
 

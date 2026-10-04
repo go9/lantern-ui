@@ -187,14 +187,27 @@ run_combo() {
 
   # Lint (ships in the lantern_ui Hex dep; cond C requires the model to run
   # it, but we always measure it). Only meaningful on a compile pass.
+  # The demo tree has pre-existing findings in files the model never touches,
+  # so we count only findings in the model's changed files.
   lint="$prev_lint"
   if [ "$SKIP_BUILD" -eq 0 ]; then
     if [ "$compile" = "pass" ]; then
-      if (cd "$demo" && mise x -- mix lantern.lint > "$out/lint.log" 2>&1); then
+      if (cd "$demo" && mise x -- mix lantern.lint --format json > "$out/lint.json" 2> "$out/lint.log"); then
         lint="0 findings"
       else
-        n="$(grep -oE '[0-9]+ finding' "$out/lint.log" | head -1 || echo '')"
-        if [ -n "$n" ]; then lint="$n"'ings'; else lint="unavailable"; fi
+        lint="unavailable"
+      fi
+      if [ "$lint" != "0 findings" ]; then
+        n="$(python3 -c "
+import json
+try:
+  chg = [l.strip() for l in open('$out/changed.txt') if l.strip()]
+  fs = json.load(open('$out/lint.json'))['findings']
+  print(sum(1 for f in fs if any(f['path'] == c or f['path'].endswith('/' + c) for c in chg)))
+except Exception:
+  print('ERR')
+")"
+        if [ "$n" = "ERR" ] || [ -z "$n" ]; then lint="unavailable"; else lint="$n findings"; fi
       fi
     else
       lint="no-compile"
@@ -229,17 +242,20 @@ run_combo() {
       if curl -sf -o /dev/null "http://localhost:$port$route"; then ready=1; break; fi
     done
     if [ "$ready" -eq 1 ]; then
-      if NODE_PATH="$EVAL_DIR/.a11y/node_modules" node "$EVAL_DIR/shot.js" \
+      if node "$EVAL_DIR/shot.mjs" \
           "http://localhost:$port$route" "$out/screenshot.png" "$out/axe.json" > "$out/shot.log" 2>&1; then
         shot="ok"
         axe="$(axe_violations "$out/axe.json") violations"
-      elif "$CHROME" --headless --disable-gpu --no-sandbox \
-          --window-size=1280,900 "--screenshot=$out/screenshot.png" \
-          "http://localhost:$port$route" > "$out/shot.log" 2>&1; then
-        shot="ok-fallback"
-        axe="not-measured"
       else
-        shot="chrome-failed"
+        cp "$out/shot.log" "$out/shot-node-error.log"
+        if "$CHROME" --headless --disable-gpu --no-sandbox \
+          --window-size=1280,900 "--screenshot=$out/screenshot.png" \
+          "http://localhost:$port$route" >> "$out/shot.log" 2>&1; then
+          shot="ok-fallback"
+          axe="not-measured"
+        else
+          shot="chrome-failed"
+        fi
       fi
     else
       shot="server-not-ready"
@@ -265,9 +281,9 @@ json.dump({
   echo "$score | compile=$compile lint=$lint blocks=$blocks axe=$axe shot=$shot"
 }
 
-# Axe/puppeteer deps (gitignored); install once so shot.js can run.
-if [ ! -d "$EVAL_DIR/.a11y/node_modules" ]; then
-  (cd "$EVAL_DIR/.a11y" && npm install --no-audit --no-fund) || echo "a11y deps install failed (shot falls back to plain Chrome)"
+# Axe/puppeteer deps (eval/node_modules, gitignored); install once so shot.mjs can run.
+if [ ! -d "$EVAL_DIR/node_modules/puppeteer-core" ]; then
+  (cd "$EVAL_DIR" && npm install --no-audit --no-fund) || echo "a11y deps install failed (shot falls back to plain Chrome)"
 fi
 
 for t in $TASKS; do

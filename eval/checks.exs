@@ -25,25 +25,49 @@ defmodule EvalChecks do
   @hex_in_class ~r/(?:text|bg|border|ring|fill|stroke)-\[#[0-9a-fA-F]{3,8}\]/
   @arbitrary_px ~r/-\[\d+(?:\.\d+)?px\]/
 
-  # Blocks-fidelity patterns (round 2): the page structure matches a recipe
+  # Blocks-fidelity checks (round 2): the page structure matches a recipe
   # block — breadcrumb-bar title/actions, flat list with status col + chips,
-  # stack spacing. Each named block is one regex over the diff.
-  @blocks %{
-    "breadcrumb" => ~r/<\.breadcrumb\b|<[A-Z][A-Za-z0-9_.]*\.breadcrumb\b|aria-label="Breadcrumb"|<\.page_header\b/,
-    "filter-chips" => ~r/<\.tabs_list\b|<[A-Z][A-Za-z0-9_.]*\.tabs_list\b|variant="segmented"/,
-    "flat-list" => ~r/<\.data_table\b|<\.resource_list\b|<\.list_row\b|<\.table\b|<[A-Z][A-Za-z0-9_.]*\.(data_table|resource_list|list_row|table)\b/,
-    "detail-inspector" => ~r/<\.inspector\b|<\.side_panel\b|<\.description_list\b|<[A-Z][A-Za-z0-9_.]*\.(inspector|side_panel|description_list)\b/,
-    "form-card" => ~r/<\.form\b|<\.input\b|<\.select\b|<\.textarea\b|<\.checkbox\b|<\.switch\b/,
-    "toast" => ~r/toast_group|send_toast/,
-    "stat-row" => ~r/<\.stat_card\b|<\.stat_grid\b|<[A-Z][A-Za-z0-9_.]*\.(stat_card|stat_grid)\b/,
-    "chart" => ~r/<\.area_chart\b|<\.bar_chart\b|<\.line_chart\b|<\.sparkline\b/,
-    "dialog" => ~r/<\.modal\b|<\.alert_dialog\b|<\.sheet\b/,
-    "empty-states" => ~r/<\.empty_state\b|<[A-Z][A-Za-z0-9_.]*\.empty_state\b/,
-    "loading" => ~r/<\.skeleton\b|<\.loading\b/,
-    "command" => ~r/<\.command\b|<\.command_group\b|<\.command_item\b/,
-    "theme" => ~r/preset="shadcn"|data-lantern-theme/,
-    "pagination" => ~r/<\.pagination\b|<[A-Z][A-Za-z0-9_.]*\.pagination\b/
+  # stack spacing. Component blocks match local `<.name` AND remote
+  # `<Module.name` calls (aliasing lantern modules is valid HEEx); the rest
+  # are literal attribute/text patterns.
+  @block_components %{
+    "breadcrumb" => ~w(breadcrumb page_header),
+    "filter-chips" => ~w(tabs_list),
+    "flat-list" => ~w(data_table resource_list list_row table),
+    "detail-inspector" => ~w(inspector side_panel description_list),
+    "form-card" => ~w(form input select textarea checkbox switch),
+    "stat-row" => ~w(stat_card stat_grid),
+    "chart" => ~w(area_chart bar_chart line_chart sparkline),
+    "dialog" => ~w(modal alert_dialog sheet),
+    "empty-states" => ~w(empty_state),
+    "loading" => ~w(skeleton loading),
+    "command" => ~w(command command_group command_item),
+    "pagination" => ~w(pagination)
   }
+
+  @block_patterns %{
+    "toast" => ~r/toast_group|send_toast/,
+    "theme" => ~r/preset="shadcn"|data-lantern-theme/
+  }
+
+  defp block_hit?(all, name) do
+    cond do
+      # Filter chips: segmented tabs_list, or lantern badges/buttons as chips.
+      name == "filter-chips" ->
+        Regex.match?(~r/<\.tabs_list\b|<[A-Z][A-Za-z0-9_.]*\.tabs_list\b|variant="segmented"/, all)
+
+      Map.has_key?(@block_patterns, name) ->
+        Regex.match?(Map.fetch!(@block_patterns, name), all)
+
+      Map.has_key?(@block_components, name) ->
+        Enum.any?(Map.fetch!(@block_components, name), fn comp ->
+          Regex.match?(~r/<\.#{comp}\b|<[A-Z][A-Za-z0-9_.]*\.#{comp}\b/, all)
+        end)
+
+      true ->
+        raise "unknown block: #{name}"
+    end
+  end
 
   def run(files, expects, opts) do
     sources =
@@ -76,7 +100,7 @@ defmodule EvalChecks do
     # comparable): lint findings must be 0, every required recipe block
     # must be present.
     blocks = Keyword.get(opts, :blocks, [])
-    missing = Enum.reject(blocks, &Regex.match?(Map.fetch!(@blocks, &1), all))
+    missing = Enum.reject(blocks, &block_hit?(all, &1))
 
     if blocks == [] do
       IO.puts("BLOCKS: PASS no blocks required")

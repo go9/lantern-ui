@@ -1,0 +1,11 @@
+RULE: no_group_band 20/20 clean
+RULE: no_hand_table 15/15 no raw <table>
+RULE: no_hand_button 10/10 clean
+RULE: no_palette 10/10 0 hits
+RULE: no_arbitrary 10/10 0 hits
+RULE: lantern_usage 15/15 8 components (bar 5): button,badge,table,breadcrumb,empty_state,status_glyph,icon,skeleton
+RULE: a11y 10/10 ok
+RULE: deliverables 10/10 2/2 expects found
+SCORE: 100/100
+BLOCKS: PASS 4/4 filter-chips,flat-list,empty-states,loading
+LINT: PASS 0 findings
