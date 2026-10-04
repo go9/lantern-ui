@@ -106,6 +106,19 @@
   --lantern-chat-button-visibility-duration: 0s;
   --lantern-ease: cubic-bezier(0.4, 0, 0.2, 1);
 
+  /* ── Layering ladder (low → high) ──
+     Floating panels live in the browser top layer (see layer.js); these only
+     order things where that is unavailable, and document the intended order. */
+  --lantern-z-sticky: 10;     /* sticky headers, table headers */
+  --lantern-z-sidebar: 20;
+  --lantern-z-appbar: 30;
+  --lantern-z-dropdown: 50;   /* dropdown / menu panels on the page */
+  --lantern-z-modal: 60;      /* modal, command palette */
+  --lantern-z-sheet: 65;
+  --lantern-z-popover: 70;    /* select, popover, date picker, autocomplete — also inside dialogs */
+  --lantern-z-tooltip: 75;
+  --lantern-z-toast: 80;
+
   /* ── Density (default = shadcn-compact) ── */
   --lantern-control-h: 2rem;
   --lantern-control-px: 0.75rem;

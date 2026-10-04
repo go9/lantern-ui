@@ -11,6 +11,7 @@
 // on client closes only. Two modes: client default, server-driven
 // `controlled` — see `dialog.js`.
 
+import { syncLayer } from "../layer.js"
 import {
   LanternDialog,
   addDialogDomEvents,
@@ -68,6 +69,8 @@ export class LanternSheet extends LanternDialog {
 
     const closeTrigger = this.el.querySelector(part("close-trigger"))
     if (closeTrigger) this.spreadProps(closeTrigger, this.api.getCloseTriggerProps())
+
+    syncLayer(this.el, !this.el.hidden)
 
     this.afterRender?.()
   }

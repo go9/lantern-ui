@@ -42,6 +42,7 @@ import {
   readUpdatedServerBoolean,
 } from "./bridge.js"
 
+import { syncLayer } from "../layer.js"
 export const SCOPE = "dialog"
 
 export const part = (name) => `[data-scope="${SCOPE}"][data-part="${name}"]`
@@ -76,6 +77,9 @@ export class LanternDialog extends Component {
     // own root visibility or an opened dialog stays invisible (flicker
     // #3448). Direct write, like the legacy hook — the root is never spread.
     this.el.hidden = !this.api.open
+    // Top layer: a dialog inside a transformed/clipped ancestor must still cover
+    // the viewport, and panels opened from it must stack above it.
+    syncLayer(this.el, this.api.open)
 
     this.afterRender?.()
   }

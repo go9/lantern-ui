@@ -33,6 +33,7 @@ import {
   readUpdatedServerBoolean,
 } from "./bridge.js"
 
+import { floating, syncLayer } from "../layer.js"
 const SCOPE = "popover"
 
 const part = (name) => `[data-scope="${SCOPE}"][data-part="${name}"]`
@@ -51,7 +52,10 @@ export class LanternPopover extends Component {
     if (trigger) this.spreadProps(trigger, this.api.getTriggerProps())
 
     const positioner = this.el.querySelector(part("positioner"))
-    if (positioner) this.spreadProps(positioner, this.api.getPositionerProps())
+    if (positioner) {
+      this.spreadProps(positioner, this.api.getPositionerProps())
+      syncLayer(positioner, this.api.open)
+    }
 
     const content = this.el.querySelector(part("content"))
     if (content) this.spreadProps(content, this.api.getContentProps())
@@ -71,7 +75,7 @@ function popoverLayoutProps(el) {
     id: el.id,
     disabled: getBoolean(el, "disabled"),
     dir: getDir(el),
-    positioning: { placement: getString(el, "placement") || "bottom-start" },
+    positioning: floating({ placement: getString(el, "placement") || "bottom-start" }),
   }
 }
 

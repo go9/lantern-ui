@@ -505,7 +505,10 @@
 }
 .lui-picker-toggle .lui-icon { width: 1rem; height: 1rem; }
 .lui-picker-panel {
-  z-index: 50;
+  z-index: var(--lantern-z-popover, 70);
+  max-height: var(--available-height, none);
+  max-width: var(--available-width, none);
+  overflow-y: auto;
   /* position:fixed + top/left set by the runtime's position() */
   background: var(--lantern-surface-raised);
   border: 1px solid var(--lantern-border);
@@ -578,7 +581,7 @@
 .lui-checkbox-desc { font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); }
 
 /* ── Modal ── */
-.lui-modal { position: fixed; inset: 0; z-index: 60; display: flex;
+.lui-modal { position: fixed; inset: 0; z-index: var(--lantern-z-modal, 60); display: flex;
   align-items: center; justify-content: center; padding: 1.5rem; }
 /* Respect the `hidden` attribute — an author `display` beats the UA
    `[hidden]{display:none}`, so without this the modal is always visible
@@ -602,7 +605,7 @@
  * Dialog chrome on the modal runtime; the panel is a search header over a
  * scrollable listbox. `data-active` is the keyboard highlight (the hook sets
  * it), :hover is the pointer highlight — deliberately the same surface. */
-.lui-command { position: fixed; inset: 0; z-index: 60; display: flex;
+.lui-command { position: fixed; inset: 0; z-index: var(--lantern-z-modal, 60); display: flex;
   align-items: flex-start; justify-content: center; padding: 1.5rem; }
 /* Same reason as .lui-modal[hidden]: an author `display` beats the UA rule,
    so without this the palette is always open and cannot be closed. */
@@ -688,16 +691,31 @@
 @keyframes lui-fade { from { opacity: 0; } }
 @keyframes lui-pop { from { opacity: 0; transform: scale(0.97); } }
 
+/* ── Floating layer ──
+   Panels, positioners, the command palette and the toast stack render
+   `popover="manual"` and are shown into the browser top layer by layer.js, so
+   no ancestor overflow/transform/z-index can clip or cover them. The UA gives
+   [popover] inset:0, a border, padding and a canvas background; reset those
+   at zero specificity so any component rule still wins. Where the Popover API
+   is missing the same elements stay position:fixed on the --lantern-z-* ladder. */
+:where([popover="manual"]) {
+  inset: auto; margin: 0; padding: 0; border: 0; background: transparent;
+  color: inherit; overflow: visible; width: auto; height: auto; max-width: none; max-height: none; }
+/* Fallback ladder: a menu inside a dialog must still clear the dialog. */
+:is(.lui-modal, .lui-sheet) :is(.lui-dropdown-menu, .lui-menu-panel) { z-index: var(--lantern-z-popover, 70); }
+
 /* ── Dropdown menu ── */
 .lui-date-range-row { display: flex; align-items: center; gap: 0.5rem; }
 .lui-date-range-sep { color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
 .lui-popover { display: inline-block; position: relative; }
-.lui-popover-panel { z-index: 50; padding: 0;
+.lui-popover-panel { z-index: var(--lantern-z-popover, 70); padding: 0;
+  max-height: var(--available-height, none); max-width: var(--available-width, none); overflow-y: auto;
   background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
   border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md);
   animation: lui-pop var(--lantern-duration) var(--lantern-ease); }
 .lui-dropdown { display: inline-block; position: relative; }
-.lui-dropdown-menu { z-index: 50; min-width: 11rem; padding: 0.25rem;
+.lui-dropdown-menu { z-index: var(--lantern-z-dropdown, 50); min-width: 11rem; padding: 0.25rem;
+  max-height: var(--available-height, none); max-width: var(--available-width, none); overflow-y: auto;
   background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
   border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md);
   animation: lui-pop var(--lantern-duration) var(--lantern-ease); }
@@ -720,7 +738,8 @@
 
 /* ── Menu / menubar (APG menu-button + menubar patterns) ── */
 .lui-menu { display: inline-block; position: relative; }
-.lui-menu-panel { z-index: 50; min-width: 11rem; padding: 0.25rem;
+.lui-menu-panel { z-index: var(--lantern-z-dropdown, 50); min-width: 11rem; padding: 0.25rem;
+  max-height: var(--available-height, none); max-width: var(--available-width, none); overflow-y: auto;
   background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
   border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md);
   animation: lui-pop var(--lantern-duration) var(--lantern-ease); }
@@ -797,7 +816,7 @@
 .lui-app[data-collapsed] { --lui-sidebar-w: 3.5rem; }
 
 /* Top bar */
-.lui-appbar { position: fixed; top: 0; left: 0; right: 0; height: var(--lui-appbar-h); z-index: 30;
+.lui-appbar { position: fixed; top: 0; left: 0; right: 0; height: var(--lui-appbar-h); z-index: var(--lantern-z-appbar, 30);
   display: flex; align-items: center; gap: 0.75rem; padding: 0 1rem;
   background: var(--lantern-surface); border-bottom: 1px solid var(--lantern-border); }
 .lui-appbar-toggle { display: none; align-items: center; justify-content: center;
@@ -823,7 +842,7 @@
   flex: none;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: var(--lantern-z-sticky, 10);
   display: flex;
   align-items: center;
   gap: 0.5rem 0.75rem;
@@ -918,7 +937,7 @@
 /* Sidebar (below the bar, fixed) */
 .lui-app-body { padding-top: var(--lui-appbar-h); }
 .lui-app-sidebar { position: fixed; top: var(--lui-appbar-h); bottom: 0; left: 0;
-  width: var(--lui-sidebar-w); z-index: 20; display: flex; flex-direction: column;
+  width: var(--lui-sidebar-w); z-index: var(--lantern-z-sidebar, 20); display: flex; flex-direction: column;
   background: var(--lantern-surface); border-right: 1px solid var(--lantern-border);
   overflow-x: hidden; transition: width var(--lantern-duration) var(--lantern-ease); }
 .lui-app-nav { flex: 1; min-height: 0; overflow-y: auto; padding: 0.75rem 0.6rem; }
@@ -1163,7 +1182,8 @@
   color: var(--lantern-fg-subtle); background: transparent; border: 0; border-radius: 0.25rem;
   cursor: pointer; font-size: 0.8em; line-height: 0; }
 .lui-select-clear:hover { color: var(--lantern-fg); }
-.lui-select-listbox { position: fixed; z-index: 70; max-height: 16rem; overflow-y: auto;
+.lui-select-listbox { position: fixed; z-index: var(--lantern-z-popover, 70);
+  max-height: min(16rem, var(--available-height, 16rem)); max-width: var(--available-width, none); overflow-y: auto;
   background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
   border-radius: var(--lantern-radius); box-shadow: var(--lantern-shadow-md); padding: 0.25rem; }
 /* Zag select: the positioner already tracks the trigger (width + start edge);
@@ -1972,7 +1992,7 @@
 }
 .lui-tooltip {
   position: fixed;
-  z-index: 70;
+  z-index: var(--lantern-z-tooltip, 75);
   display: inline-flex;
   align-items: center;
   max-width: min(18rem, calc(100vw - 1rem));
@@ -1989,6 +2009,9 @@
   animation: lui-tooltip-in var(--lantern-duration) var(--lantern-ease);
 }
 .lui-tooltip[hidden] { display: none; }
+/* Zag tooltip: the positioner is the fixed box the popper places; a fixed
+   content box inside it would leave it 0x0 and blind flip/shift to its size. */
+[data-scope="tooltip"][data-part="positioner"] > .lui-tooltip { position: relative; }
 .lui-tooltip-arrow {
   position: absolute;
   width: 0.5rem;
@@ -2035,7 +2058,7 @@
 /* ── Toasts ── */
 .lui-toasts {
   position: fixed;
-  z-index: 80;
+  z-index: var(--lantern-z-toast, 80);
   display: grid;
   width: min(24rem, calc(100vw - 1rem));
   pointer-events: none;
@@ -2170,7 +2193,7 @@
 }
 
 /* ── Sheet (slide-over) ── */
-.lui-sheet { position: fixed; inset: 0; z-index: 65; }
+.lui-sheet { position: fixed; inset: 0; z-index: var(--lantern-z-sheet, 65); }
 /* Author display beats the UA [hidden]{display:none}; guard it. */
 .lui-sheet[hidden] { display: none; }
 .lui-sheet-backdrop { position: absolute; inset: 0; background: rgb(0 0 0 / 0.4);
@@ -4060,6 +4083,19 @@ a.lui-waterfall-lane-inner:focus-visible {
   --lantern-chat-button-visibility-duration: 0s;
   --lantern-ease: cubic-bezier(0.4, 0, 0.2, 1);
 
+  /* ── Layering ladder (low → high) ──
+     Floating panels live in the browser top layer (see layer.js); these only
+     order things where that is unavailable, and document the intended order. */
+  --lantern-z-sticky: 10;     /* sticky headers, table headers */
+  --lantern-z-sidebar: 20;
+  --lantern-z-appbar: 30;
+  --lantern-z-dropdown: 50;   /* dropdown / menu panels on the page */
+  --lantern-z-modal: 60;      /* modal, command palette */
+  --lantern-z-sheet: 65;
+  --lantern-z-popover: 70;    /* select, popover, date picker, autocomplete — also inside dialogs */
+  --lantern-z-tooltip: 75;
+  --lantern-z-toast: 80;
+
   /* ── Density (default = shadcn-compact) ── */
   --lantern-control-h: 2rem;
   --lantern-control-px: 0.75rem;
@@ -4580,7 +4616,7 @@ a.lui-waterfall-lane-inner:focus-visible {
       </div>
       
 
-      <div data-scope="select" data-part="positioner">
+      <div data-scope="select" data-part="positioner" popover="manual">
         <div class="lui-select-listbox" data-scope="select" data-part="content" role="listbox" aria-labelledby="g-fruit" hidden tabindex="-1">
           <div class="lui-select-options">
             <button type="button" id="select:g-fruit-select:option:apple" class="lui-select-option" role="option" data-scope="select" data-part="item" data-value="apple" aria-selected="false" tabindex="-1">
@@ -4650,7 +4686,7 @@ a.lui-waterfall-lane-inner:focus-visible {
       </div>
       
 
-      <div data-scope="select" data-part="positioner">
+      <div data-scope="select" data-part="positioner" popover="manual">
         <div class="lui-select-listbox" data-scope="select" data-part="content" role="listbox" aria-labelledby="g-fruit-sm" hidden tabindex="-1">
           <div class="lui-select-options">
             <button type="button" id="select:g-fruit-sm-select:option:apple" class="lui-select-option" role="option" data-scope="select" data-part="item" data-value="apple" aria-selected="false" tabindex="-1">
@@ -4734,7 +4770,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-32804" role="alert" class="lui-alert" data-color="info">
+      <div id="lui-alert-1126" role="alert" class="lui-alert" data-color="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4751,7 +4787,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-32836" role="alert" class="lui-alert" data-color="success">
+      <div id="lui-alert-1158" role="alert" class="lui-alert" data-color="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4768,7 +4804,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-32868" role="alert" class="lui-alert" data-color="warning">
+      <div id="lui-alert-1190" role="alert" class="lui-alert" data-color="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4785,7 +4821,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-32900" role="alert" class="lui-alert" data-color="danger">
+      <div id="lui-alert-1222" role="alert" class="lui-alert" data-color="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

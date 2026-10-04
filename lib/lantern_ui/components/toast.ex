@@ -62,6 +62,7 @@ defmodule LanternUI.Components.Toast do
     <div
       id={@id}
       class={Class.merge(["lui-toasts", @class])}
+      popover="manual"
       phx-hook="LanternToast"
       data-placement={@placement}
       data-max={@max}

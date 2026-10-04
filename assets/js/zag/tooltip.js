@@ -29,6 +29,7 @@ import {
   readUpdatedServerBoolean,
 } from "./bridge.js"
 
+import { floating, syncLayer } from "../layer.js"
 const SCOPE = "tooltip"
 
 const part = (name) => `[data-scope="${SCOPE}"][data-part="${name}"]`
@@ -47,7 +48,10 @@ export class LanternTooltip extends Component {
     if (trigger) this.spreadProps(trigger, this.api.getTriggerProps())
 
     const positioner = this.el.querySelector(part("positioner"))
-    if (positioner) this.spreadProps(positioner, this.api.getPositionerProps())
+    if (positioner) {
+      this.spreadProps(positioner, this.api.getPositionerProps())
+      syncLayer(positioner, this.api.open)
+    }
 
     const content = this.el.querySelector(part("content"))
     if (content) this.spreadProps(content, this.api.getContentProps())
@@ -72,7 +76,7 @@ function tooltipLayoutProps(el) {
     openDelay: Number.parseInt(el.dataset.delay || "200", 10) || 0,
     closeDelay: 0,
     dir: getDir(el),
-    positioning: { placement: getString(el, "placement") || "top" },
+    positioning: floating({ placement: getString(el, "placement") || "top", fitViewport: false }),
   }
 }
 

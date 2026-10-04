@@ -280,6 +280,7 @@ defmodule LanternUI.Components.DatePicker do
           <div
             :if={@mode != :time}
             data-part="panel"
+            popover="manual"
             hidden
             role="dialog"
             aria-label={if @mode == :datetime, do: "Choose date and time", else: "Choose date"}

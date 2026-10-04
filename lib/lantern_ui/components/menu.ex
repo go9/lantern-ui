@@ -135,7 +135,7 @@ defmodule LanternUI.Components.Menu do
         </LanternUI.Components.Button.button>
       </span>
 
-      <div data-scope="menu" data-part="positioner">
+      <div data-scope="menu" data-part="positioner" popover="manual">
         <div
           id={"#{@id}-menu"}
           data-scope="menu"

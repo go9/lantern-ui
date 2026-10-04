@@ -129,7 +129,7 @@ defmodule LanternUI.Components.Dropdown do
         <% end %>
       </div>
 
-      <div data-scope="menu" data-part="positioner">
+      <div data-scope="menu" data-part="positioner" popover="manual">
         <div
           data-scope="menu"
           data-part="content"
