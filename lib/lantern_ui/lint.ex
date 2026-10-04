@@ -20,7 +20,10 @@ defmodule LanternUI.Lint do
   @lantern_table_call ~r/<\.(table|data_table|resource_list)\b/
   @component_call ~r/<\.([a-z][a-z0-9_]*[!?]?)\b/
   @local_def ~r/defp?\s+([a-z][a-z0-9_]*[!?]?)[\s(]/
-  @component_call ~r/<\.([a-z][a-z0-9_]*[!?]?)\b/
+  @def_line ~r/^\s*defp?\s+([a-z][a-z0-9_]*[!?]?)[\s(]/
+  @attr_line ~r/^\s*(?:attr|slot)[\s(]/
+  @component_module ~r/^\s*(?:use|import)\s+(?:Phoenix\.(?:Component|LiveComponent|LiveView)\b|[A-Z][\w.]*,\s*:(?:html|live_component|live_view|component|view)\b)/m
+  @import_line ~r/^\s*import\s+([A-Z][\w.]*)/m
   # Opening tag up to the first unquoted `>`, `.`s flag for multiline tags.
   @open_tag ~r/<\.([a-z][a-z0-9_]*[!?]?)((?:[^>"']|"[^"]*"|'[^']*')*)>/
   @attr_token ~r/(?:^|\s)([a-zA-Z_:][a-zA-Z0-9_:.-]*)=/
@@ -40,10 +43,11 @@ defmodule LanternUI.Lint do
     root = Path.expand(root)
     config = load_config(root, opts)
     inv = inventory()
+    project = project_components(root)
 
     root
     |> list_files(config)
-    |> Enum.flat_map(&scan_file(&1, root, config, inv))
+    |> Enum.flat_map(&scan_file(&1, root, config, inv, project))
     |> Enum.sort_by(&{&1.path, &1.line, &1.column})
   end
 
@@ -111,7 +115,7 @@ defmodule LanternUI.Lint do
     end
   end
 
-  defp scan_file(path, root, config, inv) do
+  defp scan_file(path, root, config, inv, project) do
     rel = Path.relative_to(path, root)
 
     if allowed?(rel, config.allow) do
@@ -120,6 +124,7 @@ defmodule LanternUI.Lint do
       source = File.read!(path)
       lines = String.split(source, "\n")
       local = local_defs(source)
+      known = MapSet.union(project, imported_components(source))
 
       line_findings =
         lines
@@ -130,7 +135,7 @@ defmodule LanternUI.Lint do
           if ignored_line?(text, prev) do
             []
           else
-            findings_on_line(rel, n, text, inv, local, config)
+            findings_on_line(rel, n, text, inv, {local, known}, config)
           end
         end)
 
@@ -143,7 +148,7 @@ defmodule LanternUI.Lint do
       String.contains?(to_string(prev), "lantern-lint:ignore")
   end
 
-  defp findings_on_line(rel, n, text, inv, local, config) do
+  defp findings_on_line(rel, n, text, inv, names, config) do
     [
       {@arbitrary_text, :arbitrary_text_size},
       {@arbitrary_box, :arbitrary_box},
@@ -153,7 +158,7 @@ defmodule LanternUI.Lint do
     ]
     |> Enum.reject(fn {_regex, rule} -> rule_skipped?(config, rel, rule) end)
     |> Enum.flat_map(fn {regex, rule} -> collect(rel, n, text, regex, rule) end)
-    |> Kernel.++(component_findings(rel, n, text, inv, local, config))
+    |> Kernel.++(component_findings(rel, n, text, inv, names, config))
   end
 
   defp collect(rel, n, text, regex, rule) do
@@ -208,8 +213,11 @@ defmodule LanternUI.Lint do
 
   # `<.name` call on one line: deprecated-use, confusable, or did-you-mean.
   # Names defined in the same file (`def`/`defp`, e.g. a module's own private
-  # sub-components like `<.sep>`) are local, never guesses.
-  defp component_findings(rel, n, text, inv, local, config) do
+  # sub-components like `<.sep>`) are local, never guesses. Components the app
+  # defines elsewhere (see `project_components/1`) or imports are not lantern's
+  # to second-guess either: they only silence `unknown_component`, so a
+  # deprecated lantern component is still reported.
+  defp component_findings(rel, n, text, inv, {local, known}, config) do
     @component_call
     |> Regex.scan(text, return: :index)
     |> Enum.flat_map(fn [{start, len}, {ns, nl}] ->
@@ -218,6 +226,7 @@ defmodule LanternUI.Lint do
 
       with false <- MapSet.member?(local, name),
            {rule, hint} <- check_component(name, inv),
+           false <- rule == :unknown_component and MapSet.member?(known, name),
            false <- rule_skipped?(config, rel, rule) do
         [%{path: rel, line: n, column: start + 1, rule: rule, match: match, hint: hint}]
       else
@@ -230,6 +239,60 @@ defmodule LanternUI.Lint do
     @local_def
     |> Regex.scan(source, capture: :all_but_first)
     |> List.flatten()
+    |> MapSet.new()
+  end
+
+  # Function components the app itself defines, from every `.ex` under `root`
+  # (excludes ignored: an excluded vendor file still defines what the rest of the
+  # app calls). A name counts when it is a `def`/`defp` that follows `attr`/`slot`
+  # declarations, or any def in a module that uses/imports Phoenix.Component, a
+  # LiveView, or an app's `use MyAppWeb, :html`.
+  defp project_components(root) do
+    root
+    |> list_files(%{exclude: [], allow: []})
+    |> Enum.filter(&(Path.extname(&1) == ".ex"))
+    |> Enum.reduce(MapSet.new(), fn path, acc ->
+      path |> File.read!() |> component_names() |> MapSet.union(acc)
+    end)
+  end
+
+  defp component_names(source) do
+    all? = Regex.match?(@component_module, source)
+
+    {names, _pending} =
+      source
+      |> String.split("\n")
+      |> Enum.reduce({MapSet.new(), false}, fn line, {names, pending} ->
+        cond do
+          match = Regex.run(@def_line, line, capture: :all_but_first) ->
+            [name] = match
+            {if(pending or all?, do: MapSet.put(names, name), else: names), false}
+
+          Regex.match?(@attr_line, line) ->
+            {names, true}
+
+          true ->
+            {names, pending}
+        end
+      end)
+
+    names
+  end
+
+  # `import Mod` of a compiled module that exposes lantern-style components
+  # (`__components__/0`, as every `use Phoenix.Component` module with attrs does).
+  defp imported_components(source) do
+    @import_line
+    |> Regex.scan(source, capture: :all_but_first)
+    |> Enum.flat_map(fn [mod] ->
+      module = Module.concat([mod])
+
+      if Code.ensure_loaded?(module) and function_exported?(module, :__components__, 0) do
+        module.__components__() |> Map.keys() |> Enum.map(&Atom.to_string/1)
+      else
+        []
+      end
+    end)
     |> MapSet.new()
   end
 

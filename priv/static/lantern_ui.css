@@ -3929,3 +3929,15 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-side-panel[hidden] {
   display: none;
 }
+
+/* ── data_table row links ──
+   `row_navigate` / `row_patch` render one empty anchor stretched over the row
+   (a real link: Enter, middle-click, open-in-new-tab). Anything interactive in
+   the row is lifted above it so it keeps its own click. */
+.lui-row-linked { position: relative; cursor: pointer; }
+.lui-row-link { position: absolute; inset: 0; z-index: 0; }
+.lui-row-link:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: -2px; }
+.lui-row-linked :is(a:not(.lui-row-link), button, input, select, textarea, label, summary,
+  [role="button"], [data-row-ignore], .lui-td-actions, .lui-dt-list-actions) {
+  position: relative; z-index: 1; }
+.lui-row-linked:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: -2px; }

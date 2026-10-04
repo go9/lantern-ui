@@ -3936,6 +3936,18 @@ a.lui-waterfall-lane-inner:focus-visible {
   display: none;
 }
 
+/* ── data_table row links ──
+   `row_navigate` / `row_patch` render one empty anchor stretched over the row
+   (a real link: Enter, middle-click, open-in-new-tab). Anything interactive in
+   the row is lifted above it so it keeps its own click. */
+.lui-row-linked { position: relative; cursor: pointer; }
+.lui-row-link { position: absolute; inset: 0; z-index: 0; }
+.lui-row-link:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: -2px; }
+.lui-row-linked :is(a:not(.lui-row-link), button, input, select, textarea, label, summary,
+  [role="button"], [data-row-ignore], .lui-td-actions, .lui-dt-list-actions) {
+  position: relative; z-index: 1; }
+.lui-row-linked:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: -2px; }
+
 /*
  * LanternUI design tokens + default theme.
  *
@@ -4718,7 +4730,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-3426" role="alert" class="lui-alert" data-color="info">
+      <div id="lui-alert-581" role="alert" class="lui-alert" data-color="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4735,7 +4747,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-3458" role="alert" class="lui-alert" data-color="success">
+      <div id="lui-alert-613" role="alert" class="lui-alert" data-color="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4752,7 +4764,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-3490" role="alert" class="lui-alert" data-color="warning">
+      <div id="lui-alert-645" role="alert" class="lui-alert" data-color="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4769,7 +4781,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-3522" role="alert" class="lui-alert" data-color="danger">
+      <div id="lui-alert-677" role="alert" class="lui-alert" data-color="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

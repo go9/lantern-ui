@@ -11,6 +11,12 @@ defmodule Mix.Tasks.Lantern.Lint do
       mix lantern.lint ../some-app
       mix lantern.lint --format json
 
+  A `<.name>` the app defines itself is never an unknown component: same-file
+  `def`/`defp`, any function a sibling module declares with `attr`/`slot`, any
+  function in a module that uses Phoenix.Component / LiveView / `use MyAppWeb, :html`,
+  and components from an `import`ed module that is loaded. Deprecated lantern
+  components are still reported.
+
   Allowlist: `.lantern-lint.json` (`exclude` / `allow` globs, plus
   `allow_rules` mapping one rule to globs skipped for that rule only) or a
   `lantern-lint:ignore` comment on the same line or the line above.

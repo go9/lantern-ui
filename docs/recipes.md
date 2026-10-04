@@ -355,7 +355,7 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 
 ## Block 3: flat index table with filter chips
 
-**When to use:** The page is a record list — one flat `data_table` with filter chips carrying counts, a status column on each row, search, pagination, row click, and an empty state. Title and the primary action live in the breadcrumb bar; no tabs, no group bands. `fill` pins pagination only when the parent bounds the height (see "Fill list pages" above) — without a bound the table takes its natural height.
+**When to use:** The page is a record list — one flat `data_table` with filter chips carrying counts, a status column on each row, search, pagination, row click, and an empty state. Title and the primary action live in the breadcrumb bar; no tabs, no group bands. `row_navigate` (or `row_patch`) makes each row one real link — Enter, middle-click and open-in-new-tab work, and checkboxes, buttons and menus inside the row keep their own clicks; use `row_click` with a `JS` command when the row is not a link. Do not also put `navigate` on the `list_row`. `fill` pins pagination only when the parent bounds the height (see "Fill list pages" above) — without a bound the table takes its natural height.
 
 ```heex
 <.stack gap="lg" style="max-width: 1120px; margin: 0 auto;">
@@ -374,6 +374,7 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
     views={["list"]}
     show_checkboxes={false}
     search_field={:title}
+    row_navigate={& &1.href}
     data-lantern-list-nav
   >
     <:tab label="All" count={24} />
@@ -391,9 +392,7 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
         identifier={ticket.identifier}
         title={ticket.title}
         parent={ticket.parent}
-        navigate={ticket.href}
         selected={ticket.selected}
-        data-lantern-list-item
       >
         <:leading>
           <.status_glyph status={ticket.status} />

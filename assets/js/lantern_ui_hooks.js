@@ -1734,12 +1734,12 @@ const LanternTableChrome = {
       const t = e.target
       if (t.matches('[data-part="search"]')) {
         clearTimeout(this.debounce)
-        this.debounce = setTimeout(() => this.apply(), 300)
+        this.debounce = setTimeout(() => this.apply(t.dataset.field), 300)
       }
     }
     this.onChange = (e) => {
-      if (e.target.matches('[data-part="filter"]') || e.target.closest('[data-part="filter-rich"]'))
-        this.apply()
+      const rich = e.target.closest('[data-part="filter-rich"]')
+      if (e.target.matches('[data-part="filter"]') || rich) this.apply((rich || e.target).dataset.field)
     }
     this.onClick = (e) => {
       if (!e.target.closest('[data-part="clear-filters"]')) return
@@ -1755,23 +1755,26 @@ const LanternTableChrome = {
         .querySelectorAll('[data-part="filter-rich"] [data-part="clear"]')
         .forEach((btn) => btn.click())
       this.suspended = false
-      this.apply()
+      this.apply("*")
     }
     this.el.addEventListener("input", this.onInput)
     this.el.addEventListener("change", this.onChange)
     this.el.addEventListener("click", this.onClick)
   },
 
-  apply() {
+  // `source` is the field the reader just changed, or "*" for clear-all: the
+  // one case where a filter a control owns is allowed to disappear.
+  apply(source) {
     if (this.suspended) return
     // Read the dataset now rather than at mount: a patch rewrites these, and a
     // cached copy would send back the sort and tab state the page had when it
     // first loaded.
     const base = JSON.parse(this.el.dataset.params || "{}")
-    // Filters no control in this row owns — the ones a tab set. Rebuilding only
-    // what the search box and filter panel know about would silently drop them,
+    // Filters the URL already carries (a tab preset, a chip). Rebuilding only
+    // what the search box and filter panel can show would silently drop them,
     // so a search would knock you out of the tab you were in.
-    const filters = JSON.parse(this.el.dataset.keepFilters || "[]")
+    const kept = JSON.parse(this.el.dataset.keepFilters || "[]")
+    const filters = []
     const search = this.el.querySelector('[data-part="search"]')
     if (search && search.value.trim() !== "") {
       filters.push({ field: search.dataset.field, op: search.dataset.op, value: search.value.trim() })
@@ -1798,6 +1801,16 @@ const LanternTableChrome = {
         filters.push({ field: wrap.dataset.field, op: wrap.dataset.op, value: values[0] })
       }
     })
+
+    // A kept filter stays unless a control already supplies that field, or it is
+    // a panel-owned filter the reader just changed or cleared. Kept filters go
+    // first so the URL keeps its order.
+    const supplied = new Set(filters.map((f) => f.field))
+    const survivors = kept.filter(
+      (f) => !supplied.has(f.field) && !(f.owned && (source === "*" || source === f.field))
+    )
+    survivors.forEach((f) => delete f.owned)
+    filters.unshift(...survivors)
 
     const params = { ...base }
     delete params.page
@@ -1834,6 +1847,44 @@ const LanternTableChrome = {
     clearTimeout(this.debounce)
     this.el.removeEventListener("input", this.onInput)
     this.el.removeEventListener("change", this.onChange)
+  },
+}
+
+// data_table `row_click`: the whole row runs a JS command. Rows that link use a
+// real anchor instead (see `.lui-row-link`); this is only for rows that do not.
+// A click or Enter that lands on something interactive inside the row belongs to
+// that thing, so it is ignored here.
+const ROW_INTERACTIVE =
+  'a, button, input, select, textarea, label, summary, [role="button"], [data-row-ignore]'
+
+const LanternRowClick = {
+  mounted() {
+    this.run = (e, row) => {
+      const code = row.dataset.rowClick
+      if (code) this.liveSocket.execJS(row, code)
+    }
+    this.target = (e) => {
+      const row = e.target.closest("[data-row-click]")
+      if (!row || !this.el.contains(row)) return null
+      const hit = e.target.closest(ROW_INTERACTIVE)
+      return hit && hit !== row && row.contains(hit) ? null : row
+    }
+    this.onClick = (e) => {
+      if (e.defaultPrevented || e.button !== 0) return
+      const row = this.target(e)
+      if (row) this.run(e, row)
+    }
+    this.onKeydown = (e) => {
+      if (e.key !== "Enter" || e.target.closest("[data-row-click]") !== e.target) return
+      this.run(e, e.target)
+    }
+    this.el.addEventListener("click", this.onClick)
+    this.el.addEventListener("keydown", this.onKeydown)
+  },
+
+  destroyed() {
+    this.el.removeEventListener("click", this.onClick)
+    this.el.removeEventListener("keydown", this.onKeydown)
   },
 }
 
@@ -2869,6 +2920,7 @@ export const Hooks = {
   LanternCollapse,
   LanternAccordion,
   LanternTableChrome,
+  LanternRowClick,
   LanternTheme,
 }
 export {
@@ -2895,6 +2947,7 @@ export {
   LanternCollapse,
   LanternAccordion,
   LanternTableChrome,
+  LanternRowClick,
   LanternTheme,
 }
 export default Hooks

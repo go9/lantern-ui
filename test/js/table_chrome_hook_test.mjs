@@ -142,3 +142,88 @@ test("clear-filters resets rich filters through their own control, and patches o
   assert.deepEqual(query(mount.last()), [])
   mount.unmount()
 })
+
+const search = `<input data-part="search" data-field="title" data-op="ilike" value="" />`
+const statusSelect = `<select data-part="filter" data-field="status" data-op="==">
+  <option value="">All</option><option value="todo">To do</option></select>`
+
+async function typeSearch(mount, value) {
+  const input = mount.el.querySelector('[data-part="search"]')
+  input.value = value
+  input.dispatchEvent(new input.ownerDocument.defaultView.Event("input", { bubbles: true }))
+  await new Promise((resolve) => setTimeout(resolve, 350))
+}
+
+test("typing a search keeps the status chip, even when its panel select cannot show it", async () => {
+  // The chip set status=in_progress, but the panel select has no such option, so
+  // it reads "" — the filter would be silently dropped if the select were trusted.
+  const mount = mountChrome(search + statusSelect, {
+    keepFilters: [{ field: "status", op: null, value: "in_progress", owned: true }],
+  })
+
+  await typeSearch(mount, "abc")
+
+  assert.deepEqual(query(mount.last()), [
+    ["filters[0][field]", "status"],
+    ["filters[0][value]", "in_progress"],
+    ["filters[1][field]", "title"],
+    ["filters[1][op]", "ilike"],
+    ["filters[1][value]", "abc"],
+  ])
+  mount.unmount()
+})
+
+test("a panel control that has a value overrides the kept filter for its field", async () => {
+  const mount = mountChrome(search + statusSelect, {
+    keepFilters: [{ field: "status", op: null, value: "in_progress", owned: true }],
+  })
+  const select = mount.el.querySelector("select")
+
+  select.value = "todo"
+  change(select)
+
+  assert.deepEqual(query(mount.last()), [
+    ["filters[0][field]", "status"],
+    ["filters[0][value]", "todo"],
+  ])
+  mount.unmount()
+})
+
+test("clearing the panel select drops its own filter but keeps unowned chips", () => {
+  const mount = mountChrome(search + statusSelect, {
+    keepFilters: [
+      { field: "status", op: null, value: "todo", owned: true },
+      { field: "kind", op: null, value: "bug", owned: false },
+    ],
+  })
+  const select = mount.el.querySelector("select")
+
+  select.value = ""
+  change(select)
+
+  assert.deepEqual(query(mount.last()), [
+    ["filters[0][field]", "kind"],
+    ["filters[0][value]", "bug"],
+  ])
+  mount.unmount()
+})
+
+test("clear-filters drops owned filters and keeps unowned ones", () => {
+  const mount = mountChrome(
+    search + statusSelect + `<button type="button" data-part="clear-filters">Clear</button>`,
+    {
+      keepFilters: [
+        { field: "status", op: null, value: "in_progress", owned: true },
+        { field: "kind", op: null, value: "bug", owned: false },
+      ],
+    }
+  )
+
+  mount.el.querySelector('[data-part="clear-filters"]').click()
+
+  assert.deepEqual(query(mount.last()), [
+    ["filters[0][field]", "kind"],
+    ["filters[0][value]", "bug"],
+  ])
+  mount.unmount()
+})
