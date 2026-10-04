@@ -373,14 +373,14 @@ const LanternOverlayLegacy = {
 
   hide() {
     this.open = false
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup?.forEach((fn) => fn())
     this.cleanup = []
     this.panel.hidden = true
     this.trigger.setAttribute("aria-expanded", "false")
   },
 
   destroyed() {
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup?.forEach((fn) => fn())
   },
 }
 
@@ -908,7 +908,7 @@ const LanternPicker = {
   hide() {
     if (!this.open) return
     this.open = false
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup?.forEach((fn) => fn())
     this.cleanup = []
     this.panel.hidden = true
     this.toggle.setAttribute("aria-expanded", "false")
@@ -916,7 +916,7 @@ const LanternPicker = {
   },
 
   destroyed() {
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup?.forEach((fn) => fn())
   },
 }
 
@@ -1110,7 +1110,7 @@ const LanternSelectLegacy = {
   hide(refocus = true) {
     if (!this.open) return
     this.open = false
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup?.forEach((fn) => fn())
     this.cleanup = []
     this.panel.hidden = true
     this.toggle.setAttribute("aria-expanded", "false")
@@ -1215,7 +1215,7 @@ const LanternSelectLegacy = {
   },
 
   destroyed() {
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup?.forEach((fn) => fn())
   },
 }
 
@@ -1682,7 +1682,7 @@ const LanternCollapse = {
   },
 
   destroyed() {
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup?.forEach((fn) => fn())
   },
 }
 
@@ -1923,7 +1923,7 @@ const LanternTheme = {
   },
 
   destroyed() {
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup?.forEach((fn) => fn())
   },
 }
 
@@ -1952,7 +1952,7 @@ const LanternModalLegacy = {
     // already knows, so firing it again is an echo back to the process that
     // just told us.
     this.open = false
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup?.forEach((fn) => fn())
     this.cleanup = []
     document.body.style.overflow = ""
     clearTimeout(this.closeTimer)
@@ -1995,14 +1995,14 @@ const LanternModalLegacy = {
   hide() {
     if (!this.open) return
     this.open = false
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup?.forEach((fn) => fn())
     this.cleanup = []
     this.el.hidden = true
     document.body.style.overflow = ""
   },
 
   destroyed() {
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup?.forEach((fn) => fn())
     document.body.style.overflow = ""
   },
 }
@@ -2197,7 +2197,7 @@ const LanternCommand = {
     if (!this.open) return
     this.open = false
     clearTimeout(this.searchTimer)
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup?.forEach((fn) => fn())
     this.cleanup = []
     this.setActive(-1)
     this.el.hidden = true
@@ -2277,7 +2277,7 @@ const LanternCommand = {
 
   destroyed() {
     clearTimeout(this.searchTimer)
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup?.forEach((fn) => fn())
     document.removeEventListener("keydown", this.onHotkey)
     document.body.style.overflow = ""
   },
@@ -2476,7 +2476,7 @@ const LanternMenubar = {
   close() {
     if (!this.openTrigger) return
     const menu = this.menuFor(this.openTrigger)
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup?.forEach((fn) => fn())
     this.cleanup = []
     if (menu) menu.hidden = true
     this.openTrigger.setAttribute("aria-expanded", "false")
@@ -2484,7 +2484,7 @@ const LanternMenubar = {
   },
 
   destroyed() {
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup?.forEach((fn) => fn())
   },
 }
 
@@ -2809,7 +2809,7 @@ const LanternToast = {
     this.el.removeEventListener("focusout", this.onFocusOut)
     this.el.removeEventListener("click", this.onClick)
     document.removeEventListener("visibilitychange", this.onVisibilityChange)
-    this.timers.forEach((timer) => clearTimeout(timer))
+    this.timers?.forEach((timer) => clearTimeout(timer))
     this.timers.clear()
     this.toastTimers.clear()
   },

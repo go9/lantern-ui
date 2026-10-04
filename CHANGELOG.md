@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- **Hook `destroyed()` no longer throws when `mounted()` returned early.** A LiveView
+  redirect destroys every hook; `LanternOverlay` (and the other hooks that keep a
+  `cleanup`/`timers` list) iterated a list that was never created on roots without
+  a trigger/panel, so the TypeError aborted the navigation and every `<.link navigate>`
+  (e.g. sidebar items) did nothing. Cleanup lists are now optional-chained.
+
 ### Added
 - **Page blocks: 8 shadcn-style recipes** (flicker #3420, step 2). Whole pages
   that look finished, copied as one HEEx block built only from existing lantern
