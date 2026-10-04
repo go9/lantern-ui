@@ -7,6 +7,21 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Fixed
+- **Dialogs (`modal`, `alert_dialog`, `sheet`) no longer close on server patches,
+  `phx-submit`, or the click after a patch** (flicker #3453). Three causes, all fixed:
+  the hook closed a client-opened dialog whenever a patch arrived without
+  `data-open` (and a controlled dialog dropped its `open` prop and emitted
+  `on_change(open=false)`); it now follows the server only when `data-open` /
+  `data-value` actually changed across the patch. LiveView replaced the Zag anatomy
+  nodes on every patch (the server markup lacked Zag's ids), so the panel Zag's
+  dismissable layer tracked was gone and the next click inside counted as outside
+  and focus loss closed the dialog; the parts now render `dialog:<id>:<part>` ids
+  so the nodes survive. Focus leaving the panel (LiveView blurs the field on submit)
+  is no longer a dismissal; backdrop pointerdown and Escape still are. Forms with
+  `phx-change` and `phx-submit` work with inline validation errors.
+- **Select listbox matches its trigger.** The Zag listbox was `position: fixed`
+  inside the positioner, so it shrank to its content (~100px under a 256px trigger)
+  instead of taking the trigger's width and start edge.
 - **`data_table` search no longer drops the other active filters.** A filter
   whose field also has a panel control (a status chip plus a status select) was
   rebuilt from the select alone, so a chip value the select could not show vanished

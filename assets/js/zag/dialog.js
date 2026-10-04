@@ -30,6 +30,7 @@ import {
   VanillaMachine,
   canPushEvent,
   createZagLiveHook,
+  datasetKeyChanged,
   getBoolean,
   getDir,
   getString,
@@ -119,6 +120,11 @@ export function dialogLayoutProps(el, { role } = {}) {
     preventScroll: true,
     closeOnEscape: getBoolean(el, "closeOnEsc") && !blocked,
     closeOnInteractOutside: getBoolean(el, "closeOnOutside") && !blocked,
+    // Focus leaving the panel never dismisses: LiveView blurs the active
+    // field on `phx-submit` and patches move focus, neither of which is user
+    // intent. Backdrop pointerdown (and Escape) still dismiss; the focus
+    // trap pulls stray focus back in.
+    onFocusOutside: (event) => event.preventDefault(),
     dir: getDir(el),
   }
   const titleId = getString(el, "titleId")
@@ -197,9 +203,46 @@ export function dialogSetOpen(el, component, layout, open) {
   else component.api.setOpen(open)
 }
 
+/**
+ * Apply a server patch to a mounted dialog/sheet machine. The client owns
+ * open state: the server only wins when ITS value actually changed across
+ * the patch (`beforeAttrs` snapshot, like select), so a patch that merely
+ * re-renders — e.g. a `phx-change` inside the dialog — never closes (or
+ * re-opens) a dialog the user toggled. `serverOpen(open)` lets the sheet
+ * cancel its slide-out before a server open lands.
+ */
+export function applyServerOpen(hook, dialog, layout, { serverOpen } = {}) {
+  const el = hook.el
+
+  if (getBoolean(el, "controlled")) {
+    const openPatch = readUpdatedServerBoolean(el, hook.beforeAttrs, "open")
+    // A controlled machine whose `open` prop disappears reverts to its
+    // internal default and emits on_change(open=false), so always pass the
+    // current value through.
+    dialog.updateProps({
+      ...layout(el),
+      open: openPatch.open !== undefined ? openPatch.open : dialog.api.open,
+    })
+    return
+  }
+
+  // Legacy parity: the server owns `data-open` — a patch asserting it
+  // re-opens, withdrawing it closes — but only when it changed. Marked so
+  // onOpenChange skips the close command and the fan-out.
+  if (datasetKeyChanged(hook.beforeAttrs, el, "open")) {
+    const wantOpen = el.dataset.open != null
+    if (wantOpen !== dialog.api.open) {
+      serverOpen?.(wantOpen)
+      el.__lanternServerDriven = true
+      dialog.api.setOpen(wantOpen)
+    }
+  }
+  dialog.updateProps(layout(el))
+}
+
 export const LanternZagDialog = createZagLiveHook({
   key: "dialog",
-  controlledKeys: ["value"],
+  controlledKeys: ["value", "open"],
 
   mount(hook, { dom, server }) {
     const el = hook.el
@@ -233,23 +276,9 @@ export const LanternZagDialog = createZagLiveHook({
   update(hook, dialog) {
     const el = hook.el
 
-    if (getBoolean(el, "controlled")) {
-      const openPatch = readUpdatedServerBoolean(el, hook.beforeAttrs, "open")
-      dialog.updateProps({
-        ...dialogLayoutProps(el, { role: getString(el, "role") || "dialog" }),
-        ...(openPatch.open !== undefined ? { open: openPatch.open } : {}),
-      })
-    } else {
-      // Legacy parity: the server owns `data-open`. A patch asserting it
-      // re-opens; a patch withdrawing it closes. Both are marked so
-      // onOpenChange skips the close command and the fan-out.
-      const wantOpen = el.dataset.open != null
-      if (wantOpen !== dialog.api.open) {
-        el.__lanternServerDriven = true
-        dialog.api.setOpen(wantOpen)
-      }
-      dialog.updateProps(dialogLayoutProps(el, { role: getString(el, "role") || "dialog" }))
-    }
+    applyServerOpen(hook, dialog, (root) =>
+      dialogLayoutProps(root, { role: getString(root, "role") || "dialog" })
+    )
 
     // Always re-render: a morph may have reset Zag-written attributes while
     // the machine holds newer client state.

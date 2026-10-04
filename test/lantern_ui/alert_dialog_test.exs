@@ -24,6 +24,14 @@ defmodule LanternUI.AlertDialogTest do
     end)
   end
 
+  test "anatomy nodes carry Zag's ids so a LiveView morph keeps them (flicker #3453)" do
+    html = dialog_html()
+
+    for part <- ~w(backdrop positioner content) do
+      assert html =~ ~s(id="dialog:delete-project:#{part}")
+    end
+  end
+
   test "renders required anatomy in safe, stable order on the shared modal hook" do
     html = dialog_html()
     document = Floki.parse_fragment!(html)

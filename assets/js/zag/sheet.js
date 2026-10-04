@@ -15,6 +15,7 @@ import {
   LanternDialog,
   addDialogDomEvents,
   addDialogServerEvents,
+  applyServerOpen,
   createOnOpenChange,
   dialogLayoutProps,
   dialogSetOpen,
@@ -28,7 +29,6 @@ import {
   getBoolean,
   getString,
   readBooleanControlledZagProps,
-  readUpdatedServerBoolean,
 } from "./bridge.js"
 
 export class LanternSheet extends LanternDialog {
@@ -88,7 +88,7 @@ export class LanternSheet extends LanternDialog {
 
 export const LanternZagSheet = createZagLiveHook({
   key: "sheet",
-  controlledKeys: ["value"],
+  controlledKeys: ["value", "open"],
 
   mount(hook, { dom, server }) {
     const el = hook.el
@@ -136,24 +136,14 @@ export const LanternZagSheet = createZagLiveHook({
   update(hook, sheet) {
     const el = hook.el
 
-    if (getBoolean(el, "controlled")) {
-      const openPatch = readUpdatedServerBoolean(el, hook.beforeAttrs, "open")
-      sheet.updateProps({
-        ...dialogLayoutProps(el, { role: "dialog" }),
-        ...(openPatch.open !== undefined ? { open: openPatch.open } : {}),
-      })
-    } else {
-      const wantOpen = el.dataset.open != null
-      if (wantOpen !== sheet.api.open) {
+    applyServerOpen(hook, sheet, () => dialogLayoutProps(el, { role: "dialog" }), {
+      serverOpen: () => {
         // A server open cancels a running slide-out instantly.
         clearTimeout(sheet._closeTimer)
         sheet._closeTimer = undefined
         el.removeAttribute("data-closing")
-        el.__lanternServerDriven = true
-        sheet.api.setOpen(wantOpen)
-      }
-      sheet.updateProps(dialogLayoutProps(el, { role: "dialog" }))
-    }
+      },
+    })
 
     sheet.render()
     el.removeAttribute("data-loading")

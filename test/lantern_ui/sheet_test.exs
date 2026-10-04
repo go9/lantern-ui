@@ -10,6 +10,19 @@ defmodule LanternUI.SheetTest do
     fun.(Map.put(assigns, :__changed__, nil)) |> rendered_to_string()
   end
 
+  test "anatomy nodes carry Zag's ids so a LiveView morph keeps them (flicker #3453)" do
+    html =
+      render(fn assigns ->
+        ~H"""
+        <Sheet.sheet id="edit" title="Edit theme">BODY</Sheet.sheet>
+        """
+      end)
+
+    for part <- ~w(backdrop positioner content close) do
+      assert html =~ ~s(id="dialog:edit:#{part}")
+    end
+  end
+
   test "renders hook, placement, dialog wiring, header/body/footer" do
     html =
       render(fn assigns ->
