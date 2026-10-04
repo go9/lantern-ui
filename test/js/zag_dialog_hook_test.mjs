@@ -33,13 +33,15 @@ function fixture({
   // `data-open` mirrors the server render (`data-open={@open || nil}`):
   // present only when the server asserts open.
   const serverOpen = open && mode !== "controlled" ? `data-open=""` : ""
+  // Mirrors `Modal.modal` HEEx: `hidden={!@open}` lives on the ROOT, never
+  // on the content — Zag owns both after mount (flicker #3448).
   return `
   <div id="${id}" data-zag ${binding}
     data-role="${role}" ${serverOpen}
-    data-close-on-esc="${esc}" data-close-on-outside="${outside}" ${extraRoot}>
+    data-close-on-esc="${esc}" data-close-on-outside="${outside}" ${extraRoot}${open ? "" : " hidden"}>
     <div data-scope="dialog" data-part="backdrop" class="lui-modal-backdrop"></div>
     <div data-scope="dialog" data-part="positioner">
-      <div data-scope="dialog" data-part="content" class="lui-modal-panel" role="${role}" aria-modal="true" hidden>
+      <div data-scope="dialog" data-part="content" class="lui-modal-panel" role="${role}" aria-modal="true">
         <button type="button" data-scope="dialog" data-part="close-trigger" class="lui-modal-close" aria-label="Close">x</button>
         <h2>Delete 3 objects?</h2>
         <button type="button" class="confirm">Delete</button>
@@ -62,6 +64,12 @@ function mount(html, opts = {}) {
 }
 
 const content = (el) => el.querySelector('[data-part="content"]')
+// Visibility is the ROOT `hidden` (what the server renders) AND the content
+// `hidden` (what Zag spreads): both must agree with machine state (#3448).
+const assertVisibility = (el, open) => {
+  assert.equal(el.hidden, !open, `root hidden should be ${!open}`)
+  assert.equal(content(el).hidden, !open, `content hidden should be ${!open}`)
+}
 const openDialog = (el) =>
   el.dispatchEvent(new el.ownerDocument.defaultView.CustomEvent("lantern:dialog:open", { bubbles: true }))
 const closeDialog = (el) =>
@@ -72,15 +80,15 @@ test("lantern:dialog:open/close DOM events drive the machine (open_dialog/close_
   await sleep()
 
   assert.equal(component().api.open, false)
-  assert.equal(content(el).hidden, true)
+  assertVisibility(el, false)
 
   openDialog(el)
   await waitFor(() => component().api.open === true)
-  assert.equal(content(el).hidden, false)
+  assertVisibility(el, true)
 
   el.querySelector('[data-part="close-trigger"]').click()
   await waitFor(() => component().api.open === false)
-  assert.equal(content(el).hidden, true)
+  assertVisibility(el, false)
 
   // Closing twice is a no-op, never an error.
   closeDialog(el)
@@ -101,7 +109,7 @@ test("server push open/close honors the id (LanternUI.open_dialog(socket, id) co
 
   serverPush("lantern:dialog:close", { id: "confirm" })
   await waitFor(() => component().api.open === false)
-  assert.equal(content(el).hidden, true)
+  assertVisibility(el, false)
 })
 
 test("Escape closes when close-on-esc, never when prevented", async () => {
@@ -138,10 +146,12 @@ test("server data-open patch re-opens; withdrawing it closes silently (no on_clo
   // Server asserts open: re-opens.
   ctx.patch((root) => root.setAttribute("data-open", ""))
   await waitFor(() => component().api.open === true)
+  assertVisibility(el, true)
 
   // Server withdraws open: closes, silently — the server already knows.
   ctx.patch((root) => root.removeAttribute("data-open"))
   await waitFor(() => component().api.open === false)
+  assertVisibility(el, false)
   assert.deepEqual(pushEvent, [])
   assert.deepEqual(execJS, [])
 })
@@ -175,7 +185,7 @@ test("outside pointerdown dismisses a dismissible modal", async () => {
   await waitFor(() => component().api.open === true)
 
   await dismissOutside(document, () => component().api.open)
-  assert.equal(content(el).hidden, true)
+  assertVisibility(el, false)
 })
 
 test("controlled mode: the server value is strict truth", async () => {
@@ -188,12 +198,13 @@ test("controlled mode: the server value is strict truth", async () => {
   ctx.patch((root) => root.setAttribute("data-value", "false"))
   await sleep()
   assert.equal(component().api.open, false)
-  assert.equal(content(el).hidden, true)
+  assertVisibility(el, false)
 
   // open_dialog still works in controlled mode (routed through updateProps,
   // which a controlled machine honors unlike api.setOpen).
   serverPush("lantern:dialog:open", { id: "confirm" })
   await waitFor(() => component().api.open === true)
+  assertVisibility(el, true)
 })
 
 test("initial-focus selector resolves to the machine's focus target", async () => {

@@ -53,11 +53,17 @@ export class LanternSheet extends LanternDialog {
       if (!this.api.open && this._closeTimer !== undefined) {
         this.spreadProps(content, { ...this.api.getContentProps(), hidden: false })
         this.el.setAttribute("data-closing", "")
+        // The root stays visible for the slide-out too (flicker #3448: the
+        // delegate owns root `hidden`, the server only renders it).
+        this.el.hidden = false
       } else {
         this.spreadProps(content, this.api.getContentProps())
         if (!this.api.open) this.el.removeAttribute("data-closing")
+        this.el.hidden = !this.api.open
       }
       fixLabelling(this.el, content)
+    } else {
+      this.el.hidden = !this.api.open
     }
 
     const closeTrigger = this.el.querySelector(part("close-trigger"))

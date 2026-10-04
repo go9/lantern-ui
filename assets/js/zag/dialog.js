@@ -70,6 +70,12 @@ export class LanternDialog extends Component {
     const closeTrigger = this.el.querySelector(part("close-trigger"))
     if (closeTrigger) this.spreadProps(closeTrigger, this.api.getCloseTriggerProps())
 
+    // The server renders `hidden` on the ROOT (`hidden={!@open}`); Zag only
+    // spreads part props onto the anatomy beneath it, so the delegate must
+    // own root visibility or an opened dialog stays invisible (flicker
+    // #3448). Direct write, like the legacy hook — the root is never spread.
+    this.el.hidden = !this.api.open
+
     this.afterRender?.()
   }
 }
