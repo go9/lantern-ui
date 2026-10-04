@@ -7,6 +7,19 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Fixed
+- **`data_table` search no longer drops the other active filters.** A filter
+  whose field also has a panel control (a status chip plus a status select) was
+  rebuilt from the select alone, so a chip value the select could not show vanished
+  on the first keystroke. The server now hands every non-search filter back to the
+  chrome hook (`data-keep-filters`, each flagged `owned` when a panel control
+  exists) and the hook drops one only when the reader changed or cleared its own
+  control, or pressed Clear filters.
+- **`mix lantern.lint` no longer reports `unknown_component` for the app's own
+  components.** `<.name>` now resolves against sibling modules' `attr`/`slot`-declared
+  functions, any function in a Phoenix.Component / LiveView / `use MyAppWeb, :html`
+  module, and loaded `import`ed modules, as well as same-file defs. True unknowns still
+  report with did-you-mean, deprecated lantern components still report, and
+  `lantern-lint:ignore` works as before.
 - **Hook `destroyed()` no longer throws when `mounted()` returned early.** A LiveView
   redirect destroys every hook; `LanternOverlay` (and the other hooks that keep a
   `cleanup`/`timers` list) iterated a list that was never created on roots without
@@ -14,6 +27,13 @@ All notable changes to this project are documented here. The format follows
   (e.g. sidebar items) did nothing. Cleanup lists are now optional-chained.
 
 ### Added
+- **`data_table` row links: `row_navigate`, `row_patch`, `row_click`.** Each takes a
+  `row -> value` fn. `row_navigate`/`row_patch` (path) stretch one real anchor over every
+  row in list and table views, so Enter, middle-click and open-in-new-tab work and
+  checkboxes, buttons, menus and links inside the row keep their own clicks.
+  `row_click` (a `Phoenix.LiveView.JS` command) is the non-link fallback, driven by the
+  new `LanternRowClick` hook (ignores clicks on interactive children; Enter on the
+  focused row). Block 3 of `docs/recipes.md` uses `row_navigate`.
 - **Page blocks: 8 shadcn-style recipes** (flicker #3420, step 2). Whole pages
   that look finished, copied as one HEEx block built only from existing lantern
   components: app shell + sidebar nav + breadcrumb header, dashboard (stat

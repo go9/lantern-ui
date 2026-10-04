@@ -492,7 +492,10 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 - `page_size_options` (:list, default [10, 25, 50, 100]) — Choices for the page-size control.
 - `path` (:string, required) — base path for sort/pagination patches
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `row_click` (:any) — row -> `Phoenix.LiveView.JS` fn; the whole row runs the command on click or Enter (clicks on interactive children are ignored).
 - `row_id` (:any) — row -> id fn; defaults to & &1.id
+- `row_navigate` (:any) — row -> path fn; makes the whole row a `navigate` link (list and table views).
+- `row_patch` (:any) — row -> path fn; like `row_navigate` but a `patch` link.
 - `rows` (:list, required) — Current page of row structs/maps to render.
 - `search_field` (:atom) — Flop filter field the built-in search box binds to
 - `search_op` (:string, default "ilike") — Flop op for the search filter
@@ -2306,6 +2309,7 @@ From `docs/recipes.md` (Block 3: flat index table with filter chips):
     views={["list"]}
     show_checkboxes={false}
     search_field={:title}
+    row_navigate={& &1.href}
     data-lantern-list-nav
   >
     <:tab label="All" count={24} />
@@ -2323,9 +2327,7 @@ From `docs/recipes.md` (Block 3: flat index table with filter chips):
         identifier={ticket.identifier}
         title={ticket.title}
         parent={ticket.parent}
-        navigate={ticket.href}
         selected={ticket.selected}
-        data-lantern-list-item
       >
         <:leading>
           <.status_glyph status={ticket.status} />

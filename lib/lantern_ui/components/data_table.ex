@@ -20,10 +20,18 @@ defmodule LanternUI.Components.DataTable do
   - Sorting, pagination, and page size are **patch navigation** against
     `path` — table state lives in the URL. Existing query params
     (`meta.params`, e.g. filters) are preserved.
+  - Rows can be links: `row_navigate={&~p"/orders/\#{&1.id}"}` (or `row_patch`) stretches
+    one real anchor over each row — keyboard Enter, middle-click and open-in-new-tab
+    work, and checkboxes, buttons, menus and links inside the row keep their own
+    clicks. `row_click={fn row -> JS.push("open", value: %{id: row.id}) end}` runs a
+    command on click/Enter instead, for rows that are not links.
   - Selection is server-owned: rows emit `toggle_select` (`phx-value-id`),
     the header checkbox emits `select_all_page`, the bulk bar emits
     `clear_selection` and each `bulk_action`'s `event` — all to `target`
     (defaults to the parent LiveView). Same contract as the baseline.
+
+  The built-in search box keeps every other active filter (tab presets, filter
+  panel values) in the URL it patches.
 
   Search, filter bar, tabs, and the stat overview arrive as chrome slots in a
   follow-up; this is the core.
@@ -52,6 +60,28 @@ defmodule LanternUI.Components.DataTable do
   )
 
   attr(:row_id, :any, default: nil, doc: "row -> id fn; defaults to & &1.id")
+
+  attr(:row_navigate, :any,
+    default: nil,
+    doc:
+      "row -> path fn; makes the whole row a `navigate` link (list and table views). " <>
+        "Rendered as a real anchor stretched over the row, so Enter, middle-click and " <>
+        "\"open in new tab\" work; checkboxes, buttons, menus and links inside the row stay clickable."
+  )
+
+  attr(:row_patch, :any,
+    default: nil,
+    doc:
+      "row -> path fn; like `row_navigate` but a `patch` link. Ignored when `row_navigate` is set."
+  )
+
+  attr(:row_click, :any,
+    default: nil,
+    doc:
+      "row -> `Phoenix.LiveView.JS` fn; the whole row runs the command on click or Enter " <>
+        "(clicks on interactive children are ignored). Use when the row is not a link. " <>
+        "Ignored when `row_navigate` or `row_patch` is set."
+  )
 
   attr(:show_checkboxes, :boolean,
     default: true,
@@ -189,6 +219,7 @@ defmodule LanternUI.Components.DataTable do
     assigns =
       assigns
       |> assign(:row_id_fn, assigns.row_id || (& &1.id))
+      |> assign(:row_click?, !assigns.row_navigate && !assigns.row_patch && !!assigns.row_click)
       |> assign(:selection_count, MapSet.size(assigns.selected_ids))
       |> assign(:page_ids, Enum.map(assigns.rows, assigns.row_id || (& &1.id)))
 
@@ -213,6 +244,7 @@ defmodule LanternUI.Components.DataTable do
         ])
       }
       data-view={@view}
+      phx-hook={@row_click? && "LanternRowClick"}
       {@rest}
     >
       <section
@@ -479,11 +511,23 @@ defmodule LanternUI.Components.DataTable do
             <EmptyState.empty_state icon="inbox" title="Nothing here yet" />
           <% end %>
         <% else %>
-          <div :for={row <- @rows} class="lui-dt-list-row">
-            <div class="lui-dt-list-main">{render_slot(@list_item, row)}</div>
+          <div
+            :for={row <- @rows}
+            class={Class.merge(["lui-dt-list-row", row_linked?(assigns, row) && "lui-row-linked"])}
+            data-lantern-list-item={row_linked?(assigns, row) || nil}
+            {row_click_attrs(assigns, row)}
+          >
+            <div id={"#{@id}-row-#{@row_id_fn.(row)}-main"} class="lui-dt-list-main">
+              {render_slot(@list_item, row)}
+            </div>
             <div :if={@row_action != []} class="lui-dt-list-actions">
               {render_slot(@row_action, row)}
             </div>
+            <.row_anchor
+              :if={row_link(assigns, row)}
+              link={row_link(assigns, row)}
+              labelledby={"#{@id}-row-#{@row_id_fn.(row)}-main"}
+            />
           </div>
         <% end %>
       </div>
@@ -536,7 +580,14 @@ defmodule LanternUI.Components.DataTable do
             </tr>
             <tr
               :for={row <- @rows}
-              class={Class.merge(["lui-tr", @row_id_fn.(row) in @selected_ids && "lui-tr-selected"])}
+              class={
+                Class.merge([
+                  "lui-tr",
+                  @row_id_fn.(row) in @selected_ids && "lui-tr-selected",
+                  row_linked?(assigns, row) && "lui-row-linked"
+                ])
+              }
+              {row_click_attrs(assigns, row)}
             >
               <td :if={@show_checkboxes} class="lui-td lui-td-check">
                 <input
@@ -549,8 +600,17 @@ defmodule LanternUI.Components.DataTable do
                   aria-label="Select row"
                 />
               </td>
-              <td :for={col <- @col} class={Class.merge(["lui-td", col[:td_class]])}>
+              <td
+                :for={{col, i} <- Enum.with_index(@col)}
+                id={i == 0 && row_link(assigns, row) && "#{@id}-row-#{@row_id_fn.(row)}-main"}
+                class={Class.merge(["lui-td", col[:td_class]])}
+              >
                 {render_slot(col, row)}
+                <.row_anchor
+                  :if={i == 0 && row_link(assigns, row)}
+                  link={row_link(assigns, row)}
+                  labelledby={"#{@id}-row-#{@row_id_fn.(row)}-main"}
+                />
               </td>
               <td :if={@row_action != []} class="lui-td lui-td-actions">
                 {render_slot(@row_action, row)}
@@ -575,6 +635,35 @@ defmodule LanternUI.Components.DataTable do
         class="lui-dt-pagination"
       />
     </div>
+    """
+  end
+
+  # The row's destination: `{:navigate | :patch, path}` or nil. Link wins over
+  # `row_click`, which is a hook-driven fallback for rows that run a JS command.
+  defp row_link(%{row_navigate: f}, row) when is_function(f, 1), do: {:navigate, f.(row)}
+  defp row_link(%{row_patch: f}, row) when is_function(f, 1), do: {:patch, f.(row)}
+  defp row_link(_assigns, _row), do: nil
+
+  defp row_linked?(assigns, row), do: !!row_link(assigns, row) or assigns.row_click?
+
+  defp row_click_attrs(%{row_click?: true, row_click: f}, row) do
+    [{"data-row-click", Jason.encode!(f.(row))}, {"tabindex", "0"}]
+  end
+
+  defp row_click_attrs(_assigns, _row), do: []
+
+  # A real anchor stretched over the row (see `.lui-row-link`): it is what makes
+  # Enter, middle-click and "open in new tab" work, and the row's first cell
+  # names it. Interactive children sit above it, so they keep their own clicks.
+  attr(:link, :any, required: true)
+  attr(:labelledby, :string, required: true)
+
+  defp row_anchor(assigns) do
+    {kind, to} = assigns.link
+    assigns = assign(assigns, :link_attrs, [{kind, to}])
+
+    ~H"""
+    <.link {@link_attrs} class="lui-row-link" aria-labelledby={@labelledby}></.link>
     """
   end
 
@@ -691,21 +780,27 @@ defmodule LanternUI.Components.DataTable do
   end
 
   # The chrome row rebuilds `filters` from the controls it can see, so anything
-  # set from outside it — a tab preset — has to be handed back to the hook or a
-  # keystroke in the search box would drop the tab the reader is standing in.
+  # a control cannot show has to be handed back to the hook or a keystroke in the
+  # search box would drop it — a tab preset, or a preset on a field whose panel
+  # select has no matching option. Every filter except the search term goes
+  # back, flagged `owned` when a panel control exists for its field: the hook
+  # lets an owned control override its filter, and drops it only when that
+  # control is the one the reader just changed or cleared.
   defp unowned_filters(meta, search_field, filter_slots) do
-    owned =
-      filter_slots
-      |> Enum.map(&to_string(&1[:field]))
-      |> then(&if(search_field, do: [to_string(search_field) | &1], else: &1))
-      |> MapSet.new()
+    owned = MapSet.new(filter_slots, &to_string(&1[:field]))
+    search = search_field && to_string(search_field)
 
     base_params(meta)
     |> Map.get("filters", %{})
     |> normalize_filters()
-    |> Enum.reject(&(to_string(&1["field"]) in owned))
+    |> Enum.reject(&(to_string(&1["field"]) == search))
     |> Enum.map(fn f ->
-      %{"field" => f["field"], "op" => f["op"], "value" => f["value"]}
+      %{
+        "field" => f["field"],
+        "op" => f["op"],
+        "value" => f["value"],
+        "owned" => to_string(f["field"]) in owned
+      }
     end)
   end
 

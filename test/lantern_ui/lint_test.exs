@@ -169,6 +169,107 @@ defmodule LanternUI.LintTest do
     assert Lint.scan(dir) == []
   end
 
+  describe "components the app defines in another file" do
+    test "a sibling module's attr-declared component is not an unknown", %{dir: dir} do
+      File.write!(Path.join(dir, "stat_bits.ex"), """
+      defmodule MyApp.StatBits do
+        attr :label, :string, required: true
+        def stat(assigns), do: ~H|<span>{@label}</span>|
+      end
+      """)
+
+      File.write!(Path.join(dir, "page.heex"), "<.stat label=\"Open\" />\n")
+
+      assert Lint.scan(dir) == []
+    end
+
+    test "every def in a Phoenix.Component module counts, even without attrs", %{dir: dir} do
+      File.write!(Path.join(dir, "core.ex"), """
+      defmodule MyAppWeb.CoreComponents do
+        use Phoenix.Component
+        def buton(assigns), do: ~H|<span />|
+      end
+      """)
+
+      File.write!(Path.join(dir, "page.heex"), "<.buton>Save</.buton>\n")
+
+      assert Lint.scan(dir) == []
+    end
+
+    test "an app's `use MyAppWeb, :html` module counts too", %{dir: dir} do
+      File.write!(Path.join(dir, "layouts.ex"), """
+      defmodule MyAppWeb.Layouts do
+        use MyAppWeb, :html
+        def toast(assigns), do: ~H|<div />|
+      end
+      """)
+
+      File.write!(Path.join(dir, "page.heex"), "<.toast message=\"hi\" />\n")
+
+      assert Lint.scan(dir) == []
+    end
+
+    test "a plain module's undecorated def is not a component, so true unknowns still report", %{
+      dir: dir
+    } do
+      File.write!(Path.join(dir, "util.ex"), """
+      defmodule MyApp.Util do
+        def stat(x), do: x
+      end
+      """)
+
+      File.write!(
+        Path.join(dir, "page.heex"),
+        "<.stat label=\"Open\" />\n<.buton>Save</.buton>\n"
+      )
+
+      assert [%{match: "<.stat", hint: stat_hint}, %{match: "<.buton", hint: hint}] =
+               Lint.scan(dir)
+
+      assert stat_hint =~ "stat_card"
+      assert hint =~ "<.button>"
+    end
+
+    test "a locally defined name does not hide a deprecated lantern component", %{dir: dir} do
+      [%{component: deprecated} | _] = LanternUI.Deprecated.deprecated()
+
+      File.write!(Path.join(dir, "core.ex"), """
+      defmodule MyAppWeb.CoreComponents do
+        use Phoenix.Component
+        def #{deprecated}(assigns), do: ~H|<div />|
+      end
+      """)
+
+      File.write!(Path.join(dir, "page.heex"), "<.#{deprecated} />\n")
+
+      assert [%{rule: :deprecated_component}] = Lint.scan(dir)
+    end
+
+    test "lantern-lint:ignore and excluded dirs still behave", %{dir: dir} do
+      File.mkdir_p!(Path.join(dir, "vendor"))
+
+      File.write!(Path.join(dir, "vendor/core.ex"), """
+      defmodule Vendor.Core do
+        use Phoenix.Component
+        def stat(assigns), do: ~H|<i />|
+      end
+      """)
+
+      File.write!(Path.join(dir, ".lantern-lint.json"), ~s({"exclude": ["vendor/**"]}))
+
+      File.write!(Path.join(dir, "page.heex"), """
+      <.stat label="Open" />
+      <%!-- lantern-lint:ignore --%>
+      <.buton>Save</.buton>
+      <.buton>Again</.buton>
+      """)
+
+      # vendor is excluded from linting but still defines `stat`; the ignore
+      # comment covers only the line below it.
+      assert [%{match: "<.buton", line: 4}] = Lint.scan(dir)
+    end
+  end
+
   test "unknown attrs on strict components get did-you-mean", %{dir: dir} do
     File.write!(Path.join(dir, "page.heex"), """
     <.stat_card lable="Open" value={3} />

@@ -326,7 +326,7 @@ defmodule LanternUI.DataTableChromeTest do
   end
 
   describe "filters the chrome row does not own" do
-    test "a tab's filter is handed back to the hook, a panel filter is not" do
+    test "every filter is handed back to the hook, flagged owned when a panel control has its field" do
       # status comes from a tab, channel from the filter panel.
       meta = %{
         @meta
@@ -343,18 +343,161 @@ defmodule LanternUI.DataTableChromeTest do
       [keep] = Regex.run(~r/data-keep-filters="([^"]*)"/, html, capture: :all_but_first)
       keep = keep |> String.replace("&quot;", ~s(")) |> Jason.decode!()
 
-      assert keep == [%{"field" => "status", "op" => nil, "value" => "pending"}]
+      assert keep == [
+               %{"field" => "status", "op" => nil, "value" => "pending", "owned" => false},
+               %{"field" => "channel", "op" => nil, "value" => "ebay", "owned" => true}
+             ]
     end
 
-    test "nothing to keep when every filter has a control" do
+    test "only the search term is never handed back" do
       meta = %{
         @meta
-        | params: %{"filters" => %{"0" => %{"field" => "channel", "value" => "ebay"}}}
+        | params: %{"filters" => %{"0" => %{"field" => "search", "value" => "ada"}}}
       }
 
       html = render(&table/1, %{rows: [], meta: meta, view: "table"})
 
       assert html =~ ~s(data-keep-filters="[]")
+    end
+  end
+
+  describe "keep-filters for the hook" do
+    test "a filter with a panel control is handed back flagged owned, the search term is not" do
+      meta = %{
+        @meta
+        | params: %{
+            "filters" => %{
+              "0" => %{"field" => "status", "value" => "pending"},
+              "1" => %{"field" => "search", "op" => "ilike", "value" => "ada"}
+            }
+          }
+      }
+
+      html = render(&table_status_filter/1, %{rows: [], meta: meta})
+
+      [keep] = Regex.run(~r/data-keep-filters="([^"]*)"/, html, capture: :all_but_first)
+      keep = keep |> String.replace("&quot;", ~s(")) |> Jason.decode!()
+
+      assert keep == [%{"field" => "status", "op" => nil, "value" => "pending", "owned" => true}]
+    end
+  end
+
+  defp table_status_filter(assigns) do
+    ~H"""
+    <DataTable.data_table
+      id="t"
+      rows={@rows}
+      meta={@meta}
+      path="/orders"
+      search_field={:search}
+      views={["list"]}
+    >
+      <:tab label="Pending" filters={[%{field: "status", value: "pending"}]} />
+      <:filter field={:status} label="Status" options={[{"Active", "active"}]} />
+      <:list_item :let={r}>LIST-{r.name}</:list_item>
+    </DataTable.data_table>
+    """
+  end
+
+  describe "row links and row click" do
+    defp linked(assigns) do
+      ~H"""
+      <DataTable.data_table
+        id="t"
+        rows={@rows}
+        meta={@meta}
+        path="/orders"
+        view={@view}
+        row_navigate={@row_navigate}
+        row_patch={@row_patch}
+        row_click={@row_click}
+      >
+        <:col :let={r} label="Name">{r.name}</:col>
+        <:list_item :let={r}>LIST-{r.name}</:list_item>
+        <:row_action :let={_r}><button type="button">More</button></:row_action>
+      </DataTable.data_table>
+      """
+    end
+
+    defp linked_assigns(extra) do
+      Map.merge(
+        %{
+          rows: [%{id: 7, name: "Ada"}],
+          meta: @meta,
+          view: "table",
+          row_navigate: nil,
+          row_patch: nil,
+          row_click: nil
+        },
+        extra
+      )
+    end
+
+    test "row_navigate renders one real anchor over each table row, named by the first cell" do
+      html = render(&linked/1, linked_assigns(%{row_navigate: &"/orders/#{&1.id}"}))
+
+      assert html =~ ~s(class="lui-row-link")
+      assert html =~ ~s(href="/orders/7")
+      assert html =~ ~s(data-phx-link="redirect")
+      assert html =~ ~s(aria-labelledby="t-row-7-main")
+      assert html =~ ~s(id="t-row-7-main")
+      assert html =~ "lui-row-linked"
+      refute html =~ "data-row-click"
+      # row actions stay a separate, clickable cell
+      assert html =~ "More"
+    end
+
+    test "row_patch renders a patch anchor, in the list view too" do
+      html =
+        render(
+          &linked/1,
+          linked_assigns(%{view: "list", row_patch: &"/orders?open=#{&1.id}"})
+        )
+
+      assert html =~ ~s(data-phx-link="patch")
+      assert html =~ ~s(href="/orders?open=7")
+      assert html =~ ~s(aria-labelledby="t-row-7-main")
+      assert html =~ ~s(id="t-row-7-main" class="lui-dt-list-main")
+    end
+
+    test "row_navigate wins over row_patch and row_click" do
+      html =
+        render(
+          &linked/1,
+          linked_assigns(%{
+            row_navigate: &"/a/#{&1.id}",
+            row_patch: &"/b/#{&1.id}",
+            row_click: fn _ -> Phoenix.LiveView.JS.push("open") end
+          })
+        )
+
+      assert html =~ ~s(href="/a/7")
+      refute html =~ "/b/7"
+      refute html =~ "data-row-click"
+      refute html =~ ~s(phx-hook="LanternRowClick")
+    end
+
+    test "row_click puts the command on the row and mounts the hook, with no anchor" do
+      html =
+        render(
+          &linked/1,
+          linked_assigns(%{
+            row_click: fn r -> Phoenix.LiveView.JS.push("open", value: %{id: r.id}) end
+          })
+        )
+
+      assert html =~ ~s(phx-hook="LanternRowClick")
+      assert html =~ "data-row-click="
+      assert html =~ ~s(tabindex="0")
+      assert html =~ "lui-row-linked"
+      refute html =~ "lui-row-link\""
+    end
+
+    test "no row link attrs, no row link markup" do
+      html = render(&linked/1, linked_assigns(%{}))
+
+      refute html =~ "lui-row-link"
+      refute html =~ "LanternRowClick"
     end
   end
 end
