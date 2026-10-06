@@ -6,6 +6,37 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-05
+
+### Upgrading from 0.8.x
+- **Breaking: grouped lists are gone.** `group_band`, `list_row group=` and the
+  collapse behaviour are removed. Use one flat list with a status column and
+  filter chips (see the "Grouped list" recipe, now a flat `data_table`). Run
+  `mix lantern.lint`: it flags any remaining use.
+- **Zag widgets load on demand.** Tooltip, popover, switch, radio group, dialog
+  family (modal, alert dialog, sheet), menu/dropdown, accordion, slider, tabs,
+  pagination and select now run on Zag state machines, loaded as separate chunks.
+  Apps must serve the chunk files: either build with esbuild `--format=esm
+  --splitting` and `<script type="module">` (flicker/skusync also need target
+  es2020+), or serve `deps/lantern_ui/priv/static` `zag/` and `chunks/` with
+  `Plug.Static`. The single-file `lantern_ui_hooks.standalone.js` still works with
+  everything bundled. Details: `docs/behaviours.md`, "On-demand Zag chunk".
+- **Look changes:** the `info` color is now blue (it used to follow the brand
+  accent, so an info alert could look like an error); floating panels, dialogs,
+  the command palette and the toast stack render in the browser top layer.
+- **New, opt-in:** `shadcn` theme preset (`<Theme.theme preset="shadcn" />`),
+  eight page blocks (`docs/recipes.md`), `stack/1`, `data_table` row links
+  (`row_navigate`, `row_patch`, `row_click`), `llms.txt`, `mix lantern_ui.install_skills`.
+- Apps pinned to a git ref of lantern-ui can switch back to `~> 0.9`.
+
+### Added (Zag widget rollout)
+- **Tooltip, popover, switch, radio group, dialog family, menu/dropdown,
+  accordion, slider, tabs and pagination run on Zag** (flicker #3416, step 2A),
+  in client mode and in server-driven (controlled) mode, with unchanged public
+  attrs, native form contracts and the existing `open_dialog`/`lantern:dialog:*`
+  events. Tabs arrow keys follow the manual-activation model (Enter/Space/click
+  activate); the menubar stays on the legacy implementation.
+
 ### Fixed
 - **Floating panels are no longer clipped, covered, or stranded** (flicker #3480).
   Select, searchable select, dropdown, menu, user menu, popover, tooltip,
@@ -878,6 +909,7 @@ still import `priv/static/lantern_ui_hooks.js` with no JS toolchain).
 - Optional standalone theme (`priv/static/lantern_ui.css`); components otherwise
   inherit host CSS variables (Fluxon-compatible).
 
-[Unreleased]: https://github.com/go9/lantern-ui/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/go9/lantern-ui/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/go9/lantern-ui/compare/v0.8.7...v0.9.0
 [0.8.0]: https://github.com/go9/lantern-ui/releases/tag/v0.8.0
 [0.3.0]: https://github.com/go9/lantern-ui/releases/tag/v0.3.0
