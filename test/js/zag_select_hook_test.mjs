@@ -186,6 +186,38 @@ test("client mode: clicking an option updates the machine, trigger, and hidden f
   assert.deepEqual(changes, ["archived"])
 })
 
+test("select changes bubble through a form inside an overlay and clear to empty", async () => {
+  const ctx = mount(
+    `<form id="filters" phx-change="update-filter"><input type="number" name="min_price"></form><div id="panel" class="lui-popover-panel">${fixture({ extraRoot: 'data-form="filters"' })}</div>`,
+    { rootId: "status-select" }
+  )
+  const { el, window } = ctx
+  const form = window.document.querySelector("form")
+  const changes = []
+  form.addEventListener("change", (event) => {
+    changes.push({ target: event.target.tagName, data: new window.FormData(form).get("status") })
+  })
+  await sleep()
+  assert.equal(hiddenSelect(el).form, form)
+
+  el.querySelector('[data-part="trigger"]').click()
+  await sleep()
+  assert.equal(el.querySelector('[data-part="content"]').hidden, false)
+  el.querySelector('[data-part="item"][data-value="archived"]').click()
+  await sleep()
+
+  assert.deepEqual(el.__lanternSelect.api.value.map(String), ["archived"])
+  assert.equal(hiddenSelect(el).value, "archived")
+  assert.deepEqual(changes, [{ target: "FORM", data: "archived" }])
+
+  // Exercise clear through Zag's API, as the clear button is only rendered
+  // when there is a selected value in the server markup.
+  el.__lanternSelect.api.setValue([])
+  await sleep()
+  assert.equal(hiddenSelect(el).value, "")
+  assert.equal(changes.at(-1).data, "")
+})
+
 test("client mode: on-change pushes a server event and dispatches a client event", async () => {
   const { el, pushEvent, clientEvents } = mount(
     fixture({ extraRoot: `data-on-change="status_changed" data-on-change-client="select-picked"` }),

@@ -23,6 +23,7 @@ import {
   VanillaMachine,
   canPushEvent,
   createZagLiveHook,
+  dispatchInputFormEvents,
   getBoolean,
   getDir,
   getString,
@@ -133,10 +134,11 @@ export class LanternSelect extends Component {
     }
   }
 
-  syncHiddenSelect() {
+  syncHiddenSelect(valueOverride = null) {
     const hiddenSelect = this.el.querySelector(part("hidden-select"))
     if (!hiddenSelect || !hiddenSelect.name) return false
-    const valueSet = new Set((this.api.value ?? []).map(String))
+    const formChange = hiddenSelect.form?.hasAttribute("phx-change")
+    const valueSet = new Set((formChange && valueOverride ? valueOverride : this.api.value ?? []).map(String))
     let changed = false
     for (const option of hiddenSelect.options) {
       if (option.value === "") {
@@ -152,9 +154,8 @@ export class LanternSelect extends Component {
         changed = true
       }
     }
-    if (changed) {
-      hiddenSelect.dispatchEvent(new Event("input", { bubbles: true }))
-      hiddenSelect.dispatchEvent(new Event("change", { bubbles: true }))
+    if (changed || formChange) {
+      dispatchInputFormEvents(hiddenSelect)
     }
     return changed
   }
@@ -247,7 +248,7 @@ function createOnValueChange(getEl, pushEvent, canPush, getLastValue, setLastVal
     }
 
     const component = getEl().__lanternSelect
-    component?.syncHiddenSelect()
+    component?.syncHiddenSelect(next)
 
     notifyChange({
       el,
