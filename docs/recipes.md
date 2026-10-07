@@ -357,6 +357,21 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 
 **When to use:** The page is a record list — one flat `data_table` with filter chips carrying counts, a status column on each row, search, pagination, row click, and an empty state. Title and the primary action live in the breadcrumb bar; no tabs, no group bands. `row_navigate` (or `row_patch`) makes each row one real link — Enter, middle-click and open-in-new-tab work, and checkboxes, buttons and menus inside the row keep their own clicks; use `row_click` with a `JS` command when the row is not a link. Do not also put `navigate` on the `list_row`. `fill` pins pagination only when the parent bounds the height (see "Fill list pages" above) — without a bound the table takes its natural height.
 
+### In-memory tables
+
+When the page already holds every row, keep the result count without showing a
+page-size menu or a one-page pager:
+
+```heex
+<.data_table id="teams" rows={@teams} meta={@meta} path="/teams" paginate={false}>
+  <:col :let={team} label="Team">{team.name}</:col>
+</.data_table>
+```
+
+This is inferred automatically when `meta.total_pages <= 1` and the current
+`meta.page_size` is not in `page_size_options`. Paginated tables retain the
+normal controls.
+
 ```heex
 <.stack gap="lg" style="max-width: 1120px; margin: 0 auto;">
   <.breadcrumb_bar id="tickets-crumb">

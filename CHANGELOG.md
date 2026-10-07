@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.8.8] - 2026-10-06
+
+### Added
+- **`data_table` in-memory mode.** `paginate={false}` keeps the result count and
+  hides the page-size and pager controls. This is also inferred when there is at
+  most one page and the current page size is outside `page_size_options`.
+
 ## [0.9.0] - 2026-10-05
 
 ### Upgrading from 0.8.x

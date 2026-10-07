@@ -572,6 +572,7 @@ defmodule LanternUI.DataTableTest do
         path="/orders"
         selected_ids={@selected}
         flush={@flush}
+        paginate={@paginate}
       >
         <:col :let={r} label="Name">{r.name}</:col>
         <:empty>NOTHING</:empty>
@@ -580,7 +581,7 @@ defmodule LanternUI.DataTableTest do
     end
 
     test "flush marks the root so the panel chrome can be dropped" do
-      base = %{rows: rows(), meta: @meta, selected: MapSet.new()}
+      base = %{rows: rows(), meta: @meta, selected: MapSet.new(), paginate: true}
 
       refute render(&plain_table/1, Map.put(base, :flush, false)) =~ "lui-datatable-flush"
       assert render(&plain_table/1, Map.put(base, :flush, true)) =~ "lui-datatable-flush"
@@ -590,17 +591,64 @@ defmodule LanternUI.DataTableTest do
       single = %{@meta | current_page: 1, total_pages: 1, total_count: 6}
 
       html =
-        render(&plain_table/1, %{rows: rows(), meta: single, selected: MapSet.new(), flush: false})
+        render(&plain_table/1, %{
+          rows: rows(),
+          meta: single,
+          selected: MapSet.new(),
+          flush: false,
+          paginate: true
+        })
 
       assert html =~ "lui-dt-pagination"
       assert html =~ "6 results"
+      assert html =~ "lui-pager"
+    end
+
+    test "in-memory tables infer count-only mode when page size is outside choices" do
+      single = %{@meta | current_page: 1, total_pages: 1, total_count: 3, page_size: 3}
+
+      html =
+        render(&plain_table/1, %{
+          rows: rows(),
+          meta: single,
+          selected: MapSet.new(),
+          flush: false,
+          paginate: true
+        })
+
+      assert html =~ "3 results"
+      assert html =~ "lui-dt-pagination"
+      refute html =~ "lui-pager"
+      refute html =~ "lui-pg-size"
+    end
+
+    test "paginate false keeps only the result count even for a paginated table" do
+      html =
+        render(&plain_table/1, %{
+          rows: rows(),
+          meta: @meta,
+          selected: MapSet.new(),
+          flush: false,
+          paginate: false
+        })
+
+      assert html =~ "100 results"
+      assert html =~ "lui-dt-pagination"
+      refute html =~ "lui-pager"
+      refute html =~ "lui-pg-size"
     end
 
     test "an empty table has no count to report, so it has no bar" do
       empty = %{@meta | current_page: 1, total_pages: 0, total_count: 0}
 
       html =
-        render(&plain_table/1, %{rows: [], meta: empty, selected: MapSet.new(), flush: false})
+        render(&plain_table/1, %{
+          rows: [],
+          meta: empty,
+          selected: MapSet.new(),
+          flush: false,
+          paginate: true
+        })
 
       assert html =~ "NOTHING"
       refute html =~ "lui-dt-pagination"

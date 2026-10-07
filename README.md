@@ -55,6 +55,11 @@ the complete function and attribute surface.
 
 See the [published HexDocs](https://hexdocs.pm/lantern_ui) for the released API.
 
+For an in-memory `data_table` with all rows already loaded, pass `paginate={false}`
+to keep the result count while hiding page-size and pager controls. Lantern also
+infers this mode when `total_pages <= 1` and `page_size` is outside
+`page_size_options`; real paginated tables keep their controls.
+
 ## For AI assistants
 
 Models work best with the generated reference, not raw HexDocs alone:

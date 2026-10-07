@@ -17,6 +17,9 @@ defmodule LanternUI.Components.DataTable do
   - `meta` is a `Flop.Meta` (duck-typed — any map with `flop`, `params`,
     `current_page`, `total_pages`, `page_size`, `total_count` works), so
     lantern_ui carries no flop dependency.
+  - Set `paginate={false}` for an in-memory table to show only its result count.
+    This is inferred when `total_pages <= 1` and `page_size` is not in
+    `page_size_options`.
   - Sorting, pagination, and page size are **patch navigation** against
     `path` — table state lives in the URL. Existing query params
     (`meta.params`, e.g. filters) are preserved.
@@ -53,6 +56,14 @@ defmodule LanternUI.Components.DataTable do
   attr(:rows, :list, required: true, doc: "Current page of row structs/maps to render.")
   attr(:meta, :map, required: true, doc: "Flop.Meta (or same-shaped map)")
   attr(:path, :string, required: true, doc: "base path for sort/pagination patches")
+
+  attr(:paginate, :boolean,
+    default: true,
+    doc:
+      "Show page-size and pager controls. When false, show only the result count. " <>
+        "Also inferred as false when there is at most one page and page_size is not " <>
+        "one of page_size_options (the in-memory table convention)."
+  )
 
   attr(:selected_ids, :any,
     default: MapSet.new(),
@@ -222,6 +233,7 @@ defmodule LanternUI.Components.DataTable do
       |> assign(:row_click?, !assigns.row_navigate && !assigns.row_patch && !!assigns.row_click)
       |> assign(:selection_count, MapSet.size(assigns.selected_ids))
       |> assign(:page_ids, Enum.map(assigns.rows, assigns.row_id || (& &1.id)))
+      |> assign(:paginate?, paginate?(assigns))
 
     assigns =
       assign(
@@ -626,16 +638,38 @@ defmodule LanternUI.Components.DataTable do
             reader nothing is hidden below the fold. Withholding it there reads as
             a table that has not finished loading. An empty table has no count to
             report, so that is where it goes. --%>
-      <Pagination.pagination
-        :if={@rows != []}
-        id={"#{@id}-pagination"}
-        meta={@meta}
-        patch_fn={&page_path(@path, @meta, &1)}
-        page_size_options={@page_size_options}
-        class="lui-dt-pagination"
-      />
+      <%= if @rows != [] and @paginate? do %>
+        <Pagination.pagination
+          id={"#{@id}-pagination"}
+          meta={@meta}
+          patch_fn={&page_path(@path, @meta, &1)}
+          page_size_options={@page_size_options}
+          class="lui-dt-pagination"
+        />
+      <% else %>
+        <div
+          :if={@rows != []}
+          id={"#{@id}-pagination"}
+          class="lui-pagination lui-dt-pagination"
+          data-total-count={Map.get(@meta, :total_count)}
+        >
+          <span :if={Map.get(@meta, :total_count)} class="lui-pagination-count">
+            {Map.get(@meta, :total_count)} {if Map.get(@meta, :total_count) == 1,
+              do: "result",
+              else: "results"}
+          </span>
+        </div>
+      <% end %>
     </div>
     """
+  end
+
+  defp paginate?(%{paginate: false}), do: false
+
+  defp paginate?(assigns) do
+    pages = Map.get(assigns.meta, :total_pages) || 1
+    size = Map.get(assigns.meta, :page_size)
+    pages > 1 or size in assigns.page_size_options
   end
 
   # The row's destination: `{:navigate | :patch, path}` or nil. Link wins over

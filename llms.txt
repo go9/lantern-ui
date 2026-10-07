@@ -1,4 +1,4 @@
-# LanternUI 0.9.0 — llms.txt
+# LanternUI 0.8.8 — llms.txt
 
 > Native Phoenix LiveView UI components. Server-rendered HEEx/SVG, themed
 > via CSS variables. No React, no JS UI libraries.
@@ -614,6 +614,14 @@ From `docs/recipes.md` (Block 2: dashboard with stats, chart, and activity):
     </.list_row>
   </.card>
 </.stack>
+```
+
+From `docs/recipes.md` (Block 3: flat index table with filter chips):
+
+```heex
+<.data_table id="teams" rows={@teams} meta={@meta} path="/teams" paginate={false}>
+  <:col :let={team} label="Team">{team.name}</:col>
+</.data_table>
 ```
 
 From `docs/recipes.md` (Block 3: flat index table with filter chips):

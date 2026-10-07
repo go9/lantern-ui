@@ -1,4 +1,4 @@
-# LanternUI 0.9.0 — llms-full.txt
+# LanternUI 0.8.8 — llms-full.txt
 
 > Complete model reference. Start with the rules, then the per-module
 > component sections. No React, no JS UI libraries — server-rendered HEEx.
@@ -490,6 +490,7 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 - `info_modal_id` (:string) — modal id the title's info button opens (LanternUI.open_dialog)
 - `meta` (:map, required) — Flop.Meta (or same-shaped map)
 - `page_size_options` (:list, default [10, 25, 50, 100]) — Choices for the page-size control.
+- `paginate` (:boolean, default true) — Show page-size and pager controls.
 - `path` (:string, required) — base path for sort/pagination patches
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `row_click` (:any) — row -> `Phoenix.LiveView.JS` fn; the whole row runs the command on click or Enter (clicks on interactive children are ignored).
@@ -842,7 +843,7 @@ A small, curated inline-SVG icon set (Heroicons outline paths, MIT).
 Renders an icon by name.
 
 - `class` (:any) — Extra classes merged onto the root element.
-- `name` (:string, required, values: window, minus, funnel, map-pin, calendar-days, arrow-path, check-circle, pencil-square, magnifying-glass, trash, chevron-up, clock, printer, folder-open, chevron-right, document, view-columns, ellipsis-horizontal, bars-3, sparkles, folder, cloud, chevron-up-down, information-circle, cursor-arrow-rays, x-mark, calendar, check, chart-bar, arrow-right, arrow-up-tray, chevron-down, inbox, adjustments-horizontal, globe-alt, chevron-left, presentation-chart-line, arrow-trending-up, plus, squares-2x2, arrow-down-tray, circle-stack, exclamation-circle) — Icon key from the curated outline set.
+- `name` (:string, required, values: calendar-days, document, cloud, x-mark, arrow-up-tray, globe-alt, chevron-up, sparkles, folder, exclamation-circle, window, chevron-up-down, folder-open, chart-bar, bars-3, presentation-chart-line, squares-2x2, check-circle, arrow-right, trash, minus, clock, printer, map-pin, adjustments-horizontal, funnel, information-circle, cursor-arrow-rays, inbox, ellipsis-horizontal, magnifying-glass, chevron-down, arrow-path, view-columns, plus, arrow-down-tray, chevron-left, chevron-right, calendar, circle-stack, check, pencil-square, arrow-trending-up) — Icon key from the curated outline set.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 
 ### LanternUI.Components.IconButton
@@ -2288,6 +2289,14 @@ From `docs/recipes.md` (Block 2: dashboard with stats, chart, and activity):
     </.list_row>
   </.card>
 </.stack>
+```
+
+From `docs/recipes.md` (Block 3: flat index table with filter chips):
+
+```heex
+<.data_table id="teams" rows={@teams} meta={@meta} path="/teams" paginate={false}>
+  <:col :let={team} label="Team">{team.name}</:col>
+</.data_table>
 ```
 
 From `docs/recipes.md` (Block 3: flat index table with filter chips):
