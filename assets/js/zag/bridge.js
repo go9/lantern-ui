@@ -205,6 +205,23 @@ export function syncInputFormAssociation(input, hookEl) {
   }
 }
 
+/** Dispatch the native form events used by LiveView for a synchronized control.
+ * A form-associated control can live outside the form's DOM subtree (for
+ * example, in a portaled overlay). In that case bubbling on the control never
+ * reaches the form's `phx-change` listener, so dispatch on the associated form
+ * itself; LiveView serializes that form and reads the updated control value.
+ */
+export function dispatchInputFormEvents(input) {
+  if (!input) return
+  const form = input.form
+  // LiveView binds phx-change on the form itself. Dispatch there when present
+  // so native select listeners cannot feed the synthetic event back into Zag.
+  const target = form?.hasAttribute("phx-change") ? form : input
+  const EventCtor = input.ownerDocument?.defaultView?.Event ?? Event
+  target.dispatchEvent(new EventCtor("input", { bubbles: true }))
+  target.dispatchEvent(new EventCtor("change", { bubbles: true }))
+}
+
 // ---------------------------------------------------------------------------
 // Controlled string-list binding (read-props.ts subset)
 // ---------------------------------------------------------------------------

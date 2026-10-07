@@ -6,6 +6,9 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- Select changes now update LiveView forms reliably when Zag renders the hidden control before its change callback, including controls associated with a form from overlay content. Client and controlled value changes emit `input` and `change` events.
+
 ## [0.9.0] - 2026-10-05
 
 ### Upgrading from 0.8.x
