@@ -48,6 +48,7 @@ defmodule LanternUI.Components.Layout do
   use Phoenix.Component
 
   alias LanternUI.Class
+  alias LanternUI.Deprecated
   alias LanternUI.Components.ActionBar
   alias LanternUI.Components.Breadcrumb
   alias LanternUI.Components.Icon
@@ -636,7 +637,10 @@ defmodule LanternUI.Components.Layout do
   slot(:actions, doc: "Right-side actions (buttons, menus).")
   slot(:inner_block, doc: "Optional body under the title row (rarely needed).")
 
+  @deprecated "Use page_shell/1 instead. page_header/1 is removed in 1.0."
   def page_header(assigns) do
+    Deprecated.warn(:page_header, "<.page_shell>", "1.0")
+
     ~H"""
     <div class={Class.merge(["lui-page-header", @class])} {@rest}>
       <div :if={@title} class="lui-page-header-row">

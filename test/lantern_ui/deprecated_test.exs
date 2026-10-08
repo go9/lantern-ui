@@ -38,3 +38,29 @@ defmodule LanternUI.DeprecatedTest do
     end
   end
 end
+
+defmodule LanternUI.PageHeaderDeprecationTest do
+  # Sync: the warning is once per node, so the persistent flag must be cleared
+  # here without another test rendering page_header in between.
+  use ExUnit.Case, async: false
+
+  import ExUnit.CaptureLog
+  import Phoenix.LiveViewTest, only: [render_component: 2]
+
+  alias LanternUI.Components.Layout
+
+  test "rendering page_header warns once per node and names page_shell" do
+    :persistent_term.erase({LanternUI.Deprecated, :page_header})
+
+    log =
+      capture_log(fn ->
+        render_component(&Layout.page_header/1, title: "Tickets")
+        render_component(&Layout.page_header/1, title: "Tickets")
+      end)
+
+    assert length(Regex.scan(~r/page_header\/1 is deprecated and will be removed in 1.0/, log)) ==
+             1
+
+    assert log =~ "use <.page_shell> instead"
+  end
+end
