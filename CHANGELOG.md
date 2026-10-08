@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-10-08
+
 ### Added
 - `page_shell` `layout="strip"` (opt-in). One solid row under the app bar: the
   breadcrumb trail on the left, the dismissible notice and the page actions on the

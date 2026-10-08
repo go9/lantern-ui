@@ -1,4 +1,4 @@
-# LanternUI 0.10.0 — llms-full.txt
+# LanternUI 0.10.1 — llms-full.txt
 
 > Complete model reference. Start with the rules, then the per-module
 > component sections. No React, no JS UI libraries — server-rendered HEEx.

@@ -1,4 +1,4 @@
-# LanternUI 0.10.0 — llms.txt
+# LanternUI 0.10.1 — llms.txt
 
 > Native Phoenix LiveView UI components. Server-rendered HEEx/SVG, themed
 > via CSS variables. No React, no JS UI libraries.
