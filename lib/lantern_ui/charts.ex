@@ -677,6 +677,7 @@ defmodule LanternUI.Charts do
       >
         <g :if={@show_grid} class="lui-time-series-chart__grid" aria-hidden="true">
           <line :for={y <- @grid_y} x1={@plot_left} x2={@plot_right} y1={y} y2={y} />
+          <line :for={x <- @grid_x} y1={@plot_top} y2={@plot_bottom} x1={x} x2={x} />
         </g>
         <line
           :if={@zero_y}
@@ -685,6 +686,14 @@ defmodule LanternUI.Charts do
           x2={@plot_right}
           y1={@zero_y}
           y2={@zero_y}
+        />
+        <line
+          :if={@zero_x}
+          class="lui-time-series-chart__zero"
+          x1={@zero_x}
+          x2={@zero_x}
+          y1={@plot_top}
+          y2={@plot_bottom}
         />
         <g :if={@show_axes} class="lui-time-series-chart__labels">
           <text :for={{label, y} <- @y_ticks} x={@plot_left - 8} y={y + 3} text-anchor="end">
@@ -696,7 +705,12 @@ defmodule LanternUI.Charts do
         </g>
         <g :for={path <- @paths} class={path.class} style={"--lui-series-color:#{path.color}"}>
           <path :if={path.fill != ""} d={path.fill} class="lui-time-series-chart__area" />
-          <path :if={path.line != ""} d={path.line} class="lui-time-series-chart__line" />
+          <path
+            :if={path.line != ""}
+            d={path.line}
+            class="lui-time-series-chart__line"
+            stroke-dasharray={if(path.class == "lui-time-series-chart__comparison", do: "4 4")}
+          />
           <circle
             :for={{x, y} <- path.points}
             class="lui-time-series-chart__point"
@@ -704,6 +718,25 @@ defmodule LanternUI.Charts do
             cy={y}
             r="3"
           />
+          <rect
+            :for={bar <- path.bars}
+            class="lui-time-series-chart__bar"
+            x={bar.x}
+            y={bar.y}
+            width={bar.width}
+            height={bar.height}
+            rx="2"
+          />
+        </g>
+        <g :for={marker <- @markers} class={"lui-time-series-chart__annotation tone-#{marker.tone}"}>
+          <line :if={!marker.horizontal} x1={marker.x} x2={marker.x} y1={@plot_top} y2={@plot_bottom} />
+          <line :if={marker.horizontal} x1={@plot_left} x2={@plot_right} y1={marker.y} y2={marker.y} />
+          <text
+            x={if(marker.horizontal, do: @plot_left + 4, else: marker.x + 4)}
+            y={if(marker.horizontal, do: marker.y - 4, else: @plot_top + 12)}
+          >
+            {marker.label}
+          </text>
         </g>
       </svg>
       <div :if={!@has_data} class="lui-time-series-chart__empty">{@empty_message}</div>
@@ -720,7 +753,9 @@ defmodule LanternUI.Charts do
     series = normalize_time_series(assigns.series)
     visible = assigns.visible_series && MapSet.new(assigns.visible_series)
     series = Enum.filter(series, &(is_nil(visible) or MapSet.member?(visible, &1.id)))
-    all_points = Enum.flat_map(series, & &1.points)
+    comparison = normalize_time_series(assigns.comparison)
+    comparison = Enum.filter(comparison, &(is_nil(visible) or MapSet.member?(visible, &1.id)))
+    all_points = Enum.flat_map(series ++ comparison, & &1.points)
 
     case {all_points, x_domain_kind(all_points)} do
       {[], _} ->
@@ -730,11 +765,11 @@ defmodule LanternUI.Charts do
         %{has_data: false, chart_type: assigns.type, legend: []}
 
       {_, kind} ->
-        build_time_series_geometry(assigns, series, all_points, kind)
+        build_time_series_geometry(assigns, series, comparison, all_points, kind)
     end
   end
 
-  defp build_time_series_geometry(assigns, series, all_points, kind) do
+  defp build_time_series_geometry(assigns, series, comparison, all_points, kind) do
     plot_left = @margin.left
     plot_right = @vb_w - @margin.right
     plot_top = 18
@@ -756,60 +791,99 @@ defmodule LanternUI.Charts do
       end
     end
 
-    values = Enum.map(all_points, & &1.y)
+    values = chart_domain_values(series, axis_keys, assigns.type, all_points)
     ticks = Geometry.signed_nice_ticks(Enum.min(values), Enum.max(values), 5)
     ymin = hd(ticks)
     ymax = List.last(ticks)
     yf = fn y -> Geometry.scale(ymin, ymax, plot_bottom, plot_top, y) end
+    numeric_x = fn value -> Geometry.scale(ymin, ymax, plot_left, plot_right, value) end
     zero_y = Geometry.round1(yf.(0))
 
     curve =
       if assigns.curve in [:linear, :monotone, :step, :cardinal], do: assigns.curve, else: :linear
 
-    paths =
-      series
-      |> Enum.with_index()
-      |> Enum.flat_map(fn {s, i} ->
-        values_by_key = Map.new(s.points, &{&1.key, &1.y})
-
-        runs =
-          axis_keys
-          |> Enum.with_index()
-          |> Enum.map(fn {key, index} ->
-            case Map.fetch(values_by_key, key) do
-              {:ok, y} -> {index, key, y}
-              :error -> nil
-            end
-          end)
-          |> split_point_runs()
-
-        color = s.color || Enum.at(@time_series_palette, rem(i, length(@time_series_palette)))
-
-        Enum.map(runs, fn run ->
-          points = Enum.map(run, fn {_index, key, y} -> {xf.(key), yf.(y)} end)
-          line = if assigns.type == :points, do: "", else: Geometry.curve_path(points, curve)
-
-          fill =
-            if assigns.type == :area do
-              {first_x, _} = hd(points)
-              {last_x, _} = List.last(points)
-
-              "#{line} L#{Geometry.round1(last_x)} #{zero_y} L#{Geometry.round1(first_x)} #{zero_y} Z"
-            else
-              ""
-            end
-
-          %{
-            class: "lui-time-series-chart__series",
-            color: color,
-            line: line,
-            fill: fill,
-            points: if(assigns.glyphs or assigns.type == :points, do: points, else: [])
-          }
-        end)
-      end)
-
     x_ticks = time_series_x_ticks(axis_keys, kind, xf)
+
+    {paths, grid_x, zero_x, x_ticks, y_ticks, grid_y, zero_y} =
+      if assigns.orientation == :horizontal and assigns.type in [:bar, :stacked_bar, :grouped_bar] do
+        horizontal_x_ticks =
+          Enum.map(
+            ticks,
+            &{format_value(&1, assigns.value_format), Geometry.round1(numeric_x.(&1)), "middle"}
+          )
+
+        category_y_ticks =
+          Enum.with_index(axis_keys)
+          |> Enum.map(fn {key, index} ->
+            {x_key_label(key, kind),
+             Geometry.round1(plot_top + (index + 0.5) * ((plot_bottom - plot_top) / count))}
+          end)
+
+        horizontal_paths =
+          build_bar_paths(
+            assigns,
+            series,
+            axis_keys,
+            x_positions,
+            {plot_left, plot_right},
+            {plot_top, plot_bottom},
+            yf,
+            numeric_x,
+            :horizontal
+          )
+
+        horizontal_paths =
+          horizontal_paths ++
+            build_horizontal_comparison_paths(
+              comparison,
+              axis_keys,
+              numeric_x,
+              plot_top,
+              plot_bottom
+            )
+
+        {horizontal_paths, Enum.map(ticks, &Geometry.round1(numeric_x.(&1))),
+         Geometry.round1(numeric_x.(0)), horizontal_x_ticks, category_y_ticks, [], nil}
+      else
+        chart_paths =
+          case assigns.type do
+            :stacked_area ->
+              build_stacked_area_paths(series, axis_keys, xf, yf, curve)
+
+            type when type in [:bar, :stacked_bar, :grouped_bar] ->
+              build_bar_paths(
+                assigns,
+                series,
+                axis_keys,
+                x_positions,
+                {plot_left, plot_right},
+                {plot_top, plot_bottom},
+                yf,
+                numeric_x,
+                :vertical
+              )
+
+            _ ->
+              build_line_paths(assigns, series, axis_keys, xf, yf, curve, zero_y)
+          end
+
+        compare_paths = build_comparison_paths(comparison, axis_keys, xf, yf, curve)
+
+        {chart_paths ++ compare_paths, [], nil, x_ticks,
+         Enum.map(ticks, &{format_value(&1, assigns.value_format), Geometry.round1(yf.(&1))}),
+         Enum.map(ticks, &Geometry.round1(yf.(&1))), zero_y}
+      end
+
+    markers =
+      build_annotation_markers(
+        assigns.annotations,
+        kind,
+        x_positions,
+        xf,
+        plot_top,
+        plot_bottom,
+        assigns.orientation
+      )
 
     %{
       has_data: paths != [],
@@ -818,12 +892,16 @@ defmodule LanternUI.Charts do
       vb_w: @vb_w,
       plot_left: plot_left,
       plot_right: plot_right,
-      grid_y: Enum.map(ticks, &Geometry.round1(yf.(&1))),
-      y_ticks:
-        Enum.map(ticks, &{format_value(&1, assigns.value_format), Geometry.round1(yf.(&1))}),
+      plot_top: plot_top,
+      plot_bottom: plot_bottom,
+      grid_y: grid_y,
+      grid_x: grid_x,
+      y_ticks: y_ticks,
       x_ticks: x_ticks,
       paths: paths,
       zero_y: zero_y,
+      zero_x: zero_x,
+      markers: markers,
       show_grid: assigns.grid,
       show_axes: assigns.axes,
       legend:
@@ -837,6 +915,363 @@ defmodule LanternUI.Charts do
         end)
     }
   end
+
+  defp chart_domain_values(series, axis_keys, type, points)
+       when type in [:stacked_area, :stacked_bar] do
+    raw_values = Enum.map(points, & &1.y)
+    series_maps = Enum.map(series, &Map.new(&1.points, fn point -> {point.key, point.y} end))
+
+    stacked_values =
+      Enum.map(axis_keys, fn key ->
+        Enum.reduce(series_maps, {0, 0}, fn item, {positive, negative} ->
+          value = Map.get(item, key, 0)
+          if value >= 0, do: {positive + value, negative}, else: {positive, negative + value}
+        end)
+      end)
+      |> Enum.flat_map(fn {positive, negative} -> [positive, negative] end)
+
+    raw_values ++ stacked_values
+  end
+
+  defp chart_domain_values(_series, _keys, _type, points), do: Enum.map(points, & &1.y)
+
+  defp build_line_paths(assigns, series, axis_keys, xf, yf, curve, zero_y) do
+    series
+    |> Enum.with_index()
+    |> Enum.flat_map(fn {item, series_index} ->
+      values_by_key = Map.new(item.points, &{&1.key, &1.y})
+
+      runs =
+        axis_keys
+        |> Enum.with_index()
+        |> Enum.map(fn {key, index} ->
+          case Map.fetch(values_by_key, key) do
+            {:ok, value} -> {index, key, value}
+            :error -> nil
+          end
+        end)
+        |> split_point_runs()
+
+      color =
+        item.color ||
+          Enum.at(@time_series_palette, rem(series_index, length(@time_series_palette)))
+
+      Enum.flat_map(runs, fn run ->
+        points = Enum.map(run, fn {_index, key, value} -> {xf.(key), yf.(value), value} end)
+
+        segments =
+          if length(series) == 1 and assigns.type in [:line, :area],
+            do: split_signed_segments(points, zero_y),
+            else: [{:series, points}]
+
+        Enum.map(segments, fn {sign, segment} ->
+          coords = Enum.map(segment, fn {x, y, _value} -> {x, y} end)
+          signed? = sign in [:positive, :negative]
+
+          segment_color =
+            if sign == :positive, do: "var(--lantern-success)", else: "var(--lantern-danger)"
+
+          line = if assigns.type == :points, do: "", else: Geometry.curve_path(coords, curve)
+          fill = if assigns.type == :area, do: baseline_area_path(coords, zero_y, curve), else: ""
+
+          %{
+            class:
+              "lui-time-series-chart__series" <>
+                if(signed?, do: " lui-time-series-chart__gain-#{sign}", else: ""),
+            color: if(signed?, do: segment_color, else: color),
+            line: line,
+            fill: fill,
+            points: if(assigns.glyphs or assigns.type == :points, do: coords, else: []),
+            bars: []
+          }
+        end)
+      end)
+    end)
+  end
+
+  defp baseline_area_path([], _baseline, _curve), do: ""
+
+  defp baseline_area_path(points, baseline, curve) do
+    {first_x, _} = hd(points)
+    {last_x, _} = List.last(points)
+
+    "#{Geometry.curve_path(points, curve)} L#{Geometry.round1(last_x)},#{baseline} L#{Geometry.round1(first_x)},#{baseline} Z"
+  end
+
+  defp split_signed_segments(points, zero_y) do
+    case points do
+      [] ->
+        []
+
+      [first | rest] ->
+        initial_sign = if elem(first, 2) < 0, do: :negative, else: :positive
+
+        {segments, current, sign, _previous} =
+          Enum.reduce(rest, {[], [first], initial_sign, first}, fn point = {x2, _y2, value2},
+                                                                   {segments, current, sign,
+                                                                    {x1, _y1, value1}} ->
+            if value1 * value2 < 0 do
+              ratio = abs(value1) / (abs(value1) + abs(value2))
+              cross = {x1 + (x2 - x1) * ratio, zero_y, 0}
+              next_sign = if value2 < 0, do: :negative, else: :positive
+              {segments ++ [{sign, current ++ [cross]}], [cross, point], next_sign, point}
+            else
+              {segments, current ++ [point], sign, point}
+            end
+          end)
+
+        segments ++ [{sign, current}]
+    end
+  end
+
+  defp build_stacked_area_paths(series, axis_keys, xf, yf, curve) do
+    initial = {Map.new(axis_keys, &{&1, 0}), Map.new(axis_keys, &{&1, 0})}
+
+    {paths, _final} =
+      Enum.with_index(series)
+      |> Enum.map_reduce(initial, fn {item, series_index}, {positive, negative} ->
+        values = Map.new(item.points, &{&1.key, &1.y})
+
+        color =
+          item.color ||
+            Enum.at(@time_series_palette, rem(series_index, length(@time_series_palette)))
+
+        {positive_band, next_positive} =
+          Enum.map_reduce(axis_keys, positive, fn key, totals ->
+            base = Map.fetch!(totals, key)
+            value = max(Map.get(values, key, 0), 0)
+            {{key, base, base + value}, Map.put(totals, key, base + value)}
+          end)
+
+        {negative_band, next_negative} =
+          Enum.map_reduce(axis_keys, negative, fn key, totals ->
+            base = Map.fetch!(totals, key)
+            value = min(Map.get(values, key, 0), 0)
+            {{key, base, base + value}, Map.put(totals, key, base + value)}
+          end)
+
+        bands =
+          [positive_band, negative_band]
+          |> Enum.map(fn band ->
+            lower = Enum.map(band, fn {key, base, _top} -> {xf.(key), yf.(base)} end)
+            upper = Enum.map(band, fn {key, _base, top} -> {xf.(key), yf.(top)} end)
+
+            %{
+              class: "lui-time-series-chart__series",
+              color: color,
+              line: Geometry.curve_path(upper, curve),
+              # Linear fill boundaries preserve the lower/upper ordering at every x.
+              fill: Geometry.band_path(upper, lower, :linear),
+              points: [],
+              bars: []
+            }
+          end)
+
+        {bands, {next_positive, next_negative}}
+      end)
+
+    List.flatten(paths)
+  end
+
+  defp build_bar_paths(
+         assigns,
+         series,
+         axis_keys,
+         x_positions,
+         {left, right},
+         {top, bottom},
+         yf,
+         numeric_x,
+         orientation
+       ) do
+    count = length(axis_keys)
+
+    band =
+      if orientation == :vertical,
+        do: (right - left) / max(count, 1),
+        else: (bottom - top) / max(count, 1)
+
+    cluster? = assigns.type == :grouped_bar or (assigns.type == :bar and length(series) > 1)
+    width = band * if(cluster?, do: 0.76 / max(length(series), 1), else: 0.68)
+    positive = Map.new(axis_keys, &{&1, 0})
+    negative = Map.new(axis_keys, &{&1, 0})
+
+    {_series, _pos, _neg, bars_by_series} =
+      Enum.with_index(series)
+      |> Enum.reduce({[], positive, negative, []}, fn {item, series_index},
+                                                      {built, pos, neg, all_bars} ->
+        values = Map.new(item.points, &{&1.key, &1.y})
+
+        {bars, pos, neg} =
+          Enum.reduce(axis_keys, {[], pos, neg}, fn key, {bars, p, n} ->
+            value = Map.get(values, key, 0)
+            index = Map.fetch!(x_positions, key)
+
+            {base, next, p, n} =
+              if assigns.type == :stacked_bar do
+                if value >= 0 do
+                  base = Map.fetch!(p, key)
+                  next = base + value
+                  {base, next, Map.put(p, key, next), n}
+                else
+                  base = Map.fetch!(n, key)
+                  next = base + value
+                  {base, next, p, Map.put(n, key, next)}
+                end
+              else
+                {0, value, p, n}
+              end
+
+            if value == 0 do
+              {bars, p, n}
+            else
+              offset = if cluster?, do: (series_index - (length(series) - 1) / 2) * width, else: 0
+
+              bar =
+                if orientation == :vertical do
+                  center = left + (index + 0.5) * band + offset
+                  y1 = yf.(base)
+                  y2 = yf.(next)
+
+                  %{
+                    x: Geometry.round1(center - width / 2),
+                    y: Geometry.round1(min(y1, y2)),
+                    width: Geometry.round1(width),
+                    height: Geometry.round1(max(abs(y2 - y1), 0.5))
+                  }
+                else
+                  center = top + (index + 0.5) * band + offset
+
+                  x1 = numeric_x.(base)
+                  x2 = numeric_x.(next)
+
+                  %{
+                    x: Geometry.round1(min(x1, x2)),
+                    y: Geometry.round1(center - width / 2),
+                    width: Geometry.round1(max(abs(x2 - x1), 0.5)),
+                    height: Geometry.round1(width)
+                  }
+                end
+
+              {[bar | bars], p, n}
+            end
+          end)
+
+        color =
+          item.color ||
+            Enum.at(@time_series_palette, rem(series_index, length(@time_series_palette)))
+
+        {built ++ [item], pos, neg,
+         all_bars ++
+           [
+             %{
+               class: "lui-time-series-chart__series",
+               color: color,
+               line: "",
+               fill: "",
+               points: [],
+               bars: Enum.reverse(bars)
+             }
+           ]}
+      end)
+
+    bars_by_series
+  end
+
+  defp build_comparison_paths(series, axis_keys, xf, yf, curve) do
+    Enum.flat_map(series, fn item ->
+      values = Map.new(item.points, &{&1.key, &1.y})
+
+      runs =
+        axis_keys
+        |> Enum.with_index()
+        |> Enum.map(fn {key, index} ->
+          case Map.fetch(values, key) do
+            {:ok, value} -> {index, key, value}
+            :error -> nil
+          end
+        end)
+        |> split_point_runs()
+
+      Enum.map(runs, fn run ->
+        points = Enum.map(run, fn {_index, key, value} -> {xf.(key), yf.(value)} end)
+
+        %{
+          class: "lui-time-series-chart__comparison",
+          color: "var(--lantern-fg-muted)",
+          line: Geometry.curve_path(points, curve),
+          fill: "",
+          points: [],
+          bars: []
+        }
+      end)
+    end)
+  end
+
+  defp build_horizontal_comparison_paths(series, axis_keys, numeric_x, top, bottom) do
+    band = (bottom - top) / max(length(axis_keys), 1)
+
+    Enum.flat_map(series, fn item ->
+      values = Map.new(item.points, &{&1.key, &1.y})
+
+      runs =
+        axis_keys
+        |> Enum.with_index()
+        |> Enum.map(fn {key, index} ->
+          case Map.fetch(values, key) do
+            {:ok, value} -> {index, key, value}
+            :error -> nil
+          end
+        end)
+        |> split_point_runs()
+
+      Enum.map(runs, fn run ->
+        points =
+          Enum.map(run, fn {index, _key, value} ->
+            {numeric_x.(value), top + (index + 0.5) * band}
+          end)
+
+        %{
+          class: "lui-time-series-chart__comparison",
+          color: "var(--lantern-fg-muted)",
+          line: Geometry.line_path(points, false),
+          fill: "",
+          points: [],
+          bars: []
+        }
+      end)
+    end)
+  end
+
+  defp build_annotation_markers(annotations, kind, x_positions, xf, top, bottom, orientation)
+       when is_list(annotations) do
+    Enum.flat_map(annotations, fn annotation ->
+      x = normalize_x(fetch_key(annotation, :x))
+
+      if x && elem(x.key, 0) == kind && Map.has_key?(x_positions, x.key) do
+        tone = fetch_key(annotation, :tone)
+        tone = if tone in [:accent, :success, :warning, :danger], do: tone, else: :accent
+
+        marker =
+          if orientation == :horizontal do
+            band = (bottom - top) / max(map_size(x_positions), 1)
+
+            %{
+              horizontal: true,
+              y: Geometry.round1(top + (Map.fetch!(x_positions, x.key) + 0.5) * band)
+            }
+          else
+            %{horizontal: false, x: Geometry.round1(xf.(x.key))}
+          end
+
+        [Map.merge(marker, %{label: to_string(fetch_key(annotation, :label) || ""), tone: tone})]
+      else
+        []
+      end
+    end)
+  end
+
+  defp build_annotation_markers(_, _kind, _x_positions, _xf, _top, _bottom, _orientation), do: []
 
   defp normalize_time_series(series) when is_list(series) do
     {normalized, _ids} =
@@ -874,21 +1309,21 @@ defmodule LanternUI.Charts do
         normalized_x = normalize_x(x)
 
         if normalized_x && finite_number?(y) && not MapSet.member?(seen, normalized_x.key) do
-          {acc ++
-             [
-               %{
-                 key: normalized_x.key,
-                 value: normalized_x.value,
-                 label: normalized_x.label,
-                 y: y
-               }
-             ], MapSet.put(seen, normalized_x.key)}
+          {[
+             %{
+               key: normalized_x.key,
+               value: normalized_x.value,
+               label: normalized_x.label,
+               y: y
+             }
+             | acc
+           ], MapSet.put(seen, normalized_x.key)}
         else
           {acc, seen}
         end
       end)
 
-    result
+    Enum.reverse(result)
   end
 
   defp normalize_time_points(_), do: []
@@ -966,11 +1401,11 @@ defmodule LanternUI.Charts do
     points
     |> Enum.reduce({[], []}, fn
       nil, {runs, []} -> {runs, []}
-      nil, {runs, current} -> {runs ++ [Enum.reverse(current)], []}
+      nil, {runs, current} -> {[Enum.reverse(current) | runs], []}
       point, {runs, current} -> {runs, [point | current]}
     end)
     |> then(fn {runs, current} ->
-      if current == [], do: runs, else: runs ++ [Enum.reverse(current)]
+      Enum.reverse(if(current == [], do: runs, else: [Enum.reverse(current) | runs]))
     end)
   end
 

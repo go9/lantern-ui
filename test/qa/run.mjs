@@ -26,6 +26,7 @@ const CTXS = arg("ctx") || "plain card card_transform scroll table modal sheet s
 const CMPS = arg("cmp") || "select select_search dropdown menu popover tooltip autocomplete date_picker command user_menu".split(" ")
 const VWS = (arg("vw") || ["1440", "390"]).map(Number)
 const WIDE_TABLE_ONLY = process.argv.includes("--page-shell-wide-table")
+const CHARTS_ONLY = process.argv.includes("--charts")
 const SHELL_VWS = [1440, 1100, 768, 390]
 
 // trigger: where the real click/hover lands. panel: the floating surface.
@@ -119,6 +120,50 @@ const browser = await puppeteer.launch({
 })
 fs.mkdirSync(SHOTS, { recursive: true })
 const rows = []
+
+if (CHARTS_ONLY) {
+  const types = ["line", "area", "stacked_area", "bar", "stacked_bar", "grouped_bar", "points"]
+  for (const vw of VWS) {
+    for (const theme of ["light", "dark"]) {
+      for (const type of types) {
+        const page = await browser.newPage()
+        await page.setViewport({ width: vw, height: vw < 600 ? 844 : 900 })
+        const errors = []
+        page.on("pageerror", (error) => errors.push(error.message))
+        const row = { vw, theme, type, problems: [] }
+
+        try {
+          await page.goto(`${BASE}/charts?type=${type}&theme=${theme}`, { waitUntil: "networkidle2" })
+          await page.waitForSelector(".phx-connected", { timeout: 8000 })
+          await page.waitForSelector("#qa-time-series svg", { timeout: 4000 })
+          await sleep(300)
+          const box = await page.$eval("#qa-time-series svg", (svg) => {
+            const rect = svg.getBoundingClientRect()
+            return { width: rect.width, height: rect.height }
+          })
+          if (!box.width || !box.height) row.problems.push("chart SVG has no visible dimensions")
+          if (errors.length) row.problems.push(`pageerror: ${errors[0]}`)
+          const dir = `${SHOTS}/charts`
+          fs.mkdirSync(dir, { recursive: true })
+          await page.screenshot({ path: `${dir}/${vw}-${theme}-${type}.png`, fullPage: true })
+        } catch (error) {
+          row.problems.push(`error: ${error.message.split("\n")[0]}`)
+        }
+
+        row.status = row.problems.length ? "FAIL" : "ok"
+        rows.push(row)
+        if (row.problems.length) console.log(`FAIL chart ${vw}/${theme}/${type}: ${row.problems.join("; ")}`)
+        await page.close()
+      }
+    }
+  }
+
+  await browser.close()
+  const failed = rows.filter((row) => row.problems.length)
+  console.log(`\n${rows.length} chart screenshots, ${failed.length} failing`)
+  fs.writeFileSync(`${SHOTS}/charts/matrix.json`, JSON.stringify(rows, null, 1))
+  process.exit(failed.length ? 1 : 0)
+}
 
 for (const vw of VWS) {
   if (WIDE_TABLE_ONLY) continue

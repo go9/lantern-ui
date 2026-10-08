@@ -132,8 +132,10 @@ defmodule LanternUI.Charts.Geometry do
   def band_path(_upper, [], _curve), do: ""
 
   def band_path(upper, lower, curve) do
-    {x, y} = List.last(lower)
-    "#{curve_path(upper, curve)} #{curve_path(Enum.reverse(lower), curve)} L#{s(x)},#{s(y)} Z"
+    [{x, y} | _] = lower_reversed = Enum.reverse(lower)
+    lower_start = "M#{s(x)},#{s(y)}"
+    lower_commands = lower_reversed |> curve_path(curve) |> String.replace_prefix(lower_start, "")
+    "#{curve_path(upper, curve)} L#{s(x)},#{s(y)}#{lower_commands} Z"
   end
 
   defp step_path([]), do: ""
@@ -158,12 +160,9 @@ defmodule LanternUI.Charts.Geometry do
     tangents = monotone_tangents(points, slopes)
 
     segments =
-      pairs
-      |> Enum.with_index()
-      |> Enum.map_join(" ", fn {[{x1, y1}, {x2, y2}], i} ->
+      Enum.zip([pairs, Enum.take(tangents, length(tangents) - 1), Enum.drop(tangents, 1)])
+      |> Enum.map_join(" ", fn {[{x1, y1}, {x2, y2}], m1, m2} ->
         dx = x2 - x1
-        m1 = Enum.at(tangents, i)
-        m2 = Enum.at(tangents, i + 1)
         c1x = x1 + dx / 3
         c1y = y1 + m1 * dx / 3
         c2x = x2 - dx / 3
@@ -176,24 +175,26 @@ defmodule LanternUI.Charts.Geometry do
 
   defp monotone_tangents(points, slopes) do
     count = length(points)
+    points = List.to_tuple(points)
+    slopes = List.to_tuple(slopes)
 
     interior =
       for i <- 1..(count - 2) do
-        before = Enum.at(slopes, i - 1)
-        after_slope = Enum.at(slopes, i)
+        before = elem(slopes, i - 1)
+        after_slope = elem(slopes, i)
 
         if before * after_slope <= 0 do
           0.0
         else
-          x_before = elem(Enum.at(points, i), 0) - elem(Enum.at(points, i - 1), 0)
-          x_after = elem(Enum.at(points, i + 1), 0) - elem(Enum.at(points, i), 0)
+          x_before = elem(elem(points, i), 0) - elem(elem(points, i - 1), 0)
+          x_after = elem(elem(points, i + 1), 0) - elem(elem(points, i), 0)
           w1 = 2 * x_after + x_before
           w2 = x_after + 2 * x_before
           (w1 + w2) / (w1 / before + w2 / after_slope)
         end
       end
 
-    [hd(slopes) | interior] ++ [List.last(slopes)]
+    [elem(slopes, 0) | interior] ++ [elem(slopes, tuple_size(slopes) - 1)]
   end
 
   @doc "Closed area path: the line dropped to `baseline_y` and closed back to the start."

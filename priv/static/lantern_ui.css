@@ -4176,6 +4176,13 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-time-series-chart__labels { fill: var(--lantern-fg-muted); font-size: 11px; }
 .lui-time-series-chart__line { fill: none; stroke: var(--lui-series-color); stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
 .lui-time-series-chart__area { fill: var(--lui-series-color); fill-opacity: .15; stroke: none; }
+.lui-time-series-chart__bar { fill: var(--lui-series-color); }
+.lui-time-series-chart__comparison .lui-time-series-chart__line { stroke-dasharray: 4 4; opacity: .7; }
+.lui-time-series-chart__annotation line { stroke: var(--lantern-accent); stroke-dasharray: 3 4; stroke-width: 1; }
+.lui-time-series-chart__annotation text { fill: var(--lantern-fg-muted); font-size: 10px; }
+.lui-time-series-chart__annotation.tone-success line { stroke: var(--lantern-success); }
+.lui-time-series-chart__annotation.tone-warning line { stroke: var(--lantern-warning); }
+.lui-time-series-chart__annotation.tone-danger line { stroke: var(--lantern-danger); }
 .lui-time-series-chart__point { fill: var(--lui-series-color); stroke: var(--lantern-surface); stroke-width: 1.5; }
 .lui-time-series-chart__empty { display: flex; min-height: 180px; align-items: center; justify-content: center; color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
 .lui-time-series-chart__legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; padding: 0 4px; }

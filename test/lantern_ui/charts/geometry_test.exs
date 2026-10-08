@@ -101,5 +101,17 @@ defmodule LanternUI.Charts.GeometryTest do
       assert Geometry.curve_path(points, :monotone) =~ "C"
       assert Geometry.curve_path(points, :step) =~ "H"
     end
+
+    test "stack bands close into one finite SVG subpath" do
+      upper = [{0, 4}, {5, 2}, {10, 4}]
+      lower = [{0, 5}, {5, 7}, {10, 5}]
+
+      for curve <- [:linear, :monotone, :step, :cardinal] do
+        path = Geometry.band_path(upper, lower, curve)
+        assert String.ends_with?(path, "Z")
+        assert length(Regex.scan(~r/M/, path)) == 1
+        refute path =~ ~r/NaN|Infinity|nan|inf/
+      end
+    end
   end
 end

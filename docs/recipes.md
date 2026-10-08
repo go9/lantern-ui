@@ -373,11 +373,12 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 
 ## Generic time-series chart
 
-Use `time_series_chart/1` when a dashboard needs several named series or an
-opt-in line, area, or points view. Each series owns a stable id and an ordered
-list of `%{x, y}` points. All x values in one chart use the same domain type:
-dates/date-times, numbers, or category strings. Missing x keys break line and
-area paths; they are not interpolated.
+Use `time_series_chart/1` when a dashboard needs named series, stacked or
+grouped bars, or an opt-in line, area, or points view. Each series owns a stable
+id and an ordered list of `%{x, y}` points. All x values in one chart use the
+same domain type: dates/date-times, numbers, or category strings. Missing x
+keys break line and area paths; stacked area and bar modes treat missing values
+as zero. Stacks accumulate positive and negative values on separate sides of zero.
 
 ```heex
 <.time_series_chart
@@ -395,7 +396,11 @@ area paths; they are not interpolated.
 
 The component includes zero in its signed y domain. Chart choices and visible
 series remain LiveView assigns; validate form events in the parent LiveView and
-pass the resulting values back as attrs.
+pass the resulting values back as attrs. Set `type` to `:stacked_area`, `:bar`,
+`:stacked_bar`, or `:grouped_bar` for those renderers, and use
+`orientation={:horizontal}` for horizontal bars. Comparison series align on x
+keys and render as a dashed overlay. Annotations use the same x keys and may
+set a semantic `tone`.
 
 ## Block 3: flat index table with filter chips
 

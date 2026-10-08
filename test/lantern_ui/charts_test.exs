@@ -256,6 +256,106 @@ defmodule LanternUI.ChartsTest do
       assert html =~ "lui-time-series-chart__point"
       refute html =~ "lui-time-series-chart__line"
     end
+
+    test "diverging stacked area closes every series band and includes both signs" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "stacked-area",
+          type: :stacked_area,
+          curve: :cardinal,
+          series: [
+            %{
+              id: "a",
+              label: "A",
+              points: [%{x: "Apr", y: 5}, %{x: "May", y: -3}, %{x: "Jun", y: 4}]
+            },
+            %{id: "b", label: "B", points: [%{x: "Apr", y: -2}, %{x: "Jun", y: -6}]}
+          ]
+        )
+
+      bands =
+        Regex.scan(~r/<path d="([^"]+)" class="lui-time-series-chart__area"/, html,
+          capture: :all_but_first
+        )
+
+      assert length(bands) == 4
+
+      assert Enum.all?(bands, fn [d] ->
+               String.ends_with?(d, "Z") and not Regex.match?(~r/NaN|Infinity/, d)
+             end)
+
+      assert html =~ ">\n        -"
+      assert html =~ ">\n        0\n"
+      assert html =~ " >\n        5\n" or html =~ ">\n        5\n"
+    end
+
+    test "single-series area splits its fill at the zero crossing" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "crossing-area",
+          type: :area,
+          series: [
+            %{id: "gain", label: "Gain", points: [%{x: "Apr", y: -3}, %{x: "May", y: 3}]}
+          ]
+        )
+
+      assert html =~ "lui-time-series-chart__gain-negative"
+      assert html =~ "lui-time-series-chart__gain-positive"
+
+      areas =
+        Regex.scan(~r/<path d="([^"]+)" class="lui-time-series-chart__area"/, html,
+          capture: :all_but_first
+        )
+
+      assert length(areas) == 2
+
+      assert Enum.all?(areas, fn [d] ->
+               String.ends_with?(d, "Z") and not Regex.match?(~r/NaN|Infinity/, d)
+             end)
+    end
+
+    test "grouped and stacked bars support both orientations with finite geometry" do
+      series = [
+        %{id: "a", label: "A", points: [%{x: "Apr", y: 5}, %{x: "May", y: -3}]},
+        %{id: "b", label: "B", points: [%{x: "Apr", y: -2}, %{x: "Jun", y: 4}]}
+      ]
+
+      for {type, orientation} <- [
+            grouped_bar: :vertical,
+            stacked_bar: :vertical,
+            grouped_bar: :horizontal
+          ] do
+        html =
+          render_component(&LanternUI.Charts.time_series_chart/1,
+            id: "bars-#{type}-#{orientation}",
+            type: type,
+            orientation: orientation,
+            series: series
+          )
+
+        assert html =~ "lui-time-series-chart__bar"
+        assert html =~ "lui-time-series-chart__zero"
+        refute html =~ ~r/NaN|Infinity|nan|inf/
+      end
+    end
+
+    test "comparison paths and annotations align to primary x keys" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "comparison",
+          series: [%{id: "a", label: "Current", points: [%{x: "Apr", y: 2}, %{x: "May", y: 5}]}],
+          comparison: [
+            %{id: "a", label: "Previous", points: [%{x: "Apr", y: 1}, %{x: "May", y: 3}]}
+          ],
+          annotations: [%{id: "launch", x: "May", label: "Launch", tone: :warning}]
+        )
+
+      assert html =~ "lui-time-series-chart__comparison"
+      assert html =~ "stroke-dasharray"
+      assert html =~ "lui-time-series-chart__annotation"
+      assert html =~ "Launch"
+      assert html =~ "tone-warning"
+    end
   end
 
   describe "area_chart smoothing and axis labels" do
