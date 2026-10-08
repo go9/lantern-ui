@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-08
+
 ### Upgrading from 0.9.x
 Everything in this release is opt-in. Pages that do not use `page_shell`,
 `action_bar`, `compact`, or the `promo` tone render as they did in 0.9.
