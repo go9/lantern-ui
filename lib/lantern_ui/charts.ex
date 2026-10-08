@@ -1004,24 +1004,45 @@ defmodule LanternUI.Charts do
         []
 
       [first | rest] ->
-        initial_sign = if elem(first, 2) < 0, do: :negative, else: :positive
-
-        {segments, current, sign, _previous} =
-          Enum.reduce(rest, {[], [first], initial_sign, first}, fn point = {x2, _y2, value2},
-                                                                   {segments, current, sign,
-                                                                    {x1, _y1, value1}} ->
-            if value1 * value2 < 0 do
-              ratio = abs(value1) / (abs(value1) + abs(value2))
-              cross = {x1 + (x2 - x1) * ratio, zero_y, 0}
-              next_sign = if value2 < 0, do: :negative, else: :positive
-              {segments ++ [{sign, current ++ [cross]}], [cross, point], next_sign, point}
-            else
-              {segments, current ++ [point], sign, point}
-            end
-          end)
-
-        segments ++ [{sign, current}]
+        sign = first_nonzero_sign(points, :positive)
+        split_signed_segments(rest, zero_y, sign, [first], [])
     end
+  end
+
+  defp split_signed_segments([], _zero_y, sign, current, segments),
+    do: Enum.reverse([{sign, Enum.reverse(current)} | segments])
+
+  defp split_signed_segments([point = {_x, _y, 0} | rest], zero_y, sign, current, segments) do
+    next_sign = first_nonzero_sign(rest, sign)
+
+    if next_sign == sign do
+      split_signed_segments(rest, zero_y, sign, [point | current], segments)
+    else
+      segment = {sign, Enum.reverse([point | current])}
+      split_signed_segments(rest, zero_y, next_sign, [point], [segment | segments])
+    end
+  end
+
+  defp split_signed_segments([point = {x2, _y2, value2} | rest], zero_y, sign, current, segments) do
+    point_sign = first_nonzero_sign([point], sign)
+
+    if point_sign == sign do
+      split_signed_segments(rest, zero_y, sign, [point | current], segments)
+    else
+      {x1, _y1, value1} = hd(current)
+      ratio = abs(value1) / (abs(value1) + abs(value2))
+      cross = {x1 + (x2 - x1) * ratio, zero_y, 0}
+      segment = {sign, Enum.reverse([cross | current])}
+      split_signed_segments(rest, zero_y, point_sign, [point, cross], [segment | segments])
+    end
+  end
+
+  defp first_nonzero_sign(points, fallback) do
+    Enum.find_value(points, fallback, fn
+      {_, _, value} when value < 0 -> :negative
+      {_, _, value} when value > 0 -> :positive
+      _ -> nil
+    end)
   end
 
   defp build_stacked_area_paths(series, axis_keys, xf, yf, curve) do

@@ -289,29 +289,34 @@ defmodule LanternUI.ChartsTest do
       assert html =~ " >\n        5\n" or html =~ ">\n        5\n"
     end
 
-    test "single-series area splits its fill at the zero crossing" do
-      html =
-        render_component(&LanternUI.Charts.time_series_chart/1,
-          id: "crossing-area",
-          type: :area,
-          series: [
-            %{id: "gain", label: "Gain", points: [%{x: "Apr", y: -3}, %{x: "May", y: 3}]}
-          ]
-        )
+    test "single-series area splits its fill at interpolated and explicit zero crossings" do
+      for {id, values} <- [{"interpolated", [-3, 3]}, {"explicit", [-3, 0, 3]}] do
+        points =
+          values
+          |> Enum.with_index()
+          |> Enum.map(fn {y, index} -> %{x: "Month #{index}", y: y} end)
 
-      assert html =~ "lui-time-series-chart__gain-negative"
-      assert html =~ "lui-time-series-chart__gain-positive"
+        html =
+          render_component(&LanternUI.Charts.time_series_chart/1,
+            id: "crossing-area-#{id}",
+            type: :area,
+            series: [%{id: "gain", label: "Gain", points: points}]
+          )
 
-      areas =
-        Regex.scan(~r/<path d="([^"]+)" class="lui-time-series-chart__area"/, html,
-          capture: :all_but_first
-        )
+        assert html =~ "lui-time-series-chart__gain-negative"
+        assert html =~ "lui-time-series-chart__gain-positive"
 
-      assert length(areas) == 2
+        areas =
+          Regex.scan(~r/<path d="([^"]+)" class="lui-time-series-chart__area"/, html,
+            capture: :all_but_first
+          )
 
-      assert Enum.all?(areas, fn [d] ->
-               String.ends_with?(d, "Z") and not Regex.match?(~r/NaN|Infinity/, d)
-             end)
+        assert length(areas) == 2
+
+        assert Enum.all?(areas, fn [d] ->
+                 String.ends_with?(d, "Z") and not Regex.match?(~r/NaN|Infinity/, d)
+               end)
+      end
     end
 
     test "grouped and stacked bars support both orientations with finite geometry" do
