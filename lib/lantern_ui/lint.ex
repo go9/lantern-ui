@@ -2,8 +2,9 @@ defmodule LanternUI.Lint do
   @moduledoc """
   Scan `.ex` / `.exs` / `.heex` for arbitrary Tailwind pixel values, hardcoded
   palette colors, page-local greys, banned grouped-list markup, hand-rolled
-  tables/buttons, deprecated components, and unknown component/attr names with
-  "did you mean" hints. Used by `mix lantern.lint`.
+  tables/buttons/form controls, more than one page shell per file, deprecated
+  components, and unknown component/attr names with "did you mean" hints. Used
+  by `mix lantern.lint`.
   """
 
   @extensions MapSet.new(~w(.ex .exs .heex))
@@ -17,6 +18,9 @@ defmodule LanternUI.Lint do
   @group_band ~r/group_band|GroupBand|group-band/
   @raw_table ~r/<table[\s>]/
   @raw_button ~r/<button[\s>]/
+  # Hidden inputs are plumbing (CSRF, ids), not user-facing controls.
+  @raw_input ~r/<(?:input|textarea|select)\b(?![^>]*\btype=["']hidden["'])/
+  @page_shell_call ~r/<\.page_shell\b/
   @lantern_table_call ~r/<\.(table|data_table|resource_list)\b/
   @component_call ~r/<\.([a-z][a-z0-9_]*[!?]?)\b/
   @local_def ~r/defp?\s+([a-z][a-z0-9_]*[!?]?)[\s(]/
@@ -82,7 +86,7 @@ defmodule LanternUI.Lint do
   # Rule-scoped allowlist: `%{"hand_button" => ["lib/vendor/**"]}` skips one
   # rule in vendored/component-internal files without blinding the other
   # rules there. Unknown rule names are ignored.
-  @configurable_rules ~w(arbitrary_text_size arbitrary_box palette_color hex_color group_band hand_table hand_button deprecated_component unknown_component unknown_attr)
+  @configurable_rules ~w(arbitrary_text_size arbitrary_box palette_color hex_color group_band hand_table hand_button hand_input single_page_shell deprecated_component unknown_component unknown_attr)
 
   defp allow_rules(raw) when is_map(raw) do
     Map.new(@configurable_rules, fn rule ->
@@ -318,15 +322,25 @@ defmodule LanternUI.Lint do
     end
   end
 
-  # Whole-file rules: hand-rolled buttons/tables (raw elements can open
-  # across lines, so these match on the source and map back to lines) and
-  # unknown attrs on components strict enough to declare every attr (no `:rest`).
-  # Tables follow eval semantics: a raw `<table>` is only a finding when the
-  # file uses no lantern table component.
+  # Whole-file rules: hand-rolled buttons/inputs/tables (raw elements can open
+  # across lines, so these match on the source and map back to lines), a
+  # second `<.page_shell>` in one file, and unknown attrs on components strict
+  # enough to declare every attr (no `:rest`). Tables follow eval semantics: a
+  # raw `<table>` is only a finding when the file uses no lantern table component.
   defp source_findings(rel, source, lines, inv, config) do
     source_collect(rel, source, lines, @raw_button, :hand_button, config) ++
+      source_collect(rel, source, lines, @raw_input, :hand_input, config) ++
       hand_table_findings(rel, source, lines, config) ++
+      single_page_shell_findings(rel, source, lines, config) ++
       unknown_attr_findings(rel, source, lines, inv, config)
+  end
+
+  # One page identity per route: a file that renders two `<.page_shell>` shows
+  # two breadcrumb rows and two titles. Every occurrence is reported.
+  defp single_page_shell_findings(rel, source, lines, config) do
+    findings = source_collect(rel, source, lines, @page_shell_call, :single_page_shell, config)
+
+    if length(findings) > 1, do: findings, else: []
   end
 
   defp source_collect(rel, source, lines, regex, rule, config) do
@@ -507,6 +521,14 @@ defmodule LanternUI.Lint do
 
   defp hint(:hand_button, _match) do
     ~s|hand-rolled <button>; use button/1 (size="icon" for icon-only) or a dialog action slot|
+  end
+
+  defp hint(:hand_input, _match) do
+    "hand-rolled form control; use input/1, textarea/1, or select/1 (hidden inputs are exempt)"
+  end
+
+  defp hint(:single_page_shell, _match) do
+    "one <.page_shell> per page; a second one adds a second breadcrumb row and title"
   end
 
   defp allowed?(rel, allows), do: Enum.any?(allows, &path_match?(rel, &1))

@@ -314,6 +314,64 @@ defmodule LanternUI.LintTest do
     assert [%{path: "lib/page.ex", rule: :hand_button}] = Lint.scan(dir)
   end
 
+  test "flags hand-rolled inputs, textareas, and selects; hidden inputs are exempt", %{dir: dir} do
+    File.write!(Path.join(dir, "form.heex"), """
+    <input type="text" name="q" />
+    <input
+      type="email"
+    />
+    <textarea name="body"></textarea>
+    <select name="kind"></select>
+    <input type="hidden" name="id" value="1" />
+    <.input field={@form[:name]} />
+    """)
+
+    findings = Lint.scan(dir)
+
+    assert Enum.map(findings, &{&1.rule, &1.line}) == [
+             {:hand_input, 1},
+             {:hand_input, 2},
+             {:hand_input, 5},
+             {:hand_input, 6}
+           ]
+
+    assert hd(findings).hint =~ "input/1"
+  end
+
+  test "hand_input allow_rules skip a component's own controls", %{dir: dir} do
+    File.mkdir_p!(Path.join(dir, "lib/components"))
+    File.write!(Path.join(dir, "lib/components/field.ex"), ~s|<input name="x" />|)
+    File.write!(Path.join(dir, "lib/page.ex"), ~s|<input name="y" />|)
+
+    File.write!(
+      Path.join(dir, ".lantern-lint.json"),
+      ~s|{"allow_rules": {"hand_input": ["lib/components/**"]}}|
+    )
+
+    assert [%{path: "lib/page.ex", rule: :hand_input}] = Lint.scan(dir)
+  end
+
+  test "a second <.page_shell> in one file is flagged on every occurrence", %{dir: dir} do
+    File.write!(Path.join(dir, "one.heex"), ~s|<.page_shell id="a" title="A" />\n|)
+
+    File.write!(Path.join(dir, "two.heex"), """
+    <.page_shell id="b" title="B" />
+    <.page_shell id="c" title="C" />
+    """)
+
+    findings = Enum.filter(Lint.scan(dir), &(&1.rule == :single_page_shell))
+
+    assert Enum.map(findings, &{&1.path, &1.line}) == [{"two.heex", 1}, {"two.heex", 2}]
+    assert hd(findings).hint =~ "one <.page_shell>"
+  end
+
+  test "page_header is deprecated in favour of page_shell", %{dir: dir} do
+    File.write!(Path.join(dir, "page.heex"), ~s|<.page_header title="Tickets" />\n|)
+
+    assert [%{rule: :deprecated_component, match: "<.page_header"} = finding] = Lint.scan(dir)
+    assert finding.hint =~ "<.page_shell>"
+  end
+
   test "ships named type utilities and tokens" do
     css = File.read!(Path.expand("../../priv/static/lantern_ui.css", __DIR__))
     theme = File.read!(Path.expand("../../priv/static/lantern_ui_theme.css", __DIR__))
