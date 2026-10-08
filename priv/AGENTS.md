@@ -111,16 +111,16 @@ panel toggle; properties go in a dense description list inside the side panel):
     </:actions>
     {@ticket.body}
   </.card>
-<.side_panel id="ticket-panel" open={@panel_open} aria-label="Ticket properties">
-  <.inspector aria-label="Ticket">
-    <.inspector_section title="Properties">
-      <.description_list layout="dense">
-        <:item label="Status">{@ticket.status}</:item>
-        <:item label="Priority">{@ticket.priority}</:item>
-      </.description_list>
-    </.inspector_section>
-  </.inspector>
-</.side_panel>
+  <.side_panel id="ticket-panel" open={@panel_open} aria-label="Ticket properties">
+    <.inspector aria-label="Ticket">
+      <.inspector_section title="Properties">
+        <.description_list layout="dense">
+          <:item label="Status">{@ticket.status}</:item>
+          <:item label="Priority">{@ticket.priority}</:item>
+        </.description_list>
+      </.inspector_section>
+    </.inspector>
+  </.side_panel>
 </.page_shell>
 ```
 

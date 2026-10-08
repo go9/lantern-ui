@@ -14,7 +14,7 @@ HEEx is built only from lantern components (lantern classes and `--lantern-*` to
 
 Origins: flicker #1404 tickets list, #1407 suggestions inbox, #1408 project hub.
 
-Every routed page renders exactly one `<.page_shell>`: it owns the breadcrumb row (the last crumb is the current page and title), one visually hidden `h1`, and the action row. Pass ancestors as `breadcrumbs`, the title as `title`, and page actions as `actions` descriptors. `<.page_header>` is deprecated and removed in 1.0.
+Every routed page renders exactly one `<.page_shell>`: it owns the breadcrumb row (the last crumb is the current page and title), one visually hidden `h1`, and the action row. Pass ancestors as `breadcrumbs`, the title as `title`, and page actions as `actions` descriptors. `<.page_header>` is deprecated and removed in 1.0. The one exception is the sign-in page (Block 7): it is not an app route and has no shell, so it uses a card title.
 
 Grouped tables and group headers are banned; use a flat list with a status column + filter chips. Whatever a group header said (status name, count) must stay visible per row or in the filter chips with counts.
 

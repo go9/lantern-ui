@@ -8,15 +8,28 @@ All notable changes to this project are documented here. The format follows
 
 ### Upgrading from 0.9.x
 Everything in this release is opt-in. Pages that do not use `page_shell`,
-`action_bar`, `compact`, or the `promo` tone render exactly as they did in 0.9.
-- **Move pages to `<.page_shell>`.** `<.page_header>` still renders in 0.10 and
-  logs a deprecation warning once per node; it is removed in 1.0. Pass the
-  ancestors as `breadcrumbs`, the title as `title`, and page actions as
-  `actions` descriptors. `docs/recipes.md` Block 1 has the full page.
-- **Run `mix lantern.lint`.** Two new rules: `single_page_shell` (more than one
-  `<.page_shell>` in a file) and `hand_input` (raw `<input>`, `<textarea>`, or
-  `<select>`; use `input/1`, `textarea/1`, or `select/1`; `type="hidden"` is
-  exempt). `page_header` is now a `deprecated_component` finding.
+`action_bar`, `compact`, or the `promo` tone render as they did in 0.9.
+- **Move pages to `<.page_shell>`.** Pass ancestors as `breadcrumbs`, each a map
+  with `label` and one of `navigate`, `patch`, or `href`. Pass the title as
+  `title` and page actions as `actions` descriptors. `docs/recipes.md` Block 1 is
+  the full page. The sign-in page (Block 7) is not an app route and has no shell.
+- **`<.page_header>` warns at compile time.** It is marked `@deprecated`, so every
+  call site gets a compiler warning. Builds with `--warnings-as-errors` fail until
+  those calls move to `page_shell`. At runtime it also logs a deprecation warning
+  once per node. Removal is planned for 1.0.
+- **New lint rules can fail an app's lint CI.** Run `mix lantern.lint` and fix or
+  baseline what it reports:
+  - `hand_input` flags raw `<input>`, `<textarea>`, and `<select>`. Use `input/1`,
+    `textarea/1`, and `select/1`. Hidden inputs are exempt.
+  - `single_page_shell` flags a template that renders two `<.page_shell>`s in
+    the same clause or branch. Shells in separate `def` clauses, `case` arms, or
+    `:if` branches are alternatives and are not flagged.
+  - To baseline existing code, list its files under `allow_rules` in
+    `.lantern-lint.json`, for example
+    `{"allow_rules": {"hand_input": ["lib/my_app_web/legacy/**"]}}`, or mark a line
+    with a `lantern-lint:ignore` comment. The rules are line and regex based, so
+    they cannot see across files or follow every control-flow form.
+  - `page_header` is reported as `deprecated_component`.
 
 ### Added
 - `page_shell/1`: one page identity per route. It renders the breadcrumb row
