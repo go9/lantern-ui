@@ -1,57 +1,65 @@
-<.stack gap="lg" style="max-width: 1120px; margin: 0 auto;">
-  <.breadcrumb_bar id="ticket-crumb">
-    <.breadcrumb home="/" items={@detail_crumbs} />
-    <:actions label="Toggle panel">
-      <.side_panel_toggle
-        id="ticket-panel-toggle"
-        panel_id="ticket-panel"
-        panel_key="ticket"
-        open={@panel_open}
-        kbd="]"
-      />
-    </:actions>
-    <:actions label="Edit ticket" navigate="/tickets/241/edit">
-      <.button size="sm" variant="outline" navigate="/tickets/241/edit">Edit</.button>
-    </:actions>
-  </.breadcrumb_bar>
-  <.page_header title={@ticket.title} description={@ticket.identifier} />
-  <div style="display: flex; gap: 1.25rem; align-items: flex-start;">
-    <.card title="Description" style="flex: 1; min-width: 0;">
-      {@ticket.body}
-      <:footer>
-        <.progress
-          shape="ring"
-          completed={@ticket.completed}
-          scope={@ticket.scope}
-          size="sm"
-          label="Completion"
-        >
-          {@ticket.completed} / {@ticket.scope}
-        </.progress>
-      </:footer>
-    </.card>
-    <.side_panel id="ticket-panel" open={@panel_open} aria-label="Ticket properties">
-      <.inspector aria-label="Ticket">
-        <.inspector_section title="Properties">
-          <.description_list layout="dense">
-            <:item label="Status">
-              <.status_glyph status={@ticket.status} /> in progress
-            </:item>
-            <:item label="Priority">
-              <.priority_glyph priority={@ticket.priority} /> high
-            </:item>
-            <:item label="Tags">
-              <.badge size="sm">{@ticket.tag}</.badge>
-            </:item>
-          </.description_list>
-        </.inspector_section>
-        <.inspector_section title="People">
-          <.description_list layout="dense">
-            <:item label="Owner">Ada Lovelace</:item>
-            <:item label="Reviewer">Grace Hopper</:item>
-          </.description_list>
-        </.inspector_section>
-      </.inspector>
-    </.side_panel>
-  </div>
-</.stack>
+<.page_shell
+  id="ticket-shell"
+  title={@ticket.title}
+  breadcrumbs={@detail_crumbs}
+  actions={[
+    %{
+      id: "edit",
+      label: "Edit",
+      icon: "pencil-square",
+      priority: 10,
+      navigate: "/tickets/241/edit"
+    }
+  ]}
+>
+  <.stack gap="lg" style="max-width: 1120px; margin: 0 auto;">
+    <div style="display: flex; gap: 1.25rem; align-items: flex-start;">
+      <.card title="Description" description={@ticket.identifier} style="flex: 1; min-width: 0;">
+        <:actions>
+          <.side_panel_toggle
+            id="ticket-panel-toggle"
+            panel_id="ticket-panel"
+            panel_key="ticket"
+            open={@panel_open}
+            kbd="]"
+          />
+        </:actions>
+        {@ticket.body}
+        <:footer>
+          <.progress
+            shape="ring"
+            completed={@ticket.completed}
+            scope={@ticket.scope}
+            size="sm"
+            label="Completion"
+          >
+            {@ticket.completed} / {@ticket.scope}
+          </.progress>
+        </:footer>
+      </.card>
+      <.side_panel id="ticket-panel" open={@panel_open} aria-label="Ticket properties">
+        <.inspector aria-label="Ticket">
+          <.inspector_section title="Properties">
+            <.description_list layout="dense">
+              <:item label="Status">
+                <.status_glyph status={@ticket.status} /> in progress
+              </:item>
+              <:item label="Priority">
+                <.priority_glyph priority={@ticket.priority} /> high
+              </:item>
+              <:item label="Tags">
+                <.badge size="sm">{@ticket.tag}</.badge>
+              </:item>
+            </.description_list>
+          </.inspector_section>
+          <.inspector_section title="People">
+            <.description_list layout="dense">
+              <:item label="Owner">Ada Lovelace</:item>
+              <:item label="Reviewer">Grace Hopper</:item>
+            </.description_list>
+          </.inspector_section>
+        </.inspector>
+      </.side_panel>
+    </div>
+  </.stack>
+</.page_shell>

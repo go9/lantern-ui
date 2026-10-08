@@ -2,8 +2,9 @@ defmodule LanternUI.Lint do
   @moduledoc """
   Scan `.ex` / `.exs` / `.heex` for arbitrary Tailwind pixel values, hardcoded
   palette colors, page-local greys, banned grouped-list markup, hand-rolled
-  tables/buttons, deprecated components, and unknown component/attr names with
-  "did you mean" hints. Used by `mix lantern.lint`.
+  tables/buttons/form controls, repeated page shells within one route region
+  (see `single_page_shell`), deprecated components, and unknown component/attr
+  names with "did you mean" hints. Used by `mix lantern.lint`.
   """
 
   @extensions MapSet.new(~w(.ex .exs .heex))
@@ -17,6 +18,28 @@ defmodule LanternUI.Lint do
   @group_band ~r/group_band|GroupBand|group-band/
   @raw_table ~r/<table[\s>]/
   @raw_button ~r/<button[\s>]/
+  # Raw form controls. The opening tag is read by `open_tag/2`, which skips `>`
+  # inside `{...}` and quotes, so `value={a |> b()}` does not end the tag early.
+  @raw_input_open ~r/<(?:input|textarea|select)\b/
+  @hidden_input ~r/\btype=(?:"hidden"|'hidden'|\{"hidden"\}|\{'hidden'\})/
+  # `<.page_shell>`, `<Layout.page_shell>`, and fully qualified aliases.
+  @page_shell_call ~r/<(?:[A-Z][\w.]*\.|\.)page_shell\b/
+  @page_shell_close ~r/<\/(?:[A-Z][\w.]*\.|\.)page_shell\s*>/
+  # Constructs that make the text between two shells a branch, so the shells are
+  # alternatives and not duplicates. Each matches code, not prose: Elixir clause
+  # heads and block openers on their own line, `else` on its own line, HEEx
+  # control tags, and case arms (`:pattern ->` or `{...} ->` on a line of its own,
+  # or `->` inside `<% ... %>`). An HTML comment's `-->` and a `fn x ->` inside an
+  # attribute are not branches.
+  @branch_boundaries [
+    ~r/^\s*defp?\s/m,
+    ~r/^\s*defmacrop?\s/m,
+    ~r/^\s*(?:case|cond|if|unless)\b.*\bdo\s*$/m,
+    ~r/^\s*else\s*$/m,
+    ~r/<%=?\s*(?:case|cond|if|unless|else)\b/,
+    ~r/<%[^%]*?->\s*%>/,
+    ~r/^\s*(?::\w+|\{[^}<]*\}|\[[^\]<]*\]|_\w*|\d+|nil|true|false)(?:\s+when\s[^\n<]*)?\s*->\s*$/m
+  ]
   @lantern_table_call ~r/<\.(table|data_table|resource_list)\b/
   @component_call ~r/<\.([a-z][a-z0-9_]*[!?]?)\b/
   @local_def ~r/defp?\s+([a-z][a-z0-9_]*[!?]?)[\s(]/
@@ -82,7 +105,7 @@ defmodule LanternUI.Lint do
   # Rule-scoped allowlist: `%{"hand_button" => ["lib/vendor/**"]}` skips one
   # rule in vendored/component-internal files without blinding the other
   # rules there. Unknown rule names are ignored.
-  @configurable_rules ~w(arbitrary_text_size arbitrary_box palette_color hex_color group_band hand_table hand_button deprecated_component unknown_component unknown_attr)
+  @configurable_rules ~w(arbitrary_text_size arbitrary_box palette_color hex_color group_band hand_table hand_button hand_input single_page_shell deprecated_component unknown_component unknown_attr)
 
   defp allow_rules(raw) when is_map(raw) do
     Map.new(@configurable_rules, fn rule ->
@@ -318,15 +341,87 @@ defmodule LanternUI.Lint do
     end
   end
 
-  # Whole-file rules: hand-rolled buttons/tables (raw elements can open
-  # across lines, so these match on the source and map back to lines) and
-  # unknown attrs on components strict enough to declare every attr (no `:rest`).
-  # Tables follow eval semantics: a raw `<table>` is only a finding when the
-  # file uses no lantern table component.
+  # Whole-file rules: hand-rolled buttons/inputs/tables (raw elements can open
+  # across lines, so these match on the source and map back to lines), a
+  # second `<.page_shell>` in one file, and unknown attrs on components strict
+  # enough to declare every attr (no `:rest`). Tables follow eval semantics: a
+  # raw `<table>` is only a finding when the file uses no lantern table component.
   defp source_findings(rel, source, lines, inv, config) do
     source_collect(rel, source, lines, @raw_button, :hand_button, config) ++
+      hand_input_findings(rel, source, lines, config) ++
       hand_table_findings(rel, source, lines, config) ++
+      single_page_shell_findings(rel, source, lines, config) ++
       unknown_attr_findings(rel, source, lines, inv, config)
+  end
+
+  # One page identity per route: a file that renders two `<.page_shell>` shows two
+  # breadcrumb rows and two titles. Shells are grouped by the text between them:
+  # a run with no branch construct between neighbours is one route region. A
+  # region is a duplicate when it holds two unconditional shells, or an
+  # unconditional shell next to a conditional one (`:if=`, which renders in some
+  # cases). Two conditional shells alone are read as an if/else pair. The text
+  # between shells skips each shell's own body.
+  defp single_page_shell_findings(rel, source, lines, config) do
+    if rule_skipped?(config, rel, :single_page_shell) do
+      []
+    else
+      @page_shell_call
+      |> Regex.scan(source, return: :index)
+      |> Enum.map(fn [{start, _}] -> {start, conditional_tag?(source, start)} end)
+      |> group_by_branch(source)
+      |> Enum.filter(&duplicate_region?/1)
+      |> List.flatten()
+      |> Enum.flat_map(fn {offset, _} ->
+        finding_at(rel, source, lines, offset, "page_shell", :single_page_shell)
+      end)
+    end
+  end
+
+  defp duplicate_region?(region) do
+    conditional = Enum.count(region, fn {_, cond?} -> cond? end)
+    unconditional = length(region) - conditional
+    unconditional >= 2 or (unconditional >= 1 and conditional >= 1)
+  end
+
+  defp conditional_tag?(source, start), do: String.contains?(open_tag(source, start), ":if=")
+
+  # Offset just past a shell: its self-closing tag, or its closing tag.
+  defp shell_end(source, start) do
+    tag_end = start + byte_size(open_tag(source, start))
+
+    if String.ends_with?(open_tag(source, start), "/>") do
+      tag_end
+    else
+      rest = binary_part(source, tag_end, byte_size(source) - tag_end)
+
+      case Regex.run(@page_shell_close, rest, return: :index) do
+        [{pos, len}] -> tag_end + pos + len
+        nil -> tag_end
+      end
+    end
+  end
+
+  defp branch_between?(source, from, to) do
+    between = binary_part(source, from, to - from)
+    Enum.any?(@branch_boundaries, &Regex.match?(&1, between))
+  end
+
+  # Splits shells, in source order, into regions with no branch between neighbours.
+  defp group_by_branch([], _source), do: []
+
+  defp group_by_branch([{first, _} = head | rest], source) do
+    {groups, current, _end} =
+      Enum.reduce(rest, {[], [head], shell_end(source, first)}, fn {offset, _} = shell,
+                                                                   {groups, [_ | _] = current,
+                                                                    from} ->
+        if branch_between?(source, from, offset) do
+          {[Enum.reverse(current) | groups], [shell], shell_end(source, offset)}
+        else
+          {groups, [shell | current], shell_end(source, offset)}
+        end
+      end)
+
+    Enum.reverse([Enum.reverse(current) | groups])
   end
 
   defp source_collect(rel, source, lines, regex, rule, config) do
@@ -349,26 +444,70 @@ defmodule LanternUI.Lint do
     regex
     |> Regex.scan(source, return: :index)
     |> Enum.flat_map(fn [{start, len} | _] ->
-      match = binary_part(source, start, len)
-      {line, column} = line_column(lines, start)
-      prev = if line > 1, do: Enum.at(lines, line - 2), else: ""
-      text = Enum.at(lines, line - 1, "")
-
-      if ignored_line?(text, prev) do
-        []
-      else
-        [
-          %{
-            path: rel,
-            line: line,
-            column: column,
-            rule: rule,
-            match: match,
-            hint: hint(rule, match)
-          }
-        ]
-      end
+      finding_at(rel, source, lines, start, binary_part(source, start, len), rule)
     end)
+  end
+
+  defp finding_at(rel, _source, lines, start, match, rule) do
+    {line, column} = line_column(lines, start)
+    prev = if line > 1, do: Enum.at(lines, line - 2), else: ""
+    text = Enum.at(lines, line - 1, "")
+
+    if ignored_line?(text, prev) do
+      []
+    else
+      [
+        %{
+          path: rel,
+          line: line,
+          column: column,
+          rule: rule,
+          match: match,
+          hint: hint(rule, match)
+        }
+      ]
+    end
+  end
+
+  defp hand_input_findings(rel, source, lines, config) do
+    if rule_skipped?(config, rel, :hand_input) do
+      []
+    else
+      @raw_input_open
+      |> Regex.scan(source, return: :index)
+      |> Enum.flat_map(fn [{start, len}] ->
+        tag = open_tag(source, start)
+
+        if Regex.match?(@hidden_input, tag) do
+          []
+        else
+          finding_at(rel, source, lines, start, binary_part(source, start, len), :hand_input)
+        end
+      end)
+    end
+  end
+
+  # The opening tag starting at `start`, up to the first `>` outside braces and quotes.
+  defp open_tag(source, start) do
+    rest = binary_part(source, start, byte_size(source) - start)
+    binary_part(rest, 0, scan_close(rest, 0, 0, nil))
+  end
+
+  defp scan_close(bin, i, depth, quote) do
+    if i >= byte_size(bin) do
+      byte_size(bin)
+    else
+      c = :binary.at(bin, i)
+
+      cond do
+        quote != nil -> scan_close(bin, i + 1, depth, if(c == quote, do: nil, else: quote))
+        c in [?", ?'] -> scan_close(bin, i + 1, depth, c)
+        c == ?{ -> scan_close(bin, i + 1, depth + 1, nil)
+        c == ?} -> scan_close(bin, i + 1, max(depth - 1, 0), nil)
+        c == ?> and depth == 0 -> i + 1
+        true -> scan_close(bin, i + 1, depth, nil)
+      end
+    end
   end
 
   defp hand_table_findings(rel, source, lines, config) do
@@ -507,6 +646,14 @@ defmodule LanternUI.Lint do
 
   defp hint(:hand_button, _match) do
     ~s|hand-rolled <button>; use button/1 (size="icon" for icon-only) or a dialog action slot|
+  end
+
+  defp hint(:hand_input, _match) do
+    "hand-rolled form control; use input/1, textarea/1, or select/1 (hidden inputs are exempt)"
+  end
+
+  defp hint(:single_page_shell, _match) do
+    "one <.page_shell> per page; a second one adds a second breadcrumb row and title"
   end
 
   defp allowed?(rel, allows), do: Enum.any?(allows, &path_match?(rel, &1))

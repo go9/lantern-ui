@@ -430,11 +430,14 @@ defmodule LanternUI.Llms do
     |> Enum.join("\n\n")
   end
 
+  defp removal_text(nil), do: "no removal is scheduled"
+  defp removal_text(version), do: "removal planned for #{version}"
+
   defp deprecations_section do
     deprecated =
       LanternUI.Deprecated.deprecated()
       |> Enum.map(fn entry ->
-        "- `#{entry.component}/1` is deprecated (removed in 0.9.0); use #{entry.replacement}. Evidence: #{entry.evidence}."
+        "- `#{entry.component}/1` is deprecated since #{entry.since}; #{removal_text(entry.removed_in)}; use #{entry.replacement}. Evidence: #{entry.evidence}."
       end)
       |> Enum.join("\n")
 
@@ -448,8 +451,7 @@ defmodule LanternUI.Llms do
     """
     ## Overlaps and deprecations
 
-    Deprecated (warn at render, removed in 0.9.0 — deprecate, never remove
-    without a major version):
+    Deprecated (warn at render; each entry names its planned removal version):
 
     #{deprecated}
 

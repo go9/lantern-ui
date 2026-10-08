@@ -230,7 +230,22 @@ defmodule LanternUI.QA.MatrixLive do
   end
 
   defp ctx(%{name: "action_bar"} = assigns) do
-    assigns = assign(assigns, :actions, qa_actions())
+    assigns =
+      assign(
+        assigns,
+        :actions,
+        qa_actions() ++
+          [
+            %{
+              id: "publish",
+              label: "Publish",
+              icon: "sparkles",
+              priority: 10,
+              enabled: false,
+              disabled_reason: "Connect a channel first"
+            }
+          ]
+      )
 
     ~H"""
     <div style="width:100%;min-height:calc(100vh - 1.5rem);padding-top:var(--lui-topline-h);box-sizing:border-box;background:var(--lantern-surface);color:var(--lantern-fg);">

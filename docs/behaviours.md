@@ -110,3 +110,52 @@ widget entry adds ~7–35KB raw / ~3–10KB gzip on the pages that mount it,
 shared chunks cached). Take it only when the app cannot serve ESM —
 every iife consumer pays the Zag bytes on every page whether or not it
 renders a Zag widget.
+
+## Action bar promotion
+
+`action_bar/1` and `page_shell/1` render every action twice: an inline copy in
+`.lui-action-bar-inline` and an item in the "More" menu. `LanternActionBar` runs on
+the bar root and writes `data-promoted="3"`, `"2"`, or `"1"` from the bar's own
+width (above 1100px, 740px to 1100px, below 740px). The CSS then hides the inline
+copies after the first N children of the inline row, where N is `data-promoted`
+(`.lui-action-bar[data-promoted="2"] .lui-action-bar-inline > :nth-child(n + 3)`).
+Without the hook, container queries on the bar apply the same tiers. The hook
+never moves DOM nodes, so LiveView patches stay safe, and the menu always lists
+every action. Action ids must be unique within a bar: a duplicate raises
+`ArgumentError`. An action without an id (or with an empty one) is named
+`action-N` by its position. The raw id is kept in `data-action-id`. The DOM id is
+built from a URL-safe encoding of it, so any id is safe in an attribute:
+`{bar}-action-<base64url(id)>-inline` for the inline copy and
+`{bar}-action-<base64url(id)>-menu` for the menu item, with base64url unpadded.
+Two bars on one page do not collide. An empty action row (no actions, no notice)
+is omitted from the page shell.
+
+An action is disabled when `enabled: false` or `disabled: true` is set. The disabled
+inline button and menu item carry the disabled state. When `disabled_reason` is set,
+the menu item shows it.
+
+The notice is announced with `role="status"`. It uses `role="alert"` only when it
+is initially visible and has the danger tone. Its background uses the
+`--lantern-tone-*-bg` slots, because the action bar always opts its alert into
+tone slots.
+
+Dismissing a notice runs `JS.push(on_dismiss, value: %{"id" => notice_id})`, so the
+server receives the notice id under `"id"`, not `phx-value-id`. The server owns
+that state and sets `dismissed`. Without `on_dismiss`, the hook keeps the
+dismissal in localStorage, keyed by bar and notice id, and re-applies it in
+`updated()`. `destroyed()` removes the listeners and observers, so the hook is safe
+to tear down on any redirect.
+
+```heex
+<.page_shell
+  id="tickets-shell"
+  title="Tickets"
+  breadcrumbs={@crumbs}
+  actions={@actions}
+  notice={@notice}
+  dismissed={@notice_dismissed}
+  on_dismiss="dismiss_notice"
+>
+  ...
+</.page_shell>
+```

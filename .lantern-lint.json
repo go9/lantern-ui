@@ -3,6 +3,7 @@
   "allow": ["test/**", "eval/checks.exs", "lib/lantern_ui/lint.ex", "lib/lantern_ui/llms.ex"],
   "allow_rules": {
     "hand_button": ["lib/lantern_ui/components/**"],
+    "hand_input": ["lib/lantern_ui/components/**"],
     "hand_table": ["lib/lantern_ui/components/**"]
   }
 }

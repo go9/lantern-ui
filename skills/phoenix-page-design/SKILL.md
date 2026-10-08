@@ -1,6 +1,6 @@
 ---
 name: phoenix-page-design
-description: Design consistent Phoenix LiveView pages with LanternUI. Covers breadcrumb-owned titles and actions, tables and resource lists, record navigation, long-form inputs, secondary content, accessibility, and rendered-page verification.
+description: Design consistent Phoenix LiveView pages with LanternUI. Covers page-shell titles and actions, tables and resource lists, record navigation, long-form inputs, secondary content, accessibility, and rendered-page verification.
 license: MIT
 metadata:
   source: https://github.com/go9/lantern-ui
@@ -14,15 +14,15 @@ Application policy may override this guide. Record deliberate exception where re
 
 ## 1. One title, one owner
 
-Prefer last breadcrumb as page title. Avoid repeating same title in page wrapper, content header, and data component. Detail pages may need visible heading when breadcrumb alone lacks context; do not duplicate labels without purpose.
+`<.page_shell title=…>` owns the page title. The trail's last crumb is the current page, and the shell adds one visually hidden `h1` with the same text. Pass ancestors as `breadcrumbs`. Do not repeat the title in a content header or a data component, and do not add a visible title row. `<.page_header>` is deprecated and removed in 1.0; migrate it to `<.page_shell>`.
 
-Render breadcrumbs once, normally in layout.
+Render one `<.page_shell>` per route, in the page's own template. Never render a second breadcrumb row beside it; the app layout supplies the frame only.
 
 ## 2. Page actions live with page identity
 
-Put create, import, export, history, and destructive page-level actions in breadcrumb action area. Parent navigation belongs in breadcrumb, not a “back” action.
+Pass create, import, export, history, and destructive page-level actions as `actions` descriptors on `<.page_shell>`. Each descriptor is a map with `id` and `label`. Ids must be unique within the bar (a duplicate raises). Optional keys: `icon`; `priority` (higher is promoted inline first); `enabled: false` (or `disabled: true`) with `disabled_reason` (shown in the More menu; prefer this to hiding an action); `promotable: false` (keeps it out of the inline row); `destructive: true`; the target keys `phx-click`, `phx-value-id` (defaults to the id), `phx-target`, `navigate`, `patch`, `href`; and `data-confirm`. The shell promotes as many enabled, promotable actions as the width allows and always lists every action in the More menu, so a narrow screen never loses one. Parent navigation belongs in the breadcrumb, not a “back” action.
 
-When action can fold into overflow menu, put `navigate`, `patch`, `href`, `phx-click`, and confirmation attrs on action slot. Overflow renderer may use slot attrs without rendering slot body.
+A dismissible notice goes on the same row: pass `notice: %{id: stable_key, tone: "info", title: ..., body: ...}` with `tone` one of `neutral`, `info`, `success`, `warning`, `danger`, `promo`. The `id` is the condition key. With `on_dismiss`, the server owns dismissal: it receives `%{"id" => notice_id}` and sets `dismissed`, so it decides when the notice returns. Without `on_dismiss`, the hook remembers dismissal per id in localStorage, so a new id shows the notice again. The notice is announced with `role="status"`; it uses `role="alert"` only when it starts visible with the danger tone.
 
 ## 3. Pick navigation, filters, or tabs deliberately
 
@@ -81,8 +81,7 @@ Use semantic tokens. Dense chrome: `text-meta` / `text-caption` / `text-mono-met
 
 Inspect browser surface, not only HEEx diff. Check:
 
-- one page identity/title
-- one breadcrumb nav
+- one page shell: one breadcrumb row, one visually hidden `h1`, one action row
 - actions remain reachable at narrow widths
 - table/list reaches intended bounds
 - sticky and scroll behavior works

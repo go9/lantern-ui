@@ -74,10 +74,11 @@ defmodule LanternUI.RecipesTest do
     assert html =~ "data-lantern-list-item"
   end
 
-  test "record page puts the side_panel toggle in the breadcrumb bar" do
+  test "record page names the record in a page shell and holds the panel toggle in its card" do
     html = render_recipe(:record_page)
-    assert html =~ "lui-app-breadcrumb"
-    assert html =~ "lui-page-title"
+    assert length(Regex.scan(~r/data-page-shell/, html)) == 1
+    assert html =~ "data-page-breadcrumb"
+    assert html =~ "data-page-title"
     assert html =~ ~s(aria-controls="ticket-panel")
     assert html =~ "lui-side-panel"
     assert html =~ "lui-inspector"
@@ -96,6 +97,7 @@ defmodule LanternUI.RecipesTest do
   test "project overview combines header, ring, stats, and flat children" do
     html = render_recipe(:project_overview)
     assert html =~ "lantern-ui"
+    assert length(Regex.scan(~r/data-page-shell/, html)) == 1
     assert html =~ "lui-progress-ring"
     assert html =~ "7 / 19"
     assert html =~ "lui-stat-grid"

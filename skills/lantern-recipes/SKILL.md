@@ -14,16 +14,18 @@ HEEx is built only from lantern components (lantern classes and `--lantern-*` to
 
 Origins: flicker #1404 tickets list, #1407 suggestions inbox, #1408 project hub.
 
+Every routed page renders exactly one `<.page_shell>`: it owns the breadcrumb row (the last crumb is the current page and title), one visually hidden `h1`, and the action row. Pass ancestors as `breadcrumbs`, the title as `title`, and page actions as `actions` descriptors. `<.page_header>` is deprecated and removed in 1.0. The one exception is the sign-in page (Block 7): it is not an app route and has no shell, so it uses a card title.
+
 Grouped tables and group headers are banned; use a flat list with a status column + filter chips. Whatever a group header said (status name, count) must stay visible per row or in the filter chips with counts.
 
 ## Page blocks
 
 Whole pages that look finished — copy one block from the recipe index at the top of `docs/recipes.md` ("Page blocks", same source as `test/support/blocks/`, screenshots in `test/fixtures/blocks_gallery/`). Never hand-roll a shell, dashboard, index, detail, settings, form, login, or confirm flow.
 
-- **app_shell** — the full frame: sidebar nav, breadcrumb trail, content.
+- **app_shell** — the full frame: sidebar nav, a page shell (breadcrumb trail, title, actions), content.
 - **dashboard** — stat cards, one chart, recent activity.
 - **index** — flat table, filter chips with counts, search, pagination, row click.
-- **detail** — breadcrumb actions, body card, right inspector panel.
+- **detail** — page shell with its actions, body card, right inspector panel.
 - **settings** — stacked section cards, each with its own form and save row.
 - **form** — single card, inline validation errors, cancel/save footer.
 - **login** — centered card, one primary action, SSO second.
@@ -103,40 +105,38 @@ Whole pages that look finished — copy one block from the recipe index at the t
 
 ## Record page with inspector rail
 
-**When to use:** A record page: breadcrumb actions hold the panel toggle, title plus a long body (LiveCode in flicker; the description card is the host slot), and a collapsible side panel of property rows.
+**When to use:** A record page: a `page_shell` names the record and carries its actions, the body card's header holds the panel toggle, the card body holds the long content (LiveCode in flicker; the description card is the host slot), and a collapsible side panel shows property rows.
 
 **Origin:** flicker #1404 ticket show.
 
 ```heex
-<.breadcrumb_bar id="ticket-crumb">
-  <.breadcrumb home="/" items={@crumbs} />
-  <:actions label="Toggle panel">
-    <.side_panel_toggle
-      id="ticket-panel-toggle"
-      panel_id="ticket-panel"
-      panel_key="ticket"
-      open={@panel_open}
-      kbd="]"
-    />
-  </:actions>
-</.breadcrumb_bar>
-<.page_header title={@ticket.title} description={@ticket.identifier} />
-<.card title="Description">
-  {@ticket.body}
-</.card>
-<.side_panel id="ticket-panel" open={@panel_open} aria-label="Ticket properties">
-  <.inspector aria-label="Ticket">
-    <.inspector_section title="Properties">
-      <.description_list layout="dense">
-        <:item label="Status">{@ticket.status}</:item>
-        <:item label="Priority">{@ticket.priority}</:item>
-        <:item label="Tags">
-          <.badge size="sm">{@ticket.tag}</.badge>
-        </:item>
-      </.description_list>
-    </.inspector_section>
-  </.inspector>
-</.side_panel>
+<.page_shell id="ticket-shell" title={@ticket.title} breadcrumbs={@crumbs}>
+  <.card title="Description" description={@ticket.identifier}>
+    <:actions>
+      <.side_panel_toggle
+        id="ticket-panel-toggle"
+        panel_id="ticket-panel"
+        panel_key="ticket"
+        open={@panel_open}
+        kbd="]"
+      />
+    </:actions>
+    {@ticket.body}
+  </.card>
+  <.side_panel id="ticket-panel" open={@panel_open} aria-label="Ticket properties">
+    <.inspector aria-label="Ticket">
+      <.inspector_section title="Properties">
+        <.description_list layout="dense">
+          <:item label="Status">{@ticket.status}</:item>
+          <:item label="Priority">{@ticket.priority}</:item>
+          <:item label="Tags">
+            <.badge size="sm">{@ticket.tag}</.badge>
+          </:item>
+        </.description_list>
+      </.inspector_section>
+    </.inspector>
+  </.side_panel>
+</.page_shell>
 ```
 
 ## Three-column inbox
@@ -187,39 +187,45 @@ Whole pages that look finished — copy one block from the recipe index at the t
 
 ## Project overview
 
-**When to use:** Hub header, a progress ring with a stats strip, then flat children. Do not invent a custom overview grid.
+**When to use:** A project hub: a `page_shell` names the project, a progress card leads the content, then a stats strip and flat children. Do not invent a custom overview grid.
 
 **Origin:** flicker #1408 project hub.
 
 ```heex
-<.page_header title={@project.name} description={@project.summary}>
-  <:actions>
-    <.progress
-      shape="ring"
-      completed={@project.completed}
-      scope={@project.scope}
-      label="Progress"
-    >
-      {@project.completed} / {@project.scope}
-    </.progress>
-  </:actions>
-</.page_header>
-<.stat_grid>
-  <:stat label="Apps" value={@stats.apps} />
-  <:stat label="Databases" value={@stats.databases} />
-  <:stat label="Environments" value={@stats.environments} />
-</.stat_grid>
-<.card flush title="Tickets">
-  <.list_row
-    :for={child <- @children}
-    identifier={child.identifier}
-    title={child.title}
-    navigate={child.href}
-  >
-    <:leading><.status_glyph status={child.status} /></:leading>
-    <:trailing>{child.date}</:trailing>
-  </.list_row>
-</.card>
+<.page_shell
+  id="project-shell"
+  title={@project.name}
+  breadcrumbs={[%{label: "Projects", navigate: "/projects"}]}
+>
+  <.stack gap="lg">
+    <.card title="Progress" description={@project.summary}>
+      <.progress
+        shape="ring"
+        completed={@project.completed}
+        scope={@project.scope}
+        label="Progress"
+      >
+        {@project.completed} / {@project.scope}
+      </.progress>
+    </.card>
+    <.stat_grid>
+      <:stat label="Apps" value={@stats.apps} />
+      <:stat label="Databases" value={@stats.databases} />
+      <:stat label="Environments" value={@stats.environments} />
+    </.stat_grid>
+    <.card flush title="Tickets">
+      <.list_row
+        :for={child <- @children}
+        identifier={child.identifier}
+        title={child.title}
+        navigate={child.href}
+      >
+        <:leading><.status_glyph status={child.status} /></:leading>
+        <:trailing>{child.date}</:trailing>
+      </.list_row>
+    </.card>
+  </.stack>
+</.page_shell>
 ```
 
 ## Icon toolbar with kbd hints

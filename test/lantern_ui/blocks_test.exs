@@ -28,6 +28,14 @@ defmodule LanternUI.BlocksTest do
     end
   end
 
+  test "every page block except the sign-in card renders exactly one page shell" do
+    for name <- Blocks.names(), name != :login do
+      html = render_block(name)
+      assert length(Regex.scan(~r/data-page-shell/, html)) == 1, "#{name} needs one page shell"
+      refute html =~ "lui-page-header", "#{name} still renders page_header"
+    end
+  end
+
   test "docs include every block HEEx verbatim" do
     docs = File.read!("docs/recipes.md")
 
@@ -49,7 +57,7 @@ defmodule LanternUI.BlocksTest do
     end
   end
 
-  test "app shell carries brand, nav, breadcrumb header, and content" do
+  test "app shell carries brand, nav, page shell, and content" do
     html = render_block(:app_shell)
     assert html =~ "lui-app"
     assert html =~ "Acme"
@@ -57,8 +65,9 @@ defmodule LanternUI.BlocksTest do
     assert html =~ "Dashboard"
     assert html =~ "Tickets"
     assert html =~ "badge"
-    assert html =~ "lui-breadcrumb"
-    assert html =~ "lui-page-title"
+    assert html =~ "data-page-shell"
+    assert html =~ "data-page-breadcrumb"
+    assert html =~ "data-page-title"
     assert html =~ "New ticket"
   end
 
@@ -94,7 +103,7 @@ defmodule LanternUI.BlocksTest do
 
   test "detail pairs the record with an inspector panel" do
     html = render_block(:detail)
-    assert html =~ "lui-app-breadcrumb"
+    assert html =~ "data-page-breadcrumb"
     assert html =~ "Visible progress ring"
     assert html =~ ~s(aria-controls="ticket-panel")
     assert html =~ "lui-side-panel"

@@ -1,42 +1,41 @@
-<.stack gap="lg" style="max-width: 760px; margin: 0 auto;">
-  <.breadcrumb_bar id="ticket-new-crumb">
-    <.breadcrumb home="/" items={@form_crumbs} />
-  </.breadcrumb_bar>
-  <.card title="New ticket" description="Small, sharp titles get picked up fastest.">
-    <.stack gap="md">
-      <.alert color="danger" title="2 problems need attention">
-        Title can't be blank. Pick a status so the ticket lands in the right list.
-      </.alert>
-      <.input
-        id="ticket-title"
-        name="title"
-        label="Title"
-        placeholder="Visible progress ring"
-        value=""
-        errors={["can't be blank"]}
-      />
-      <.textarea
-        id="ticket-body"
-        name="body"
-        label="Description"
-        placeholder="What changes, and how will the reviewer see it?"
-        value=""
-        help_text="Markdown welcome. Screenshots beat paragraphs."
-      />
-      <.select
-        native
-        id="ticket-status"
-        name="status"
-        label="Status"
-        options={[{"To do", "todo"}, {"In progress", "in_progress"}, {"Done", "done"}]}
-        value=""
-        prompt="Pick a status"
-        errors={["can't be blank"]}
-      />
-    </.stack>
-    <:footer>
-      <.button size="sm" variant="ghost" navigate="/tickets">Cancel</.button>
-      <.button size="sm" variant="solid">Create ticket</.button>
-    </:footer>
-  </.card>
-</.stack>
+<.page_shell id="ticket-new-shell" title="New ticket" breadcrumbs={@form_crumbs}>
+  <.stack gap="lg" style="max-width: 760px; margin: 0 auto;">
+    <.card title="Details" description="Small, sharp titles get picked up fastest.">
+      <.stack gap="md">
+        <.alert color="danger" title="2 problems need attention">
+          Title can't be blank. Pick a status so the ticket lands in the right list.
+        </.alert>
+        <.input
+          id="ticket-title"
+          name="title"
+          label="Title"
+          placeholder="Visible progress ring"
+          value=""
+          errors={["can't be blank"]}
+        />
+        <.textarea
+          id="ticket-body"
+          name="body"
+          label="Description"
+          placeholder="What changes, and how will the reviewer see it?"
+          value=""
+          help_text="Markdown welcome. Screenshots beat paragraphs."
+        />
+        <.select
+          native
+          id="ticket-status"
+          name="status"
+          label="Status"
+          options={[{"To do", "todo"}, {"In progress", "in_progress"}, {"Done", "done"}]}
+          value=""
+          prompt="Pick a status"
+          errors={["can't be blank"]}
+        />
+      </.stack>
+      <:footer>
+        <.button size="sm" variant="ghost" navigate="/tickets">Cancel</.button>
+        <.button size="sm" variant="solid">Create ticket</.button>
+      </:footer>
+    </.card>
+  </.stack>
+</.page_shell>

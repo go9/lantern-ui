@@ -23,18 +23,9 @@ defmodule LanternUI.Blocks do
 
   def fixture_assigns do
     %{
-      shell_crumbs: [
-        %{label: "Acme", path: "/"},
-        %{label: "Tickets", path: nil}
-      ],
-      detail_crumbs: [
-        %{label: "Tickets", path: "/tickets"},
-        %{label: "#241", path: nil}
-      ],
-      form_crumbs: [
-        %{label: "Tickets", path: "/tickets"},
-        %{label: "New", path: nil}
-      ],
+      shell_crumbs: [%{label: "Acme", navigate: "/"}],
+      detail_crumbs: [%{label: "Tickets", navigate: "/tickets"}],
+      form_crumbs: [%{label: "Tickets", navigate: "/tickets"}],
       panel_open: true,
       ticket: %{
         title: "Visible progress ring",

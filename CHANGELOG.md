@@ -6,7 +6,85 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Upgrading from 0.9.x
+Everything in this release is opt-in. Pages that do not use `page_shell`,
+`action_bar`, `compact`, or the `promo` tone render as they did in 0.9.
+- **Move pages to `<.page_shell>`, and pass ancestors only.** A 0.9
+  `breadcrumb` list ends with the current page (`path: nil`). `page_shell` appends
+  its `title` as the current crumb, so a reused list renders the current page
+  twice. Pass the home and parent crumbs as `breadcrumbs` and the page name as
+  `title`. Each crumb is a map with `label` and one of `navigate`, `patch`, or
+  `href`; `path` is accepted as an alias of `href`. Page actions are `actions`
+  descriptors. `docs/recipes.md` Block 1 is the full page. The sign-in page (Block 7)
+  is not an app route and has no shell.
+- **Tone backgrounds are opt-in.** `alert/1` keeps its 0.9 backgrounds. Pass
+  `tone_slots` to use the `--lantern-tone-*-bg` slots, which apps define in their
+  own theme. The action bar's notice always opts in, so apps that set these slots
+  see them there. The `promo` tone is new in 0.10, so it always uses
+  `--lantern-tone-promo-bg` and needs no opt-in.
+- **`<.page_header>` warns at compile time.** It is marked `@deprecated`, so every
+  call site gets a compiler warning. Builds with `--warnings-as-errors` fail until
+  those calls move to `page_shell`. At runtime it also logs a deprecation warning
+  once per node. Removal is planned for 1.0.
+- **New lint rules can fail an app's lint CI.** Run `mix lantern.lint` and fix or
+  baseline what it reports:
+  - `hand_input` flags raw `<input>`, `<textarea>`, and `<select>`. Use `input/1`,
+    `textarea/1`, and `select/1`. Hidden inputs are exempt (`type="hidden"` or
+    `type={"hidden"}`).
+  - `single_page_shell` flags repeated shells in one route region. Shells are
+    separated by a branch when the text between them has a `case`, `cond`, `if`, or
+    `unless` block, an `else`, a HEEx control tag, or a case arm. Two conditional
+    shells (`:if=`) alone are read as an if/else pair. Other conditional shells,
+    and shells in different files, are not compared.
+  - Both rules read source text, not the AST. They do not follow a branch they
+    cannot see, so a shell chosen by computed data is still one region.
+  - To baseline existing code, list its files under `allow_rules` in
+    `.lantern-lint.json`, for example
+    `{"allow_rules": {"hand_input": ["lib/my_app_web/legacy/**"]}}`, or mark a line
+    with a `lantern-lint:ignore` comment.
+  - `page_header` is reported as `deprecated_component`.
+
+### Added
+- `page_shell/1`: one page identity per route. It renders the breadcrumb row
+  (the last crumb is the current page), one visually hidden `h1`, the action
+  row, and the page content. Its `data-page-*` attributes are the QA contract.
+- `action_bar/1`: a floating, transparent action row. Every action renders twice,
+  as an inline button and as an item in a "More" menu on the Zag menu, so the menu
+  always lists everything. The `LanternActionBar` hook sets `data-promoted`
+  (3, 2, or 1 by the bar's width), and CSS hides the inline copies past that count
+  (container queries do the same without the hook). Nothing moves in the DOM. See
+  `docs/behaviours.md`, "Action bar promotion".
+- Optional dismissible notice on the action row: `notice`, `dismissed`, and
+  `on_dismiss`. Dismissal sends `on_dismiss` with `%{"id" => notice_id}`; the
+  server owns the state. Without `on_dismiss` the hook keeps it in localStorage.
+- `app_shell` `compact` attr: opts the app chrome into the slim topline. The
+  default layout is unchanged.
+- Shell height tokens `--lui-topline-h`, `--lui-actionbar-h`, and `--lui-shell-h`
+  (their sum). Component CSS uses them instead of literal pixels.
+- `promo` tone on `badge` and `alert` (`data-tone` on alerts), with the semantic
+  slots `--lantern-tone-*-bg` and `--lantern-accent-text`. No palette is shipped.
+  The other tones' backgrounds apply only with `tone_slots` (see Upgrading).
+- An empty page shell (no actions, no notice) renders no action row.
+- Lint rules `single_page_shell` and `hand_input`. `.lantern-lint.json`
+  `allow_rules` accepts `hand_input`.
+- `test/qa/run.mjs` page-contract assertions for `ctx=page_shell` and
+  `ctx=action_bar` in `LanternUI.QA.MatrixLive`.
+
+### Changed
+- `docs/recipes.md` blocks and recipes, the `lantern-recipes` and
+  `phoenix-page-design` skills, and the consumer guide use `page_shell` instead of
+  `breadcrumb_bar` plus `page_header`. The sign-in block is a card with a title.
+- `LanternUI.Deprecated.warn/3` takes the version the component is removed in.
+  `warn/2` keeps the 0.9.0 default. `llms.txt` names each deprecated entry's
+  removal version.
+
+### Deprecated
+- `<.page_header>` is deprecated since 0.10; use `<.page_shell>`. Removal is planned for 1.0.
+- `icon_button`, `segmented`, `progress_ring`, and `property_row` have been deprecated since 0.8.2. No removal is scheduled. Their runtime warnings still read "removed in 0.9.0", a stale wording tracked as a follow-up.
+
 ### Fixed
+- `DeprecatedTest` no longer fails when another test's deprecation warning lands
+  in its log capture (#3426). The assertion counts only the component under test.
 - Select changes now update LiveView forms reliably when Zag renders the hidden control before its change callback, including controls associated with a form from overlay content. Client and controlled value changes emit `input` and `change` events.
 
 ## [0.9.0] - 2026-10-05

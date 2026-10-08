@@ -73,7 +73,7 @@ defmodule LanternUI.Recipes do
         new_in_progress: "/tickets/new?status=in_progress"
       },
       panel_open: true,
-      crumbs: [%{label: "Tickets", path: "/tickets"}, %{label: "#241", path: nil}],
+      crumbs: [%{label: "Tickets", navigate: "/tickets"}],
       inbox_count: 12,
       inbox_items: [
         %{

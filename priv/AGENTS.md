@@ -40,7 +40,7 @@ theming section and docs/scale.md.
 
 ### Page layout
 
-Title and actions live in the breadcrumb bar; no tabs as a default grouping
+The page shell owns the title and actions (`<.page_shell>`); no tabs as a default grouping
 mechanism; data_table fill only inside a bounded-height parent; row click
 opens the record's own route; disable checkboxes when there is no bulk
 action; records get routes, not inline expansion. Full checklist: the
@@ -94,36 +94,34 @@ column, never a group):
 </.data_table>
 ```
 
-Record page (breadcrumb owns the panel toggle; properties go in a dense
-description list inside the side panel):
+Record page (the page shell names the record; the body card's header holds the
+panel toggle; properties go in a dense description list inside the side panel):
 
 ```heex
-<.breadcrumb_bar id="ticket-crumb">
-  <.breadcrumb home="/" items={@crumbs} />
-  <:actions label="Toggle panel">
-    <.side_panel_toggle
-      id="ticket-panel-toggle"
-      panel_id="ticket-panel"
-      panel_key="ticket"
-      open={@panel_open}
-      kbd="]"
-    />
-  </:actions>
-</.breadcrumb_bar>
-<.page_header title={@ticket.title} description={@ticket.identifier} />
-<.card title="Description">
-  {@ticket.body}
-</.card>
-<.side_panel id="ticket-panel" open={@panel_open} aria-label="Ticket properties">
-  <.inspector aria-label="Ticket">
-    <.inspector_section title="Properties">
-      <.description_list layout="dense">
-        <:item label="Status">{@ticket.status}</:item>
-        <:item label="Priority">{@ticket.priority}</:item>
-      </.description_list>
-    </.inspector_section>
-  </.inspector>
-</.side_panel>
+<.page_shell id="ticket-shell" title={@ticket.title} breadcrumbs={@crumbs}>
+  <.card title="Description" description={@ticket.identifier}>
+    <:actions>
+      <.side_panel_toggle
+        id="ticket-panel-toggle"
+        panel_id="ticket-panel"
+        panel_key="ticket"
+        open={@panel_open}
+        kbd="]"
+      />
+    </:actions>
+    {@ticket.body}
+  </.card>
+  <.side_panel id="ticket-panel" open={@panel_open} aria-label="Ticket properties">
+    <.inspector aria-label="Ticket">
+      <.inspector_section title="Properties">
+        <.description_list layout="dense">
+          <:item label="Status">{@ticket.status}</:item>
+          <:item label="Priority">{@ticket.priority}</:item>
+        </.description_list>
+      </.inspector_section>
+    </.inspector>
+  </.side_panel>
+</.page_shell>
 ```
 
 Overview strip (stats plus ring; never a custom metric grid):

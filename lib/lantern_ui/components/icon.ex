@@ -129,7 +129,7 @@ defmodule LanternUI.Components.Icon do
     ]
   }
 
-  @names Map.keys(@paths)
+  @names @paths |> Map.keys() |> Enum.sort()
 
   @doc """
   Renders an icon by name. Available: `#{Enum.join(@names, "`, `")}`.

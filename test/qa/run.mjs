@@ -507,6 +507,69 @@ for (const vw of [1440, 768, 390]) {
   }
 }
 
+// Action bar menu and dismissal on /qa?ctx=action_bar (the shell block above
+// covers layout and promotion). The More menu must list every action and show the
+// disabled reason, the destructive item must be marked, and dismissal must make a
+// real server round trip: the notice exists before the click, and afterwards the
+// server renders it dismissed (data-server-dismissed="true") and hidden.
+const ACTION_IDS = ["create", "import", "export", "archive", "delete", "publish"]
+if (!WIDE_TABLE_ONLY) {
+  for (const vw of [1440, 390]) {
+    const page = await browser.newPage()
+    const row = { vw, ctx: "action_bar", cmp: "menu-dismissal", problems: [] }
+    try {
+      await page.setViewport({ width: vw, height: 900 })
+      await page.goto(`${BASE}/qa?ctx=action_bar`, { waitUntil: "networkidle2" })
+      await page.waitForSelector(".phx-connected", { timeout: 8000 })
+      await page.waitForSelector("[data-action-bar-notice]", { timeout: 4000 })
+      const trigger = await page.waitForSelector(".lui-action-bar-more-trigger", { timeout: 4000 })
+      await trigger.click()
+      // Wait for the menu to be open: its first item has a box.
+      await page.waitForFunction(
+        () => (document.querySelector(".lui-action-bar-menu [data-action-id]")?.getBoundingClientRect().height ?? 0) > 0,
+        { timeout: 4000 },
+      )
+      const menu = await page.evaluate((expected) => {
+        const items = [...document.querySelectorAll(".lui-action-bar-menu [data-action-id]")]
+        const ids = items.map((el) => el.dataset.actionId)
+        const pub = items.find((el) => el.dataset.actionId === "publish")
+        const del = items.find((el) => el.dataset.actionId === "delete")
+        return {
+          missing: expected.filter((id) => !ids.includes(id)),
+          reasonVisible: !!pub && pub.textContent.includes("Connect a channel first") && pub.getBoundingClientRect().height > 0,
+          deleteDanger: del?.dataset.tone === "danger",
+        }
+      }, ACTION_IDS)
+      if (menu.missing.length) row.problems.push(`More menu missing ${menu.missing.join(", ")}`)
+      if (!menu.reasonVisible) row.problems.push("disabled reason not visible in More menu")
+      if (!menu.deleteDanger) row.problems.push("destructive action not marked danger in More menu")
+      await page.keyboard.press("Escape")
+
+      const before = await page.evaluate(() => document.querySelector("[data-action-bar-notice]")?.dataset.serverDismissed)
+      if (before !== "false") row.problems.push(`notice not visible before dismissal (data-server-dismissed=${before})`)
+      const dismiss = await page.waitForSelector("[data-action-bar-notice] [data-part='dismiss']", { timeout: 4000 })
+      await dismiss.click()
+      // The round trip is complete when the server re-renders the notice dismissed.
+      await page.waitForFunction(
+        () => document.querySelector("[data-action-bar-notice]")?.dataset.serverDismissed === "true",
+        { timeout: 4000 },
+      ).catch(() => row.problems.push("dismissal did not reach the server (no data-server-dismissed=\"true\" render)"))
+      const hidden = await page.evaluate(() => {
+        const n = document.querySelector("[data-action-bar-notice]")
+        return !!n && (n.hidden || getComputedStyle(n).display === "none")
+      })
+      if (!hidden) row.problems.push("server-dismissed notice is still visible")
+    } catch (e) {
+      row.problems.push(`error: ${e.message.split("\n")[0]}`)
+    }
+    row.status = row.problems.length ? "FAIL" : "ok"
+    rows.push(row)
+    if (row.problems.length) console.log(`FAIL ${vw} action_bar/menu-dismissal: ${row.problems.join("; ")}`)
+    await page.close()
+  }
+}
+
+
 await browser.close()
 
 const bucket = (re) => rows.filter((r) => r.problems.some((p) => re.test(p))).length
