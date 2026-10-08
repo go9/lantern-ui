@@ -173,6 +173,28 @@ defmodule LanternUI.LayoutTest do
       assert Floki.find(doc, "[data-page-shell][data-page-has-actions]") == []
     end
 
+    test "omits the action row and action marker for a server-dismissed notice without actions" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.page_shell
+            id="dismissed-notice"
+            title="Dismissed"
+            notice={%{id: "notice-1", title: "Already handled"}}
+            dismissed
+          >
+            Content
+          </Layout.page_shell>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      assert Floki.find(doc, "[data-page-content]") != []
+      assert Floki.find(doc, "[data-page-actions]") == []
+      assert Floki.find(doc, "[phx-hook='LanternActionBar']") == []
+      assert Floki.find(doc, "[data-page-shell][data-page-has-actions]") == []
+    end
+
     test "keeps every column of a wide table rendered inside the page shell" do
       meta = %{
         flop: %{},
@@ -216,14 +238,6 @@ defmodule LanternUI.LayoutTest do
       assert Floki.attribute(wrapper, "class") |> hd() =~ "lui-table-wrap"
       assert length(Floki.find(wrapper, "thead th")) == 9
       assert Floki.text(Floki.find(wrapper, "thead")) =~ "Additional metadata and details"
-
-      css = File.read!("priv/static/lantern_ui.css")
-      assert css =~ ~r/\.lui-table-wrap\s*\{[^}]*overflow-x:\s*auto/s
-
-      assert css =~
-               ~r/\.lui-page-shell \[data-page-content\].*?\.lui-th \{\s*position: sticky;\s*top: var\(--lui-shell-h\);/s
-
-      assert css =~ ~r/\.lui-table-wrap \.lui-th,.*?\{\s*top: 0;/s
     end
   end
 

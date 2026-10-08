@@ -185,6 +185,10 @@ defmodule LanternUI.Components.Layout do
 
   Ancestor breadcrumb maps accept `label` and optional `navigate`, `patch`, or
   `href` targets. The current page title is always appended as the last crumb.
+  When nested in `app_shell/1`, the sticky breadcrumb and action row sit below
+  its fixed app bar. Non-fill data table headers remain in their horizontal
+  `.lui-table-wrap` scroll region; they do not stick to the viewport while the
+  page scrolls. Fill tables pin their header within the table's own scroll area.
   """
   attr(:id, :string, required: true, doc: "Stable id for the page shell and action hook.")
   attr(:title, :string, required: true, doc: "Current page label and semantic h1 text.")
@@ -220,14 +224,20 @@ defmodule LanternUI.Components.Layout do
   slot(:inner_block, required: true, doc: "Page content.")
 
   def page_shell(assigns) do
-    assigns = assign(assigns, :ancestor_breadcrumbs, normalize_breadcrumbs(assigns.breadcrumbs))
+    assigns =
+      assigns
+      |> assign(:ancestor_breadcrumbs, normalize_breadcrumbs(assigns.breadcrumbs))
+      |> assign(
+        :has_actions?,
+        assigns.actions != [] or (not is_nil(assigns.notice) and not assigns.dismissed)
+      )
 
     ~H"""
     <section
       id={@id}
       class={Class.merge(["lui-page-shell", @class])}
       data-page-shell
-      data-page-has-actions={if @actions != [] or not is_nil(@notice), do: "true"}
+      data-page-has-actions={@has_actions? && "true"}
       {@rest}
     >
       <div class="lui-page-topline" data-page-breadcrumb>
@@ -246,7 +256,7 @@ defmodule LanternUI.Components.Layout do
       </div>
 
       <ActionBar.action_bar
-        :if={@actions != [] or not is_nil(@notice)}
+        :if={@has_actions?}
         id={"#{@id}-actions"}
         actions={@actions}
         notice={@notice}

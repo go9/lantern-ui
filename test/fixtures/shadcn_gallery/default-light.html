@@ -817,6 +817,8 @@
 
 /* ── App shell (top bar + fixed sidebar + main) ── */
 .lui-app { --lui-sidebar-w: 15rem; --lui-appbar-h: 3.25rem;
+  /* Page-shell sticky rows account for the fixed bar when the document scrolls. */
+  --lui-shell-appbar-offset: var(--lui-appbar-h);
   min-height: 100vh; background: var(--lantern-surface); color: var(--lantern-fg);
   font-family: var(--lantern-font); }
 .lui-app[data-collapsed] { --lui-sidebar-w: 3.5rem; }
@@ -947,7 +949,7 @@
 .lui-page-topline {
   box-sizing: border-box;
   position: sticky;
-  top: 0;
+  top: var(--lui-shell-appbar-offset, 0px);
   z-index: var(--lantern-z-sticky, 10);
   display: flex;
   align-items: center;
@@ -963,7 +965,7 @@
 .lui-action-bar {
   box-sizing: border-box;
   position: sticky;
-  top: var(--lui-topline-h);
+  top: calc(var(--lui-shell-appbar-offset, 0px) + var(--lui-topline-h));
   z-index: var(--lantern-z-sticky, 10);
   display: flex;
   align-items: center;
@@ -1044,11 +1046,14 @@
   .lui-action-bar:not([data-promoted]) .lui-action-bar-inline > :nth-child(n + 2) { display: none; }
   .lui-action-bar-action[data-has-icon="true"] .lui-action-bar-label { display: none; }
   .lui-action-bar-notice .lui-alert-body {
-    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
   }
-  .lui-action-bar-notice { width: 3.75rem; min-width: 3.75rem; max-width: 3.75rem; padding: 0.25rem; }
-  .lui-action-bar-notice .lui-alert-icon { margin-inline: auto; }
+  .lui-action-bar-notice { width: auto; min-width: 0; max-width: min(55%, 16rem); padding: 0.25rem 0.45rem; }
+  .lui-action-bar-notice .lui-alert-title { flex: 1 1 auto; }
+  .lui-action-bar-notice .lui-alert-subtitle { display: none; }
   .lui-action-bar-notice .lui-alert-close { margin-left: auto; }
 }
 
@@ -1089,7 +1094,8 @@
    tables with pinned header/overview/pagination work inside app_shell. Mobile
    (<=768px, sidebar becomes a drawer) keeps natural page scroll. */
 @media (min-width: 769px) {
-  .lui-app { height: 100vh; overflow: hidden; }
+  /* The main element is the scrollport and starts below the fixed appbar. */
+  .lui-app { height: 100vh; overflow: hidden; --lui-shell-appbar-offset: 0px; }
   .lui-app-main { box-sizing: border-box; height: calc(100vh - var(--lui-appbar-h));
     overflow-y: auto; display: flex; flex-direction: column; }
   /* The 4rem bottom gutter is sized for scrolling content. A `.lui-datatable-fill`
@@ -1260,22 +1266,6 @@
 .lui-th { background: var(--lantern-surface-sunken); color: var(--lantern-fg-muted);
   font-size: var(--lantern-text-sm); font-weight: 550; text-align: left;
   padding: 0.35rem 0.7rem; border-bottom: 1px solid var(--lantern-border); white-space: nowrap; }
-/* Default sticky offset for a page without a nearer scrollport. The shell's
-   topline and action row occupy the viewport chrome. A .lui-table-wrap with
-   overflow:auto becomes the nearer scrollport, and already starts below that
-   chrome, so its header uses the wrapper's top edge instead. */
-.lui-page-shell [data-page-content] .lui-datatable:not(.lui-datatable-fill) .lui-th {
-  position: sticky;
-  top: var(--lui-shell-h);
-  z-index: 2;
-}
-.lui-page-shell:not([data-page-has-actions]) [data-page-content] .lui-datatable:not(.lui-datatable-fill) .lui-th {
-  top: var(--lui-topline-h);
-}
-.lui-page-shell [data-page-content] .lui-datatable:not(.lui-datatable-fill) .lui-table-wrap .lui-th,
-.lui-page-shell:not([data-page-has-actions]) [data-page-content] .lui-datatable:not(.lui-datatable-fill) .lui-table-wrap .lui-th {
-  top: 0;
-}
 .lui-td { padding: 0.35rem 0.7rem; border-bottom: 1px solid var(--lantern-border);
   color: var(--lantern-fg); }
 .lui-tr:last-child .lui-td { border-bottom: none; }
@@ -4925,7 +4915,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-963" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-614" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4942,7 +4932,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-995" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-646" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4959,7 +4949,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1027" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-678" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -4976,7 +4966,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1059" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-710" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

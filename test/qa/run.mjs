@@ -128,7 +128,7 @@ for (const vw of VWS) {
   const errors = []
   page.on("pageerror", (e) => errors.push(e.message))
   for (const ctx of CTXS) {
-    if (ctx === "page_shell" || ctx === "action_bar") continue
+    if (ctx === "page_shell" || ctx === "action_bar" || ctx.startsWith("app_page_shell")) continue
     for (const cmp of CMPS) {
       const spec = SPEC[cmp]
       const row = { vw, ctx, cmp, problems: [] }
@@ -368,6 +368,54 @@ if (!WIDE_TABLE_ONLY) {
           if (emptyShell.actions || emptyShell.hooks || emptyShell.marker) row.problems.push("empty page_shell rendered an empty action row")
           if (Math.abs(emptyShell.contentGap) > 1) row.problems.push("empty page_shell left a content inset")
           row.emptyShell = emptyShell
+
+          await page.goto(`${BASE}/qa?ctx=page_shell&shell_dismissed_notice=1`, { waitUntil: "networkidle2" })
+          await page.waitForSelector(".phx-connected", { timeout: 8000 })
+          const dismissedShell = await page.evaluate(() => {
+            const shell = document.querySelector("[data-page-shell]")
+            return {
+              actions: shell.querySelectorAll("[data-page-actions]").length,
+              hooks: shell.querySelectorAll("[phx-hook='LanternActionBar']").length,
+              marker: shell.hasAttribute("data-page-has-actions"),
+              contentGap:
+                shell.querySelector("[data-page-content]").getBoundingClientRect().top -
+                shell.querySelector("[data-page-breadcrumb]").getBoundingClientRect().bottom,
+            }
+          })
+          if (dismissedShell.actions || dismissedShell.hooks || dismissedShell.marker) {
+            row.problems.push("server-dismissed notice without actions rendered an empty action row")
+          }
+          if (Math.abs(dismissedShell.contentGap) > 1) row.problems.push("dismissed notice left a page-shell content inset")
+          row.dismissedShell = dismissedShell
+        }
+
+        if (vw < 740) {
+          const notice = await page.evaluate(() => {
+            const pill = document.querySelector("[data-action-bar-notice]")
+            if (!pill) return null
+            const title = pill.querySelector(".lui-alert-title")
+            const subtitle = pill.querySelector(".lui-alert-subtitle")
+            const titleRect = title?.getBoundingClientRect()
+            return {
+              label: pill.getAttribute("aria-label"),
+              title: title?.textContent.trim(),
+              titleVisible: !!titleRect && titleRect.width > 0 && titleRect.height > 0,
+              titleWhiteSpace: title && getComputedStyle(title).whiteSpace,
+              titleOverflow: title && getComputedStyle(title).textOverflow,
+              subtitleDisplay: subtitle && getComputedStyle(subtitle).display,
+            }
+          })
+          if (
+            notice &&
+            (!notice.label?.includes("All items are up to date.") ||
+              !notice.titleVisible ||
+              notice.titleWhiteSpace !== "nowrap" ||
+              notice.titleOverflow !== "ellipsis" ||
+              notice.subtitleDisplay !== "none")
+          ) {
+            row.problems.push("mobile notice must show a one-line title and expose its full message")
+          }
+          row.mobileNotice = notice
         }
       } catch (e) {
         row.problems.push(`error: ${e.message.split("\n")[0]}`)
@@ -379,6 +427,83 @@ if (!WIDE_TABLE_ONLY) {
       if (row.problems.length) console.log(`FAIL ${vw} ${ctx}/shell-contract: ${row.problems.join("; ")}`)
       await page.close()
     }
+  }
+}
+
+// The app shell's appbar is fixed. Verify nested page-shell sticky chrome at
+// both appbar sizes, including mobile where the document is the scrollport.
+for (const vw of [1440, 768, 390]) {
+  for (const ctx of ["app_page_shell", "app_page_shell_compact"]) {
+    const page = await browser.newPage()
+    const h = vw < 600 ? 844 : 900
+    await page.setViewport({ width: vw, height: h })
+    const row = { vw, ctx, cmp: "app-shell-sticky-offsets", problems: [] }
+
+    try {
+      await page.goto(`${BASE}/qa?ctx=${ctx}`, { waitUntil: "networkidle2" })
+      await page.waitForSelector(".phx-connected", { timeout: 8000 })
+      await page.waitForSelector(".lui-appbar", { timeout: 4000 })
+      await page.waitForSelector("#qa-app-shell-table .lui-table-wrap .lui-th", { timeout: 4000 })
+      await page.evaluate(async () => {
+        const main = document.querySelector(".lui-app-main")
+        if (getComputedStyle(main).overflowY === "auto") main.scrollTop = 64
+        else window.scrollTo(0, 64)
+        const table = document.querySelector("#qa-app-shell-table .lui-table-wrap")
+        table.scrollTop = 120
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+      })
+      await sleep(80)
+
+      const measurements = await page.evaluate(() => {
+        const rect = (selector) => {
+          const r = document.querySelector(selector).getBoundingClientRect()
+          return { top: r.top, bottom: r.bottom, height: r.height }
+        }
+        const appbar = rect(".lui-appbar")
+        const topline = rect("[data-page-breadcrumb]")
+        const actions = rect("[data-page-actions]")
+        const wrapper = rect("#qa-app-shell-table .lui-table-wrap")
+        const header = rect("#qa-app-shell-table .lui-table-wrap .lui-th")
+        const main = document.querySelector(".lui-app-main")
+        const tableScrollport = document.querySelector("#qa-app-shell-table .lui-table-wrap")
+        const notice = document.querySelector("[data-action-bar-notice]")
+        return {
+          appbar,
+          topline,
+          actions,
+          wrapper,
+          header,
+          compact: document.querySelector(".lui-app").hasAttribute("data-compact"),
+          pageScrollTop: getComputedStyle(main).overflowY === "auto" ? main.scrollTop : window.scrollY,
+          tableScrollTop: tableScrollport.scrollTop,
+          noticeLabel: notice?.getAttribute("aria-label"),
+          documentOverflows: document.documentElement.scrollWidth > innerWidth + 1,
+        }
+      })
+
+      const separated = (upper, lower) => lower.top >= upper.bottom - 1
+      if (!separated(measurements.appbar, measurements.topline)) row.problems.push("topline overlaps the fixed appbar")
+      if (!separated(measurements.topline, measurements.actions)) row.problems.push("action row overlaps the topline")
+      if (!separated(measurements.actions, measurements.header)) row.problems.push("table header overlaps the action row")
+      if (measurements.pageScrollTop <= 0) row.problems.push("app shell page did not scroll")
+      if (measurements.tableScrollTop <= 0) row.problems.push("fill table scroll region did not scroll")
+      if (Math.abs(measurements.header.top - measurements.wrapper.top - 1) > 2) {
+        row.problems.push("fill table header did not remain pinned to its own scroll region")
+      }
+      if (measurements.compact !== (ctx === "app_page_shell_compact")) row.problems.push("app_shell compact mode does not match the context")
+      if (!measurements.noticeLabel) row.problems.push("nested notice is missing its accessible full-message label")
+      if (measurements.documentOverflows) row.problems.push("nested page shell document overflows horizontally")
+      row.measurements = measurements
+      await page.screenshot({ path: `${SHOTS}/${vw}-${ctx}.png` })
+    } catch (e) {
+      row.problems.push(`error: ${e.message.split("\n")[0]}`)
+      await page.screenshot({ path: `${SHOTS}/${vw}-${ctx}.png` }).catch(() => {})
+    }
+
+    row.status = row.problems.length ? "FAIL" : "ok"
+    rows.push(row)
+    if (row.problems.length) console.log(`FAIL ${vw} ${ctx}/app-shell-sticky-offsets: ${row.problems.join("; ")}`)
+    await page.close()
   }
 }
 

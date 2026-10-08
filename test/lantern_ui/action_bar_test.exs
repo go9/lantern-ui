@@ -114,7 +114,7 @@ defmodule LanternUI.ActionBarTest do
       end
     end
 
-    test "promotion follows priority and skips disabled or non-promotable actions" do
+    test "promotion order follows priority then source order and leaves destructive menu items last" do
       html =
         render(fn assigns ->
           ~H"""
@@ -122,33 +122,58 @@ defmodule LanternUI.ActionBarTest do
             id="ordered"
             actions={[
               %{id: "low", label: "Low", priority: 1},
-              %{id: "high", label: "High", priority: 20},
+              %{id: "high", label: "High", priority: 30},
+              %{id: "tie-first", label: "First tie", priority: 20},
               %{id: "locked", label: "Locked", priority: 100, enabled: false},
               %{id: "disabled", label: "Disabled", priority: 95, disabled: true},
               %{id: "background", label: "Background", priority: 90, promotable: false},
-              %{id: "middle", label: "Middle", priority: 10}
+              %{id: "tie-second", label: "Second tie", priority: 20},
+              %{id: "middle", label: "Middle", priority: 10},
+              %{id: "delete", label: "Delete", priority: 0, destructive: true}
             ]}
           />
           """
         end)
 
-      actions = Floki.parse_fragment!(html) |> Floki.find(".lui-action-bar-action")
+      doc = Floki.parse_fragment!(html)
 
-      indexes =
-        Map.new(actions, fn action ->
+      inline_actions = Floki.find(doc, "#ordered .lui-action-bar-action")
+
+      inline_order =
+        Enum.map(inline_actions, fn action ->
           [id] = Floki.attribute(action, "data-action-id")
           [index] = Floki.attribute(action, "data-promoted-index")
           {id, index}
         end)
 
-      assert indexes == %{
-               "high" => "1",
-               "middle" => "2",
-               "low" => "3",
-               "locked" => "0",
-               "disabled" => "0",
-               "background" => "0"
-             }
+      assert inline_order == [
+               {"high", "1"},
+               {"tie-first", "2"},
+               {"tie-second", "3"},
+               {"middle", "4"},
+               {"low", "5"},
+               {"delete", "6"},
+               {"locked", "0"},
+               {"disabled", "0"},
+               {"background", "0"}
+             ]
+
+      menu_order =
+        doc
+        |> Floki.find("#ordered [role='menuitem']")
+        |> Enum.map(fn item -> Floki.attribute(item, "data-action-id") |> hd() end)
+
+      assert menu_order == [
+               "low",
+               "high",
+               "tie-first",
+               "locked",
+               "disabled",
+               "background",
+               "tie-second",
+               "middle",
+               "delete"
+             ]
     end
 
     test "keeps disabled actions in More with their reason and renders a dismissible notice" do
@@ -190,6 +215,7 @@ defmodule LanternUI.ActionBarTest do
       assert Floki.find(doc, "button#page-actions-action-ZGlzYWJsZWQ-menu[disabled]") != []
       assert Floki.text(Floki.find(doc, "#page-actions-action-ZGlzYWJsZWQ-menu")) =~ "Unavailable"
       assert Floki.attribute(notice, "data-server-dismissed") == ["false"]
+      assert Floki.attribute(notice, "aria-label") == ["Update. Ready"]
     end
 
     test "server dismissal is rendered as hidden state" do

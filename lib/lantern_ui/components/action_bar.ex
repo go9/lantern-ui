@@ -63,6 +63,7 @@ defmodule LanternUI.Components.ActionBar do
       |> assign(:inline_actions, actions)
       |> assign(:menu_actions, menu_actions)
       |> assign(:notice_data, notice)
+      |> assign(:notice_accessible_label, notice && notice.accessible_label)
       |> assign(:dismiss_command, dismiss_command(assigns.on_dismiss, notice))
       |> assign(:menu_id, "#{assigns.id}-menu")
 
@@ -92,6 +93,7 @@ defmodule LanternUI.Components.ActionBar do
         data-dismissal-key={"#{@id}:#{@notice_data.id}"}
         data-notice-id={@notice_data.id}
         data-server-dismissed={to_string(@dismissed)}
+        aria-label={@notice_accessible_label}
       />
 
       <div :if={@inline_actions != []} class="lui-action-bar-actions">
@@ -256,12 +258,15 @@ defmodule LanternUI.Components.ActionBar do
   defp normalize_notice(notice) when is_map(notice) do
     tone = value(notice, :tone, "neutral")
     tone = if tone in ~w(neutral info success warning danger promo), do: tone, else: "neutral"
+    title = to_string(value(notice, :title, ""))
+    body = to_string(value(notice, :body, ""))
 
     %{
       id: to_string(value(notice, :id, "notice")),
       tone: tone,
-      title: to_string(value(notice, :title, "")),
-      body: to_string(value(notice, :body, ""))
+      title: if(title == "", do: body, else: title),
+      body: body,
+      accessible_label: Enum.reject([title, body], &(&1 == "")) |> Enum.join(". ")
     }
   end
 
