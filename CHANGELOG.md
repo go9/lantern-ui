@@ -10,7 +10,8 @@ All notable changes to this project are documented here. The format follows
 Everything in this release is opt-in. Pages that do not use `page_shell`,
 `action_bar`, `compact`, or the `promo` tone render as they did in 0.9.
 - **Move pages to `<.page_shell>`.** Pass ancestors as `breadcrumbs`, each a map
-  with `label` and one of `navigate`, `patch`, or `href`. Pass the title as
+  with `label` and one of `navigate`, `patch`, or `href`; `path` is accepted as an
+  alias of `href`. Pass the title as
   `title` and page actions as `actions` descriptors. `docs/recipes.md` Block 1 is
   the full page. The sign-in page (Block 7) is not an app route and has no shell.
 - **`<.page_header>` warns at compile time.** It is marked `@deprecated`, so every
@@ -38,11 +39,12 @@ Everything in this release is opt-in. Pages that do not use `page_shell`,
 - `action_bar/1`: a floating, transparent action row. Every action renders twice,
   as an inline button and as an item in a "More" menu on the Zag menu, so the menu
   always lists everything. The `LanternActionBar` hook sets `data-promoted`
-  (3, 2, or 1 by width) and CSS hides the inline copies past that count. Nothing
-  moves in the DOM. See `docs/behaviours.md`, "Action bar promotion".
+  (3, 2, or 1 by the bar's width), and CSS hides the inline copies past that count
+  (container queries do the same without the hook). Nothing moves in the DOM. See
+  `docs/behaviours.md`, "Action bar promotion".
 - Optional dismissible notice on the action row: `notice`, `dismissed`, and
-  `on_dismiss` (the server owns dismissal; without `on_dismiss` the hook keeps it
-  in localStorage and re-applies it on update).
+  `on_dismiss`. Dismissal sends `on_dismiss` with `%{"id" => notice_id}`; the
+  server owns the state. Without `on_dismiss` the hook keeps it in localStorage.
 - `app_shell` `compact` attr: opts the app chrome into the slim topline. The
   default layout is unchanged.
 - Shell height tokens `--lui-topline-h`, `--lui-actionbar-h`, and `--lui-shell-h`

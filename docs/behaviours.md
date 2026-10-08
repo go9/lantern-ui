@@ -113,18 +113,22 @@ renders a Zag widget.
 
 ## Action bar promotion
 
-`action_bar/1` and `page_shell/1` render every action twice: an inline button and
-an item in the "More" menu. `LanternActionBar` runs on the bar root. It writes
-`data-promoted="3"`, `"2"`, or `"1"` from the bar's width (above 1100px, 740–1100px,
-and below 740px). CSS hides the inline copies past that count. The hook never
-moves DOM nodes, so LiveView patches stay safe, and the menu always lists every
-action.
+`action_bar/1` and `page_shell/1` render every action twice: an inline copy in
+`.lui-action-bar-inline` and an item in the "More" menu. `LanternActionBar` runs on
+the bar root and writes `data-promoted="3"`, `"2"`, or `"1"` from the bar's own
+width (above 1100px, 740px to 1100px, below 740px). The CSS then hides the inline
+copies after the first N children of the inline row, where N is `data-promoted`
+(`.lui-action-bar[data-promoted="2"] .lui-action-bar-inline > :nth-child(n + 3)`).
+Without the hook, container queries on the bar apply the same tiers. The hook
+never moves DOM nodes, so LiveView patches stay safe, and the menu always lists
+every action.
 
-Dismissing a notice sends `on_dismiss` with the notice `id` as `phx-value-id`. The
-server owns that state and sets `dismissed`. Without `on_dismiss`, the hook keeps
-the dismissal in localStorage and re-applies it in `updated()`. `destroyed()`
-removes the listeners and observers, so the hook is safe to tear down on any
-redirect.
+Dismissing a notice runs `JS.push(on_dismiss, value: %{"id" => notice_id})`, so the
+server receives the notice id under `"id"`, not `phx-value-id`. The server owns
+that state and sets `dismissed`. Without `on_dismiss`, the hook keeps the
+dismissal in localStorage, keyed by bar and notice id, and re-applies it in
+`updated()`. `destroyed()` removes the listeners and observers, so the hook is safe
+to tear down on any redirect.
 
 ```heex
 <.page_shell
