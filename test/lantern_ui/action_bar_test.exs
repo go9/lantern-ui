@@ -98,6 +98,7 @@ defmodule LanternUI.ActionBarTest do
               %{id: "low", label: "Low", priority: 1},
               %{id: "high", label: "High", priority: 20},
               %{id: "locked", label: "Locked", priority: 100, enabled: false},
+              %{id: "disabled", label: "Disabled", priority: 95, disabled: true},
               %{id: "background", label: "Background", priority: 90, promotable: false},
               %{id: "middle", label: "Middle", priority: 10}
             ]}
@@ -119,6 +120,7 @@ defmodule LanternUI.ActionBarTest do
                "middle" => "2",
                "low" => "3",
                "locked" => "0",
+               "disabled" => "0",
                "background" => "0"
              }
     end
@@ -133,7 +135,8 @@ defmodule LanternUI.ActionBarTest do
             on_dismiss="dismiss_notice"
             dismiss_label="Hide update"
             actions={[
-              %{id: "locked", label: "Locked", enabled: false, disabled_reason: "Requires access"}
+              %{id: "locked", label: "Locked", enabled: false, disabled_reason: "Requires access"},
+              %{id: "disabled", label: "Disabled", disabled: true, disabled_reason: "Unavailable"}
             ]}
           />
           """
@@ -155,6 +158,8 @@ defmodule LanternUI.ActionBarTest do
 
       assert Floki.find(doc, "button#page-actions-locked-menu[disabled]") != []
       assert Floki.text(Floki.find(doc, "#page-actions-locked-menu")) =~ "Requires access"
+      assert Floki.find(doc, "button#page-actions-disabled-menu[disabled]") != []
+      assert Floki.text(Floki.find(doc, "#page-actions-disabled-menu")) =~ "Unavailable"
       assert Floki.attribute(notice, "data-server-dismissed") == ["false"]
     end
 

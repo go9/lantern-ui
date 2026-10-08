@@ -43,9 +43,10 @@ defmodule LanternUI.Components.ActionBar do
   remain in the menu only. The observed bar width sets a CSS-pixel promotion tier
   (`> 1100`: 3, `740–1100`: 2, `< 740`: 1), also exposed as `data-promoted`.
   Action maps accept `id` (unique within this bar), `label`, `icon`, `priority`,
-  `enabled`, `disabled_reason`, `promotable`, `destructive`, `navigate`, `patch`,
-  `href`, `phx-click`, `phx-target`, and `phx-value-*` keys. All actions remain
-  available in the menu at every width.
+  `enabled`, `disabled` (an alias that disables when true), `disabled_reason`,
+  `promotable`, `destructive`, `navigate`, `patch`, `href`, `phx-click`,
+  `phx-target`, and `phx-value-*` keys. All actions remain available in the menu
+  at every width.
 
   An optional notice map accepts `id`, `tone`, `title`, and `body`. The dismiss
   button sends `on_dismiss` with the notice id through the LiveView event. Notice
@@ -212,7 +213,7 @@ defmodule LanternUI.Components.ActionBar do
 
     priority = value(action, :priority, 0)
     priority = if is_number(priority), do: priority, else: 0
-    enabled = value(action, :enabled, true) != false
+    enabled = value(action, :enabled, true) != false and value(action, :disabled, false) != true
     promotable = value(action, :promotable, true) != false
 
     %{
