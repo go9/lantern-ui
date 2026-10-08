@@ -31,7 +31,7 @@ defmodule EvalChecks do
   # `<Module.name` calls (aliasing lantern modules is valid HEEx); the rest
   # are literal attribute/text patterns.
   @block_components %{
-    "breadcrumb" => ~w(breadcrumb page_header),
+    "breadcrumb" => ~w(breadcrumb page_header page_shell),
     "filter-chips" => ~w(tabs_list),
     "flat-list" => ~w(data_table resource_list list_row table),
     "detail-inspector" => ~w(inspector side_panel description_list),
