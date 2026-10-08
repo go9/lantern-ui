@@ -179,7 +179,9 @@ keeps one `h1`, one trail and one actions region, and it is `display: none` in p
   `more_breadcrumbs_label`. Above 40rem every crumb shows.
 - Actions: the same descriptors and promotion tiers as the floating row. The tiers
   are measured on the action region's own width, not the viewport's. At narrow
-  widths the notice keeps its icon and title, with the full text in `title`.
+  widths the notice shows its icon and dismiss control; the title text is hidden
+  and the full text is the accessible name (`aria-label`). No HTML `title` tooltip
+  is rendered.
 - Empty strip: with no actions and no notice, the strip shows the trail alone and
   renders no action region.
 

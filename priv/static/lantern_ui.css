@@ -999,8 +999,13 @@
   .lui-page-strip-trail .lui-breadcrumb-item:not(:nth-last-child(-n + 2)) { display: none; }
   .lui-page-strip-trail .lui-page-strip-more { display: inline-flex; flex: none; }
 }
+/* Print: the breadcrumb, the More menu and the actions go; the sr-only h1 stays
+   in the DOM, as it does in the stacked layout. */
 @media print {
-  .lui-page-shell-strip > .lui-page-strip { display: none; }
+  .lui-page-shell-strip > .lui-page-strip { height: auto; min-height: 0; position: static;
+    border-bottom: 0; background: none; }
+  .lui-page-shell-strip .lui-page-strip-trail > :not(.lui-sr-only),
+  .lui-page-shell-strip .lui-page-strip-actions { display: none; }
 }
 
 /* ── Floating page action bar ── */

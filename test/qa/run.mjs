@@ -665,6 +665,20 @@ if (!WIDE_TABLE_ONLY) {
         if (m.stripWidth <= 640 && !m.foldMenuVisible) row.problems.push("narrow strip did not fold breadcrumbs")
         if (m.stripWidth <= 640 && m.visibleCrumbs > 2) row.problems.push(`narrow strip shows ${m.visibleCrumbs} crumbs`)
         if (m.documentOverflows || m.mainOverflows) row.problems.push("page overflows horizontally")
+        // Print: the trail and actions are hidden, but the h1 stays in the print stream.
+        await page.emulateMediaType("print")
+        const printed = await page.evaluate(() => {
+          const shown = (sel) => !!document.querySelector(sel) && getComputedStyle(document.querySelector(sel)).display !== "none"
+          return {
+            crumbs: shown("[data-page-shell] nav.lui-breadcrumb"),
+            actions: shown("[data-page-shell] .lui-page-strip-actions"),
+            title: !!document.querySelector("[data-page-shell] h1[data-page-title]") &&
+              getComputedStyle(document.querySelector("[data-page-shell] h1[data-page-title]")).display !== "none",
+          }
+        })
+        await page.emulateMediaType("screen")
+        if (printed.crumbs || printed.actions) row.problems.push("print still shows the strip trail or actions")
+        if (!printed.title) row.problems.push("print hides the page h1")
         row.strip = m
       } catch (e) {
         row.problems.push(`error: ${e.message.split("\n")[0]}`)
