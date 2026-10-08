@@ -279,7 +279,7 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 
 ## Block 1: app shell with sidebar and page shell
 
-**When to use:** The page needs the full frame — brand, sidebar nav with groups and count badges, and a `page_shell` with its breadcrumb trail, title, and actions — in one shell. `compact` opts the app chrome into the slim topline (36px, 38px at 46.1875rem and below); leave it off to keep the 0.9 layout. Pass the trail to `<.page_shell breadcrumbs>`, not to the app shell's `:breadcrumb` slot, so the route keeps one breadcrumb row. Hosts with plain `use LanternUI` write `<.app_shell>`; the fixture below calls it fully qualified only because the test module defines its own `app_shell/1` template function.
+**When to use:** The page needs the full frame — brand, a workspace switcher at the top of the sidebar, sidebar nav with groups and count badges, and a `page_shell` with its breadcrumb trail, title, and actions — in one shell. `layout="strip"` puts the trail on the left and the notice and actions on the right of one row under the app bar; leave it off for the 0.10 stacked topline with its floating action row. `compact` opts the app chrome into the slim topline (36px, 38px at 46.1875rem and below); leave it off to keep the 0.9 layout. `:sidebar_header` holds the switcher; on the icon rail it should collapse to an avatar (`.lui-app[data-collapsed]`). Pass the trail to `<.page_shell breadcrumbs>`, not to the app shell's `:breadcrumb` slot, so the route keeps one breadcrumb row. Hosts with plain `use LanternUI` write `<.app_shell>`; the fixture below calls it fully qualified only because the test module defines its own `app_shell/1` template function.
 
 ```heex
 <LanternUI.Components.Layout.app_shell id="demo-app" compact>
@@ -293,6 +293,10 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
   <:actions>
     <.avatar size="sm" initials="AL" />
   </:actions>
+  <:sidebar_header>
+    <.avatar size="sm" initials="AW" />
+    <span class="lui-brand-name">Acme workspace</span>
+  </:sidebar_header>
   <:sidebar>
     <.nav_group label="Workspace">
       <.nav_item label="Dashboard" icon="chart-bar" navigate="/" active />
@@ -309,6 +313,7 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
   </:sidebar_footer>
   <.page_shell
     id="tickets-shell"
+    layout="strip"
     title="Tickets"
     breadcrumbs={@shell_crumbs}
     actions={[

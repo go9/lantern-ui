@@ -7,7 +7,7 @@ defmodule LanternUI.QA.MatrixLive do
   use LanternUI
 
   @cmps ~w(select select_search dropdown menu popover tooltip autocomplete date_picker command user_menu)
-  @ctxs ~w(plain card card_transform scroll table modal sheet side_panel scroll_area data_table page_shell action_bar app_page_shell app_page_shell_compact edge_br edge_bl sticky tall patch nested)
+  @ctxs ~w(plain card card_transform scroll table modal sheet side_panel scroll_area data_table page_shell action_bar app_page_shell app_page_shell_compact page_shell_strip page_shell_strip_compact sidebar_header sidebar_header_collapsed edge_br edge_bl sticky tall patch nested)
   def cmps, do: @cmps
   def ctxs, do: @ctxs
 
@@ -33,9 +33,11 @@ defmodule LanternUI.QA.MatrixLive do
 
   def render(assigns) do
     ~H"""
-    <div id="qa-root" style="padding:12px;min-height:100vh;box-sizing:border-box;">
+    <div id="qa-root" style={root_style(@ctx)}>
       <button
-        :if={@ctx not in ["page_shell", "action_bar"]}
+        :if={
+          @ctx not in ~w(page_shell action_bar page_shell_strip page_shell_strip_compact sidebar_header sidebar_header_collapsed)
+        }
         id="qa-patch"
         type="button"
         phx-click="bump"
@@ -54,6 +56,12 @@ defmodule LanternUI.QA.MatrixLive do
     </div>
     """
   end
+
+  # App-shell contexts own the whole viewport: a page inset would move the fixed
+  # appbar's neighbours and make "directly under the appbar" unmeasurable.
+  defp root_style("page_shell_strip" <> _), do: "min-height:100vh;box-sizing:border-box;"
+  defp root_style("sidebar_header" <> _), do: "min-height:100vh;box-sizing:border-box;"
+  defp root_style(_), do: "padding:12px;min-height:100vh;box-sizing:border-box;"
 
   attr(:name, :string, required: true)
   attr(:cmp, :string, required: true)
@@ -305,6 +313,103 @@ defmodule LanternUI.QA.MatrixLive do
         </div>
         <div style="height:900px;flex:none">Long page content after the table</div>
       </.page_shell>
+    </.app_shell>
+    """
+  end
+
+  # Strip layout inside the app shell: a long page with a fill table so the sticky
+  # strip, the table header and the fixed app bar can be checked against each other.
+  defp ctx(%{name: name} = assigns)
+       when name in ["page_shell_strip", "page_shell_strip_compact"] do
+    assigns =
+      assigns
+      |> assign(:compact?, name == "page_shell_strip_compact")
+      |> assign(:rows, for(i <- 1..32, do: %{id: i, name: "Record #{i}"}))
+      |> assign(:meta, %{
+        flop: %{},
+        params: %{},
+        current_page: 1,
+        total_pages: 1,
+        page_size: 32,
+        total_count: 32
+      })
+
+    ~H"""
+    <.app_shell
+      id={if(@compact?, do: "qa-strip-app-compact", else: "qa-strip-app-default")}
+      compact={@compact?}
+    >
+      <:brand>Lantern QA</:brand>
+      <:sidebar_header>
+        <button id="qa-strip-switcher" type="button" class="qa-switcher">
+          <span class="qa-avatar">AW</span>
+          <span class="qa-switcher-name">Acme workspace</span>
+        </button>
+      </:sidebar_header>
+      <:sidebar><.nav_item label="Inventory" navigate="/qa" active /></:sidebar>
+      <.page_shell
+        id="qa-strip-page"
+        layout="strip"
+        title="Inventory"
+        breadcrumbs={[
+          %{label: "Workspace", navigate: "/workspace"},
+          %{label: "Items", href: "/items"},
+          %{label: "Regions", href: "/regions"}
+        ]}
+        actions={qa_actions()}
+        notice={%{id: "sync", tone: "info", title: "Sync complete", body: "All records are current."}}
+        style="flex:none"
+      >
+        <div style="height:180px;flex:none">Content before the table</div>
+        <div style="height:320px;min-height:0;display:flex;flex-direction:column;flex:none">
+          <.data_table
+            id="qa-strip-table"
+            fill
+            rows={@rows}
+            meta={@meta}
+            path="/qa"
+            show_checkboxes={false}
+          >
+            <:col :let={row} label="Record">{row.name}</:col>
+            <:col :let={row} label="Status">Ready {row.id}</:col>
+            <:col :let={row} label="Owner">Team {rem(row.id, 4)}</:col>
+          </.data_table>
+        </div>
+        <div style="height:900px;flex:none">Long page content after the table</div>
+      </.page_shell>
+    </.app_shell>
+    """
+  end
+
+  # The sidebar header on the expanded and the icon rail, where it collapses to an avatar.
+  defp ctx(%{name: name} = assigns) when name in ["sidebar_header", "sidebar_header_collapsed"] do
+    assigns = assign(assigns, :collapsed?, name == "sidebar_header_collapsed")
+
+    ~H"""
+    <style>
+      .qa-switcher { display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.3rem; border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm); background: var(--lantern-surface); color: var(--lantern-fg); font: inherit; cursor: pointer; }
+      .qa-avatar { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 1.75rem; height: 1.75rem; border-radius: 999px; background: var(--lantern-accent); color: var(--lantern-accent-fg); font-size: 0.75rem; font-weight: 600; }
+      .lui-app[data-collapsed] .qa-switcher { width: auto; border: none; padding: 0; }
+      .lui-app[data-collapsed] .qa-switcher-name { display: none; }
+    </style>
+    <.app_shell
+      id={if(@collapsed?, do: "qa-sidebar-collapsed", else: "qa-sidebar-expanded")}
+      collapsed={@collapsed?}
+    >
+      <:brand>Lantern QA</:brand>
+      <:sidebar_header>
+        <button id="qa-sidebar-switcher" type="button" class="qa-switcher">
+          <span class="qa-avatar">AW</span>
+          <span class="qa-switcher-name">Acme workspace</span>
+        </button>
+      </:sidebar_header>
+      <:sidebar>
+        <.nav_group label="Workspace">
+          <.nav_item label="Dashboard" icon="chart-bar" navigate="/qa" active />
+          <.nav_item label="Inventory" icon="cloud" navigate="/qa" />
+        </.nav_group>
+      </:sidebar>
+      <div id="qa-sidebar-content" style="height:1200px">Dashboard content</div>
     </.app_shell>
     """
   end
