@@ -51,5 +51,6 @@ defmodule LanternUI.AlertTest do
     [alert] = Floki.parse_fragment!(html) |> Floki.find("#status")
     assert Floki.attribute(alert, "data-tone-slots") == ["data-tone-slots"]
     assert Floki.attribute(alert, "role") == ["status"]
+    assert Floki.find(alert, ".lui-alert-icon svg") != []
   end
 end

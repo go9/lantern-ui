@@ -96,5 +96,6 @@ defmodule LanternUI.Components.Alert do
   defp default_icon("success"), do: "check-circle"
   defp default_icon("warning"), do: "exclamation-circle"
   defp default_icon("danger"), do: "exclamation-circle"
+  defp default_icon("promo"), do: "information-circle"
   defp default_icon(_), do: "information-circle"
 end

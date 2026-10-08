@@ -72,6 +72,22 @@ defmodule LanternUI.ActionBarTest do
       assert length(Floki.find(doc, "#right-edit-menu")) == 1
     end
 
+    test "rejects repeated action ids within the same bar" do
+      assert_raise ArgumentError, ~r/action ids must be unique within an action bar/, fn ->
+        render(fn assigns ->
+          ~H"""
+          <ActionBar.action_bar
+            id="duplicate-actions"
+            actions={[
+              %{id: "edit", label: "Edit"},
+              %{id: "edit", label: "Edit again"}
+            ]}
+          />
+          """
+        end)
+      end
+    end
+
     test "promotion follows priority and skips disabled or non-promotable actions" do
       html =
         render(fn assigns ->

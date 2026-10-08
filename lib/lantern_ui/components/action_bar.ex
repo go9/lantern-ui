@@ -42,7 +42,7 @@ defmodule LanternUI.Components.ActionBar do
   is ordered by descending `priority`; disabled and `promotable: false` actions
   remain in the menu only. The observed bar width sets a CSS-pixel promotion tier
   (`> 1100`: 3, `740–1100`: 2, `< 740`: 1), also exposed as `data-promoted`.
-  Action maps accept `id`, `label`, `icon`, `priority`,
+  Action maps accept `id` (unique within this bar), `label`, `icon`, `priority`,
   `enabled`, `disabled_reason`, `promotable`, `destructive`, `navigate`, `patch`,
   `href`, `phx-click`, `phx-target`, and `phx-value-*` keys. All actions remain
   available in the menu at every width.
@@ -162,6 +162,8 @@ defmodule LanternUI.Components.ActionBar do
       |> Enum.with_index()
       |> Enum.map(fn {action, index} -> normalize_action(action, index) end)
 
+    ensure_unique_action_ids!(normalized)
+
     promoted_indices =
       normalized
       |> Enum.filter(&(&1.enabled and &1.promotable))
@@ -187,6 +189,17 @@ defmodule LanternUI.Components.ActionBar do
       |> Enum.sort_by(fn action -> {action.destructive, action.source_index} end)
 
     {inline_actions, menu_actions}
+  end
+
+  defp ensure_unique_action_ids!(actions) do
+    case Enum.find(Enum.frequencies_by(actions, & &1.id), fn {_id, count} -> count > 1 end) do
+      {id, _count} ->
+        raise ArgumentError,
+              "action ids must be unique within an action bar; duplicate id: #{inspect(id)}"
+
+      nil ->
+        :ok
+    end
   end
 
   defp normalize_action(action, index) do
