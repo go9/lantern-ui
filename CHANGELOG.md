@@ -9,24 +9,19 @@ All notable changes to this project are documented here. The format follows
 ### Upgrading from 0.9.x
 Everything in this release is opt-in. Pages that do not use `page_shell`,
 `action_bar`, `compact`, or the `promo` tone render as they did in 0.9.
-- **Move pages to `<.page_shell>`.** Pass ancestors as `breadcrumbs`, each a map
-  with `label` and one of `navigate`, `patch`, or `href`; `path` is accepted as an
-  alias of `href`. Pass the title as
-  `title` and page actions as `actions` descriptors. `docs/recipes.md` Block 1 is
-  the full page. The sign-in page (Block 7) is not an app route and has no shell.
+- **Move pages to `<.page_shell>`, and pass ancestors only.** A 0.9
+  `breadcrumb` list ends with the current page (`path: nil`). `page_shell` appends
+  its `title` as the current crumb, so a reused list renders the current page
+  twice. Pass the home and parent crumbs as `breadcrumbs` and the page name as
+  `title`. Each crumb is a map with `label` and one of `navigate`, `patch`, or
+  `href`; `path` is accepted as an alias of `href`. Page actions are `actions`
+  descriptors. `docs/recipes.md` Block 1 is the full page. The sign-in page (Block 7)
+  is not an app route and has no shell.
 - **Tone backgrounds are opt-in.** `alert/1` keeps its 0.9 backgrounds. Pass
   `tone_slots` to use the `--lantern-tone-*-bg` slots, which apps define in their
   own theme. The action bar's notice always opts in, so apps that set these slots
   see them there. The `promo` tone is new in 0.10, so it always uses
   `--lantern-tone-promo-bg` and needs no opt-in.
-- **Action bar DOM ids are bar-scoped and encoded.** Inline copies get
-  `{bar}-action-<base64url(id)>-inline` and menu items `{bar}-action-<base64url(id)>-menu`
-  (unpadded base64url). The raw id stays in `data-action-id`. Anything that selected
-  the old `{bar}-{action}-*` ids must use the encoded form. Action ids must be unique
-  within a bar; a duplicate raises `ArgumentError`. `enabled: false` and
-  `disabled: true` both disable an action.
-- **Notice announcements.** The action-bar notice uses `role="status"`, and
-  `role="alert"` only when it starts visible with the danger tone.
 - **`<.page_header>` warns at compile time.** It is marked `@deprecated`, so every
   call site gets a compiler warning. Builds with `--warnings-as-errors` fail until
   those calls move to `page_shell`. At runtime it also logs a deprecation warning
@@ -34,15 +29,19 @@ Everything in this release is opt-in. Pages that do not use `page_shell`,
 - **New lint rules can fail an app's lint CI.** Run `mix lantern.lint` and fix or
   baseline what it reports:
   - `hand_input` flags raw `<input>`, `<textarea>`, and `<select>`. Use `input/1`,
-    `textarea/1`, and `select/1`. Hidden inputs are exempt.
-  - `single_page_shell` flags a template that renders two `<.page_shell>`s in
-    the same clause or branch. Shells in separate `def` clauses, `case` arms, or
-    `:if` branches are alternatives and are not flagged.
+    `textarea/1`, and `select/1`. Hidden inputs are exempt (`type="hidden"` or
+    `type={"hidden"}`).
+  - `single_page_shell` flags repeated shells in one route region. Shells are
+    separated by a branch when the text between them has a `case`, `cond`, `if`, or
+    `unless` block, an `else`, a HEEx control tag, or a case arm. Two conditional
+    shells (`:if=`) alone are read as an if/else pair. Other conditional shells,
+    and shells in different files, are not compared.
+  - Both rules read source text, not the AST. They do not follow a branch they
+    cannot see, so a shell chosen by computed data is still one region.
   - To baseline existing code, list its files under `allow_rules` in
     `.lantern-lint.json`, for example
     `{"allow_rules": {"hand_input": ["lib/my_app_web/legacy/**"]}}`, or mark a line
-    with a `lantern-lint:ignore` comment. The rules are line and regex based, so
-    they cannot see across files or follow every control-flow form.
+    with a `lantern-lint:ignore` comment.
   - `page_header` is reported as `deprecated_component`.
 
 ### Added
@@ -80,7 +79,8 @@ Everything in this release is opt-in. Pages that do not use `page_shell`,
   removal version.
 
 ### Deprecated
-- `<.page_header>` is deprecated; use `<.page_shell>`. Removed in 1.0.
+- `<.page_header>` is deprecated since 0.10; use `<.page_shell>`. Removal is planned for 1.0.
+- `icon_button`, `segmented`, `progress_ring`, and `property_row` have been deprecated since 0.8.2. No removal is scheduled. Their runtime warnings still read "removed in 0.9.0", a stale wording tracked as a follow-up.
 
 ### Fixed
 - `DeprecatedTest` no longer fails when another test's deprecation warning lands

@@ -2553,7 +2553,7 @@ From `docs/recipes.md` (Block 6: create/edit form with validation errors):
 ```heex
 <.page_shell id="ticket-new-shell" title="New ticket" breadcrumbs={@form_crumbs}>
   <.stack gap="lg" style="max-width: 760px; margin: 0 auto;">
-    <.card title="New ticket" description="Small, sharp titles get picked up fastest.">
+    <.card title="Details" description="Small, sharp titles get picked up fastest.">
       <.stack gap="md">
         <.alert color="danger" title="2 problems need attention">
           Title can't be blank. Pick a status so the ticket lands in the right list.
@@ -2813,11 +2813,11 @@ From `README.md` (Command palette):
 
 Deprecated (warn at render; each entry names its planned removal version):
 
-- `icon_button/1` is deprecated (planned removal: 0.9.0); use <.button size="icon" label="...">. Evidence: eval tasks 01/05 steer models to icon_button; same chrome as button/1.
-- `segmented/1` is deprecated (planned removal: 0.9.0); use <.tabs_list variant="segmented">. Evidence: eval tasks 01 + brief steer models to segmented; duplicate filter-chip API.
-- `progress_ring/1` is deprecated (planned removal: 0.9.0); use <.progress shape="ring" ...>. Evidence: duplicate of progress/1 shape="ring"; both in eval inventory.
-- `property_row/1` is deprecated (planned removal: 0.9.0); use <.description_list layout="dense"> with <:item>. Evidence: eval task 03 steers models to property_row; same rows as dense description_list.
-- `page_header/1` is deprecated (planned removal: 1.0); use <.page_shell>. Evidence: shell contract 0.10: page_header draws a second visible title row under the breadcrumb; page_shell makes the breadcrumb the one title (docs/recipes.md Block 1).
+- `icon_button/1` is deprecated since 0.8.2; no removal is scheduled; use <.button size="icon" label="...">. Evidence: eval tasks 01/05 steer models to icon_button; same chrome as button/1.
+- `segmented/1` is deprecated since 0.8.2; no removal is scheduled; use <.tabs_list variant="segmented">. Evidence: eval tasks 01 + brief steer models to segmented; duplicate filter-chip API.
+- `progress_ring/1` is deprecated since 0.8.2; no removal is scheduled; use <.progress shape="ring" ...>. Evidence: duplicate of progress/1 shape="ring"; both in eval inventory.
+- `property_row/1` is deprecated since 0.8.2; no removal is scheduled; use <.description_list layout="dense"> with <:item>. Evidence: eval task 03 steers models to property_row; same rows as dense description_list.
+- `page_header/1` is deprecated since 0.10; removal planned for 1.0; use <.page_shell>. Evidence: shell contract 0.10: page_header draws a second visible title row under the breadcrumb; page_shell makes the breadcrumb the one title (docs/recipes.md Block 1).
 
 Names models guess that never existed (the lint answers these with
 did-you-mean):

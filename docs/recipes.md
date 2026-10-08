@@ -279,7 +279,7 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 
 ## Block 1: app shell with sidebar and page shell
 
-**When to use:** The page needs the full frame — brand, sidebar nav with groups and count badges, and a `page_shell` with its breadcrumb trail, title, and actions — in one shell. `compact` opts the app chrome into the slim 36px topline; leave it off to keep the 0.9 layout. Pass the trail to `<.page_shell breadcrumbs>`, not to the app shell's `:breadcrumb` slot, so the route keeps one breadcrumb row. Hosts with plain `use LanternUI` write `<.app_shell>`; the fixture below calls it fully qualified only because the test module defines its own `app_shell/1` template function.
+**When to use:** The page needs the full frame — brand, sidebar nav with groups and count badges, and a `page_shell` with its breadcrumb trail, title, and actions — in one shell. `compact` opts the app chrome into the slim topline (36px, 38px at 46.1875rem and below); leave it off to keep the 0.9 layout. Pass the trail to `<.page_shell breadcrumbs>`, not to the app shell's `:breadcrumb` slot, so the route keeps one breadcrumb row. Hosts with plain `use LanternUI` write `<.app_shell>`; the fixture below calls it fully qualified only because the test module defines its own `app_shell/1` template function.
 
 ```heex
 <LanternUI.Components.Layout.app_shell id="demo-app" compact>
@@ -586,7 +586,7 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 ```heex
 <.page_shell id="ticket-new-shell" title="New ticket" breadcrumbs={@form_crumbs}>
   <.stack gap="lg" style="max-width: 760px; margin: 0 auto;">
-    <.card title="New ticket" description="Small, sharp titles get picked up fastest.">
+    <.card title="Details" description="Small, sharp titles get picked up fastest.">
       <.stack gap="md">
         <.alert color="danger" title="2 problems need attention">
           Title can't be blank. Pick a status so the ticket lands in the right list.
