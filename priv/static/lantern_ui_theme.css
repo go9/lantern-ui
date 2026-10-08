@@ -70,6 +70,15 @@
   /* info is blue, not the brand colour: accent-as-info read as an error next to danger */
   --lantern-info: var(--info, oklch(0.62 0.17 255));
 
+  /* Semantic tint slots are neutral by default; apps may map their own themes. */
+  --lantern-tone-neutral-bg: color-mix(in oklab, var(--lantern-fg-muted) 14%, var(--lantern-surface-raised));
+  --lantern-tone-success-bg: color-mix(in oklab, var(--lantern-success) 14%, var(--lantern-surface-raised));
+  --lantern-tone-warning-bg: color-mix(in oklab, var(--lantern-warning) 14%, var(--lantern-surface-raised));
+  --lantern-tone-danger-bg: color-mix(in oklab, var(--lantern-danger) 14%, var(--lantern-surface-raised));
+  --lantern-tone-info-bg: color-mix(in oklab, var(--lantern-info) 14%, var(--lantern-surface-raised));
+  --lantern-tone-promo-bg: var(--lantern-surface-sunken);
+  --lantern-accent-text: var(--lantern-fg);
+
   /* ── Focus ring ── */
   --lantern-ring: var(--lantern-accent);
   --lantern-ring-soft: color-mix(in oklab, var(--lantern-ring) 25%, transparent);
