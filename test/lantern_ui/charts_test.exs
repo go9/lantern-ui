@@ -187,6 +187,77 @@ defmodule LanternUI.ChartsTest do
     end
   end
 
+  describe "time_series_chart/1" do
+    test "renders the additive series-first contract with a signed zero axis" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "generic",
+          aria_label: "Portfolio value",
+          series: [
+            %{
+              id: :collection,
+              label: "Collection",
+              points: [%{x: ~D[2026-01-01], y: -4}, %{x: ~D[2026-03-01], y: 8}]
+            },
+            %{
+              id: :inventory,
+              label: "Inventory",
+              points: [
+                %{x: ~D[2026-01-01], y: 2},
+                %{x: ~D[2026-02-01], y: 3},
+                %{x: ~D[2026-03-01], y: 5}
+              ]
+            }
+          ],
+          curve: :monotone
+        )
+
+      assert html =~ ~s(id="generic")
+      assert html =~ ~s(aria-label="Portfolio value")
+      assert html =~ "Collection"
+      assert html =~ "Inventory"
+      assert html =~ ~s(class="lui-time-series-chart__zero")
+      assert html =~ "C"
+      refute html =~ ~r/NaN|Infinity|nan|inf/
+    end
+
+    test "missing x keys break a path instead of connecting across the gap" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "sparse",
+          series: [
+            %{id: "a", label: "Sparse", points: [%{x: 1, y: 2}, %{x: 3, y: 4}]},
+            %{id: "b", label: "Complete", points: [%{x: 1, y: 1}, %{x: 2, y: 2}, %{x: 3, y: 3}]}
+          ]
+        )
+
+      assert length(Regex.scan(~r/class="lui-time-series-chart__line"/, html)) == 3
+    end
+
+    test "invalid and mixed x domains render a deterministic empty state" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "invalid",
+          series: [%{id: "a", label: "Invalid", points: [%{x: 1, y: 1}, %{x: "category", y: 2}]}]
+        )
+
+      assert html =~ "No data"
+      refute html =~ "<svg"
+    end
+
+    test "the points mode renders glyphs without connecting paths" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "points",
+          type: :points,
+          series: [%{id: "a", label: "A", points: [%{x: 1, y: -1}, %{x: 2, y: 2}]}]
+        )
+
+      assert html =~ "lui-time-series-chart__point"
+      refute html =~ "lui-time-series-chart__line"
+    end
+  end
+
   describe "area_chart smoothing and axis labels" do
     @monthly [
       %{date: "2025-10-01", value: 0},

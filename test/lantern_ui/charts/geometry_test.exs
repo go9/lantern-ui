@@ -81,4 +81,25 @@ defmodule LanternUI.Charts.GeometryTest do
       assert String.contains?(d, "100.0")
     end
   end
+
+  describe "time-series geometry" do
+    test "signed ticks include zero for positive and negative domains" do
+      assert 0.0 in Geometry.signed_nice_ticks(-8, 12)
+      assert 0.0 in Geometry.signed_nice_ticks(-12, -2)
+      assert 0.0 in Geometry.signed_nice_ticks(2, 12)
+    end
+
+    test "all curve modes produce finite paths for irregular points" do
+      points = [{10, -4}, {22, 3}, {61, 2}, {97, 8}]
+
+      for curve <- [:linear, :monotone, :step, :cardinal] do
+        path = Geometry.curve_path(points, curve)
+        assert path =~ "M"
+        refute path =~ ~r/NaN|Infinity|nan|inf/
+      end
+
+      assert Geometry.curve_path(points, :monotone) =~ "C"
+      assert Geometry.curve_path(points, :step) =~ "H"
+    end
+  end
 end

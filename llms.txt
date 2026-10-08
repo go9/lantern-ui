@@ -41,6 +41,7 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `bar_chart/1` — A categorical bar chart.
 - `line_chart/1` — A multi-series time-series line chart with a legend and a shared crosshair tooltip.
 - `sparkline/1` — A compact trend sparkline (no axes).
+- `time_series_chart/1` — Render a generic series-first chart using server-computed SVG geometry.
 
 ### LanternUI.Components.Accordion
 
@@ -633,6 +634,22 @@ From `docs/recipes.md` (Block 2: dashboard with stats, chart, and activity):
     </.card>
   </.stack>
 </.page_shell>
+```
+
+From `docs/recipes.md` (Generic time-series chart):
+
+```heex
+<.time_series_chart
+  id="portfolio-performance"
+  aria_label="Portfolio value over time"
+  series={[
+    %{id: :collection, label: "Collection", points: @collection_points},
+    %{id: :inventory, label: "Inventory", points: @inventory_points}
+  ]}
+  type={@chart_type}
+  curve={@curve}
+  visible_series={@visible_series}
+/>
 ```
 
 From `docs/recipes.md` (Block 3: flat index table with filter chips):

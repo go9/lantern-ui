@@ -371,6 +371,32 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 </.page_shell>
 ```
 
+## Generic time-series chart
+
+Use `time_series_chart/1` when a dashboard needs several named series or an
+opt-in line, area, or points view. Each series owns a stable id and an ordered
+list of `%{x, y}` points. All x values in one chart use the same domain type:
+dates/date-times, numbers, or category strings. Missing x keys break line and
+area paths; they are not interpolated.
+
+```heex
+<.time_series_chart
+  id="portfolio-performance"
+  aria_label="Portfolio value over time"
+  series={[
+    %{id: :collection, label: "Collection", points: @collection_points},
+    %{id: :inventory, label: "Inventory", points: @inventory_points}
+  ]}
+  type={@chart_type}
+  curve={@curve}
+  visible_series={@visible_series}
+/>
+```
+
+The component includes zero in its signed y domain. Chart choices and visible
+series remain LiveView assigns; validate form events in the parent LiveView and
+pass the resulting values back as attrs.
+
 ## Block 3: flat index table with filter chips
 
 **When to use:** The page is a record list — one flat `data_table` with filter chips carrying counts, a status column on each row, search, pagination, row click, and an empty state. Title and the primary action live in the `page_shell`; no tabs, no group bands. `row_navigate` (or `row_patch`) makes each row one real link — Enter, middle-click and open-in-new-tab work, and checkboxes, buttons and menus inside the row keep their own clicks; use `row_click` with a `JS` command when the row is not a link. Do not also put `navigate` on the `list_row`. `fill` pins pagination only when the parent bounds the height (see "Fill list pages" above) — without a bound the table takes its natural height.

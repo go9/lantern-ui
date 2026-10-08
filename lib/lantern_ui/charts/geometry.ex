@@ -47,6 +47,12 @@ defmodule LanternUI.Charts.Geometry do
     |> Enum.map(&Float.round(&1, 6))
   end
 
+  @doc "Signed nice ticks whose padded domain always includes zero."
+  @spec signed_nice_ticks(number, number, pos_integer) :: [float]
+  def signed_nice_ticks(min, max, count \\ 5) when count > 1 do
+    nice_ticks(min(min, 0), max(max, 0), count)
+  end
+
   defp domain(min, max) when max <= min and min >= 0, do: {max(min - 1.0, 0.0), min + 1.0}
   defp domain(min, max) when max <= min, do: {min - 1.0, max + 1.0}
   defp domain(min, max), do: {min * 1.0, max * 1.0}
@@ -110,6 +116,84 @@ defmodule LanternUI.Charts.Geometry do
       end)
 
     "M#{s(x0)},#{s(y0)} #{segments}"
+  end
+
+  @doc "Build an SVG path using a supported line curve."
+  @spec curve_path([{number, number}], atom) :: String.t()
+  def curve_path(points, :linear), do: line_path(points, false)
+  def curve_path(points, :cardinal), do: line_path(points, true)
+  def curve_path(points, :monotone), do: monotone_path(points)
+  def curve_path(points, :step), do: step_path(points)
+  def curve_path(points, _), do: line_path(points, false)
+
+  @doc "Build a closed band between two point lists, traversing the lower edge in reverse."
+  @spec band_path([{number, number}], [{number, number}], atom) :: String.t()
+  def band_path([], _lower, _curve), do: ""
+  def band_path(_upper, [], _curve), do: ""
+
+  def band_path(upper, lower, curve) do
+    {x, y} = List.last(lower)
+    "#{curve_path(upper, curve)} #{curve_path(Enum.reverse(lower), curve)} L#{s(x)},#{s(y)} Z"
+  end
+
+  defp step_path([]), do: ""
+  defp step_path([{x, y}]), do: "M#{s(x)},#{s(y)}"
+
+  defp step_path([{x, y} | _] = points) do
+    points
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.reduce("M#{s(x)},#{s(y)}", fn [{x1, _y1}, {x2, y2}], path ->
+      mid_x = (x1 + x2) / 2
+      path <> " H#{s(mid_x)} V#{s(y2)} H#{s(x2)}"
+    end)
+  end
+
+  defp monotone_path([]), do: ""
+  defp monotone_path([{x, y}]), do: "M#{s(x)},#{s(y)}"
+  defp monotone_path([_first, _second] = points), do: line_path(points, false)
+
+  defp monotone_path([{x0, y0} | _] = points) do
+    pairs = Enum.chunk_every(points, 2, 1, :discard)
+    slopes = Enum.map(pairs, fn [{x1, y1}, {x2, y2}] -> (y2 - y1) / (x2 - x1) end)
+    tangents = monotone_tangents(points, slopes)
+
+    segments =
+      pairs
+      |> Enum.with_index()
+      |> Enum.map_join(" ", fn {[{x1, y1}, {x2, y2}], i} ->
+        dx = x2 - x1
+        m1 = Enum.at(tangents, i)
+        m2 = Enum.at(tangents, i + 1)
+        c1x = x1 + dx / 3
+        c1y = y1 + m1 * dx / 3
+        c2x = x2 - dx / 3
+        c2y = y2 - m2 * dx / 3
+        "C#{s(c1x)},#{s(c1y)} #{s(c2x)},#{s(c2y)} #{s(x2)},#{s(y2)}"
+      end)
+
+    "M#{s(x0)},#{s(y0)} #{segments}"
+  end
+
+  defp monotone_tangents(points, slopes) do
+    count = length(points)
+
+    interior =
+      for i <- 1..(count - 2) do
+        before = Enum.at(slopes, i - 1)
+        after_slope = Enum.at(slopes, i)
+
+        if before * after_slope <= 0 do
+          0.0
+        else
+          x_before = elem(Enum.at(points, i), 0) - elem(Enum.at(points, i - 1), 0)
+          x_after = elem(Enum.at(points, i + 1), 0) - elem(Enum.at(points, i), 0)
+          w1 = 2 * x_after + x_before
+          w2 = x_after + 2 * x_before
+          (w1 + w2) / (w1 / before + w2 / after_slope)
+        end
+      end
+
+    [hd(slopes) | interior] ++ [List.last(slopes)]
   end
 
   @doc "Closed area path: the line dropped to `baseline_y` and closed back to the start."

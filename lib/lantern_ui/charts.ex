@@ -26,6 +26,7 @@ defmodule LanternUI.Charts do
   use Phoenix.Component
 
   alias LanternUI.Charts.Geometry
+  alias LanternUI.Class
 
   @vb_w 700
   @margin %{top: 12, right: 14, bottom: 26, left: 46}
@@ -508,6 +509,14 @@ defmodule LanternUI.Charts do
   # ── line chart (multi-series) ───────────────────────────────────────────────
 
   @line_palette ~w(#3b82f6 #16a34a #f59e0b #dc2626 #8b5cf6 #0891b2 #db2777 #65a30d)
+  @time_series_palette [
+    "var(--lantern-chart-1, var(--lantern-accent, currentColor))",
+    "var(--lantern-chart-2, var(--lantern-success, currentColor))",
+    "var(--lantern-chart-3, var(--lantern-warning, currentColor))",
+    "var(--lantern-chart-4, var(--lantern-danger, currentColor))",
+    "var(--lantern-chart-5, var(--lantern-info, currentColor))",
+    "var(--lantern-chart-6, var(--lantern-fg-muted, currentColor))"
+  ]
 
   @doc """
   A multi-series time-series line chart with a legend and a shared crosshair tooltip.
@@ -597,6 +606,388 @@ defmodule LanternUI.Charts do
     </div>
     """
   end
+
+  @doc """
+  Render a generic series-first chart using server-computed SVG geometry.
+
+  A series is `%{id: stable_id, label: label, color: "var(--token)", points: [%{x: key, y: number}]}`.
+  The x domain must be homogeneous: dates/date-times, numbers, or category strings.
+  Missing x keys break line and area paths. Invalid points are ignored; duplicate
+  series ids and duplicate x keys within a series retain their first occurrence.
+  """
+  attr(:id, :string, required: true, doc: "Stable chart id.")
+
+  attr(:series, :list,
+    default: [],
+    doc: "Series maps with id, label, optional CSS token color and %{x, y} points."
+  )
+
+  attr(:height, :integer, default: 280, doc: "SVG viewBox height.")
+  attr(:class, :string, default: nil, doc: "Extra classes merged onto the root element.")
+
+  attr(:type, :atom,
+    default: :line,
+    values: [:line, :area, :points, :stacked_area, :bar, :stacked_bar, :grouped_bar],
+    doc: "Series renderer: line, area, points, stacked area, or bar grouping mode."
+  )
+
+  attr(:curve, :atom,
+    default: :linear,
+    values: [:linear, :monotone, :step, :cardinal],
+    doc: "Line interpolation: :linear, :monotone, :step or :cardinal."
+  )
+
+  attr(:visible_series, :list, default: nil, doc: "Visible series ids; nil shows all.")
+  attr(:comparison, :list, default: [], doc: "Optional previous-period series set.")
+  attr(:annotations, :list, default: [], doc: "Optional markers keyed by x.")
+
+  attr(:orientation, :atom,
+    default: :vertical,
+    values: [:vertical, :horizontal],
+    doc: "Bar orientation; applies to bar chart types."
+  )
+
+  attr(:glyphs, :boolean, default: false, doc: "Render a marker at each available point.")
+  attr(:grid, :boolean, default: true, doc: "Show horizontal y-axis grid lines.")
+  attr(:axes, :boolean, default: true, doc: "Show x and y labels.")
+
+  attr(:empty_message, :string,
+    default: "No data",
+    doc: "Copy shown when no valid series remains."
+  )
+
+  attr(:aria_label, :string, default: "Time series chart", doc: "Accessible name for the SVG.")
+
+  attr(:value_format, :any,
+    default: :number,
+    doc: "`:number`, `:currency`, or a 1-arity number formatter."
+  )
+
+  def time_series_chart(assigns) do
+    assigns = assign(assigns, time_series_geometry(assigns))
+
+    ~H"""
+    <div id={@id} class={Class.merge(["lui-time-series-chart", @class])} data-chart-type={@chart_type}>
+      <svg
+        :if={@has_data}
+        viewBox={"0 0 #{@vb_w} #{@height}"}
+        role="img"
+        aria-label={@aria_label}
+        class="lui-time-series-chart__svg"
+      >
+        <g :if={@show_grid} class="lui-time-series-chart__grid" aria-hidden="true">
+          <line :for={y <- @grid_y} x1={@plot_left} x2={@plot_right} y1={y} y2={y} />
+        </g>
+        <line
+          :if={@zero_y}
+          class="lui-time-series-chart__zero"
+          x1={@plot_left}
+          x2={@plot_right}
+          y1={@zero_y}
+          y2={@zero_y}
+        />
+        <g :if={@show_axes} class="lui-time-series-chart__labels">
+          <text :for={{label, y} <- @y_ticks} x={@plot_left - 8} y={y + 3} text-anchor="end">
+            {label}
+          </text>
+          <text :for={{label, x, anchor} <- @x_ticks} x={x} y={@height - 8} text-anchor={anchor}>
+            {label}
+          </text>
+        </g>
+        <g :for={path <- @paths} class={path.class} style={"--lui-series-color:#{path.color}"}>
+          <path :if={path.fill != ""} d={path.fill} class="lui-time-series-chart__area" />
+          <path :if={path.line != ""} d={path.line} class="lui-time-series-chart__line" />
+          <circle
+            :for={{x, y} <- path.points}
+            class="lui-time-series-chart__point"
+            cx={x}
+            cy={y}
+            r="3"
+          />
+        </g>
+      </svg>
+      <div :if={!@has_data} class="lui-time-series-chart__empty">{@empty_message}</div>
+      <div :if={@legend != []} class="lui-time-series-chart__legend" aria-label="Series">
+        <span :for={item <- @legend} class="lui-time-series-chart__legend-item">
+          <i style={"--lui-series-color:#{item.color}"} aria-hidden="true"></i>{item.label}
+        </span>
+      </div>
+    </div>
+    """
+  end
+
+  defp time_series_geometry(assigns) do
+    series = normalize_time_series(assigns.series)
+    visible = assigns.visible_series && MapSet.new(assigns.visible_series)
+    series = Enum.filter(series, &(is_nil(visible) or MapSet.member?(visible, &1.id)))
+    all_points = Enum.flat_map(series, & &1.points)
+
+    case {all_points, x_domain_kind(all_points)} do
+      {[], _} ->
+        %{has_data: false, chart_type: assigns.type, legend: []}
+
+      {_, nil} ->
+        %{has_data: false, chart_type: assigns.type, legend: []}
+
+      {_, kind} ->
+        build_time_series_geometry(assigns, series, all_points, kind)
+    end
+  end
+
+  defp build_time_series_geometry(assigns, series, all_points, kind) do
+    plot_left = @margin.left
+    plot_right = @vb_w - @margin.right
+    plot_top = 18
+    plot_bottom = assigns.height - @margin.bottom
+    axis_keys = all_points |> Enum.map(& &1.key) |> Enum.uniq() |> sort_x_keys(kind)
+    x_positions = axis_keys |> Enum.with_index() |> Map.new(fn {key, index} -> {key, index} end)
+    count = length(axis_keys)
+
+    x_value = fn key -> x_key_value(key) end
+    x_min = axis_keys |> hd() |> x_value.()
+    x_max = axis_keys |> List.last() |> x_value.()
+
+    xf = fn key ->
+      if kind == :category do
+        band = (plot_right - plot_left) / max(count, 1)
+        plot_left + (Map.fetch!(x_positions, key) + 0.5) * band
+      else
+        Geometry.scale(x_min, x_max, plot_left, plot_right, x_value.(key))
+      end
+    end
+
+    values = Enum.map(all_points, & &1.y)
+    ticks = Geometry.signed_nice_ticks(Enum.min(values), Enum.max(values), 5)
+    ymin = hd(ticks)
+    ymax = List.last(ticks)
+    yf = fn y -> Geometry.scale(ymin, ymax, plot_bottom, plot_top, y) end
+    zero_y = Geometry.round1(yf.(0))
+
+    curve =
+      if assigns.curve in [:linear, :monotone, :step, :cardinal], do: assigns.curve, else: :linear
+
+    paths =
+      series
+      |> Enum.with_index()
+      |> Enum.flat_map(fn {s, i} ->
+        values_by_key = Map.new(s.points, &{&1.key, &1.y})
+
+        runs =
+          axis_keys
+          |> Enum.with_index()
+          |> Enum.map(fn {key, index} ->
+            case Map.fetch(values_by_key, key) do
+              {:ok, y} -> {index, key, y}
+              :error -> nil
+            end
+          end)
+          |> split_point_runs()
+
+        color = s.color || Enum.at(@time_series_palette, rem(i, length(@time_series_palette)))
+
+        Enum.map(runs, fn run ->
+          points = Enum.map(run, fn {_index, key, y} -> {xf.(key), yf.(y)} end)
+          line = if assigns.type == :points, do: "", else: Geometry.curve_path(points, curve)
+
+          fill =
+            if assigns.type == :area do
+              {first_x, _} = hd(points)
+              {last_x, _} = List.last(points)
+
+              "#{line} L#{Geometry.round1(last_x)} #{zero_y} L#{Geometry.round1(first_x)} #{zero_y} Z"
+            else
+              ""
+            end
+
+          %{
+            class: "lui-time-series-chart__series",
+            color: color,
+            line: line,
+            fill: fill,
+            points: if(assigns.glyphs or assigns.type == :points, do: points, else: [])
+          }
+        end)
+      end)
+
+    x_ticks = time_series_x_ticks(axis_keys, kind, xf)
+
+    %{
+      has_data: paths != [],
+      chart_type: assigns.type,
+      height: assigns.height,
+      vb_w: @vb_w,
+      plot_left: plot_left,
+      plot_right: plot_right,
+      grid_y: Enum.map(ticks, &Geometry.round1(yf.(&1))),
+      y_ticks:
+        Enum.map(ticks, &{format_value(&1, assigns.value_format), Geometry.round1(yf.(&1))}),
+      x_ticks: x_ticks,
+      paths: paths,
+      zero_y: zero_y,
+      show_grid: assigns.grid,
+      show_axes: assigns.axes,
+      legend:
+        series
+        |> Enum.with_index()
+        |> Enum.map(fn {s, i} ->
+          %{
+            label: s.label,
+            color: s.color || Enum.at(@time_series_palette, rem(i, length(@time_series_palette)))
+          }
+        end)
+    }
+  end
+
+  defp normalize_time_series(series) when is_list(series) do
+    {normalized, _ids} =
+      series
+      |> Enum.with_index()
+      |> Enum.reduce({[], MapSet.new()}, fn {series, index}, {acc, ids} ->
+        id = fetch_key(series, :id) || "series-#{index}"
+
+        if MapSet.member?(ids, id) do
+          {acc, ids}
+        else
+          points = normalize_time_points(fetch_key(series, :points))
+
+          item = %{
+            id: id,
+            label: to_string(fetch_key(series, :label) || id),
+            color: normalize_series_color(fetch_key(series, :color)),
+            points: points
+          }
+
+          {acc ++ [item], MapSet.put(ids, id)}
+        end
+      end)
+
+    normalized
+  end
+
+  defp normalize_time_series(_), do: []
+
+  defp normalize_time_points(points) when is_list(points) do
+    {result, _seen} =
+      Enum.reduce(points, {[], MapSet.new()}, fn point, {acc, seen} ->
+        x = fetch_key(point, :x)
+        y = fetch_key(point, :y)
+        normalized_x = normalize_x(x)
+
+        if normalized_x && finite_number?(y) && not MapSet.member?(seen, normalized_x.key) do
+          {acc ++
+             [
+               %{
+                 key: normalized_x.key,
+                 value: normalized_x.value,
+                 label: normalized_x.label,
+                 y: y
+               }
+             ], MapSet.put(seen, normalized_x.key)}
+        else
+          {acc, seen}
+        end
+      end)
+
+    result
+  end
+
+  defp normalize_time_points(_), do: []
+
+  defp normalize_x(%Date{} = date) do
+    value = Date.to_gregorian_days(date) * 86_400_000_000
+    %{key: {:time, value}, value: value, label: Date.to_iso8601(date)}
+  end
+
+  defp normalize_x(%DateTime{} = datetime) do
+    value = DateTime.to_unix(datetime, :microsecond)
+    %{key: {:time, value}, value: value, label: Calendar.strftime(datetime, "%b %-d")}
+  end
+
+  defp normalize_x(%NaiveDateTime{} = datetime),
+    do: NaiveDateTime.to_iso8601(datetime) |> normalize_x()
+
+  defp normalize_x(value) when is_number(value) and abs(value) <= 1.0e15 do
+    %{key: {:number, value}, value: value, label: number_label(value)}
+  end
+
+  defp normalize_x(value) when is_binary(value) do
+    case Date.from_iso8601(value) do
+      {:ok, date} ->
+        normalize_x(date)
+
+      _ ->
+        case DateTime.from_iso8601(value) do
+          {:ok, datetime, _} -> normalize_x(datetime)
+          _ -> %{key: {:category, value}, value: value, label: value}
+        end
+    end
+  end
+
+  defp normalize_x(_), do: nil
+
+  defp x_domain_kind(points) do
+    kinds = points |> Enum.map(fn point -> point.key |> elem(0) end) |> Enum.uniq()
+    if length(kinds) == 1, do: hd(kinds), else: nil
+  end
+
+  defp sort_x_keys(keys, :category), do: keys
+  defp sort_x_keys(keys, _kind), do: Enum.sort(keys)
+
+  defp x_key_value({:time, value}), do: value
+  defp x_key_value({:number, value}), do: value
+  defp x_key_value({:category, _}), do: 0
+
+  defp time_series_x_ticks(keys, kind, xf) do
+    count = length(keys)
+
+    indices =
+      0..min(count - 1, 4)
+      |> Enum.map(&round(&1 * (count - 1) / max(min(count - 1, 4), 1)))
+      |> Enum.uniq()
+
+    Enum.map(indices, fn index ->
+      point = Enum.at(keys, index)
+      label = x_key_label(point, kind)
+      {label, Geometry.round1(xf.(point)), tick_anchor(index, count)}
+    end)
+  end
+
+  defp x_key_label({:category, label}, :category), do: label
+  defp x_key_label({:number, value}, :number), do: number_label(value)
+
+  defp x_key_label({:time, value}, :time) do
+    case DateTime.from_unix(value, :microsecond) do
+      {:ok, datetime} -> Calendar.strftime(datetime, "%b %-d")
+      _ -> ""
+    end
+  end
+
+  defp split_point_runs(points) do
+    points
+    |> Enum.reduce({[], []}, fn
+      nil, {runs, []} -> {runs, []}
+      nil, {runs, current} -> {runs ++ [Enum.reverse(current)], []}
+      point, {runs, current} -> {runs, [point | current]}
+    end)
+    |> then(fn {runs, current} ->
+      if current == [], do: runs, else: runs ++ [Enum.reverse(current)]
+    end)
+  end
+
+  defp fetch_key(map, key) when is_map(map),
+    do: Map.get(map, key, Map.get(map, Atom.to_string(key)))
+
+  defp fetch_key(_, _), do: nil
+
+  defp finite_number?(value) when is_integer(value), do: abs(value) <= 1.0e15
+  defp finite_number?(value) when is_float(value), do: value == value and abs(value) <= 1.0e15
+  defp finite_number?(_), do: false
+
+  defp normalize_series_color(color) when is_binary(color) do
+    if String.starts_with?(String.trim(color), "var("), do: String.trim(color), else: nil
+  end
+
+  defp normalize_series_color(_), do: nil
 
   defp line_geometry(series, height, fmt) do
     norm =
