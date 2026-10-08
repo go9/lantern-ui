@@ -48,11 +48,11 @@ defmodule LanternUI.Components.Layout do
   use Phoenix.Component
 
   alias LanternUI.Class
-  alias LanternUI.Deprecated
   alias LanternUI.Components.ActionBar
   alias LanternUI.Components.Breadcrumb
   alias LanternUI.Components.Icon
   alias LanternUI.Components.Menu
+  alias LanternUI.Deprecated
   alias Phoenix.LiveView.JS
 
   attr(:id, :string, required: true, doc: "stable id — the collapse state is persisted per id")

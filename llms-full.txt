@@ -2811,14 +2811,13 @@ From `README.md` (Command palette):
 
 ## Overlaps and deprecations
 
-Deprecated (warn at render; each entry names the version it is removed in,
-and nothing is removed before a major version):
+Deprecated (warn at render; each entry names its planned removal version):
 
-- `icon_button/1` is deprecated (removed in 0.9.0); use <.button size="icon" label="...">. Evidence: eval tasks 01/05 steer models to icon_button; same chrome as button/1.
-- `segmented/1` is deprecated (removed in 0.9.0); use <.tabs_list variant="segmented">. Evidence: eval tasks 01 + brief steer models to segmented; duplicate filter-chip API.
-- `progress_ring/1` is deprecated (removed in 0.9.0); use <.progress shape="ring" ...>. Evidence: duplicate of progress/1 shape="ring"; both in eval inventory.
-- `property_row/1` is deprecated (removed in 0.9.0); use <.description_list layout="dense"> with <:item>. Evidence: eval task 03 steers models to property_row; same rows as dense description_list.
-- `page_header/1` is deprecated (removed in 1.0); use <.page_shell>. Evidence: shell contract 0.10: page_header draws a second visible title row under the breadcrumb; page_shell makes the breadcrumb the one title (docs/recipes.md Block 1).
+- `icon_button/1` is deprecated (planned removal: 0.9.0); use <.button size="icon" label="...">. Evidence: eval tasks 01/05 steer models to icon_button; same chrome as button/1.
+- `segmented/1` is deprecated (planned removal: 0.9.0); use <.tabs_list variant="segmented">. Evidence: eval tasks 01 + brief steer models to segmented; duplicate filter-chip API.
+- `progress_ring/1` is deprecated (planned removal: 0.9.0); use <.progress shape="ring" ...>. Evidence: duplicate of progress/1 shape="ring"; both in eval inventory.
+- `property_row/1` is deprecated (planned removal: 0.9.0); use <.description_list layout="dense"> with <:item>. Evidence: eval task 03 steers models to property_row; same rows as dense description_list.
+- `page_header/1` is deprecated (planned removal: 1.0); use <.page_shell>. Evidence: shell contract 0.10: page_header draws a second visible title row under the breadcrumb; page_shell makes the breadcrumb the one title (docs/recipes.md Block 1).
 
 Names models guess that never existed (the lint answers these with
 did-you-mean):

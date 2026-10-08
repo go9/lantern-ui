@@ -36,8 +36,8 @@ defmodule LanternUI.Deprecated do
   Deprecated components: `%{component, replacement, removed_in, evidence}`.
 
   Every entry has a `@deprecated` annotation on the component itself and warns
-  through `warn/3` at render time. Lint flags call sites. Nothing is removed
-  before its `removed_in` version; removals wait for a major release.
+  through `warn/3` at render time. Lint flags call sites. An entry is not removed
+  before its `removed_in` version.
   """
   def deprecated do
     [

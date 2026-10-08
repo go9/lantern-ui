@@ -434,7 +434,7 @@ defmodule LanternUI.Llms do
     deprecated =
       LanternUI.Deprecated.deprecated()
       |> Enum.map(fn entry ->
-        "- `#{entry.component}/1` is deprecated (removed in #{entry.removed_in}); use #{entry.replacement}. Evidence: #{entry.evidence}."
+        "- `#{entry.component}/1` is deprecated (planned removal: #{entry.removed_in}); use #{entry.replacement}. Evidence: #{entry.evidence}."
       end)
       |> Enum.join("\n")
 
@@ -448,8 +448,7 @@ defmodule LanternUI.Llms do
     """
     ## Overlaps and deprecations
 
-    Deprecated (warn at render; each entry names the version it is removed in,
-    and nothing is removed before a major version):
+    Deprecated (warn at render; each entry names its planned removal version):
 
     #{deprecated}
 
