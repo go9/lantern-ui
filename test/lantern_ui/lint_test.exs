@@ -365,6 +365,75 @@ defmodule LanternUI.LintTest do
     assert hd(findings).hint =~ "one <.page_shell>"
   end
 
+  test "hand_input reads the whole tag: a `>` inside braces does not hide type=hidden", %{
+    dir: dir
+  } do
+    File.write!(Path.join(dir, "form.heex"), """
+    <input value={@a |> String.trim()} type="hidden" name="x" />
+    <input type={"hidden"} value={@b} />
+    <input value={@c |> String.trim()} name="visible" />
+    """)
+
+    assert [%{rule: :hand_input, line: 3}] =
+             Enum.filter(Lint.scan(dir), &(&1.rule == :hand_input))
+  end
+
+  test "single_page_shell: shells in separate function clauses or case arms are alternatives", %{
+    dir: dir
+  } do
+    File.write!(Path.join(dir, "live.ex"), """
+    defmodule MyAppWeb.Live do
+      def render(%{live_action: :index} = assigns) do
+        ~H\"\"\"
+        <.page_shell id="a" title="A" />
+        \"\"\"
+      end
+
+      def render(assigns) do
+        ~H\"\"\"
+        <.page_shell id="b" title="B" />
+        \"\"\"
+      end
+    end
+    """)
+
+    File.write!(Path.join(dir, "case.heex"), """
+    <%= case @live_action do %>
+      <% :index -> %>
+        <.page_shell id="c" title="C" />
+      <% :edit -> %>
+        <.page_shell id="d" title="D" />
+    <% end %>
+    """)
+
+    File.write!(Path.join(dir, "conditional.heex"), """
+    <.page_shell :if={@a} id="e" title="E" />
+    <.page_shell :if={!@a} id="f" title="F" />
+    """)
+
+    assert Enum.filter(Lint.scan(dir), &(&1.rule == :single_page_shell)) == []
+  end
+
+  test "single_page_shell: two shells in one template are flagged; allow_rules skips them", %{
+    dir: dir
+  } do
+    File.mkdir_p!(Path.join(dir, "lib/legacy"))
+
+    File.write!(
+      Path.join(dir, "lib/legacy/two.heex"),
+      ~s|<.page_shell id="a" title="A" />\n<.page_shell id="b" title="B" />\n|
+    )
+
+    assert length(Enum.filter(Lint.scan(dir), &(&1.rule == :single_page_shell))) == 2
+
+    File.write!(
+      Path.join(dir, ".lantern-lint.json"),
+      ~s|{"allow_rules": {"single_page_shell": ["lib/legacy/**"]}}|
+    )
+
+    assert Enum.filter(Lint.scan(dir), &(&1.rule == :single_page_shell)) == []
+  end
+
   test "page_header is deprecated in favour of page_shell", %{dir: dir} do
     File.write!(Path.join(dir, "page.heex"), ~s|<.page_header title="Tickets" />\n|)
 

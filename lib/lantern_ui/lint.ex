@@ -18,9 +18,14 @@ defmodule LanternUI.Lint do
   @group_band ~r/group_band|GroupBand|group-band/
   @raw_table ~r/<table[\s>]/
   @raw_button ~r/<button[\s>]/
-  # Hidden inputs are plumbing (CSRF, ids), not user-facing controls.
-  @raw_input ~r/<(?:input|textarea|select)\b(?![^>]*\btype=["']hidden["'])/
+  # Raw form controls. The opening tag is read by `open_tag/2`, which skips `>`
+  # inside `{...}` and quotes, so `value={a |> b()}` does not end the tag early.
+  @raw_input_open ~r/<(?:input|textarea|select)\b/
+  @hidden_input ~r/\btype=(?:"hidden"|'hidden'|\{"hidden"\}|\{'hidden'\})/
   @page_shell_call ~r/<\.page_shell\b/
+  # Text between two shells that means they are alternatives, not a duplicate:
+  # a new function clause, a case/cond/if branch, or an `:if` attribute.
+  @branch_boundary ~r/^\s*(?:defp?|defmacrop?|case|cond|else|if)\b|->|<%=?\s*(?:case|cond|if|else)\b|\bcase\s+@|\bcond\s+do\b/m
   @lantern_table_call ~r/<\.(table|data_table|resource_list)\b/
   @component_call ~r/<\.([a-z][a-z0-9_]*[!?]?)\b/
   @local_def ~r/defp?\s+([a-z][a-z0-9_]*[!?]?)[\s(]/
@@ -329,7 +334,7 @@ defmodule LanternUI.Lint do
   # raw `<table>` is only a finding when the file uses no lantern table component.
   defp source_findings(rel, source, lines, inv, config) do
     source_collect(rel, source, lines, @raw_button, :hand_button, config) ++
-      source_collect(rel, source, lines, @raw_input, :hand_input, config) ++
+      hand_input_findings(rel, source, lines, config) ++
       hand_table_findings(rel, source, lines, config) ++
       single_page_shell_findings(rel, source, lines, config) ++
       unknown_attr_findings(rel, source, lines, inv, config)
@@ -337,10 +342,48 @@ defmodule LanternUI.Lint do
 
   # One page identity per route: a file that renders two `<.page_shell>` shows
   # two breadcrumb rows and two titles. Every occurrence is reported.
+  # Shells separated by a branch or clause boundary are alternatives (one per
+  # route clause or case arm) and count once. Conditional shells (`:if=`) are
+  # alternatives by construction. Anything else in one clause is reported.
   defp single_page_shell_findings(rel, source, lines, config) do
-    findings = source_collect(rel, source, lines, @page_shell_call, :single_page_shell, config)
+    if rule_skipped?(config, rel, :single_page_shell) do
+      []
+    else
+      @page_shell_call
+      |> Regex.scan(source, return: :index)
+      |> Enum.map(fn [{start, _}] -> start end)
+      |> Enum.reject(&conditional_line?(source, &1))
+      |> group_by_boundary(source)
+      |> Enum.filter(&(length(&1) > 1))
+      |> List.flatten()
+      |> Enum.flat_map(&finding_at(rel, source, lines, &1, "<.page_shell", :single_page_shell))
+    end
+  end
 
-    if length(findings) > 1, do: findings, else: []
+  defp conditional_line?(source, offset), do: String.contains?(line_at(source, offset), ":if=")
+
+  defp line_at(source, offset) do
+    head = source |> binary_part(0, offset) |> String.split("\n") |> List.last()
+    tail = source |> binary_part(offset, byte_size(source) - offset) |> String.split("\n") |> hd()
+    head <> tail
+  end
+
+  # Splits ordered offsets into runs with no branch boundary between neighbours.
+  defp group_by_boundary([], _source), do: []
+
+  defp group_by_boundary([first | rest], source) do
+    {groups, current} =
+      Enum.reduce(rest, {[], [first]}, fn offset, {groups, [prev | _] = current} ->
+        between = binary_part(source, prev, offset - prev)
+
+        if Regex.match?(@branch_boundary, between) do
+          {[current | groups], [offset]}
+        else
+          {groups, [offset | current]}
+        end
+      end)
+
+    Enum.reverse([Enum.reverse(current) | groups])
   end
 
   defp source_collect(rel, source, lines, regex, rule, config) do
@@ -363,26 +406,70 @@ defmodule LanternUI.Lint do
     regex
     |> Regex.scan(source, return: :index)
     |> Enum.flat_map(fn [{start, len} | _] ->
-      match = binary_part(source, start, len)
-      {line, column} = line_column(lines, start)
-      prev = if line > 1, do: Enum.at(lines, line - 2), else: ""
-      text = Enum.at(lines, line - 1, "")
-
-      if ignored_line?(text, prev) do
-        []
-      else
-        [
-          %{
-            path: rel,
-            line: line,
-            column: column,
-            rule: rule,
-            match: match,
-            hint: hint(rule, match)
-          }
-        ]
-      end
+      finding_at(rel, source, lines, start, binary_part(source, start, len), rule)
     end)
+  end
+
+  defp finding_at(rel, _source, lines, start, match, rule) do
+    {line, column} = line_column(lines, start)
+    prev = if line > 1, do: Enum.at(lines, line - 2), else: ""
+    text = Enum.at(lines, line - 1, "")
+
+    if ignored_line?(text, prev) do
+      []
+    else
+      [
+        %{
+          path: rel,
+          line: line,
+          column: column,
+          rule: rule,
+          match: match,
+          hint: hint(rule, match)
+        }
+      ]
+    end
+  end
+
+  defp hand_input_findings(rel, source, lines, config) do
+    if rule_skipped?(config, rel, :hand_input) do
+      []
+    else
+      @raw_input_open
+      |> Regex.scan(source, return: :index)
+      |> Enum.flat_map(fn [{start, len}] ->
+        tag = open_tag(source, start)
+
+        if Regex.match?(@hidden_input, tag) do
+          []
+        else
+          finding_at(rel, source, lines, start, binary_part(source, start, len), :hand_input)
+        end
+      end)
+    end
+  end
+
+  # The opening tag starting at `start`, up to the first `>` outside braces and quotes.
+  defp open_tag(source, start) do
+    rest = binary_part(source, start, byte_size(source) - start)
+    binary_part(rest, 0, scan_close(rest, 0, 0, nil))
+  end
+
+  defp scan_close(bin, i, depth, quote) do
+    if i >= byte_size(bin) do
+      byte_size(bin)
+    else
+      c = :binary.at(bin, i)
+
+      cond do
+        quote != nil -> scan_close(bin, i + 1, depth, if(c == quote, do: nil, else: quote))
+        c in [?", ?'] -> scan_close(bin, i + 1, depth, c)
+        c == ?{ -> scan_close(bin, i + 1, depth + 1, nil)
+        c == ?} -> scan_close(bin, i + 1, max(depth - 1, 0), nil)
+        c == ?> and depth == 0 -> i + 1
+        true -> scan_close(bin, i + 1, depth, nil)
+      end
+    end
   end
 
   defp hand_table_findings(rel, source, lines, config) do
