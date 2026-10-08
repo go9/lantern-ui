@@ -521,6 +521,7 @@ defmodule LanternUI.ComponentsTest do
 
       assert keys == [
                :accordion,
+               :action_bar,
                :alert,
                :alert_dialog,
                :autocomplete,
