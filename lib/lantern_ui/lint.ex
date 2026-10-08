@@ -2,9 +2,9 @@ defmodule LanternUI.Lint do
   @moduledoc """
   Scan `.ex` / `.exs` / `.heex` for arbitrary Tailwind pixel values, hardcoded
   palette colors, page-local greys, banned grouped-list markup, hand-rolled
-  tables/buttons/form controls, more than one page shell per file, deprecated
-  components, and unknown component/attr names with "did you mean" hints. Used
-  by `mix lantern.lint`.
+  tables/buttons/form controls, repeated page shells within one route region
+  (see `single_page_shell`), deprecated components, and unknown component/attr
+  names with "did you mean" hints. Used by `mix lantern.lint`.
   """
 
   @extensions MapSet.new(~w(.ex .exs .heex))
@@ -22,10 +22,24 @@ defmodule LanternUI.Lint do
   # inside `{...}` and quotes, so `value={a |> b()}` does not end the tag early.
   @raw_input_open ~r/<(?:input|textarea|select)\b/
   @hidden_input ~r/\btype=(?:"hidden"|'hidden'|\{"hidden"\}|\{'hidden'\})/
-  @page_shell_call ~r/<\.page_shell\b/
-  # Text between two shells that means they are alternatives, not a duplicate:
-  # a new function clause, a case/cond/if branch, or an `:if` attribute.
-  @branch_boundary ~r/^\s*(?:defp?|defmacrop?|case|cond|else|if)\b|->|<%=?\s*(?:case|cond|if|else)\b|\bcase\s+@|\bcond\s+do\b/m
+  # `<.page_shell>`, `<Layout.page_shell>`, and fully qualified aliases.
+  @page_shell_call ~r/<(?:[A-Z][\w.]*\.|\.)page_shell\b/
+  @page_shell_close ~r/<\/(?:[A-Z][\w.]*\.|\.)page_shell\s*>/
+  # Constructs that make the text between two shells a branch, so the shells are
+  # alternatives and not duplicates. Each matches code, not prose: Elixir clause
+  # heads and block openers on their own line, `else` on its own line, HEEx
+  # control tags, and case arms (`:pattern ->` or `{...} ->` on a line of its own,
+  # or `->` inside `<% ... %>`). An HTML comment's `-->` and a `fn x ->` inside an
+  # attribute are not branches.
+  @branch_boundaries [
+    ~r/^\s*defp?\s/m,
+    ~r/^\s*defmacrop?\s/m,
+    ~r/^\s*(?:case|cond|if|unless)\b.*\bdo\s*$/m,
+    ~r/^\s*else\s*$/m,
+    ~r/<%=?\s*(?:case|cond|if|unless|else)\b/,
+    ~r/<%[^%]*?->\s*%>/,
+    ~r/^\s*(?::\w+|\{[^}<]*\}|\[[^\]<]*\]|_\w*|\d+|nil|true|false)(?:\s+when\s[^\n<]*)?\s*->\s*$/m
+  ]
   @lantern_table_call ~r/<\.(table|data_table|resource_list)\b/
   @component_call ~r/<\.([a-z][a-z0-9_]*[!?]?)\b/
   @local_def ~r/defp?\s+([a-z][a-z0-9_]*[!?]?)[\s(]/
@@ -340,46 +354,70 @@ defmodule LanternUI.Lint do
       unknown_attr_findings(rel, source, lines, inv, config)
   end
 
-  # One page identity per route: a file that renders two `<.page_shell>` shows
-  # two breadcrumb rows and two titles. Every occurrence is reported.
-  # Shells separated by a branch or clause boundary are alternatives (one per
-  # route clause or case arm) and count once. Conditional shells (`:if=`) are
-  # alternatives by construction. Anything else in one clause is reported.
+  # One page identity per route: a file that renders two `<.page_shell>` shows two
+  # breadcrumb rows and two titles. Shells are grouped by the text between them:
+  # a run with no branch construct between neighbours is one route region. A
+  # region is a duplicate when it holds two unconditional shells, or an
+  # unconditional shell next to a conditional one (`:if=`, which renders in some
+  # cases). Two conditional shells alone are read as an if/else pair. The text
+  # between shells skips each shell's own body.
   defp single_page_shell_findings(rel, source, lines, config) do
     if rule_skipped?(config, rel, :single_page_shell) do
       []
     else
       @page_shell_call
       |> Regex.scan(source, return: :index)
-      |> Enum.map(fn [{start, _}] -> start end)
-      |> Enum.reject(&conditional_line?(source, &1))
-      |> group_by_boundary(source)
-      |> Enum.filter(&(length(&1) > 1))
+      |> Enum.map(fn [{start, _}] -> {start, conditional_tag?(source, start)} end)
+      |> group_by_branch(source)
+      |> Enum.filter(&duplicate_region?/1)
       |> List.flatten()
-      |> Enum.flat_map(&finding_at(rel, source, lines, &1, "<.page_shell", :single_page_shell))
+      |> Enum.flat_map(fn {offset, _} ->
+        finding_at(rel, source, lines, offset, "page_shell", :single_page_shell)
+      end)
     end
   end
 
-  defp conditional_line?(source, offset), do: String.contains?(line_at(source, offset), ":if=")
-
-  defp line_at(source, offset) do
-    head = source |> binary_part(0, offset) |> String.split("\n") |> List.last()
-    tail = source |> binary_part(offset, byte_size(source) - offset) |> String.split("\n") |> hd()
-    head <> tail
+  defp duplicate_region?(region) do
+    conditional = Enum.count(region, fn {_, cond?} -> cond? end)
+    unconditional = length(region) - conditional
+    unconditional >= 2 or (unconditional >= 1 and conditional >= 1)
   end
 
-  # Splits ordered offsets into runs with no branch boundary between neighbours.
-  defp group_by_boundary([], _source), do: []
+  defp conditional_tag?(source, start), do: String.contains?(open_tag(source, start), ":if=")
 
-  defp group_by_boundary([first | rest], source) do
-    {groups, current} =
-      Enum.reduce(rest, {[], [first]}, fn offset, {groups, [prev | _] = current} ->
-        between = binary_part(source, prev, offset - prev)
+  # Offset just past a shell: its self-closing tag, or its closing tag.
+  defp shell_end(source, start) do
+    tag_end = start + byte_size(open_tag(source, start))
 
-        if Regex.match?(@branch_boundary, between) do
-          {[current | groups], [offset]}
+    if String.ends_with?(open_tag(source, start), "/>") do
+      tag_end
+    else
+      rest = binary_part(source, tag_end, byte_size(source) - tag_end)
+
+      case Regex.run(@page_shell_close, rest, return: :index) do
+        [{pos, len}] -> tag_end + pos + len
+        nil -> tag_end
+      end
+    end
+  end
+
+  defp branch_between?(source, from, to) do
+    between = binary_part(source, from, to - from)
+    Enum.any?(@branch_boundaries, &Regex.match?(&1, between))
+  end
+
+  # Splits shells, in source order, into regions with no branch between neighbours.
+  defp group_by_branch([], _source), do: []
+
+  defp group_by_branch([{first, _} = head | rest], source) do
+    {groups, current, _end} =
+      Enum.reduce(rest, {[], [head], shell_end(source, first)}, fn {offset, _} = shell,
+                                                                   {groups, [_ | _] = current,
+                                                                    from} ->
+        if branch_between?(source, from, offset) do
+          {[Enum.reverse(current) | groups], [shell], shell_end(source, offset)}
         else
-          {groups, [offset | current]}
+          {groups, [shell | current], shell_end(source, offset)}
         end
       end)
 

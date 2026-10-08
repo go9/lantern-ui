@@ -434,6 +434,111 @@ defmodule LanternUI.LintTest do
     assert Enum.filter(Lint.scan(dir), &(&1.rule == :single_page_shell)) == []
   end
 
+  describe "single_page_shell regions" do
+    defp shell_findings(dir, source) do
+      File.write!(Path.join(dir, "region.heex"), source)
+      Enum.filter(Lint.scan(dir), &(&1.rule == :single_page_shell))
+    end
+
+    test "a multi-line :if pair is an if/else pair, not a duplicate", %{dir: dir} do
+      assert shell_findings(dir, """
+             <.page_shell
+               :if={@a}
+               id="a"
+               title="A"
+             />
+             <.page_shell
+               :if={!@a}
+               id="b"
+               title="B"
+             />
+             """) == []
+    end
+
+    test "a conditional shell next to an unconditional one is a duplicate", %{dir: dir} do
+      findings =
+        shell_findings(dir, """
+        <.page_shell
+          :if={@a}
+          id="a"
+          title="A"
+        />
+        <.page_shell id="b" title="B" />
+        """)
+
+      assert Enum.map(findings, & &1.line) == [1, 6]
+    end
+
+    test "aliased shells (Layout.page_shell, fully qualified) count as shells", %{dir: dir} do
+      findings =
+        shell_findings(dir, """
+        <Layout.page_shell id="a" title="A" />
+        <LanternUI.Components.Layout.page_shell id="b" title="B" />
+        """)
+
+      assert length(findings) == 2
+    end
+
+    test "an HTML comment is not a branch between two shells", %{dir: dir} do
+      findings =
+        shell_findings(dir, """
+        <.page_shell id="a" title="A" />
+        <!-- kept for the legacy breadcrumb -->
+        <.page_shell id="b" title="B" />
+        """)
+
+      assert length(findings) == 2
+    end
+
+    test "a fn arrow inside an attribute between two shells is not a branch", %{dir: dir} do
+      findings =
+        shell_findings(dir, """
+        <.page_shell id="a" title="A" />
+        <.button phx-click={JS.push("x", value: %{f: fn r -> r end})}>Go</.button>
+        <.page_shell id="b" title="B" />
+        """)
+
+      assert length(findings) == 2
+    end
+
+    test "prose that starts with if or else between two shells is not a branch", %{dir: dir} do
+      findings =
+        shell_findings(dir, """
+        <.page_shell id="a" title="A" />
+        if you need help, ask your admin.
+        else nothing to see here.
+        <.page_shell id="b" title="B" />
+        """)
+
+      assert length(findings) == 2
+    end
+
+    test "a shell's own body does not hide a duplicate after it", %{dir: dir} do
+      findings =
+        shell_findings(dir, """
+        <.page_shell id="a" title="A">
+          <%= if @x do %>
+            one
+          <% end %>
+        </.page_shell>
+        <.page_shell id="b" title="B" />
+        """)
+
+      assert length(findings) == 2
+    end
+
+    test "a case arm between shells still separates them", %{dir: dir} do
+      assert shell_findings(dir, """
+             <%= case @live_action do %>
+               <% :index -> %>
+                 <.page_shell id="a" title="A" />
+               <% :edit -> %>
+                 <.page_shell id="b" title="B" />
+             <% end %>
+             """) == []
+    end
+  end
+
   test "page_header is deprecated in favour of page_shell", %{dir: dir} do
     File.write!(Path.join(dir, "page.heex"), ~s|<.page_header title="Tickets" />\n|)
 
