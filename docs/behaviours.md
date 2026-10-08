@@ -121,10 +121,18 @@ copies after the first N children of the inline row, where N is `data-promoted`
 (`.lui-action-bar[data-promoted="2"] .lui-action-bar-inline > :nth-child(n + 3)`).
 Without the hook, container queries on the bar apply the same tiers. The hook
 never moves DOM nodes, so LiveView patches stay safe, and the menu always lists
-every action. The inline and menu copies have bar-scoped ids,
-`{bar}-{action}-inline` and `{bar}-{action}-menu`, so two bars on one page do not
-collide. An empty action row (no actions, no notice) is omitted from the page
-shell.
+every action. Action ids must be unique within a bar: a duplicate raises
+`ArgumentError`. An action without an id (or with an empty one) is named
+`action-N` by its position. The raw id is kept in `data-action-id`. The DOM id is
+built from a URL-safe encoding of it, so any id is safe in an attribute:
+`{bar}-action-<base64url(id)>-inline` for the inline copy and
+`{bar}-action-<base64url(id)>-menu` for the menu item, with base64url unpadded.
+Two bars on one page do not collide. An empty action row (no actions, no notice)
+is omitted from the page shell.
+
+An action is disabled when `enabled: false` or `disabled: true` is set. The disabled
+inline button and menu item carry the disabled state. When `disabled_reason` is set,
+the menu item shows it.
 
 The notice is announced with `role="status"`. It uses `role="alert"` only when it
 is initially visible and has the danger tone. Its background uses the

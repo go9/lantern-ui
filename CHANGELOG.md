@@ -19,9 +19,12 @@ Everything in this release is opt-in. Pages that do not use `page_shell`,
   own theme. The action bar's notice always opts in, so apps that set these slots
   see them there. The `promo` tone is new in 0.10, so it always uses
   `--lantern-tone-promo-bg` and needs no opt-in.
-- **Action bar ids are bar-scoped.** Inline copies are `{bar}-{action}-inline` and
-  menu items are `{bar}-{action}-menu`. Anything that selected the old unscoped ids
-  must use these.
+- **Action bar DOM ids are bar-scoped and encoded.** Inline copies get
+  `{bar}-action-<base64url(id)>-inline` and menu items `{bar}-action-<base64url(id)>-menu`
+  (unpadded base64url). The raw id stays in `data-action-id`. Anything that selected
+  the old `{bar}-{action}-*` ids must use the encoded form. Action ids must be unique
+  within a bar; a duplicate raises `ArgumentError`. `enabled: false` and
+  `disabled: true` both disable an action.
 - **Notice announcements.** The action-bar notice uses `role="status"`, and
   `role="alert"` only when it starts visible with the danger tone.
 - **`<.page_header>` warns at compile time.** It is marked `@deprecated`, so every
