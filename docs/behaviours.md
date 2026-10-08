@@ -121,7 +121,15 @@ copies after the first N children of the inline row, where N is `data-promoted`
 (`.lui-action-bar[data-promoted="2"] .lui-action-bar-inline > :nth-child(n + 3)`).
 Without the hook, container queries on the bar apply the same tiers. The hook
 never moves DOM nodes, so LiveView patches stay safe, and the menu always lists
-every action.
+every action. The inline and menu copies have bar-scoped ids,
+`{bar}-{action}-inline` and `{bar}-{action}-menu`, so two bars on one page do not
+collide. An empty action row (no actions, no notice) is omitted from the page
+shell.
+
+The notice is announced with `role="status"`. It uses `role="alert"` only when it
+is initially visible and has the danger tone. Its background uses the
+`--lantern-tone-*-bg` slots, because the action bar always opts its alert into
+tone slots.
 
 Dismissing a notice runs `JS.push(on_dismiss, value: %{"id" => notice_id})`, so the
 server receives the notice id under `"id"`, not `phx-value-id`. The server owns

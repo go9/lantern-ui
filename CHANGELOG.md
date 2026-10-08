@@ -14,6 +14,16 @@ Everything in this release is opt-in. Pages that do not use `page_shell`,
   alias of `href`. Pass the title as
   `title` and page actions as `actions` descriptors. `docs/recipes.md` Block 1 is
   the full page. The sign-in page (Block 7) is not an app route and has no shell.
+- **Tone backgrounds are opt-in.** `alert/1` keeps its 0.9 backgrounds. Pass
+  `tone_slots` to use the `--lantern-tone-*-bg` slots, which apps define in their
+  own theme. The action bar's notice always opts in, so apps that set these slots
+  see them there. The `promo` tone is new in 0.10, so it always uses
+  `--lantern-tone-promo-bg` and needs no opt-in.
+- **Action bar ids are bar-scoped.** Inline copies are `{bar}-{action}-inline` and
+  menu items are `{bar}-{action}-menu`. Anything that selected the old unscoped ids
+  must use these.
+- **Notice announcements.** The action-bar notice uses `role="status"`, and
+  `role="alert"` only when it starts visible with the danger tone.
 - **`<.page_header>` warns at compile time.** It is marked `@deprecated`, so every
   call site gets a compiler warning. Builds with `--warnings-as-errors` fail until
   those calls move to `page_shell`. At runtime it also logs a deprecation warning
@@ -51,6 +61,8 @@ Everything in this release is opt-in. Pages that do not use `page_shell`,
   (their sum). Component CSS uses them instead of literal pixels.
 - `promo` tone on `badge` and `alert` (`data-tone` on alerts), with the semantic
   slots `--lantern-tone-*-bg` and `--lantern-accent-text`. No palette is shipped.
+  The other tones' backgrounds apply only with `tone_slots` (see Upgrading).
+- An empty page shell (no actions, no notice) renders no action row.
 - Lint rules `single_page_shell` and `hand_input`. `.lantern-lint.json`
   `allow_rules` accepts `hand_input`.
 - `test/qa/run.mjs` page-contract assertions for `ctx=page_shell` and
