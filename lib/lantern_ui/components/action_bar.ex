@@ -37,6 +37,21 @@ defmodule LanternUI.Components.ActionBar do
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
   attr(:rest, :global, doc: "Arbitrary HTML and LiveView attributes passed through.")
 
+  @doc """
+  Renders each action inline and in the Zag `More actions` menu. Inline promotion
+  is ordered by descending `priority`; disabled and `promotable: false` actions
+  remain in the menu only. The observed bar width sets a CSS-pixel promotion tier
+  (`> 1100`: 3, `740–1100`: 2, `< 740`: 1), also exposed as `data-promoted`.
+  Action maps accept `id`, `label`, `icon`, `priority`,
+  `enabled`, `disabled_reason`, `promotable`, `destructive`, `navigate`, `patch`,
+  `href`, `phx-click`, `phx-target`, and `phx-value-*` keys. All actions remain
+  available in the menu at every width.
+
+  An optional notice map accepts `id`, `tone`, `title`, and `body`. The dismiss
+  button sends `on_dismiss` with the notice id through the LiveView event. Notice
+  announcements use `role="status"`, except an initially visible danger notice,
+  which uses `role="alert"`.
+  """
   def action_bar(assigns) do
     {actions, menu_actions} = prepare_actions(assigns.actions)
     notice = normalize_notice(assigns.notice)
@@ -55,7 +70,6 @@ defmodule LanternUI.Components.ActionBar do
       class={Class.merge(["lui-action-bar", @class])}
       phx-hook="LanternActionBar"
       data-action-bar
-      data-promoted="3"
       data-dismissal-event={@on_dismiss}
       {@rest}
     >
@@ -64,6 +78,8 @@ defmodule LanternUI.Components.ActionBar do
         id={"#{@id}-notice"}
         class="lui-action-bar-notice"
         color={@notice_data.tone}
+        tone_slots
+        role={if @notice_data.tone == "danger" and not @dismissed, do: "alert", else: "status"}
         title={@notice_data.title}
         subtitle={@notice_data.body}
         hide_close={false}
@@ -86,7 +102,7 @@ defmodule LanternUI.Components.ActionBar do
             data-has-icon={action.icon && "true"}
           >
             <Button.button
-              id={"#{action.id}-inline"}
+              id={"#{@id}-#{action.id}-inline"}
               size="sm"
               variant="outline"
               color={if(action.destructive, do: "danger", else: "primary")}
@@ -95,10 +111,7 @@ defmodule LanternUI.Components.ActionBar do
               navigate={action.navigate}
               patch={action.patch}
               href={action.href}
-              phx-click={action.phx_click}
-              phx-value-id={action.phx_value_id}
-              phx-target={action.phx_target}
-              data-confirm={action.data_confirm}
+              {action.rest_attrs}
             >
               <Icon.icon :if={action.icon} name={action.icon} />
               <span class="lui-action-bar-label">{action.label}</span>
@@ -118,15 +131,12 @@ defmodule LanternUI.Components.ActionBar do
           </:trigger>
           <Menu.menu_item
             :for={action <- @menu_actions}
-            id={"#{action.id}-menu"}
+            id={"#{@id}-#{action.id}-menu"}
             disabled={!action.enabled}
-            phx-click={action.phx_click}
-            phx-value-id={action.phx_value_id}
-            phx-target={action.phx_target}
             navigate={action.navigate}
             patch={action.patch}
             href={action.href}
-            data-confirm={action.data_confirm}
+            {action.rest_attrs}
             data-action-id={action.id}
             data-tone={action.destructive && "danger"}
           >
@@ -180,8 +190,13 @@ defmodule LanternUI.Components.ActionBar do
   end
 
   defp normalize_action(action, index) do
-    id = value(action, :id, "action-#{index + 1}")
-    id = if is_nil(id) or id == "", do: "action-#{index + 1}", else: to_string(id)
+    id =
+      case value(action, :id) do
+        nil -> "action-#{index + 1}"
+        "" -> "action-#{index + 1}"
+        id -> to_string(id)
+      end
+
     priority = value(action, :priority, 0)
     priority = if is_number(priority), do: priority, else: 0
     enabled = value(action, :enabled, true) != false
@@ -196,16 +211,28 @@ defmodule LanternUI.Components.ActionBar do
       disabled_reason: value(action, :disabled_reason),
       promotable: promotable,
       destructive: value(action, :destructive, false) == true,
-      phx_click: value(action, :"phx-click"),
-      phx_value_id: value(action, :"phx-value-id", id),
-      phx_target: value(action, :"phx-target"),
+      rest_attrs: action_rest_attrs(action, id),
       navigate: value(action, :navigate),
       patch: value(action, :patch),
       href: value(action, :href),
-      data_confirm: value(action, :"data-confirm"),
       source_index: index,
       promoted_index: 0
     }
+  end
+
+  defp action_rest_attrs(action, id) do
+    base = %{
+      "phx-value-id" => id,
+      "phx-click" => value(action, :"phx-click"),
+      "phx-target" => value(action, :"phx-target"),
+      "data-confirm" => value(action, :"data-confirm")
+    }
+
+    action
+    |> Enum.reduce(base, fn {key, value}, attrs ->
+      key = to_string(key)
+      if String.starts_with?(key, "phx-value-"), do: Map.put(attrs, key, value), else: attrs
+    end)
   end
 
   defp normalize_notice(nil), do: nil
@@ -233,19 +260,15 @@ defmodule LanternUI.Components.ActionBar do
   defp value(map, key, default \\ nil)
 
   defp value(map, key, default) when is_map(map) do
-    case Map.fetch(map, key) do
-      {:ok, nil} ->
-        case Map.fetch(map, Atom.to_string(key)) do
-          {:ok, nil} -> default
-          {:ok, value} -> value
-          :error -> default
+    case Map.get(map, key) do
+      nil ->
+        case Map.get(map, Atom.to_string(key)) do
+          nil -> default
+          value -> value
         end
 
-      {:ok, value} ->
+      value ->
         value
-
-      :error ->
-        Map.get(map, Atom.to_string(key), default)
     end
   end
 

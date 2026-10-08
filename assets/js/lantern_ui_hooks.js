@@ -2931,6 +2931,7 @@ const LanternActionBar = {
   mounted() {
     this._syncPromotion = () => {
       const width = this.el.getBoundingClientRect().width
+      // Keep these CSS-pixel cutoffs aligned with the action-bar container queries.
       const promoted = width > 1100 ? 3 : width >= 740 ? 2 : 1
       this.el.setAttribute("data-promoted", String(promoted))
     }

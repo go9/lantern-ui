@@ -19,7 +19,14 @@ defmodule LanternUI.ActionBarTest do
             id="page-actions"
             more_actions_label="More"
             actions={[
-              %{:"phx-click" => "save", id: "save", label: "Save", icon: "check", priority: 10},
+              %{
+                :"phx-click" => "save",
+                :"phx-value-record-id" => "r-1",
+                id: "save",
+                label: "Save",
+                icon: "check",
+                priority: 10
+              },
               %{id: "export", label: "Export", navigate: "/export"},
               %{:"phx-click" => "delete", id: "delete", label: "Delete", destructive: true}
             ]}
@@ -27,19 +34,77 @@ defmodule LanternUI.ActionBarTest do
           """
         end)
 
-      assert html =~ ~s(id="page-actions")
-      assert html =~ ~s(phx-hook="LanternActionBar")
-      assert html =~ ~s(data-promoted="3")
-      assert html =~ ~s(id="save-inline")
-      assert html =~ ~s(id="save-menu")
-      assert html =~ ~s(id="export-inline")
-      assert html =~ ~s(id="export-menu")
-      assert html =~ ~s(id="delete-inline")
-      assert html =~ ~s(id="delete-menu")
-      assert html =~ ~s(lui-sr-only">More</span>)
-      assert html =~ ~s(role="menu")
-      assert html =~ ~s(href="/export")
-      assert html =~ ~s(data-tone="danger")
+      doc = Floki.parse_fragment!(html)
+      assert Floki.find(doc, "#page-actions[phx-hook='LanternActionBar']") != []
+      assert Floki.find(doc, "#page-actions[data-promoted]") == []
+      assert Floki.find(doc, "#page-actions-save-inline") != []
+      assert Floki.find(doc, "#page-actions-save-menu") != []
+
+      assert Floki.attribute(Floki.find(doc, "#page-actions-save-inline"), "phx-value-record-id") ==
+               ["r-1"]
+
+      assert Floki.attribute(Floki.find(doc, "#page-actions-save-menu"), "phx-value-record-id") ==
+               ["r-1"]
+
+      assert Floki.find(doc, "#page-actions-export-inline") != []
+      assert Floki.find(doc, "#page-actions-export-menu[href='/export']") != []
+      assert Floki.find(doc, "#page-actions-delete-inline") != []
+      assert Floki.find(doc, "#page-actions-delete-menu[data-tone='danger']") != []
+      assert Floki.find(doc, "[role='menu']") != []
+      assert Floki.text(Floki.find(doc, ".lui-sr-only")) =~ "More"
+    end
+
+    test "scopes duplicate action ids to their own bars" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <div>
+            <ActionBar.action_bar id="left" actions={[%{id: "edit", label: "Edit"}]} />
+            <ActionBar.action_bar id="right" actions={[%{id: "edit", label: "Edit"}]} />
+          </div>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      assert length(Floki.find(doc, "#left-edit-inline")) == 1
+      assert length(Floki.find(doc, "#left-edit-menu")) == 1
+      assert length(Floki.find(doc, "#right-edit-inline")) == 1
+      assert length(Floki.find(doc, "#right-edit-menu")) == 1
+    end
+
+    test "promotion follows priority and skips disabled or non-promotable actions" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <ActionBar.action_bar
+            id="ordered"
+            actions={[
+              %{id: "low", label: "Low", priority: 1},
+              %{id: "high", label: "High", priority: 20},
+              %{id: "locked", label: "Locked", priority: 100, enabled: false},
+              %{id: "background", label: "Background", priority: 90, promotable: false},
+              %{id: "middle", label: "Middle", priority: 10}
+            ]}
+          />
+          """
+        end)
+
+      actions = Floki.parse_fragment!(html) |> Floki.find(".lui-action-bar-action")
+
+      indexes =
+        Map.new(actions, fn action ->
+          [id] = Floki.attribute(action, "data-action-id")
+          [index] = Floki.attribute(action, "data-promoted-index")
+          {id, index}
+        end)
+
+      assert indexes == %{
+               "high" => "1",
+               "middle" => "2",
+               "low" => "3",
+               "locked" => "0",
+               "background" => "0"
+             }
     end
 
     test "keeps disabled actions in More with their reason and renders a dismissible notice" do
@@ -58,15 +123,23 @@ defmodule LanternUI.ActionBarTest do
           """
         end)
 
-      assert html =~ ~s(data-action-bar-notice)
-      assert html =~ ~s(data-tone="promo")
-      assert html =~ ~s(data-notice-id="sync-4")
-      assert html =~ ~s(data-dismissal-event="dismiss_notice")
-      assert html =~ ~s(aria-label="Hide update")
-      assert html =~ ~s(disabled aria-label="Locked")
-      assert html =~ "Requires access"
-      assert html =~ ~s(id="locked-menu")
-      assert html =~ ~s(data-server-dismissed="false")
+      doc = Floki.parse_fragment!(html)
+      assert [notice] = Floki.find(doc, "[data-action-bar-notice][data-tone='promo']")
+      assert Floki.attribute(notice, "data-notice-id") == ["sync-4"]
+      assert Floki.attribute(notice, "data-tone-slots") == ["data-tone-slots"]
+      assert Floki.attribute(notice, "role") == ["status"]
+
+      assert Floki.attribute(Floki.find(doc, "#page-actions"), "data-dismissal-event") == [
+               "dismiss_notice"
+             ]
+
+      assert Floki.attribute(Floki.find(doc, "[data-part='dismiss']"), "aria-label") == [
+               "Hide update"
+             ]
+
+      assert Floki.find(doc, "button#page-actions-locked-menu[disabled]") != []
+      assert Floki.text(Floki.find(doc, "#page-actions-locked-menu")) =~ "Requires access"
+      assert Floki.attribute(notice, "data-server-dismissed") == ["false"]
     end
 
     test "server dismissal is rendered as hidden state" do
@@ -81,8 +154,23 @@ defmodule LanternUI.ActionBarTest do
           """
         end)
 
-      assert html =~ ~s(data-server-dismissed="true")
-      assert html =~ ~s(hidden data-action-bar-notice)
+      doc = Floki.parse_fragment!(html)
+      assert [notice] = Floki.find(doc, "[data-action-bar-notice][hidden]")
+      assert Floki.attribute(notice, "data-server-dismissed") == ["true"]
+    end
+
+    test "danger notices use alert semantics on first render" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <ActionBar.action_bar id="danger" notice={%{id: "incident", tone: "danger", title: "Failed"}} />
+          """
+        end)
+
+      assert [notice] =
+               Floki.parse_fragment!(html) |> Floki.find("[data-action-bar-notice][role='alert']")
+
+      assert Floki.text(notice) =~ "Failed"
     end
   end
 end

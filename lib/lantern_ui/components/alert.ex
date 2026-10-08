@@ -25,6 +25,17 @@ defmodule LanternUI.Components.Alert do
 
   attr(:hide_icon, :boolean, default: false, doc: "Omit the leading status icon.")
   attr(:hide_close, :boolean, default: true, doc: "Hide the dismiss button (default).")
+
+  attr(:role, :string,
+    default: "alert",
+    doc: "Announcement role; defaults to alert for compatibility."
+  )
+
+  attr(:tone_slots, :boolean,
+    default: false,
+    doc: "Opt in to consumer-defined `--lantern-tone-*-bg` alert backgrounds."
+  )
+
   attr(:dismiss_label, :string, default: "Close", doc: "Accessible label for the dismiss button.")
 
   attr(:on_close, :any,
@@ -47,10 +58,11 @@ defmodule LanternUI.Components.Alert do
     ~H"""
     <div
       id={@id}
-      role="alert"
+      role={@role}
       class={Class.merge(["lui-alert", @class])}
       data-color={@color}
       data-tone={@color}
+      data-tone-slots={@tone_slots || nil}
       {@rest}
     >
       <div :if={!@hide_icon} class="lui-alert-icon">

@@ -3,7 +3,7 @@ import test from "node:test"
 
 import { hooks, mountHook } from "./helpers/dom.mjs"
 
-test("LanternActionBar reports container promotion tiers after resize", () => {
+test("LanternActionBar reports CSS-pixel promotion tiers after resize", () => {
   const mounted = mountHook(
     hooks.LanternActionBar,
     '<div id="bar" data-action-bar><div data-part="inline-actions"></div></div>',
@@ -26,6 +26,54 @@ test("LanternActionBar reports container promotion tiers after resize", () => {
   }
 
   mounted.unmount()
+})
+
+test("LanternActionBar observes the bar with ResizeObserver and updates promotion", () => {
+  const previousObserver = globalThis.ResizeObserver
+  let observed
+  let callback
+  let disconnected = false
+  globalThis.ResizeObserver = class ResizeObserver {
+    constructor(onResize) {
+      callback = onResize
+    }
+
+    observe(el) {
+      observed = el
+    }
+
+    disconnect() {
+      disconnected = true
+    }
+  }
+
+  let mounted
+  try {
+    mounted = mountHook(
+      hooks.LanternActionBar,
+      '<div id="bar" data-action-bar><div data-part="inline-actions"></div></div>',
+      { rootId: "bar" },
+    )
+
+    let width = 1440
+    mounted.el.getBoundingClientRect = () => ({ width })
+    callback()
+    assert.equal(observed, mounted.el)
+    assert.equal(mounted.el.dataset.promoted, "3")
+
+    width = 1100
+    callback()
+    assert.equal(mounted.el.dataset.promoted, "2")
+    width = 739
+    callback()
+    assert.equal(mounted.el.dataset.promoted, "1")
+  } finally {
+    mounted?.unmount()
+    if (previousObserver === undefined) delete globalThis.ResizeObserver
+    else globalThis.ResizeObserver = previousObserver
+  }
+
+  assert.equal(disconnected, true)
 })
 
 test("fallback notice dismissal persists and is reapplied after LiveView updates", () => {

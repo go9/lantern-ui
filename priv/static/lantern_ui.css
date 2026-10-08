@@ -1017,7 +1017,11 @@
 .lui-action-bar-inline { display: flex; align-items: center; gap: 0.375rem; }
 .lui-action-bar-action { display: inline-flex; flex: none; }
 .lui-action-bar-action[data-promoted-index="0"] { display: none; }
-.lui-action-bar-inline > :nth-child(n + 4) { display: none; }
+/* Before the hook runs, container queries mirror the hook's CSS-pixel tiers. */
+.lui-action-bar:not([data-promoted]) .lui-action-bar-inline > :nth-child(n + 4) { display: none; }
+.lui-action-bar[data-promoted="3"] .lui-action-bar-inline > :nth-child(n + 4) { display: none; }
+.lui-action-bar[data-promoted="2"] .lui-action-bar-inline > :nth-child(n + 3) { display: none; }
+.lui-action-bar[data-promoted="1"] .lui-action-bar-inline > :nth-child(n + 2) { display: none; }
 .lui-action-bar-label { white-space: nowrap; }
 .lui-action-bar-menu { display: inline-flex; flex: none; pointer-events: auto; }
 .lui-action-bar-more-trigger { min-width: 2rem; padding-inline: 0.375rem; }
@@ -1027,13 +1031,16 @@
 .lui-action-bar-menu-copy small { color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
 .lui-action-bar .lui-menu-item[data-tone="danger"] { color: var(--lantern-danger); }
 
-@container lui-action-bar (max-width: 68.75rem) {
-  .lui-action-bar-inline > :nth-child(n + 3) { display: none; }
+@container lui-action-bar (max-width: 1100px) {
+  .lui-action-bar:not([data-promoted]) .lui-action-bar-inline > :nth-child(n + 3) { display: none; }
 }
-@container lui-action-bar (max-width: 46.1875rem) {
-  .lui-action-bar-inline > :nth-child(n + 2) { display: none; }
+@container lui-action-bar (max-width: 739.999px) {
+  .lui-action-bar:not([data-promoted]) .lui-action-bar-inline > :nth-child(n + 2) { display: none; }
   .lui-action-bar-action[data-has-icon="true"] .lui-action-bar-label { display: none; }
-  .lui-action-bar-notice .lui-alert-body { display: none; }
+  .lui-action-bar-notice .lui-alert-body {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
   .lui-action-bar-notice { width: 3.75rem; min-width: 3.75rem; max-width: 3.75rem; padding: 0.25rem; }
   .lui-action-bar-notice .lui-alert-icon { margin-inline: auto; }
   .lui-action-bar-notice .lui-alert-close { margin-left: auto; }
@@ -1042,7 +1049,6 @@
 @media (max-width: 46.1875rem) {
   :root {
     --lui-topline-h: 2.375rem;
-    --lui-shell-h: calc(var(--lui-topline-h) + var(--lui-actionbar-h));
   }
 }
 
@@ -1248,13 +1254,21 @@
 .lui-th { background: var(--lantern-surface-sunken); color: var(--lantern-fg-muted);
   font-size: var(--lantern-text-sm); font-weight: 550; text-align: left;
   padding: 0.35rem 0.7rem; border-bottom: 1px solid var(--lantern-border); white-space: nowrap; }
-/* In a page shell, a wide table keeps its horizontal scroll wrapper. When that
-   wrapper overflows, it is also the sticky header's scrollport, so the header
-   sticks to the wrapper top instead of being offset a second time by the shell. */
+/* Default sticky offset for a page without a nearer scrollport. The shell's
+   topline and action row occupy the viewport chrome. A .lui-table-wrap with
+   overflow:auto becomes the nearer scrollport, and already starts below that
+   chrome, so its header uses the wrapper's top edge instead. */
 .lui-page-shell [data-page-content] .lui-datatable:not(.lui-datatable-fill) .lui-th {
   position: sticky;
-  top: 0;
+  top: var(--lui-shell-h);
   z-index: 2;
+}
+.lui-page-shell:not([data-page-has-actions]) [data-page-content] .lui-datatable:not(.lui-datatable-fill) .lui-th {
+  top: var(--lui-topline-h);
+}
+.lui-page-shell [data-page-content] .lui-datatable:not(.lui-datatable-fill) .lui-table-wrap .lui-th,
+.lui-page-shell:not([data-page-has-actions]) [data-page-content] .lui-datatable:not(.lui-datatable-fill) .lui-table-wrap .lui-th {
+  top: 0;
 }
 .lui-td { padding: 0.35rem 0.7rem; border-bottom: 1px solid var(--lantern-border);
   color: var(--lantern-fg); }
@@ -2001,7 +2015,6 @@
 /* ── Alert ── */
 .lui-alert {
   --lui-alert-c: var(--lantern-fg-muted);
-  --lui-alert-bg: var(--lantern-tone-neutral-bg, color-mix(in oklab, var(--lui-alert-c) 14%, var(--lantern-surface-raised)));
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: start;
@@ -2009,17 +2022,24 @@
   padding: 0.7rem 0.85rem;
   border-radius: var(--lantern-radius);
   border: 1px solid color-mix(in oklab, var(--lui-alert-c) 45%, var(--lantern-border));
-  background: var(--lui-alert-bg);
+  background: color-mix(in oklab, var(--lui-alert-c) 14%, var(--lantern-surface-raised));
   color: var(--lantern-fg);
   font-family: var(--lantern-font);
   font-size: var(--lantern-text);
 }
-.lui-alert[data-tone="neutral"] { --lui-alert-c: var(--lantern-fg-muted); --lui-alert-bg: var(--lantern-tone-neutral-bg, color-mix(in oklab, var(--lui-alert-c) 14%, var(--lantern-surface-raised))); }
-.lui-alert[data-tone="info"] { --lui-alert-c: var(--lantern-info); --lui-alert-bg: var(--lantern-tone-info-bg, color-mix(in oklab, var(--lui-alert-c) 14%, var(--lantern-surface-raised))); }
-.lui-alert[data-tone="success"] { --lui-alert-c: var(--lantern-success); --lui-alert-bg: var(--lantern-tone-success-bg, color-mix(in oklab, var(--lui-alert-c) 14%, var(--lantern-surface-raised))); }
-.lui-alert[data-tone="warning"] { --lui-alert-c: var(--lantern-warning); --lui-alert-bg: var(--lantern-tone-warning-bg, color-mix(in oklab, var(--lui-alert-c) 14%, var(--lantern-surface-raised))); }
-.lui-alert[data-tone="danger"] { --lui-alert-c: var(--lantern-danger); --lui-alert-bg: var(--lantern-tone-danger-bg, color-mix(in oklab, var(--lui-alert-c) 14%, var(--lantern-surface-raised))); }
-.lui-alert[data-tone="promo"] { --lui-alert-c: var(--lantern-accent-text, var(--lantern-fg)); --lui-alert-bg: var(--lantern-tone-promo-bg, var(--lantern-surface-sunken)); }
+.lui-alert[data-color="neutral"] { --lui-alert-c: var(--lantern-fg-muted); }
+.lui-alert[data-color="info"] { --lui-alert-c: var(--lantern-info); }
+.lui-alert[data-color="success"] { --lui-alert-c: var(--lantern-success); }
+.lui-alert[data-color="warning"] { --lui-alert-c: var(--lantern-warning); }
+.lui-alert[data-color="danger"] { --lui-alert-c: var(--lantern-danger); }
+/* Tone slots are deliberately opt-in. With no data-tone-slots marker the
+   original data-color rules above own the alert's computed background. */
+.lui-alert[data-tone="neutral"][data-tone-slots] { background: var(--lantern-tone-neutral-bg, color-mix(in oklab, var(--lui-alert-c) 14%, var(--lantern-surface-raised))); }
+.lui-alert[data-tone="info"][data-tone-slots] { background: var(--lantern-tone-info-bg, color-mix(in oklab, var(--lui-alert-c) 14%, var(--lantern-surface-raised))); }
+.lui-alert[data-tone="success"][data-tone-slots] { background: var(--lantern-tone-success-bg, color-mix(in oklab, var(--lui-alert-c) 14%, var(--lantern-surface-raised))); }
+.lui-alert[data-tone="warning"][data-tone-slots] { background: var(--lantern-tone-warning-bg, color-mix(in oklab, var(--lui-alert-c) 14%, var(--lantern-surface-raised))); }
+.lui-alert[data-tone="danger"][data-tone-slots] { background: var(--lantern-tone-danger-bg, color-mix(in oklab, var(--lui-alert-c) 14%, var(--lantern-surface-raised))); }
+.lui-alert[data-tone="promo"] { --lui-alert-c: var(--lantern-accent-text, var(--lantern-fg)); background: var(--lantern-tone-promo-bg, var(--lantern-surface-sunken)); }
 .lui-alert[hidden] { display: none !important; }
 .lui-alert-icon {
   display: inline-flex;
