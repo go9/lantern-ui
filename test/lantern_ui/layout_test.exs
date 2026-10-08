@@ -133,6 +133,7 @@ defmodule LanternUI.LayoutTest do
             id="inventory"
             title="Inventory"
             breadcrumbs={[%{label: "Workspace", navigate: "/workspace"}]}
+            actions={[%{id: "create", label: "Create", priority: 1}]}
           >
             PAGE BODY
           </Layout.page_shell>
@@ -151,6 +152,25 @@ defmodule LanternUI.LayoutTest do
       assert length(Regex.scan(~r/<h1\b/, html)) == 1
       assert length(Regex.scan(~r/data-page-breadcrumb/, html)) == 1
       assert length(Regex.scan(~r/data-page-actions/, html)) == 1
+    end
+
+    test "accepts legacy path keys and omits the empty floating action row" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.page_shell id="empty" title="Empty" breadcrumbs={[%{label: "Legacy", path: "/legacy"}]}>
+            Content
+          </Layout.page_shell>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      assert Floki.find(doc, ".lui-breadcrumb-link[href='/legacy']") != []
+      assert Floki.find(doc, "h1[data-page-title]") != []
+      assert Floki.find(doc, "[data-page-actions]") == []
+      assert Floki.find(doc, "[phx-hook='LanternActionBar']") == []
+      assert Floki.find(doc, "[data-page-content]") != []
+      assert Floki.find(doc, "[data-page-shell][data-page-has-actions]") == []
     end
 
     test "keeps every column of a wide table rendered inside the page shell" do
@@ -190,10 +210,20 @@ defmodule LanternUI.LayoutTest do
           """
         end)
 
-      assert html =~ ~s(id="wide-table")
-      assert html =~ ~s(class="lui-table-wrap")
-      assert html =~ "Additional metadata and details"
-      assert length(Regex.scan(~r/<th\b/, html)) == 9
+      doc = Floki.parse_fragment!(html)
+      assert Floki.find(doc, "#wide-table") != []
+      assert [wrapper] = Floki.find(doc, "#wide-table .lui-table-wrap")
+      assert Floki.attribute(wrapper, "class") |> hd() =~ "lui-table-wrap"
+      assert length(Floki.find(wrapper, "thead th")) == 9
+      assert Floki.text(Floki.find(wrapper, "thead")) =~ "Additional metadata and details"
+
+      css = File.read!("priv/static/lantern_ui.css")
+      assert css =~ ~r/\.lui-table-wrap\s*\{[^}]*overflow-x:\s*auto/s
+
+      assert css =~
+               ~r/\.lui-page-shell \[data-page-content\].*?\.lui-th \{\s*position: sticky;\s*top: var\(--lui-shell-h\);/s
+
+      assert css =~ ~r/\.lui-table-wrap \.lui-th,.*?\{\s*top: 0;/s
     end
   end
 

@@ -227,6 +227,7 @@ defmodule LanternUI.Components.Layout do
       id={@id}
       class={Class.merge(["lui-page-shell", @class])}
       data-page-shell
+      data-page-has-actions={if @actions != [] or not is_nil(@notice), do: "true"}
       {@rest}
     >
       <div class="lui-page-topline" data-page-breadcrumb>
@@ -245,6 +246,7 @@ defmodule LanternUI.Components.Layout do
       </div>
 
       <ActionBar.action_bar
+        :if={@actions != [] or not is_nil(@notice)}
         id={"#{@id}-actions"}
         actions={@actions}
         notice={@notice}
@@ -268,7 +270,7 @@ defmodule LanternUI.Components.Layout do
         label: crumb_value(crumb, :label, ""),
         navigate: crumb_value(crumb, :navigate),
         patch: crumb_value(crumb, :patch),
-        href: crumb_value(crumb, :href)
+        href: crumb_value(crumb, :href) || crumb_value(crumb, :path)
       }
     end)
   end

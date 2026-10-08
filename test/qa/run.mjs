@@ -26,6 +26,7 @@ const CTXS = arg("ctx") || "plain card card_transform scroll table modal sheet s
 const CMPS = arg("cmp") || "select select_search dropdown menu popover tooltip autocomplete date_picker command user_menu".split(" ")
 const VWS = (arg("vw") || ["1440", "390"]).map(Number)
 const WIDE_TABLE_ONLY = process.argv.includes("--page-shell-wide-table")
+const SHELL_VWS = [1440, 1100, 768, 390]
 
 // trigger: where the real click/hover lands. panel: the floating surface.
 const SPEC = {
@@ -127,6 +128,7 @@ for (const vw of VWS) {
   const errors = []
   page.on("pageerror", (e) => errors.push(e.message))
   for (const ctx of CTXS) {
+    if (ctx === "page_shell" || ctx === "action_bar") continue
     for (const cmp of CMPS) {
       const spec = SPEC[cmp]
       const row = { vw, ctx, cmp, problems: [] }
@@ -241,6 +243,143 @@ if (VWS.includes(390)) {
   rows.push(row)
   if (row.problems.length) console.log(`FAIL 390 page_shell/wide-table-scroll: ${row.problems.join("; ")}`)
   await page.close()
+}
+
+// The shell contract is tested at each promotion boundary with both the
+// default root size and a 62.5% root size. JS and CSS use CSS pixels, so the
+// visible inline count must continue to match data-promoted under either size.
+if (!WIDE_TABLE_ONLY) {
+  for (const vw of SHELL_VWS) {
+    for (const ctx of ["page_shell", "action_bar"]) {
+      const page = await browser.newPage()
+      await page.setViewport({ width: vw, height: 900 })
+      const row = { vw, ctx, cmp: "shell-contract", problems: [] }
+
+      try {
+        await page.goto(`${BASE}/qa?ctx=${ctx}`, { waitUntil: "networkidle2" })
+        await page.waitForSelector(".phx-connected", { timeout: 8000 })
+        await page.waitForSelector("[data-action-bar]", { timeout: 4000 })
+
+        if (ctx === "page_shell") {
+          await page.screenshot({ path: `${SHOTS}/${vw}-page_shell-contract.png` })
+          const shell = await page.evaluate(() => {
+            const breadcrumb = document.querySelector("[data-page-breadcrumb]")
+            const title = document.querySelector("h1[data-page-title]")
+            const actions = document.querySelector("[data-page-actions]")
+            const content = document.querySelector("[data-page-content]")
+            const tokenHeight = (token, scope) => {
+              const probe = document.createElement("div")
+              probe.style.cssText = `position:absolute;height:var(${token})`
+              scope.append(probe)
+              const height = probe.getBoundingClientRect().height
+              probe.remove()
+              return height
+            }
+            return {
+              breadcrumbCount: document.querySelectorAll("[data-page-breadcrumb]").length,
+              titleCount: document.querySelectorAll("h1[data-page-title]").length,
+              actionsCount: document.querySelectorAll("[data-page-actions]").length,
+              toplineHeight: breadcrumb.getBoundingClientRect().height,
+              toplineToken: tokenHeight("--lui-topline-h", breadcrumb.parentElement),
+              actionHeight: actions.getBoundingClientRect().height,
+              actionToken: tokenHeight("--lui-actionbar-h", actions.parentElement),
+              contentInset: content.getBoundingClientRect().top - breadcrumb.getBoundingClientRect().bottom,
+              documentOverflows: document.documentElement.scrollWidth > innerWidth + 1,
+            }
+          })
+          if (shell.breadcrumbCount !== 1) row.problems.push("page_shell must render one breadcrumb row")
+          if (shell.titleCount !== 1) row.problems.push("page_shell must render one sr-only h1")
+          if (shell.actionsCount !== 1) row.problems.push("page_shell must render one actions region")
+          if (Math.abs(shell.toplineHeight - shell.toplineToken) > 1) row.problems.push("topline height exceeds its token")
+          if (Math.abs(shell.actionHeight - shell.actionToken) > 1) row.problems.push("action row height exceeds its token")
+          if (Math.abs(shell.contentInset - shell.actionHeight) > 1) row.problems.push("content inset does not equal the floating row height")
+          if (shell.documentOverflows) row.problems.push("page_shell document overflows horizontally")
+          row.shell = shell
+
+          const alerts = await page.evaluate(() => {
+            const expected = (id) => {
+              const alert = document.getElementById(id)
+              const ref = alert.cloneNode(false)
+              ref.removeAttribute("id")
+              ref.style.background = "color-mix(in oklab, var(--lui-alert-c) 14%, var(--lantern-surface-raised))"
+              alert.parentElement.append(ref)
+              const result = {
+                actual: getComputedStyle(alert).backgroundColor,
+                expected: getComputedStyle(ref).backgroundColor,
+              }
+              ref.remove()
+              return result
+            }
+            const root = document.documentElement
+            const scoped = document.getElementById("qa-scoped-theme")
+            root.classList.remove("dark")
+            root.classList.add("light")
+            const light = expected("qa-default-info-alert")
+            root.classList.remove("light")
+            root.classList.add("dark")
+            const dark = expected("qa-default-info-alert")
+            root.classList.remove("dark")
+            root.classList.add("light")
+            scoped.classList.add("dark")
+            const nested = expected("qa-scoped-info-alert")
+            return { light, dark, nested }
+          })
+          for (const [name, colors] of Object.entries(alerts)) {
+            if (colors.actual !== colors.expected) row.problems.push(`${name} default alert background changed: ${colors.actual} != ${colors.expected}`)
+          }
+          if (alerts.light.actual === alerts.dark.actual) row.problems.push("default and dark themes did not produce distinct alert backgrounds")
+          if (alerts.light.actual === alerts.nested.actual) row.problems.push("nested scoped dark theme did not produce a distinct alert background")
+          row.alertBackgrounds = alerts
+        } else {
+          await page.screenshot({ path: `${SHOTS}/${vw}-action_bar-contract.png` })
+        }
+
+        for (const rootSize of ["100%", "62.5%"] ) {
+          await page.evaluate((size) => { document.documentElement.style.fontSize = size }, rootSize)
+          await sleep(80)
+          const promotion = await page.evaluate(() => {
+            const bar = document.querySelector("[data-action-bar]")
+            const width = bar.getBoundingClientRect().width
+            const promoted = bar.dataset.promoted
+            const visible = [...bar.querySelectorAll("[data-part='inline-actions'] > .lui-action-bar-action")]
+              .filter((action) => getComputedStyle(action).display !== "none").length
+            const expected = width > 1100 ? "3" : width >= 740 ? "2" : "1"
+            return { width, promoted, visible, expected }
+          })
+          if (promotion.promoted !== promotion.expected) row.problems.push(`${rootSize} promotion tier ${promotion.promoted} != ${promotion.expected} at ${Math.round(promotion.width)}px`)
+          if (promotion.visible !== Number(promotion.promoted)) row.problems.push(`${rootSize} visible inline count ${promotion.visible} != data-promoted ${promotion.promoted}`)
+          row[`promotion_${rootSize}`] = promotion
+        }
+
+        if (ctx === "page_shell") {
+          await page.goto(`${BASE}/qa?ctx=page_shell&shell_empty=1`, { waitUntil: "networkidle2" })
+          await page.waitForSelector(".phx-connected", { timeout: 8000 })
+          const emptyShell = await page.evaluate(() => {
+            const shell = document.querySelector("[data-page-shell]")
+            const breadcrumb = shell.querySelector("[data-page-breadcrumb]")
+            const content = shell.querySelector("[data-page-content]")
+            return {
+              actions: shell.querySelectorAll("[data-page-actions]").length,
+              hooks: shell.querySelectorAll("[phx-hook='LanternActionBar']").length,
+              marker: shell.hasAttribute("data-page-has-actions"),
+              contentGap: content.getBoundingClientRect().top - breadcrumb.getBoundingClientRect().bottom,
+            }
+          })
+          if (emptyShell.actions || emptyShell.hooks || emptyShell.marker) row.problems.push("empty page_shell rendered an empty action row")
+          if (Math.abs(emptyShell.contentGap) > 1) row.problems.push("empty page_shell left a content inset")
+          row.emptyShell = emptyShell
+        }
+      } catch (e) {
+        row.problems.push(`error: ${e.message.split("\n")[0]}`)
+        await page.screenshot({ path: `${SHOTS}/${vw}-${ctx}-contract.png` }).catch(() => {})
+      }
+
+      row.status = row.problems.length ? "FAIL" : "ok"
+      rows.push(row)
+      if (row.problems.length) console.log(`FAIL ${vw} ${ctx}/shell-contract: ${row.problems.join("; ")}`)
+      await page.close()
+    }
+  }
 }
 
 await browser.close()

@@ -18,6 +18,7 @@ defmodule LanternUI.QA.MatrixLive do
        ctx: params["ctx"] || "plain",
        cmp: params["cmp"] || "select",
        n: 0,
+       shell_empty?: params["shell_empty"] == "1",
        dismissed: false
      )
      |> assign(:page_title, "QA matrix"), layout: false}
@@ -41,7 +42,13 @@ defmodule LanternUI.QA.MatrixLive do
       >
         patch {@n}
       </button>
-      <.ctx name={@ctx} cmp={@cmp} n={@n} dismissed={@dismissed} />
+      <.ctx
+        name={@ctx}
+        cmp={@cmp}
+        n={@n}
+        dismissed={@dismissed}
+        shell_empty?={@shell_empty?}
+      />
     </div>
     """
   end
@@ -50,6 +57,7 @@ defmodule LanternUI.QA.MatrixLive do
   attr(:cmp, :string, required: true)
   attr(:n, :integer, default: 0)
   attr(:dismissed, :boolean, default: false)
+  attr(:shell_empty?, :boolean, default: false)
 
   defp ctx(%{name: "plain"} = assigns) do
     ~H"""
@@ -160,7 +168,7 @@ defmodule LanternUI.QA.MatrixLive do
           page_size: 24,
           total_count: 24
         },
-        actions: qa_actions()
+        actions: if(assigns.shell_empty?, do: [], else: qa_actions())
       )
 
     ~H"""
@@ -174,11 +182,25 @@ defmodule LanternUI.QA.MatrixLive do
         ]}
         actions={@actions}
         notice={
-          %{id: "qa-update", tone: "info", title: "Sync complete", body: "All items are up to date."}
+          if(@shell_empty?,
+            do: nil,
+            else: %{
+              id: "qa-update",
+              tone: "info",
+              title: "Sync complete",
+              body: "All items are up to date."
+            }
+          )
         }
         dismissed={@dismissed}
         on_dismiss="dismiss_notice"
       >
+        <div class="lui-sr-only" aria-hidden="true">
+          <.alert id="qa-default-info-alert" color="info" title="Legacy info alert" />
+          <div id="qa-scoped-theme" class="dark">
+            <.alert id="qa-scoped-info-alert" color="info" title="Scoped legacy info alert" />
+          </div>
+        </div>
         <.data_table
           id="qa-shell-table"
           rows={@rows}
