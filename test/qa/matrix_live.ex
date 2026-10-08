@@ -7,16 +7,24 @@ defmodule LanternUI.QA.MatrixLive do
   use LanternUI
 
   @cmps ~w(select select_search dropdown menu popover tooltip autocomplete date_picker command user_menu)
-  @ctxs ~w(plain card card_transform scroll table modal sheet side_panel scroll_area data_table edge_br edge_bl sticky tall patch nested)
+  @ctxs ~w(plain card card_transform scroll table modal sheet side_panel scroll_area data_table page_shell action_bar edge_br edge_bl sticky tall patch nested)
   def cmps, do: @cmps
   def ctxs, do: @ctxs
 
   def mount(params, _session, socket) do
     {:ok,
      socket
-     |> assign(ctx: params["ctx"] || "plain", cmp: params["cmp"] || "select", n: 0)
+     |> assign(
+       ctx: params["ctx"] || "plain",
+       cmp: params["cmp"] || "select",
+       n: 0,
+       dismissed: false
+     )
      |> assign(:page_title, "QA matrix"), layout: false}
   end
+
+  def handle_event("dismiss_notice", _params, socket),
+    do: {:noreply, assign(socket, :dismissed, true)}
 
   def handle_event("bump", _, socket), do: {:noreply, update(socket, :n, &(&1 + 1))}
   def handle_event(_, _, socket), do: {:noreply, socket}
@@ -24,8 +32,16 @@ defmodule LanternUI.QA.MatrixLive do
   def render(assigns) do
     ~H"""
     <div id="qa-root" style="padding:12px;min-height:100vh;box-sizing:border-box;">
-      <button id="qa-patch" type="button" phx-click="bump" style="font-size:11px">patch {@n}</button>
-      <.ctx name={@ctx} cmp={@cmp} n={@n} />
+      <button
+        :if={@ctx not in ["page_shell", "action_bar"]}
+        id="qa-patch"
+        type="button"
+        phx-click="bump"
+        style="font-size:11px"
+      >
+        patch {@n}
+      </button>
+      <.ctx name={@ctx} cmp={@cmp} n={@n} dismissed={@dismissed} />
     </div>
     """
   end
@@ -33,6 +49,7 @@ defmodule LanternUI.QA.MatrixLive do
   attr(:name, :string, required: true)
   attr(:cmp, :string, required: true)
   attr(:n, :integer, default: 0)
+  attr(:dismissed, :boolean, default: false)
 
   defp ctx(%{name: "plain"} = assigns) do
     ~H"""
@@ -127,6 +144,65 @@ defmodule LanternUI.QA.MatrixLive do
     """
   end
 
+  defp ctx(%{name: "page_shell"} = assigns) do
+    assigns =
+      assign(assigns,
+        rows: for(i <- 1..24, do: %{id: i, name: "Item #{i}"}),
+        meta: %{
+          flop: %{},
+          params: %{},
+          current_page: 1,
+          total_pages: 1,
+          page_size: 24,
+          total_count: 24
+        },
+        actions: qa_actions()
+      )
+
+    ~H"""
+    <div style="background:var(--lantern-surface);color:var(--lantern-fg);">
+      <.page_shell
+        id="qa-page-shell"
+        title="Inventory"
+        breadcrumbs={[
+          %{label: "Workspace", navigate: "/workspace"},
+          %{label: "Items", href: "/items"}
+        ]}
+        actions={@actions}
+        notice={
+          %{id: "qa-update", tone: "info", title: "Sync complete", body: "All items are up to date."}
+        }
+        dismissed={@dismissed}
+        on_dismiss="dismiss_notice"
+      >
+        <.data_table id="qa-shell-table" rows={@rows} meta={@meta} path="/qa">
+          <:col :let={row} label="Item">{row.name}</:col>
+          <:col :let={row} label="Status">Ready {row.id}</:col>
+        </.data_table>
+      </.page_shell>
+    </div>
+    """
+  end
+
+  defp ctx(%{name: "action_bar"} = assigns) do
+    assigns = assign(assigns, :actions, qa_actions())
+
+    ~H"""
+    <div style="width:100%;min-height:calc(100vh - 1.5rem);padding-top:var(--lui-topline-h);box-sizing:border-box;background:var(--lantern-surface);color:var(--lantern-fg);">
+      <.action_bar
+        id="qa-action-bar"
+        actions={@actions}
+        notice={
+          %{id: "qa-update", tone: "info", title: "Sync complete", body: "All items are up to date."}
+        }
+        dismissed={@dismissed}
+        on_dismiss="dismiss_notice"
+      />
+      <div style="height:600px;padding:16px 0;">Scroll content</div>
+    </div>
+    """
+  end
+
   defp ctx(%{name: "modal"} = assigns) do
     ~H"""
     <.modal id="qa-modal" open>
@@ -204,6 +280,40 @@ defmodule LanternUI.QA.MatrixLive do
       </.modal>
     </div>
     """
+  end
+
+  defp qa_actions do
+    [
+      %{
+        :"phx-click" => "create",
+        id: "create",
+        label: "Create item",
+        icon: "plus",
+        priority: 100
+      },
+      %{
+        :"phx-click" => "import",
+        id: "import",
+        label: "Import",
+        icon: "arrow-down-tray",
+        priority: 80
+      },
+      %{
+        :"phx-click" => "export",
+        id: "export",
+        label: "Export",
+        icon: "arrow-up-tray",
+        priority: 60
+      },
+      %{
+        :"phx-click" => "archive",
+        id: "archive",
+        label: "Archive",
+        icon: "document",
+        priority: 20
+      },
+      %{:"phx-click" => "delete", id: "delete", label: "Delete", icon: "trash", destructive: true}
+    ]
   end
 
   attr(:cmp, :string, required: true)
