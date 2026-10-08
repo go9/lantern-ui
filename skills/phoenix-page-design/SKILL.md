@@ -16,6 +16,8 @@ Application policy may override this guide. Record deliberate exception where re
 
 `<.page_shell title=…>` owns the page title. The trail's last crumb is the current page, and the shell adds one visually hidden `h1` with the same text. Pass ancestors as `breadcrumbs`. Do not repeat the title in a content header or a data component, and do not add a visible title row. `<.page_header>` is deprecated and removed in 1.0; migrate it to `<.page_shell>`.
 
+`<.page_shell layout="strip">` puts the trail, the notice and the actions on one row under the app bar (trail left, actions right). It is opt-in; the default `layout` is the 0.10 stacked topline. Inside `app_shell`, the workspace switcher goes in `<:sidebar_header>`, not in the top bar; on the icon rail it must collapse to an avatar.
+
 Render one `<.page_shell>` per route, in the page's own template. Never render a second breadcrumb row beside it; the app layout supplies the frame only.
 
 ## 2. Page actions live with page identity

@@ -6,6 +6,21 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- `page_shell` `layout="strip"` (opt-in). One solid row under the app bar: the
+  breadcrumb trail on the left, the dismissible notice and the page actions on the
+  right. It is sticky at the shell offset and hidden in print. Below ~40rem the
+  trail keeps its last two crumbs and folds the rest into a `…` menu
+  (`more_breadcrumbs_label`). The action tiers match the floating row. New token:
+  `--lui-strip-h`.
+- `app_shell` `:sidebar_header` slot (opt-in). Content above the nav groups, for an
+  org or workspace switcher. On the icon rail it stays visible, so it should
+  collapse to an avatar; style it with `.lui-app[data-collapsed]`.
+
+### Upgrading from 0.10.x
+Both additions are opt-in. Without `layout="strip"` and without `:sidebar_header`,
+`page_shell` and `app_shell` render the same markup and behaviour as 0.10.0.
+
 ## [0.10.0] - 2026-10-08
 
 ### Upgrading from 0.9.x

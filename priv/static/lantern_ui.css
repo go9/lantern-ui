@@ -982,11 +982,12 @@
   .lui-app-main:has(> .lui-page-shell-strip) { padding-top: 0; }
 }
 .lui-page-strip-trail { display: flex; align-items: center; gap: 0.25rem; flex: 0 1 auto; min-width: 0; }
+.lui-page-strip-trail .lui-breadcrumb-current { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lui-page-strip-trail .lui-breadcrumb { min-width: 0; }
 .lui-page-strip-trail .lui-page-strip-more { display: none; }
 .lui-page-strip .lui-action-bar {
   position: static;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   height: 100%;
   min-width: 0;
   background: none;

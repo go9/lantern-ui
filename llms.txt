@@ -559,6 +559,10 @@ From `docs/recipes.md` (Block 1: app shell with sidebar and page shell):
   <:actions>
     <.avatar size="sm" initials="AL" />
   </:actions>
+  <:sidebar_header>
+    <.avatar size="sm" initials="AW" />
+    <span class="lui-brand-name">Acme workspace</span>
+  </:sidebar_header>
   <:sidebar>
     <.nav_group label="Workspace">
       <.nav_item label="Dashboard" icon="chart-bar" navigate="/" active />
@@ -575,6 +579,7 @@ From `docs/recipes.md` (Block 1: app shell with sidebar and page shell):
   </:sidebar_footer>
   <.page_shell
     id="tickets-shell"
+    layout="strip"
     title="Tickets"
     breadcrumbs={@shell_crumbs}
     actions={[

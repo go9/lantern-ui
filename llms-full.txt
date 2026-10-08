@@ -952,6 +952,7 @@ Slots:
 - `:inner_block` (required) — Main content column.
 - `:sidebar` (required) — nav_group / nav_item
 - `:sidebar_footer` — Persistent links pinned below the nav and above the collapse control (support, docs, legal).
+- `:sidebar_header` — Top of the sidebar, above the nav groups: an org or workspace switcher, for example a dropdown.
 
 #### `breadcrumb_bar/1`
 
@@ -1037,7 +1038,9 @@ Page shell with breadcrumb-owned page identity, a visually hidden semantic title
 - `dismiss_label` (:string, default "Dismiss notice") — Accessible label for the notice dismiss control.
 - `dismissed` (:boolean, default false) — Server-owned notice dismissal state.
 - `id` (:string, required) — Stable id for the page shell and action hook.
+- `layout` (:string, values: stacked, strip, default "stacked") — `"stacked"` (default): a breadcrumb topline above a floating action row.
 - `more_actions_label` (:string, default "More actions") — Accessible label for the overflow action menu.
+- `more_breadcrumbs_label` (:string, default "More breadcrumbs") — Accessible label for the strip's folded breadcrumb menu (`layout="strip"`).
 - `notice` (:map) — Optional dismissible notice descriptor.
 - `on_dismiss` (:string) — LiveView event for notice dismissal.
 - `rest` (:global) — Arbitrary HTML and LiveView attributes passed through.
@@ -2270,6 +2273,10 @@ From `docs/recipes.md` (Block 1: app shell with sidebar and page shell):
   <:actions>
     <.avatar size="sm" initials="AL" />
   </:actions>
+  <:sidebar_header>
+    <.avatar size="sm" initials="AW" />
+    <span class="lui-brand-name">Acme workspace</span>
+  </:sidebar_header>
   <:sidebar>
     <.nav_group label="Workspace">
       <.nav_item label="Dashboard" icon="chart-bar" navigate="/" active />
@@ -2286,6 +2293,7 @@ From `docs/recipes.md` (Block 1: app shell with sidebar and page shell):
   </:sidebar_footer>
   <.page_shell
     id="tickets-shell"
+    layout="strip"
     title="Tickets"
     breadcrumbs={@shell_crumbs}
     actions={[

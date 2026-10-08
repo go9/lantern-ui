@@ -570,6 +570,163 @@ if (!WIDE_TABLE_ONLY) {
 }
 
 
+// page_shell layout="strip" inside app_shell (default and compact appbar). After
+// scrolling, the strip is pinned under the appbar, sits above (never under) any
+// table header that reaches it, and the page keeps one trail, one h1, one actions
+// region and the promotion tier its width implies. Desktop scrolls <main>; mobile
+// scrolls the document.
+if (!WIDE_TABLE_ONLY) {
+  for (const vw of SHELL_VWS) {
+    for (const ctx of ["page_shell_strip", "page_shell_strip_compact"]) {
+      const page = await browser.newPage()
+      await page.setViewport({ width: vw, height: vw < 600 ? 844 : 900 })
+      const row = { vw, ctx, cmp: "strip-contract", problems: [] }
+
+      try {
+        await page.goto(`${BASE}/qa?ctx=${ctx}`, { waitUntil: "networkidle2" })
+        await page.waitForSelector(".phx-connected", { timeout: 8000 })
+        await page.waitForSelector("#qa-strip-table .lui-th", { timeout: 4000 })
+        // Scroll until the fill table's top edge is just under the strip, so its
+        // header has to meet the strip. Then the page has moved past the trail.
+        await page.evaluate(async () => {
+          const main = document.querySelector(".lui-app-main")
+          const table = document.querySelector("#qa-strip-table")
+          if (getComputedStyle(main).overflowY === "auto") {
+            main.scrollTop = table.getBoundingClientRect().top - main.getBoundingClientRect().top + main.scrollTop + 8
+          } else {
+            window.scrollTo(0, table.getBoundingClientRect().top + scrollY + 8)
+          }
+          await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+        })
+        await sleep(80)
+
+        const m = await page.evaluate(() => {
+          const r = (el) => el.getBoundingClientRect()
+          const appbar = r(document.querySelector(".lui-appbar"))
+          const strip = document.querySelector(".lui-page-strip")
+          const sr = r(strip)
+          const header = document.querySelector("#qa-strip-table .lui-th")
+          const hr = r(header)
+          const bar = document.querySelector(".lui-page-strip .lui-action-bar")
+          const barWidth = r(bar).width
+          const tier = barWidth > 1100 ? 3 : barWidth >= 740 ? 2 : 1
+          const inlineVisible = [...bar.querySelectorAll(".lui-action-bar-action:not([data-promoted-index='0'])")]
+            .filter((el) => r(el).width > 0).length
+          const promotable = [...bar.querySelectorAll(".lui-action-bar-action:not([data-promoted-index='0'])")].length
+          const crumbs = [...document.querySelectorAll("[data-page-shell] nav.lui-breadcrumb .lui-breadcrumb-item")]
+          const visibleCrumbs = crumbs.filter((el) => r(el).width > 0).length
+          // The strip's own middle point must hit the strip, so nothing scrolled
+          // beneath it (a table header, for example) can paint over it.
+          const hit = document.elementFromPoint((sr.left + sr.right) / 2, (sr.top + sr.bottom) / 2)
+          const overlap = hr.top < sr.bottom && hr.bottom > sr.top
+          return {
+            appbarBottom: appbar.bottom,
+            stripTop: sr.top,
+            stripBottom: sr.bottom,
+            stripHeight: sr.height,
+            stripWidth: sr.width,
+            tokenHeight: parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--lui-strip-h")) *
+              parseFloat(getComputedStyle(document.documentElement).fontSize),
+            headerTop: hr.top,
+            overlap,
+            coveredByStrip: !!hit && !!hit.closest(".lui-page-strip"),
+            breadcrumbs: document.querySelectorAll("[data-page-shell] nav.lui-breadcrumb").length,
+            titles: document.querySelectorAll("[data-page-shell] h1[data-page-title]").length,
+            actionRegions: document.querySelectorAll("[data-page-actions]").length,
+            promoted: bar.getAttribute("data-promoted"),
+            tier,
+            inlineVisible,
+            promotable,
+            visibleCrumbs,
+            foldMenuVisible: !!document.querySelector(".lui-page-strip-more") &&
+              r(document.querySelector(".lui-page-strip-more")).width > 0,
+            documentOverflows: document.documentElement.scrollWidth > innerWidth + 1,
+            mainOverflows: (() => {
+              const main = document.querySelector(".lui-app-main")
+              return main.scrollWidth > main.clientWidth + 1
+            })(),
+            pageScrolled: (document.querySelector(".lui-app-main").scrollTop || scrollY) > 100,
+            pinned: Math.abs(sr.top - appbar.bottom) <= 1,
+          }
+        })
+        await page.screenshot({ path: `${SHOTS}/${vw}-${ctx}.png` })
+
+        if (!m.pageScrolled) row.problems.push("page did not scroll")
+        if (!m.pinned) row.problems.push(`strip not pinned under appbar (top ${m.stripTop}, appbar bottom ${m.appbarBottom})`)
+        if (m.stripTop < m.appbarBottom - 1) row.problems.push("strip sits under the app bar")
+        if (Math.abs(m.stripHeight - m.tokenHeight) > 1) row.problems.push("strip height does not match --lui-strip-h")
+        if (m.overlap && !m.coveredByStrip) row.problems.push("table header paints over the strip")
+        if (!m.overlap && m.headerTop < m.stripTop && m.headerTop > m.appbarBottom) row.problems.push("table header is between the appbar and the strip")
+        if (m.breadcrumbs !== 1) row.problems.push(`expected one breadcrumb trail, found ${m.breadcrumbs}`)
+        if (m.titles !== 1) row.problems.push(`expected one h1, found ${m.titles}`)
+        if (m.actionRegions !== 1) row.problems.push(`expected one actions region, found ${m.actionRegions}`)
+        if (m.promoted !== String(m.tier)) row.problems.push(`data-promoted ${m.promoted} does not match width tier ${m.tier}`)
+        if (m.inlineVisible > m.tier) row.problems.push(`${m.inlineVisible} inline actions visible above tier ${m.tier}`)
+        if (m.stripWidth <= 640 && !m.foldMenuVisible) row.problems.push("narrow strip did not fold breadcrumbs")
+        if (m.stripWidth <= 640 && m.visibleCrumbs > 2) row.problems.push(`narrow strip shows ${m.visibleCrumbs} crumbs`)
+        if (m.documentOverflows || m.mainOverflows) row.problems.push("page overflows horizontally")
+        row.strip = m
+      } catch (e) {
+        row.problems.push(`error: ${e.message.split("\n")[0]}`)
+        await page.screenshot({ path: `${SHOTS}/${vw}-${ctx}.png` }).catch(() => {})
+      }
+
+      row.status = row.problems.length ? "FAIL" : "ok"
+      rows.push(row)
+      if (row.problems.length) console.log(`FAIL ${vw} ${ctx}/strip-contract: ${row.problems.join("; ")}`)
+      await page.close()
+    }
+  }
+
+  // The sidebar header stays on the icon rail; its switcher name hides there.
+  for (const ctx of ["sidebar_header", "sidebar_header_collapsed"]) {
+    for (const vw of [1440, 1100]) {
+      const page = await browser.newPage()
+      await page.setViewport({ width: vw, height: 900 })
+      const row = { vw, ctx, cmp: "sidebar-header", problems: [] }
+
+      try {
+        await page.goto(`${BASE}/qa?ctx=${ctx}`, { waitUntil: "networkidle2" })
+        await page.waitForSelector(".phx-connected", { timeout: 8000 })
+        await page.waitForSelector("#qa-sidebar-switcher", { timeout: 4000 })
+        const m = await page.evaluate(() => {
+          const r = (el) => el.getBoundingClientRect()
+          const aside = document.querySelector(".lui-app-sidebar")
+          const header = document.querySelector(".lui-app-sidebar-header")
+          const nav = document.querySelector(".lui-app-nav")
+          const name = document.querySelector(".qa-switcher-name")
+          const collapsed = document.querySelector(".lui-app").hasAttribute("data-collapsed")
+          return {
+            collapsed,
+            headerAboveNav: r(header).bottom <= r(nav).top + 1,
+            headerInsideSidebar: r(header).right <= r(aside).right + 1 && r(header).width > 0,
+            headerWithinRail: r(header).width <= r(aside).width + 1,
+            nameVisible: r(name).width > 0,
+            avatarVisible: r(document.querySelector(".qa-avatar")).width > 0,
+            headerRect: { w: r(header).width, h: r(header).height },
+          }
+        })
+        await page.screenshot({ path: `${SHOTS}/${vw}-${ctx}.png` })
+        if (m.collapsed !== (ctx === "sidebar_header_collapsed")) row.problems.push("collapsed state does not match the context")
+        if (!m.headerAboveNav) row.problems.push("sidebar header is not above the nav")
+        if (!m.headerInsideSidebar) row.problems.push("sidebar header is outside the sidebar")
+        if (!m.avatarVisible) row.problems.push("switcher avatar not visible")
+        if (m.collapsed && m.nameVisible) row.problems.push("switcher name still visible on the icon rail")
+        if (!m.collapsed && !m.nameVisible) row.problems.push("switcher name hidden when expanded")
+        row.sidebar = m
+      } catch (e) {
+        row.problems.push(`error: ${e.message.split("\n")[0]}`)
+      }
+
+      row.status = row.problems.length ? "FAIL" : "ok"
+      rows.push(row)
+      if (row.problems.length) console.log(`FAIL ${vw} ${ctx}/sidebar-header: ${row.problems.join("; ")}`)
+      await page.close()
+    }
+  }
+}
+
+
 await browser.close()
 
 const bucket = (re) => rows.filter((r) => r.problems.some((p) => re.test(p))).length

@@ -159,3 +159,50 @@ to tear down on any redirect.
   ...
 </.page_shell>
 ```
+
+## Page layouts: stacked and strip
+
+`page_shell/1` has two layouts, chosen by `layout` (default `"stacked"`).
+`"stacked"` renders the breadcrumb topline, then the floating action row. Both
+rows are sticky under the app bar, and the floating row stays transparent. This is
+the 0.10 markup.
+
+`layout="strip"` renders one row instead: the trail on the left, then the notice
+and the actions on the right. The row has a solid surface and a bottom hairline. It
+is sticky at `--lui-shell-appbar-offset` and is `--lui-strip-h` tall. Inside
+`app_shell` the strip bleeds to the main column's edges. The page's sticky table
+headers sit below it, and the strip is never covered by the app bar. The strip
+keeps one `h1`, one trail and one actions region, and it is `display: none` in print.
+
+- Trail: at strip widths of 40rem and below, only the back crumb and the current
+  page show. The other ancestors move to a `…` menu, whose trigger is labelled by
+  `more_breadcrumbs_label`. Above 40rem every crumb shows.
+- Actions: the same descriptors and promotion tiers as the floating row. The tiers
+  are measured on the action region's own width, not the viewport's. At narrow
+  widths the notice keeps its icon and title, with the full text in `title`.
+- Empty strip: with no actions and no notice, the strip shows the trail alone and
+  renders no action region.
+
+## App shell sidebar header
+
+`app_shell/1`'s `:sidebar_header` slot renders at the top of the sidebar, above the
+nav groups. Use it for an org or workspace switcher, for example a dropdown. On the
+icon rail the header stays and is not hidden. Its content should collapse to an
+avatar there. Style that with `.lui-app[data-collapsed] .your-class`, because
+`data-collapsed` is set on the app root and toggled by `LanternSidebar`. Collapse
+state, the nav hook, and Cmd/Ctrl+B are unchanged. Without the slot, the sidebar
+markup is the 0.10 markup.
+
+```heex
+<.app_shell id="app">
+  <:brand>Acme</:brand>
+  <:sidebar_header>
+    <.avatar size="sm" initials="AW" />
+    <span class="lui-brand-name">Acme workspace</span>
+  </:sidebar_header>
+  <:sidebar>...</:sidebar>
+  <.page_shell id="inventory" layout="strip" title="Inventory" breadcrumbs={@crumbs} actions={@actions}>
+    ...
+  </.page_shell>
+</.app_shell>
+```
