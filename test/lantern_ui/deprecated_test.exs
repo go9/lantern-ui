@@ -31,9 +31,10 @@ defmodule LanternUI.DeprecatedTest do
     assert log =~ "#{name}/1 is deprecated and will be removed in 1.0; use <.page_shell>"
   end
 
-  test "every deprecated entry names its removal version and replacement" do
+  test "every deprecated entry names its since version, removal version or nil, and replacement" do
     for entry <- LanternUI.Deprecated.deprecated() do
-      assert is_binary(entry.removed_in)
+      assert is_binary(entry.since)
+      assert is_binary(entry.removed_in) or is_nil(entry.removed_in)
       assert is_binary(entry.replacement)
     end
   end

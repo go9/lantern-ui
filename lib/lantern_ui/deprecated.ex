@@ -33,7 +33,9 @@ defmodule LanternUI.Deprecated do
   end
 
   @doc """
-  Deprecated components: `%{component, replacement, removed_in, evidence}`.
+  Deprecated components: `%{component, replacement, since, removed_in, evidence}`.
+  `since` is the first release that deprecated the component. `removed_in` is the
+  planned removal version, or `nil` when no removal is scheduled.
 
   Every entry has a `@deprecated` annotation on the component itself and warns
   through `warn/3` at render time. Lint flags call sites. An entry is not removed
@@ -44,31 +46,36 @@ defmodule LanternUI.Deprecated do
       %{
         component: :icon_button,
         replacement: ~s|<.button size="icon" label="...">|,
-        removed_in: "0.9.0",
+        since: "0.8.2",
+        removed_in: nil,
         evidence: "eval tasks 01/05 steer models to icon_button; same chrome as button/1"
       },
       %{
         component: :segmented,
         replacement: ~s|<.tabs_list variant="segmented">|,
-        removed_in: "0.9.0",
+        since: "0.8.2",
+        removed_in: nil,
         evidence: "eval tasks 01 + brief steer models to segmented; duplicate filter-chip API"
       },
       %{
         component: :progress_ring,
         replacement: ~s|<.progress shape="ring" ...>|,
-        removed_in: "0.9.0",
+        since: "0.8.2",
+        removed_in: nil,
         evidence: ~s|duplicate of progress/1 shape="ring"; both in eval inventory|
       },
       %{
         component: :property_row,
         replacement: ~s|<.description_list layout="dense"> with <:item>|,
-        removed_in: "0.9.0",
+        since: "0.8.2",
+        removed_in: nil,
         evidence:
           "eval task 03 steers models to property_row; same rows as dense description_list"
       },
       %{
         component: :page_header,
         replacement: "<.page_shell>",
+        since: "0.10",
         removed_in: "1.0",
         evidence:
           "shell contract 0.10: page_header draws a second visible title row under the breadcrumb; page_shell makes the breadcrumb the one title (docs/recipes.md Block 1)"
