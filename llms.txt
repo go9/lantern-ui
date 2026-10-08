@@ -49,7 +49,7 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 ### LanternUI.Components.ActionBar
 
-- `action_bar/1` — Floating page actions with inline promotion and a complete overflow menu.
+- `action_bar/1` — Renders each action inline and in the Zag `More actions` menu.
 
 ### LanternUI.Components.Alert
 

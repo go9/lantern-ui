@@ -126,7 +126,7 @@ Floating page actions with inline promotion and a complete overflow menu.
 
 #### `action_bar/1`
 
-Floating page actions with inline promotion and a complete overflow menu.
+Renders each action inline and in the Zag `More actions` menu.
 
 - `actions` (:list, default []) — Page actions as descriptor maps.
 - `class` (:any) — Extra classes merged onto the root element.
@@ -154,8 +154,10 @@ Inline status alert.
 - `id` (:string) — Element id; auto-generated when omitted.
 - `on_close` (:any) — JS command run when the alert is dismissed (Fluxon parity); its presence shows the close button.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `role` (:string, default "alert") — Announcement role; defaults to alert for compatibility.
 - `subtitle` (:string) — Secondary line under the title.
 - `title` (:string) — Primary heading shown next to the icon.
+- `tone_slots` (:boolean, default false) — Opt in to consumer-defined `--lantern-tone-*-bg` alert backgrounds.
 Slots:
 - `:icon` — Custom leading icon; overrides the color default.
 - `:inner_block` — Alert body content below the title.
@@ -861,7 +863,7 @@ A small, curated inline-SVG icon set (Heroicons outline paths, MIT).
 Renders an icon by name.
 
 - `class` (:any) — Extra classes merged onto the root element.
-- `name` (:string, required, values: window, minus, funnel, map-pin, calendar-days, arrow-path, check-circle, pencil-square, magnifying-glass, trash, chevron-up, clock, printer, folder-open, chevron-right, document, view-columns, ellipsis-horizontal, bars-3, sparkles, folder, cloud, chevron-up-down, information-circle, cursor-arrow-rays, x-mark, calendar, check, chart-bar, arrow-right, arrow-up-tray, chevron-down, inbox, adjustments-horizontal, globe-alt, chevron-left, presentation-chart-line, arrow-trending-up, plus, squares-2x2, arrow-down-tray, circle-stack, exclamation-circle) — Icon key from the curated outline set.
+- `name` (:string, required, values: calendar-days, document, cloud, x-mark, arrow-up-tray, globe-alt, chevron-up, sparkles, folder, exclamation-circle, window, chevron-up-down, folder-open, chart-bar, bars-3, presentation-chart-line, squares-2x2, check-circle, arrow-right, trash, minus, clock, printer, map-pin, adjustments-horizontal, funnel, information-circle, cursor-arrow-rays, inbox, ellipsis-horizontal, magnifying-glass, chevron-down, arrow-path, view-columns, plus, arrow-down-tray, chevron-left, chevron-right, calendar, circle-stack, check, pencil-square, arrow-trending-up) — Icon key from the curated outline set.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 
 ### LanternUI.Components.IconButton
