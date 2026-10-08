@@ -98,6 +98,13 @@ defmodule LanternUI.Components.Layout do
     )
   end
 
+  slot(:sidebar_header,
+    doc:
+      "Top of the sidebar, above the nav groups: an org or workspace switcher, for " <>
+        "example a dropdown. On the icon rail it stays visible, so the content should " <>
+        "collapse to an avatar: style it with `.lui-app[data-collapsed] .your-class`."
+  )
+
   slot(:sidebar, required: true, doc: "nav_group / nav_item")
 
   slot(:sidebar_footer,
@@ -138,7 +145,9 @@ defmodule LanternUI.Components.Layout do
       <div class="lui-app-body">
         <div class="lui-app-scrim" data-part="sidebar-scrim" aria-hidden="true"></div>
         <aside id={"#{@id}-sidebar"} class="lui-app-sidebar" data-part="sidebar">
-          <div class="lui-app-nav">{render_slot(@sidebar)}</div>
+          <div :if={@sidebar_header != []} class="lui-app-sidebar-header">
+            {render_slot(@sidebar_header)}
+          </div><div class="lui-app-nav">{render_slot(@sidebar)}</div>
           <div :if={@sidebar_footer != []} class="lui-app-sidebar-links">
             {render_slot(@sidebar_footer)}
           </div>
@@ -190,9 +199,34 @@ defmodule LanternUI.Components.Layout do
   its fixed app bar. Non-fill data table headers remain in their horizontal
   `.lui-table-wrap` scroll region; they do not stick to the viewport while the
   page scrolls. Fill tables pin their header within the table's own scroll area.
+
+  `layout="strip"` (opt-in) puts the breadcrumb trail, the dismissible notice and
+  the actions on ONE solid row under the app bar: the trail on the left, the
+  actions on the right. The row is sticky with the same offset as the default
+  topline. Below ~40rem of strip width the trail keeps its last two crumbs and
+  folds the rest into a `…` menu; the actions keep the same promotion tiers as the
+  floating row. The strip is hidden in print. A page with no actions and no notice
+  shows the trail alone, with no action region.
+
+      <.app_shell id="app">
+        <:brand>Acme</:brand>
+        <:sidebar_header>…workspace switcher…</:sidebar_header>
+        <:sidebar>…</:sidebar>
+        <.page_shell id="inventory" layout="strip" title="Inventory" breadcrumbs={@crumbs} actions={@actions}>
+          …
+        </.page_shell>
+      </.app_shell>
   """
   attr(:id, :string, required: true, doc: "Stable id for the page shell and action hook.")
   attr(:title, :string, required: true, doc: "Current page label and semantic h1 text.")
+
+  attr(:layout, :string,
+    default: "stacked",
+    values: ~w(stacked strip),
+    doc:
+      "`\"stacked\"` (default): a breadcrumb topline above a floating action row. " <>
+        "`\"strip\"`: one solid row with the trail on the left and the actions on the right."
+  )
 
   attr(:breadcrumbs, :list,
     default: [],
@@ -207,6 +241,11 @@ defmodule LanternUI.Components.Layout do
   attr(:breadcrumb_label, :string,
     default: "Breadcrumb",
     doc: "Accessible name for the breadcrumb navigation."
+  )
+
+  attr(:more_breadcrumbs_label, :string,
+    default: "More breadcrumbs",
+    doc: "Accessible label for the strip's folded breadcrumb menu (`layout=\"strip\"`)."
   )
 
   attr(:more_actions_label, :string,
@@ -233,6 +272,14 @@ defmodule LanternUI.Components.Layout do
         assigns.actions != [] or (not is_nil(assigns.notice) and not assigns.dismissed)
       )
 
+    if assigns.layout == "strip" do
+      page_shell_strip(assigns)
+    else
+      page_shell_stacked(assigns)
+    end
+  end
+
+  defp page_shell_stacked(assigns) do
     ~H"""
     <section
       id={@id}
@@ -267,6 +314,73 @@ defmodule LanternUI.Components.Layout do
         dismiss_label={@dismiss_label}
         data-page-actions
       />
+
+      <div class={Class.merge(["lui-page-content", @content_class])} data-page-content>
+        {render_slot(@inner_block)}
+      </div>
+    </section>
+    """
+  end
+
+  defp page_shell_strip(assigns) do
+    ~H"""
+    <section
+      id={@id}
+      class={Class.merge(["lui-page-shell lui-page-shell-strip", @class])}
+      data-page-shell
+      data-page-layout="strip"
+      data-page-has-actions={@has_actions? && "true"}
+      {@rest}
+    >
+      <div class="lui-page-strip" data-page-strip>
+        <div class="lui-page-strip-trail" data-page-breadcrumb>
+          <Menu.menu
+            :if={length(@ancestor_breadcrumbs) > 1}
+            id={"#{@id}-crumbs"}
+            placement="bottom-start"
+            container_class="lui-page-strip-more"
+            trigger_class="lui-page-strip-more-trigger"
+          >
+            <:trigger>
+              <Icon.icon name="ellipsis-horizontal" />
+              <span class="lui-sr-only">{@more_breadcrumbs_label}</span>
+            </:trigger>
+            <Menu.menu_item
+              :for={crumb <- Enum.drop(@ancestor_breadcrumbs, -1)}
+              navigate={crumb.navigate}
+              patch={crumb.patch}
+              href={crumb.href}
+            >
+              {crumb.label}
+            </Menu.menu_item>
+          </Menu.menu>
+          <Breadcrumb.breadcrumb aria_label={@breadcrumb_label}>
+            <:item
+              :for={crumb <- @ancestor_breadcrumbs}
+              navigate={crumb.navigate}
+              patch={crumb.patch}
+              href={crumb.href}
+            >
+              {crumb.label}
+            </:item>
+            <:item current>{@title}</:item>
+          </Breadcrumb.breadcrumb>
+          <h1 class="lui-sr-only" data-page-title>{@title}</h1>
+        </div>
+
+        <ActionBar.action_bar
+          :if={@has_actions?}
+          id={"#{@id}-actions"}
+          class="lui-page-strip-actions"
+          actions={@actions}
+          notice={@notice}
+          dismissed={@dismissed}
+          on_dismiss={@on_dismiss}
+          more_actions_label={@more_actions_label}
+          dismiss_label={@dismiss_label}
+          data-page-actions
+        />
+      </div>
 
       <div class={Class.merge(["lui-page-content", @content_class])} data-page-content>
         {render_slot(@inner_block)}

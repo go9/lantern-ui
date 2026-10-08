@@ -37,6 +37,7 @@
 :root {
   --lui-topline-h: 2.25rem;
   --lui-actionbar-h: 2.75rem;
+  --lui-strip-h: 2.75rem;
   --lui-shell-h: calc(var(--lui-topline-h) + var(--lui-actionbar-h));
 }
 
@@ -955,6 +956,52 @@
 .lui-page-topline .lui-breadcrumb { flex: 1 1 auto; min-width: 0; }
 .lui-page-content { min-width: 0; }
 
+/* ── Page strip (`page_shell layout="strip"`, opt-in) ──
+   One solid row: trail left, notice and actions right. It is in flow and sticky
+   at the shell offset, so content starts exactly at its bottom edge. Inside
+   app_shell it bleeds to the main column's edges, like the breadcrumb strip. */
+.lui-page-strip {
+  box-sizing: border-box;
+  position: sticky;
+  top: var(--lui-shell-appbar-offset, 0px);
+  z-index: var(--lantern-z-sticky, 10);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  height: var(--lui-strip-h);
+  border-bottom: 1px solid var(--lantern-border);
+  background: var(--lantern-surface);
+  container-type: inline-size;
+  container-name: lui-page-strip;
+}
+.lui-app-main .lui-page-shell-strip > .lui-page-strip { margin-inline: -1.5rem; padding-inline: 1.5rem; }
+.lui-app-main:has(> .lui-page-shell-strip) { padding-top: 0; }
+@media (max-width: 768px) {
+  .lui-app-main .lui-page-shell-strip > .lui-page-strip { margin-inline: -1.25rem; padding-inline: 1.25rem; }
+  .lui-app-main:has(> .lui-page-shell-strip) { padding-top: 0; }
+}
+.lui-page-strip-trail { display: flex; align-items: center; gap: 0.25rem; flex: 0 1 auto; min-width: 0; }
+.lui-page-strip-trail .lui-breadcrumb { min-width: 0; }
+.lui-page-strip-trail .lui-page-strip-more { display: none; }
+.lui-page-strip .lui-action-bar {
+  position: static;
+  flex: 1 1 auto;
+  height: 100%;
+  min-width: 0;
+  background: none;
+  pointer-events: auto;
+}
+.lui-page-strip .lui-action-bar-notice { min-width: 0; }
+/* Narrow strip: keep the back crumb and the current page; fold the rest into `…`. */
+@container lui-page-strip (max-width: 40rem) {
+  .lui-page-strip-trail .lui-breadcrumb-item:not(:nth-last-child(-n + 2)) { display: none; }
+  .lui-page-strip-trail .lui-page-strip-more { display: inline-flex; flex: none; }
+}
+@media print {
+  .lui-page-shell-strip > .lui-page-strip { display: none; }
+}
+
 /* ── Floating page action bar ── */
 .lui-action-bar {
   box-sizing: border-box;
@@ -1054,6 +1101,7 @@
 @media (max-width: 46.1875rem) {
   :root {
     --lui-topline-h: 2.375rem;
+    --lui-strip-h: 2.375rem;
   }
 }
 
@@ -1100,6 +1148,12 @@
      misses the nested case (flicker's `page_layout fill` wraps the table). */
   .lui-app-main:has(.lui-datatable-fill) { padding-bottom: 1.5rem; }
 }
+
+/* Sidebar header (`app_shell` `:sidebar_header`): above the nav, e.g. a
+   workspace switcher. On the icon rail it stays, so it should collapse to an
+   avatar; `.lui-app[data-collapsed]` is the hook for that. */
+.lui-app-sidebar-header { flex: none; padding: 0.6rem 0.6rem 0.5rem; border-bottom: 1px solid var(--lantern-border); }
+.lui-app[data-collapsed] .lui-app-sidebar-header { padding-inline: 0.4rem; display: flex; justify-content: center; }
 
 /* Nav */
 .lui-nav-group { margin-bottom: 1rem; }

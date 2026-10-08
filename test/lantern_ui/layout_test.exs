@@ -809,4 +809,157 @@ defmodule LanternUI.LayoutTest do
       assert css =~ ~r/\.lui-card-foot\s*\{[^}]*justify-content:\s*space-between/s
     end
   end
+
+  describe "page_shell/1 layout=\"strip\" (opt-in)" do
+    test "the default layout keeps the stacked topline and no strip marker" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.page_shell id="stacked" title="Stacked" breadcrumbs={[%{label: "Home", navigate: "/"}]}>
+            Body
+          </Layout.page_shell>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      assert Floki.find(doc, "[data-page-layout]") == []
+      assert Floki.find(doc, ".lui-page-topline[data-page-breadcrumb]") != []
+      assert Floki.find(doc, ".lui-page-strip") == []
+    end
+
+    test "renders one trail, one sr-only h1, the notice and the actions on one strip" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.page_shell
+            id="inv"
+            layout="strip"
+            title="Inventory"
+            breadcrumbs={[%{label: "Workspace", navigate: "/workspace"}, %{label: "Items", href: "/items"}]}
+            actions={[%{id: "create", label: "Create", priority: 1}]}
+            notice={%{id: "sync", tone: "info", title: "Sync complete", body: "All current."}}
+            breadcrumb_label="Trail"
+            more_breadcrumbs_label="All crumbs"
+          >
+            PAGE BODY
+          </Layout.page_shell>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      assert [strip] = Floki.find(doc, ".lui-page-strip[data-page-strip]")
+
+      assert [_] =
+               Floki.find(strip, "[data-page-breadcrumb] nav.lui-breadcrumb[aria-label='Trail']")
+
+      assert length(Floki.find(doc, "nav.lui-breadcrumb")) == 1
+      assert length(Floki.find(doc, "h1[data-page-title]")) == 1
+      assert [_] = Floki.find(strip, "[data-page-actions]")
+      assert [_] = Floki.find(strip, ".lui-action-bar-notice")
+      assert Floki.find(strip, "[data-page-actions] .lui-action-bar-menu") != []
+
+      assert Floki.find(doc, "[data-page-shell][data-page-layout='strip'][data-page-has-actions]") !=
+               []
+
+      assert Floki.find(doc, "[data-page-content]") != []
+      assert html =~ "PAGE BODY"
+      # Two ancestors: the middle crumbs fold into the strip's `…` menu, labelled.
+      assert [_] = Floki.find(strip, ".lui-page-strip-more")
+      assert html =~ "All crumbs"
+    end
+
+    test "shows the trail alone, without an action region, when there is nothing else" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.page_shell
+            id="trail"
+            layout="strip"
+            title="Trail only"
+            breadcrumbs={[%{label: "Home", navigate: "/"}]}
+          >
+            Body
+          </Layout.page_shell>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      assert Floki.find(doc, ".lui-page-strip") != []
+      assert Floki.find(doc, "nav.lui-breadcrumb") != []
+      assert Floki.find(doc, "[data-page-actions]") == []
+      assert Floki.find(doc, "[phx-hook='LanternActionBar']") == []
+      # A single ancestor has nothing to fold, so no `…` menu is rendered.
+      assert Floki.find(doc, ".lui-page-strip-more") == []
+    end
+
+    test "a dismissed notice without actions leaves no action region on the strip" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.page_shell
+            id="dismissed"
+            layout="strip"
+            title="Dismissed"
+            notice={%{id: "n", title: "Handled"}}
+            dismissed
+          >
+            Body
+          </Layout.page_shell>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      assert Floki.find(doc, "[data-page-actions]") == []
+      assert Floki.find(doc, "[data-page-shell][data-page-has-actions]") == []
+    end
+  end
+
+  describe "app_shell/1 sidebar_header slot" do
+    test "renders the header above the nav groups inside the sidebar" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.app_shell id="switch">
+            <:brand>Acme</:brand>
+            <:sidebar_header><button type="button">Acme workspace</button></:sidebar_header>
+            <:sidebar><Layout.nav_item label="Dashboard" navigate="/" /></:sidebar>
+            Body
+          </Layout.app_shell>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      [sidebar] = Floki.find(doc, "aside[data-part='sidebar']")
+
+      children =
+        for {"div", attrs, _} = node <- Floki.children(sidebar, include_text: false),
+            do: {attrs, node}
+
+      classes =
+        Enum.map(children, fn {attrs, _} ->
+          attrs |> Enum.find_value("", fn {k, v} -> k == "class" && v end)
+        end)
+
+      header_index = Enum.find_index(classes, &(&1 == "lui-app-sidebar-header"))
+      nav_index = Enum.find_index(classes, &(&1 == "lui-app-nav"))
+      assert header_index != nil and nav_index != nil and header_index < nav_index
+      assert Floki.find(sidebar, ".lui-app-sidebar-header button") != []
+    end
+
+    test "omits the header element when the slot is absent" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.app_shell id="plain">
+            <:brand>Acme</:brand>
+            <:sidebar><Layout.nav_item label="Dashboard" navigate="/" /></:sidebar>
+            Body
+          </Layout.app_shell>
+          """
+        end)
+
+      refute html =~ "lui-app-sidebar-header"
+      assert html =~ "lui-app-nav"
+    end
+  end
 end
