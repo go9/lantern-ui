@@ -83,6 +83,31 @@ defmodule LanternUI.LayoutTest do
       refute open =~ ~s(data-collapsed)
     end
 
+    test "compact is opt-in and marks only the opted-in shell" do
+      compact =
+        render(fn assigns ->
+          ~H"""
+          <Layout.app_shell id="compact" compact>
+            <:brand>b</:brand><:sidebar>n</:sidebar>x
+          </Layout.app_shell>
+          """
+        end)
+
+      assert compact =~ ~s(id="compact")
+      assert compact =~ ~s(data-compact)
+
+      default =
+        render(fn assigns ->
+          ~H"""
+          <Layout.app_shell id="default">
+            <:brand>b</:brand><:sidebar>n</:sidebar>x
+          </Layout.app_shell>
+          """
+        end)
+
+      refute default =~ ~s(data-compact)
+    end
+
     test "header and actions bars are omitted when their slots are empty" do
       html =
         render(fn assigns ->
@@ -95,6 +120,36 @@ defmodule LanternUI.LayoutTest do
 
       refute html =~ "lui-appbar-header"
       refute html =~ "lui-appbar-actions"
+    end
+  end
+
+  describe "page_shell/1" do
+    test "renders one breadcrumb row, one hidden h1, one actions region, and content hooks" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.page_shell
+            id="inventory"
+            title="Inventory"
+            breadcrumbs={[%{label: "Workspace", navigate: "/workspace"}]}
+          >
+            PAGE BODY
+          </Layout.page_shell>
+          """
+        end)
+
+      assert html =~ ~s(data-page-shell)
+      assert html =~ ~s(data-page-breadcrumb)
+      assert html =~ ~s(data-page-title)
+      assert html =~ ~s(data-page-actions)
+      assert html =~ ~s(data-page-content)
+      assert html =~ ~s(href="/workspace")
+      assert html =~ ~s(aria-current="page")
+      assert html =~ "Inventory"
+      assert html =~ "PAGE BODY"
+      assert length(Regex.scan(~r/<h1\b/, html)) == 1
+      assert length(Regex.scan(~r/data-page-breadcrumb/, html)) == 1
+      assert length(Regex.scan(~r/data-page-actions/, html)) == 1
     end
   end
 
