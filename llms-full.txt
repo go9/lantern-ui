@@ -120,6 +120,24 @@ Slots:
 - `:panel` (required) — Expandable panel content.
   - `class` — Extra classes merged onto the panel content wrapper.
 
+### LanternUI.Components.ActionBar
+
+Floating page actions with inline promotion and a complete overflow menu.
+
+#### `action_bar/1`
+
+Floating page actions with inline promotion and a complete overflow menu.
+
+- `actions` (:list, default []) — Page actions as descriptor maps.
+- `class` (:any) — Extra classes merged onto the root element.
+- `dismiss_label` (:string, default "Dismiss notice") — Accessible label for the notice dismiss control.
+- `dismissed` (:boolean, default false) — Server-owned notice dismissal state.
+- `id` (:string, required) — Stable id for the promotion and dismissal hook.
+- `more_actions_label` (:string, default "More actions") — Accessible label for the overflow action menu.
+- `notice` (:map) — Optional dismissible notice map.
+- `on_dismiss` (:string) — LiveView event for notice dismissal; receives the notice id.
+- `rest` (:global) — Arbitrary HTML and LiveView attributes passed through.
+
 ### LanternUI.Components.Alert
 
 Inline status alert.
@@ -129,7 +147,8 @@ Inline status alert.
 Inline status alert.
 
 - `class` (:any) — Extra classes merged onto the root element.
-- `color` (:string, values: neutral, info, success, warning, danger, default "neutral") — Semantic color; also picks the default status icon.
+- `color` (:string, values: neutral, info, success, warning, danger, promo, default "neutral") — Semantic color; also picks the default status icon.
+- `dismiss_label` (:string, default "Close") — Accessible label for the dismiss button.
 - `hide_close` (:boolean, default true) — Hide the dismiss button (default).
 - `hide_icon` (:boolean, default false) — Omit the leading status icon.
 - `id` (:string) — Element id; auto-generated when omitted.
@@ -239,7 +258,7 @@ Status badge / pill.
 Status badge / pill.
 
 - `class` (:any) — Extra classes merged onto the root element.
-- `color` (:string, values: neutral, primary, accent, info, success, warning, danger, default "neutral") — Semantic color token for the badge surface.
+- `color` (:string, values: neutral, primary, accent, info, success, warning, danger, promo, default "neutral") — Semantic color token for the badge surface.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `size` (:string, values: sm, md, lg, default "md") — Badge padding and type scale.
 - `variant` (:string, values: soft, solid, outline, default "soft") — Surface style: soft tint, solid fill, or outline border.
@@ -910,6 +929,7 @@ App shell — a full-width top bar (brand + inline context + actions) over a fix
 
 - `class` (:any) — Extra classes merged onto the root element.
 - `collapsed` (:boolean, default false) — Initial sidebar collapsed (icon-rail) state.
+- `compact` (:boolean, default false) — Opt in to the slim shell topline height.
 - `id` (:string, required) — stable id — the collapse state is persisted per id
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 Slots:
@@ -1002,6 +1022,26 @@ Page title row — compact, goprint-density.
 Slots:
 - `:actions` — Right-side actions (buttons, menus).
 - `:inner_block` — Optional body under the title row (rarely needed).
+
+#### `page_shell/1`
+
+Page shell with breadcrumb-owned page identity, a visually hidden semantic title, a floating action bar, and the page content region.
+
+- `actions` (:list, default []) — Action descriptor maps rendered by action_bar/1.
+- `breadcrumb_label` (:string, default "Breadcrumb") — Accessible name for the breadcrumb navigation.
+- `breadcrumbs` (:list, default []) — Ancestor crumb maps with a label and optional navigation target.
+- `class` (:any) — Extra classes merged onto the page shell.
+- `content_class` (:any) — Extra classes merged onto the content region.
+- `dismiss_label` (:string, default "Dismiss notice") — Accessible label for the notice dismiss control.
+- `dismissed` (:boolean, default false) — Server-owned notice dismissal state.
+- `id` (:string, required) — Stable id for the page shell and action hook.
+- `more_actions_label` (:string, default "More actions") — Accessible label for the overflow action menu.
+- `notice` (:map) — Optional dismissible notice descriptor.
+- `on_dismiss` (:string) — LiveView event for notice dismissal.
+- `rest` (:global) — Arbitrary HTML and LiveView attributes passed through.
+- `title` (:string, required) — Current page label and semantic h1 text.
+Slots:
+- `:inner_block` (required) — Page content.
 
 #### `stack/1`
 
