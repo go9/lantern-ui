@@ -6,7 +6,55 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Upgrading from 0.9.x
+Everything in this release is opt-in. Pages that do not use `page_shell`,
+`action_bar`, `compact`, or the `promo` tone render exactly as they did in 0.9.
+- **Move pages to `<.page_shell>`.** `<.page_header>` still renders in 0.10 and
+  logs a deprecation warning once per node; it is removed in 1.0. Pass the
+  ancestors as `breadcrumbs`, the title as `title`, and page actions as
+  `actions` descriptors. `docs/recipes.md` Block 1 has the full page.
+- **Run `mix lantern.lint`.** Two new rules: `single_page_shell` (more than one
+  `<.page_shell>` in a file) and `hand_input` (raw `<input>`, `<textarea>`, or
+  `<select>`; use `input/1`, `textarea/1`, or `select/1`; `type="hidden"` is
+  exempt). `page_header` is now a `deprecated_component` finding.
+
+### Added
+- `page_shell/1`: one page identity per route. It renders the breadcrumb row
+  (the last crumb is the current page), one visually hidden `h1`, the action
+  row, and the page content. Its `data-page-*` attributes are the QA contract.
+- `action_bar/1`: a floating, transparent action row. Every action renders twice,
+  as an inline button and as an item in a "More" menu on the Zag menu, so the menu
+  always lists everything. The `LanternActionBar` hook sets `data-promoted`
+  (3, 2, or 1 by width) and CSS hides the inline copies past that count. Nothing
+  moves in the DOM. See `docs/behaviours.md`, "Action bar promotion".
+- Optional dismissible notice on the action row: `notice`, `dismissed`, and
+  `on_dismiss` (the server owns dismissal; without `on_dismiss` the hook keeps it
+  in localStorage and re-applies it on update).
+- `app_shell` `compact` attr: opts the app chrome into the slim topline. The
+  default layout is unchanged.
+- Shell height tokens `--lui-topline-h`, `--lui-actionbar-h`, and `--lui-shell-h`
+  (their sum). Component CSS uses them instead of literal pixels.
+- `promo` tone on `badge` and `alert` (`data-tone` on alerts), with the semantic
+  slots `--lantern-tone-*-bg` and `--lantern-accent-text`. No palette is shipped.
+- Lint rules `single_page_shell` and `hand_input`. `.lantern-lint.json`
+  `allow_rules` accepts `hand_input`.
+- `test/qa/run.mjs` page-contract assertions for `ctx=page_shell` and
+  `ctx=action_bar` in `LanternUI.QA.MatrixLive`.
+
+### Changed
+- `docs/recipes.md` blocks and recipes, the `lantern-recipes` and
+  `phoenix-page-design` skills, and the consumer guide use `page_shell` instead of
+  `breadcrumb_bar` plus `page_header`. The sign-in block is a card with a title.
+- `LanternUI.Deprecated.warn/3` takes the version the component is removed in.
+  `warn/2` keeps the 0.9.0 default. `llms.txt` names each deprecated entry's
+  removal version.
+
+### Deprecated
+- `<.page_header>` is deprecated; use `<.page_shell>`. Removed in 1.0.
+
 ### Fixed
+- `DeprecatedTest` no longer fails when another test's deprecation warning lands
+  in its log capture (#3426). The assertion counts only the component under test.
 - Select changes now update LiveView forms reliably when Zag renders the hidden control before its change callback, including controls associated with a form from overlay content. Client and controlled value changes emit `input` and `change` events.
 
 ## [0.9.0] - 2026-10-05

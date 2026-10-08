@@ -1,28 +1,34 @@
-<.page_header title={@project.name} description={@project.summary}>
-  <:actions>
-    <.progress
-      shape="ring"
-      completed={@project.completed}
-      scope={@project.scope}
-      label="Progress"
-    >
-      {@project.completed} / {@project.scope}
-    </.progress>
-  </:actions>
-</.page_header>
-<.stat_grid>
-  <:stat label="Apps" value={@stats.apps} />
-  <:stat label="Databases" value={@stats.databases} />
-  <:stat label="Environments" value={@stats.environments} />
-</.stat_grid>
-<.card flush title="Tickets">
-  <.list_row
-    :for={child <- @children}
-    identifier={child.identifier}
-    title={child.title}
-    navigate={child.href}
-  >
-    <:leading><.status_glyph status={child.status} /></:leading>
-    <:trailing>{child.date}</:trailing>
-  </.list_row>
-</.card>
+<.page_shell
+  id="project-shell"
+  title={@project.name}
+  breadcrumbs={[%{label: "Projects", navigate: "/projects"}]}
+>
+  <.stack gap="lg">
+    <.card title="Progress" description={@project.summary}>
+      <.progress
+        shape="ring"
+        completed={@project.completed}
+        scope={@project.scope}
+        label="Progress"
+      >
+        {@project.completed} / {@project.scope}
+      </.progress>
+    </.card>
+    <.stat_grid>
+      <:stat label="Apps" value={@stats.apps} />
+      <:stat label="Databases" value={@stats.databases} />
+      <:stat label="Environments" value={@stats.environments} />
+    </.stat_grid>
+    <.card flush title="Tickets">
+      <.list_row
+        :for={child <- @children}
+        identifier={child.identifier}
+        title={child.title}
+        navigate={child.href}
+      >
+        <:leading><.status_glyph status={child.status} /></:leading>
+        <:trailing>{child.date}</:trailing>
+      </.list_row>
+    </.card>
+  </.stack>
+</.page_shell>

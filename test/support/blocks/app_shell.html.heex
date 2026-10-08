@@ -1,4 +1,4 @@
-<LanternUI.Components.Layout.app_shell id="demo-app">
+<LanternUI.Components.Layout.app_shell id="demo-app" compact>
   <:brand>
     <.icon name="sparkles" />
     <span class="lui-brand-name">Acme</span>
@@ -9,9 +9,6 @@
   <:actions>
     <.avatar size="sm" initials="AL" />
   </:actions>
-  <:breadcrumb>
-    <.breadcrumb home="/" items={@shell_crumbs} />
-  </:breadcrumb>
   <:sidebar>
     <.nav_group label="Workspace">
       <.nav_item label="Dashboard" icon="chart-bar" navigate="/" active />
@@ -26,15 +23,19 @@
   <:sidebar_footer>
     <.nav_link label="Documentation" icon="globe-alt" href="/docs" />
   </:sidebar_footer>
-  <.page_header title="Tickets" description="Every request, one flat list.">
-    <:actions>
-      <.button size="sm" variant="solid">New ticket</.button>
-    </:actions>
-  </.page_header>
-  <.card title="Getting started" description="Three steps to a finished page.">
-    <p style="margin: 0;">
-      Pick a block from the recipe index, swap the fixture assigns for the host LiveView assigns, and ship.
-    </p>
-    <:footer>Blocks render in the default theme and the shadcn preset.</:footer>
-  </.card>
+  <.page_shell
+    id="tickets-shell"
+    title="Tickets"
+    breadcrumbs={@shell_crumbs}
+    actions={[
+      %{id: "new", label: "New ticket", icon: "plus", priority: 10, navigate: "/tickets/new"}
+    ]}
+  >
+    <.card title="Getting started" description="Three steps to a finished page.">
+      <p style="margin: 0;">
+        Pick a block from the recipe index, swap the fixture assigns for the host LiveView assigns, and ship.
+      </p>
+      <:footer>Blocks render in the default theme and the shadcn preset.</:footer>
+    </.card>
+  </.page_shell>
 </LanternUI.Components.Layout.app_shell>

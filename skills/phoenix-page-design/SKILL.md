@@ -1,6 +1,6 @@
 ---
 name: phoenix-page-design
-description: Design consistent Phoenix LiveView pages with LanternUI. Covers breadcrumb-owned titles and actions, tables and resource lists, record navigation, long-form inputs, secondary content, accessibility, and rendered-page verification.
+description: Design consistent Phoenix LiveView pages with LanternUI. Covers page-shell titles and actions, tables and resource lists, record navigation, long-form inputs, secondary content, accessibility, and rendered-page verification.
 license: MIT
 metadata:
   source: https://github.com/go9/lantern-ui
@@ -14,15 +14,13 @@ Application policy may override this guide. Record deliberate exception where re
 
 ## 1. One title, one owner
 
-Prefer last breadcrumb as page title. Avoid repeating same title in page wrapper, content header, and data component. Detail pages may need visible heading when breadcrumb alone lacks context; do not duplicate labels without purpose.
+`<.page_shell title=…>` owns the page title. The trail's last crumb is the current page, and the shell adds one visually hidden `h1` with the same text. Pass ancestors as `breadcrumbs`. Do not repeat the title in a content header or a data component, and do not add a visible title row. `<.page_header>` is deprecated and removed in 1.0; migrate it to `<.page_shell>`.
 
-Render breadcrumbs once, normally in layout.
+Render one `<.page_shell>` per route, in the page's own template. Never render a second breadcrumb row beside it; the app layout supplies the frame only.
 
 ## 2. Page actions live with page identity
 
-Put create, import, export, history, and destructive page-level actions in breadcrumb action area. Parent navigation belongs in breadcrumb, not a “back” action.
-
-When action can fold into overflow menu, put `navigate`, `patch`, `href`, `phx-click`, and confirmation attrs on action slot. Overflow renderer may use slot attrs without rendering slot body.
+Pass create, import, export, history, and destructive page-level actions as `actions` descriptors on `<.page_shell>`. Each descriptor has an `id` and a `label`, and may set `icon`, `priority`, `enabled`, `disabled_reason`, and `destructive`, plus the target attrs (`navigate`, `patch`, `href`, `phx-click`) and `data-confirm`. The shell promotes the highest-priority enabled actions inline as the width allows and always lists every action in the More menu, so a narrow screen never loses one. Disable an action with `enabled={false}` and a `disabled_reason` rather than hiding it. Parent navigation belongs in the breadcrumb, not a “back” action.
 
 ## 3. Pick navigation, filters, or tabs deliberately
 
@@ -81,8 +79,7 @@ Use semantic tokens. Dense chrome: `text-meta` / `text-caption` / `text-mono-met
 
 Inspect browser surface, not only HEEx diff. Check:
 
-- one page identity/title
-- one breadcrumb nav
+- one page shell: one breadcrumb row, one visually hidden `h1`, one action row
 - actions remain reachable at narrow widths
 - table/list reaches intended bounds
 - sticky and scroll behavior works

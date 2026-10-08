@@ -110,3 +110,32 @@ widget entry adds ~7–35KB raw / ~3–10KB gzip on the pages that mount it,
 shared chunks cached). Take it only when the app cannot serve ESM —
 every iife consumer pays the Zag bytes on every page whether or not it
 renders a Zag widget.
+
+## Action bar promotion
+
+`action_bar/1` and `page_shell/1` render every action twice: an inline button and
+an item in the "More" menu. `LanternActionBar` runs on the bar root. It writes
+`data-promoted="3"`, `"2"`, or `"1"` from the bar's width (above 1100px, 740–1100px,
+and below 740px). CSS hides the inline copies past that count. The hook never
+moves DOM nodes, so LiveView patches stay safe, and the menu always lists every
+action.
+
+Dismissing a notice sends `on_dismiss` with the notice `id` as `phx-value-id`. The
+server owns that state and sets `dismissed`. Without `on_dismiss`, the hook keeps
+the dismissal in localStorage and re-applies it in `updated()`. `destroyed()`
+removes the listeners and observers, so the hook is safe to tear down on any
+redirect.
+
+```heex
+<.page_shell
+  id="tickets-shell"
+  title="Tickets"
+  breadcrumbs={@crumbs}
+  actions={@actions}
+  notice={@notice}
+  dismissed={@notice_dismissed}
+  on_dismiss="dismiss_notice"
+>
+  ...
+</.page_shell>
+```
