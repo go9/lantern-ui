@@ -42,7 +42,8 @@ defmodule LanternUI.Components.ActionBar do
   is ordered by descending `priority`; disabled and `promotable: false` actions
   remain in the menu only. The observed bar width sets a CSS-pixel promotion tier
   (`> 1100`: 3, `740–1100`: 2, `< 740`: 1), also exposed as `data-promoted`.
-  Action maps accept `id` (unique within this bar), `label`, `icon`, `priority`,
+  Action maps accept `id` (unique within this bar; encoded in generated DOM ids),
+  `label`, `icon`, `priority`,
   `enabled`, `disabled` (an alias that disables when true), `disabled_reason`,
   `promotable`, `destructive`, `navigate`, `patch`, `href`, `phx-click`,
   `phx-target`, and `phx-value-*` keys. All actions remain available in the menu
@@ -103,7 +104,7 @@ defmodule LanternUI.Components.ActionBar do
             data-has-icon={action.icon && "true"}
           >
             <Button.button
-              id={"#{@id}-#{action.id}-inline"}
+              id={"#{@id}-#{action.dom_id}-inline"}
               size="sm"
               variant="outline"
               color={if(action.destructive, do: "danger", else: "primary")}
@@ -132,7 +133,7 @@ defmodule LanternUI.Components.ActionBar do
           </:trigger>
           <Menu.menu_item
             :for={action <- @menu_actions}
-            id={"#{@id}-#{action.id}-menu"}
+            id={"#{@id}-#{action.dom_id}-menu"}
             disabled={!action.enabled}
             navigate={action.navigate}
             patch={action.patch}
@@ -218,6 +219,7 @@ defmodule LanternUI.Components.ActionBar do
 
     %{
       id: id,
+      dom_id: "action-#{Base.url_encode64(id, padding: false)}",
       label: to_string(value(action, :label, "")),
       icon: value(action, :icon),
       priority: priority,

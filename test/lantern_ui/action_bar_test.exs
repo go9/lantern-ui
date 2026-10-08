@@ -37,19 +37,25 @@ defmodule LanternUI.ActionBarTest do
       doc = Floki.parse_fragment!(html)
       assert Floki.find(doc, "#page-actions[phx-hook='LanternActionBar']") != []
       assert Floki.find(doc, "#page-actions[data-promoted]") == []
-      assert Floki.find(doc, "#page-actions-save-inline") != []
-      assert Floki.find(doc, "#page-actions-save-menu") != []
+      assert Floki.find(doc, "#page-actions-action-c2F2ZQ-inline") != []
+      assert Floki.find(doc, "#page-actions-action-c2F2ZQ-menu") != []
 
-      assert Floki.attribute(Floki.find(doc, "#page-actions-save-inline"), "phx-value-record-id") ==
+      assert Floki.attribute(
+               Floki.find(doc, "#page-actions-action-c2F2ZQ-inline"),
+               "phx-value-record-id"
+             ) ==
                ["r-1"]
 
-      assert Floki.attribute(Floki.find(doc, "#page-actions-save-menu"), "phx-value-record-id") ==
+      assert Floki.attribute(
+               Floki.find(doc, "#page-actions-action-c2F2ZQ-menu"),
+               "phx-value-record-id"
+             ) ==
                ["r-1"]
 
-      assert Floki.find(doc, "#page-actions-export-inline") != []
-      assert Floki.find(doc, "#page-actions-export-menu[href='/export']") != []
-      assert Floki.find(doc, "#page-actions-delete-inline") != []
-      assert Floki.find(doc, "#page-actions-delete-menu[data-tone='danger']") != []
+      assert Floki.find(doc, "#page-actions-action-ZXhwb3J0-inline") != []
+      assert Floki.find(doc, "#page-actions-action-ZXhwb3J0-menu[href='/export']") != []
+      assert Floki.find(doc, "#page-actions-action-ZGVsZXRl-inline") != []
+      assert Floki.find(doc, "#page-actions-action-ZGVsZXRl-menu[data-tone='danger']") != []
       assert Floki.find(doc, "[role='menu']") != []
       assert Floki.text(Floki.find(doc, ".lui-sr-only")) =~ "More"
     end
@@ -66,10 +72,30 @@ defmodule LanternUI.ActionBarTest do
         end)
 
       doc = Floki.parse_fragment!(html)
-      assert length(Floki.find(doc, "#left-edit-inline")) == 1
-      assert length(Floki.find(doc, "#left-edit-menu")) == 1
-      assert length(Floki.find(doc, "#right-edit-inline")) == 1
-      assert length(Floki.find(doc, "#right-edit-menu")) == 1
+      assert length(Floki.find(doc, "#left-action-ZWRpdA-inline")) == 1
+      assert length(Floki.find(doc, "#left-action-ZWRpdA-menu")) == 1
+      assert length(Floki.find(doc, "#right-action-ZWRpdA-inline")) == 1
+      assert length(Floki.find(doc, "#right-action-ZWRpdA-menu")) == 1
+    end
+
+    test "encodes unusual descriptor ids in the bar-prefixed DOM ids" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <ActionBar.action_bar id="safe-actions" actions={[%{id: "delete:item", label: "Delete"}]} />
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      [inline] = Floki.find(doc, ".lui-action-bar-action[data-action-id='delete:item'] button")
+      [menu_item] = Floki.find(doc, "[role='menuitem'][data-action-id='delete:item']")
+      [inline_id] = Floki.attribute(inline, "id")
+      [menu_id] = Floki.attribute(menu_item, "id")
+
+      assert inline_id == "safe-actions-action-ZGVsZXRlOml0ZW0-inline"
+      assert menu_id == "safe-actions-action-ZGVsZXRlOml0ZW0-menu"
+      refute inline_id =~ ~r/[\s:]/
+      refute menu_id =~ ~r/[\s:]/
     end
 
     test "rejects repeated action ids within the same bar" do
@@ -156,10 +182,13 @@ defmodule LanternUI.ActionBarTest do
                "Hide update"
              ]
 
-      assert Floki.find(doc, "button#page-actions-locked-menu[disabled]") != []
-      assert Floki.text(Floki.find(doc, "#page-actions-locked-menu")) =~ "Requires access"
-      assert Floki.find(doc, "button#page-actions-disabled-menu[disabled]") != []
-      assert Floki.text(Floki.find(doc, "#page-actions-disabled-menu")) =~ "Unavailable"
+      assert Floki.find(doc, "button#page-actions-action-bG9ja2Vk-menu[disabled]") != []
+
+      assert Floki.text(Floki.find(doc, "#page-actions-action-bG9ja2Vk-menu")) =~
+               "Requires access"
+
+      assert Floki.find(doc, "button#page-actions-action-ZGlzYWJsZWQ-menu[disabled]") != []
+      assert Floki.text(Floki.find(doc, "#page-actions-action-ZGlzYWJsZWQ-menu")) =~ "Unavailable"
       assert Floki.attribute(notice, "data-server-dismissed") == ["false"]
     end
 
