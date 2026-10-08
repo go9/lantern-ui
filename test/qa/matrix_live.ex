@@ -147,7 +147,11 @@ defmodule LanternUI.QA.MatrixLive do
   defp ctx(%{name: "page_shell"} = assigns) do
     assigns =
       assign(assigns,
-        rows: for(i <- 1..24, do: %{id: i, name: "Item #{i}"}),
+        rows:
+          for(
+            i <- 1..24,
+            do: %{id: i, name: "Item #{i}"}
+          ),
         meta: %{
           flop: %{},
           params: %{},
@@ -175,9 +179,24 @@ defmodule LanternUI.QA.MatrixLive do
         dismissed={@dismissed}
         on_dismiss="dismiss_notice"
       >
-        <.data_table id="qa-shell-table" rows={@rows} meta={@meta} path="/qa">
+        <.data_table
+          id="qa-shell-table"
+          rows={@rows}
+          meta={@meta}
+          path="/qa"
+          show_checkboxes={false}
+        >
           <:col :let={row} label="Item">{row.name}</:col>
-          <:col :let={row} label="Status">Ready {row.id}</:col>
+          <:col :let={row} label="Current status">Ready {row.id}</:col>
+          <:col :let={row} label="Owner or assignee">Team {rem(row.id, 4)}</:col>
+          <:col :let={row} label="Location or region">Region {rem(row.id, 3)}</:col>
+          <:col :let={row} label="Category and classification">Class {rem(row.id, 5)}</:col>
+          <:col :let={row} label="Last synchronized date">2026-10-{rem(row.id, 28) + 1}</:col>
+          <:col label="Visibility and access scope">Workspace</:col>
+          <:col :let={row} label="External reference identifier">REF-00{row.id}</:col>
+          <:col :let={row} label="Additional metadata and details">
+            More details for item {row.id}
+          </:col>
         </.data_table>
       </.page_shell>
     </div>

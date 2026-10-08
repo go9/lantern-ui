@@ -953,17 +953,6 @@
 .lui-page-topline .lui-breadcrumb { flex: 1 1 auto; min-width: 0; }
 .lui-page-content { min-width: 0; }
 
-/* PageShell normal-flow tables scroll with the page, so their header can stick
-   below the shell. `overflow-x: auto` makes the table wrapper a nearer scroll
-   container and prevents the header offset from tracking the page scroll. */
-.lui-page-shell [data-page-content] .lui-datatable:not(.lui-datatable-fill) {
-  overflow: clip;
-}
-.lui-page-shell [data-page-content] .lui-datatable:not(.lui-datatable-fill) .lui-table-wrap {
-  overflow-x: clip;
-  overflow-y: visible;
-}
-
 /* ── Floating page action bar ── */
 .lui-action-bar {
   box-sizing: border-box;
@@ -1259,9 +1248,12 @@
 .lui-th { background: var(--lantern-surface-sunken); color: var(--lantern-fg-muted);
   font-size: var(--lantern-text-sm); font-weight: 550; text-align: left;
   padding: 0.35rem 0.7rem; border-bottom: 1px solid var(--lantern-border); white-space: nowrap; }
+/* In a page shell, a wide table keeps its horizontal scroll wrapper. When that
+   wrapper overflows, it is also the sticky header's scrollport, so the header
+   sticks to the wrapper top instead of being offset a second time by the shell. */
 .lui-page-shell [data-page-content] .lui-datatable:not(.lui-datatable-fill) .lui-th {
   position: sticky;
-  top: var(--lui-shell-h);
+  top: 0;
   z-index: 2;
 }
 .lui-td { padding: 0.35rem 0.7rem; border-bottom: 1px solid var(--lantern-border);

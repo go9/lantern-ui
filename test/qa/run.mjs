@@ -10,6 +10,7 @@
 //
 // QA_SHOTS=dir  screenshot directory for failures (default /tmp/lantern-qa)
 // QA_REPORT_ONLY=1  print the matrix, exit 0 even with failures
+// --page-shell-wide-table  run only the page_shell horizontal reachability check
 import { createRequire } from "node:module"
 import fs from "node:fs"
 
@@ -17,12 +18,14 @@ const require = createRequire(import.meta.url)
 const puppeteer = require(process.env.PUPPETEER_CORE || "puppeteer-core")
 const BASE = process.env.BASE || "http://127.0.0.1:4013"
 const SHOTS = process.env.QA_SHOTS || "/tmp/lantern-qa"
+const CHROME = process.env.CHROME_PATH || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const arg = (n) => process.argv.find((a) => a.startsWith(`--${n}=`))?.split("=")[1]?.split(",")
 
 const CTXS = arg("ctx") || "plain card card_transform scroll table modal sheet side_panel scroll_area data_table edge_br edge_bl sticky tall patch nested".split(" ")
 const CMPS = arg("cmp") || "select select_search dropdown menu popover tooltip autocomplete date_picker command user_menu".split(" ")
 const VWS = (arg("vw") || ["1440", "390"]).map(Number)
+const WIDE_TABLE_ONLY = process.argv.includes("--page-shell-wide-table")
 
 // trigger: where the real click/hover lands. panel: the floating surface.
 const SPEC = {
@@ -109,7 +112,7 @@ async function open(page, spec) {
 }
 
 const browser = await puppeteer.launch({
-  executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  executablePath: CHROME,
   headless: "new",
   args: ["--no-sandbox"],
 })
@@ -117,6 +120,7 @@ fs.mkdirSync(SHOTS, { recursive: true })
 const rows = []
 
 for (const vw of VWS) {
+  if (WIDE_TABLE_ONLY) continue
   const page = await browser.newPage()
   const h = vw < 600 ? 844 : 900
   await page.setViewport({ width: vw, height: h })
@@ -188,6 +192,57 @@ for (const vw of VWS) {
   }
   await page.close()
 }
+
+// A page shell must keep wide non-fill table columns reachable without making
+// the document itself horizontally scroll. The table wrapper owns the scroll.
+if (VWS.includes(390)) {
+  const page = await browser.newPage()
+  await page.setViewport({ width: 390, height: 844 })
+  const row = { vw: 390, ctx: "page_shell", cmp: "wide-table-scroll", problems: [] }
+
+  try {
+    await page.goto(`${BASE}/qa?ctx=page_shell`, { waitUntil: "networkidle2" })
+    await page.waitForSelector(".phx-connected", { timeout: 8000 })
+    await page.waitForSelector("#qa-shell-table .lui-table-wrap", { timeout: 4000 })
+    const result = await page.evaluate(() => {
+      const wrapper = document.querySelector("#qa-shell-table .lui-table-wrap")
+      const headers = [...wrapper.querySelectorAll("thead th")]
+      const last = headers.at(-1)
+      const overflows = wrapper.scrollWidth > wrapper.clientWidth + 1
+      const documentOverflows = document.documentElement.scrollWidth > innerWidth + 1
+
+      wrapper.scrollLeft = wrapper.scrollWidth
+      const wrapperRect = wrapper.getBoundingClientRect()
+      const lastRect = last.getBoundingClientRect()
+
+      return {
+        columns: headers.length,
+        overflows,
+        documentOverflows,
+        scrollLeft: wrapper.scrollLeft,
+        lastColumnVisible:
+          lastRect.left >= wrapperRect.left - 1 && lastRect.right <= wrapperRect.right + 1,
+      }
+    })
+
+    if (result.columns !== 9) row.problems.push(`expected 9 columns, found ${result.columns}`)
+    if (!result.overflows) row.problems.push("wide table has no horizontal scroll range")
+    if (result.documentOverflows) row.problems.push("document overflows horizontally")
+    if (result.scrollLeft <= 0) row.problems.push("table wrapper did not scroll horizontally")
+    if (!result.lastColumnVisible) row.problems.push("last table column is not reachable after scrolling")
+    row.scroll = result
+    if (row.problems.length) await page.screenshot({ path: `${SHOTS}/390-page-shell-wide-table.png` })
+  } catch (e) {
+    row.problems.push(`error: ${e.message.split("\n")[0]}`)
+    await page.screenshot({ path: `${SHOTS}/390-page-shell-wide-table.png` }).catch(() => {})
+  }
+
+  row.status = row.problems.length ? "FAIL" : "ok"
+  rows.push(row)
+  if (row.problems.length) console.log(`FAIL 390 page_shell/wide-table-scroll: ${row.problems.join("; ")}`)
+  await page.close()
+}
+
 await browser.close()
 
 const bucket = (re) => rows.filter((r) => r.problems.some((p) => re.test(p))).length
