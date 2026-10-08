@@ -48,12 +48,15 @@ defmodule LanternUI.Components.Layout do
   use Phoenix.Component
 
   alias LanternUI.Class
+  alias LanternUI.Components.ActionBar
+  alias LanternUI.Components.Breadcrumb
   alias LanternUI.Components.Icon
   alias LanternUI.Components.Menu
   alias Phoenix.LiveView.JS
 
   attr(:id, :string, required: true, doc: "stable id — the collapse state is persisted per id")
   attr(:collapsed, :boolean, default: false, doc: "Initial sidebar collapsed (icon-rail) state.")
+  attr(:compact, :boolean, default: false, doc: "Opt in to the slim shell topline height.")
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
   slot(:brand, required: true, doc: "logo/name, top-left corner")
@@ -112,6 +115,7 @@ defmodule LanternUI.Components.Layout do
       class={Class.merge(["lui-app", @class])}
       phx-hook="LanternSidebar"
       data-collapsed={@collapsed || nil}
+      data-compact={@compact || nil}
       {@rest}
     >
       <header class="lui-appbar">
@@ -173,6 +177,116 @@ defmodule LanternUI.Components.Layout do
       </div>
     </div>
     """
+  end
+
+  @doc """
+  Page shell with breadcrumb-owned page identity, a visually hidden semantic
+  title, a floating action bar, and the page content region.
+
+  Ancestor breadcrumb maps accept `label` and optional `navigate`, `patch`, or
+  `href` targets. The current page title is always appended as the last crumb.
+  When nested in `app_shell/1`, the sticky breadcrumb and action row sit below
+  its fixed app bar. Non-fill data table headers remain in their horizontal
+  `.lui-table-wrap` scroll region; they do not stick to the viewport while the
+  page scrolls. Fill tables pin their header within the table's own scroll area.
+  """
+  attr(:id, :string, required: true, doc: "Stable id for the page shell and action hook.")
+  attr(:title, :string, required: true, doc: "Current page label and semantic h1 text.")
+
+  attr(:breadcrumbs, :list,
+    default: [],
+    doc: "Ancestor crumb maps with a label and optional navigation target."
+  )
+
+  attr(:actions, :list, default: [], doc: "Action descriptor maps rendered by action_bar/1.")
+  attr(:notice, :map, default: nil, doc: "Optional dismissible notice descriptor.")
+  attr(:dismissed, :boolean, default: false, doc: "Server-owned notice dismissal state.")
+  attr(:on_dismiss, :string, default: nil, doc: "LiveView event for notice dismissal.")
+
+  attr(:breadcrumb_label, :string,
+    default: "Breadcrumb",
+    doc: "Accessible name for the breadcrumb navigation."
+  )
+
+  attr(:more_actions_label, :string,
+    default: "More actions",
+    doc: "Accessible label for the overflow action menu."
+  )
+
+  attr(:dismiss_label, :string,
+    default: "Dismiss notice",
+    doc: "Accessible label for the notice dismiss control."
+  )
+
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the page shell.")
+  attr(:content_class, :any, default: nil, doc: "Extra classes merged onto the content region.")
+  attr(:rest, :global, doc: "Arbitrary HTML and LiveView attributes passed through.")
+  slot(:inner_block, required: true, doc: "Page content.")
+
+  def page_shell(assigns) do
+    assigns =
+      assigns
+      |> assign(:ancestor_breadcrumbs, normalize_breadcrumbs(assigns.breadcrumbs))
+      |> assign(
+        :has_actions?,
+        assigns.actions != [] or (not is_nil(assigns.notice) and not assigns.dismissed)
+      )
+
+    ~H"""
+    <section
+      id={@id}
+      class={Class.merge(["lui-page-shell", @class])}
+      data-page-shell
+      data-page-has-actions={@has_actions? && "true"}
+      {@rest}
+    >
+      <div class="lui-page-topline" data-page-breadcrumb>
+        <Breadcrumb.breadcrumb aria_label={@breadcrumb_label}>
+          <:item
+            :for={crumb <- @ancestor_breadcrumbs}
+            navigate={crumb.navigate}
+            patch={crumb.patch}
+            href={crumb.href}
+          >
+            {crumb.label}
+          </:item>
+          <:item current>{@title}</:item>
+        </Breadcrumb.breadcrumb>
+        <h1 class="lui-sr-only" data-page-title>{@title}</h1>
+      </div>
+
+      <ActionBar.action_bar
+        :if={@has_actions?}
+        id={"#{@id}-actions"}
+        actions={@actions}
+        notice={@notice}
+        dismissed={@dismissed}
+        on_dismiss={@on_dismiss}
+        more_actions_label={@more_actions_label}
+        dismiss_label={@dismiss_label}
+        data-page-actions
+      />
+
+      <div class={Class.merge(["lui-page-content", @content_class])} data-page-content>
+        {render_slot(@inner_block)}
+      </div>
+    </section>
+    """
+  end
+
+  defp normalize_breadcrumbs(breadcrumbs) do
+    Enum.map(breadcrumbs, fn crumb ->
+      %{
+        label: crumb_value(crumb, :label, ""),
+        navigate: crumb_value(crumb, :navigate),
+        patch: crumb_value(crumb, :patch),
+        href: crumb_value(crumb, :href) || crumb_value(crumb, :path)
+      }
+    end)
+  end
+
+  defp crumb_value(crumb, key, default \\ nil) do
+    Map.get(crumb, key, Map.get(crumb, Atom.to_string(key), default))
   end
 
   @doc "A labelled group of nav items. The label hides when the rail is collapsed."

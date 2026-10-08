@@ -4,6 +4,7 @@ defmodule LanternUI.LayoutTest do
   import Phoenix.Component
   import Phoenix.LiveViewTest, only: [rendered_to_string: 1]
 
+  alias LanternUI.Components.DataTable
   alias LanternUI.Components.Layout
 
   defp render(fun, assigns \\ %{}) do
@@ -83,6 +84,31 @@ defmodule LanternUI.LayoutTest do
       refute open =~ ~s(data-collapsed)
     end
 
+    test "compact is opt-in and marks only the opted-in shell" do
+      compact =
+        render(fn assigns ->
+          ~H"""
+          <Layout.app_shell id="compact" compact>
+            <:brand>b</:brand><:sidebar>n</:sidebar>x
+          </Layout.app_shell>
+          """
+        end)
+
+      assert compact =~ ~s(id="compact")
+      assert compact =~ ~s(data-compact)
+
+      default =
+        render(fn assigns ->
+          ~H"""
+          <Layout.app_shell id="default">
+            <:brand>b</:brand><:sidebar>n</:sidebar>x
+          </Layout.app_shell>
+          """
+        end)
+
+      refute default =~ ~s(data-compact)
+    end
+
     test "header and actions bars are omitted when their slots are empty" do
       html =
         render(fn assigns ->
@@ -95,6 +121,123 @@ defmodule LanternUI.LayoutTest do
 
       refute html =~ "lui-appbar-header"
       refute html =~ "lui-appbar-actions"
+    end
+  end
+
+  describe "page_shell/1" do
+    test "renders one breadcrumb row, one hidden h1, one actions region, and content hooks" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.page_shell
+            id="inventory"
+            title="Inventory"
+            breadcrumbs={[%{label: "Workspace", navigate: "/workspace"}]}
+            actions={[%{id: "create", label: "Create", priority: 1}]}
+          >
+            PAGE BODY
+          </Layout.page_shell>
+          """
+        end)
+
+      assert html =~ ~s(data-page-shell)
+      assert html =~ ~s(data-page-breadcrumb)
+      assert html =~ ~s(data-page-title)
+      assert html =~ ~s(data-page-actions)
+      assert html =~ ~s(data-page-content)
+      assert html =~ ~s(href="/workspace")
+      assert html =~ ~s(aria-current="page")
+      assert html =~ "Inventory"
+      assert html =~ "PAGE BODY"
+      assert length(Regex.scan(~r/<h1\b/, html)) == 1
+      assert length(Regex.scan(~r/data-page-breadcrumb/, html)) == 1
+      assert length(Regex.scan(~r/data-page-actions/, html)) == 1
+    end
+
+    test "accepts legacy path keys and omits the empty floating action row" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.page_shell id="empty" title="Empty" breadcrumbs={[%{label: "Legacy", path: "/legacy"}]}>
+            Content
+          </Layout.page_shell>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      assert Floki.find(doc, ".lui-breadcrumb-link[href='/legacy']") != []
+      assert Floki.find(doc, "h1[data-page-title]") != []
+      assert Floki.find(doc, "[data-page-actions]") == []
+      assert Floki.find(doc, "[phx-hook='LanternActionBar']") == []
+      assert Floki.find(doc, "[data-page-content]") != []
+      assert Floki.find(doc, "[data-page-shell][data-page-has-actions]") == []
+    end
+
+    test "omits the action row and action marker for a server-dismissed notice without actions" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.page_shell
+            id="dismissed-notice"
+            title="Dismissed"
+            notice={%{id: "notice-1", title: "Already handled"}}
+            dismissed
+          >
+            Content
+          </Layout.page_shell>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      assert Floki.find(doc, "[data-page-content]") != []
+      assert Floki.find(doc, "[data-page-actions]") == []
+      assert Floki.find(doc, "[phx-hook='LanternActionBar']") == []
+      assert Floki.find(doc, "[data-page-shell][data-page-has-actions]") == []
+    end
+
+    test "keeps every column of a wide table rendered inside the page shell" do
+      meta = %{
+        flop: %{},
+        params: %{},
+        current_page: 1,
+        total_pages: 1,
+        page_size: 1,
+        total_count: 1
+      }
+
+      html =
+        render(fn assigns ->
+          assigns = assign(assigns, :meta, meta)
+
+          ~H"""
+          <Layout.page_shell id="wide-page" title="Wide table">
+            <DataTable.data_table
+              id="wide-table"
+              rows={[%{id: 1, name: "Every row remains available"}]}
+              meta={@meta}
+              path="/wide"
+              show_checkboxes={false}
+            >
+              <:col :let={row} label="Identifier">{row.id}</:col>
+              <:col label="Current status">Ready</:col>
+              <:col label="Owner or assignee">Operations</:col>
+              <:col label="Location or region">Northwest</:col>
+              <:col label="Category and classification">Inventory</:col>
+              <:col label="Last synchronized date">2026-10-07</:col>
+              <:col label="Visibility and access scope">Workspace</:col>
+              <:col label="External reference identifier">REF-0001</:col>
+              <:col label="Additional metadata and details">Available</:col>
+            </DataTable.data_table>
+          </Layout.page_shell>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      assert Floki.find(doc, "#wide-table") != []
+      assert [wrapper] = Floki.find(doc, "#wide-table .lui-table-wrap")
+      assert Floki.attribute(wrapper, "class") |> hd() =~ "lui-table-wrap"
+      assert length(Floki.find(wrapper, "thead th")) == 9
+      assert Floki.text(Floki.find(wrapper, "thead")) =~ "Additional metadata and details"
     end
   end
 

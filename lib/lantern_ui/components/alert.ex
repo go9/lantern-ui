@@ -19,12 +19,24 @@ defmodule LanternUI.Components.Alert do
 
   attr(:color, :string,
     default: "neutral",
-    values: ~w(neutral info success warning danger),
+    values: ~w(neutral info success warning danger promo),
     doc: "Semantic color; also picks the default status icon."
   )
 
   attr(:hide_icon, :boolean, default: false, doc: "Omit the leading status icon.")
   attr(:hide_close, :boolean, default: true, doc: "Hide the dismiss button (default).")
+
+  attr(:role, :string,
+    default: "alert",
+    doc: "Announcement role; defaults to alert for compatibility."
+  )
+
+  attr(:tone_slots, :boolean,
+    default: false,
+    doc: "Opt in to consumer-defined `--lantern-tone-*-bg` alert backgrounds."
+  )
+
+  attr(:dismiss_label, :string, default: "Close", doc: "Accessible label for the dismiss button.")
 
   attr(:on_close, :any,
     default: nil,
@@ -46,9 +58,11 @@ defmodule LanternUI.Components.Alert do
     ~H"""
     <div
       id={@id}
-      role="alert"
+      role={@role}
       class={Class.merge(["lui-alert", @class])}
       data-color={@color}
+      data-tone={@color}
+      data-tone-slots={@tone_slots || nil}
       {@rest}
     >
       <div :if={!@hide_icon} class="lui-alert-icon">
@@ -69,7 +83,8 @@ defmodule LanternUI.Components.Alert do
         :if={!@hide_close || @on_close}
         type="button"
         class="lui-alert-close"
-        aria-label="Close"
+        data-part="dismiss"
+        aria-label={@dismiss_label}
         phx-click={@on_close || JS.hide(to: "##{@id}")}
       >
         <Icon.icon name="x-mark" />
@@ -81,5 +96,6 @@ defmodule LanternUI.Components.Alert do
   defp default_icon("success"), do: "check-circle"
   defp default_icon("warning"), do: "exclamation-circle"
   defp default_icon("danger"), do: "exclamation-circle"
+  defp default_icon("promo"), do: "information-circle"
   defp default_icon(_), do: "information-circle"
 end

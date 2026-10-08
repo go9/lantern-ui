@@ -7,6 +7,7 @@ import test from "node:test"
 import { hooks } from "./helpers/dom.mjs"
 
 const source = await readFile(new URL("../../assets/js/lantern_ui_hooks.js", import.meta.url), "utf8")
+const standalone = await import("../../priv/static/lantern_ui_hooks.standalone.js")
 
 test("no hook defines the same method twice", () => {
   // A duplicated key in an object literal is not an error in JavaScript: the
@@ -51,4 +52,9 @@ test("every hook in the Hooks map is also a named export", () => {
   for (const name of Object.keys(hooks.default)) {
     assert.equal(hooks[name], hooks.default[name], `${name} is not exported by name`)
   }
+})
+
+test("the standalone bundle registers and exports the action bar hook", () => {
+  assert.equal(standalone.Hooks.LanternActionBar, standalone.LanternActionBar)
+  assert.ok(standalone.Hooks.LanternActionBar)
 })

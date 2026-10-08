@@ -47,6 +47,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `accordion/1` — Accordion — a WAI-ARIA APG accordion with the Fluxon 2.3.1 composition API.
 - `accordion_item/1` — Accordion — a WAI-ARIA APG accordion with the Fluxon 2.3.1 composition API.
 
+### LanternUI.Components.ActionBar
+
+- `action_bar/1` — Renders each action inline and in the Zag `More actions` menu.
+
 ### LanternUI.Components.Alert
 
 - `alert/1` — Inline status alert.
@@ -162,6 +166,7 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `nav_item/1` — A sidebar nav item.
 - `nav_link/1` — A quiet link for the shell's `:sidebar_footer` — support, docs, legal.
 - `page_header/1` — Page title row — compact, goprint-density.
+- `page_shell/1` — Page shell with breadcrumb-owned page identity, a visually hidden semantic title, a floating action bar, and the page content region.
 - `stack/1` — Vertical stack — one gap for a run of fields, sections, or cards, so a page never depends on margin collapsing or host utilities for its rhythm.
 
 ### LanternUI.Components.ListRow

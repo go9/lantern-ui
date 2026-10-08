@@ -2927,6 +2927,78 @@ const LanternAccordion = {
   },
 }
 
+const LanternActionBar = {
+  mounted() {
+    this._syncPromotion = () => {
+      const width = this.el.getBoundingClientRect().width
+      // Keep these CSS-pixel cutoffs aligned with the action-bar container queries.
+      const promoted = width > 1100 ? 3 : width >= 740 ? 2 : 1
+      this.el.setAttribute("data-promoted", String(promoted))
+    }
+
+    this._syncNoticeDismissal = () => {
+      const notice = this.el.querySelector("[data-action-bar-notice]")
+      if (!notice || this.el.dataset.dismissalEvent) return
+
+      const key = notice.dataset.dismissalKey
+      const serverDismissed = notice.dataset.serverDismissed === "true"
+      if (serverDismissed) {
+        notice.hidden = true
+        return
+      }
+
+      let stored = false
+      if (key) {
+        try {
+          stored = localStorage.getItem(`lantern:notice:${key}`) === "dismissed"
+        } catch (_) {
+          // Private browsing and storage quotas do not prevent this page from working.
+        }
+      }
+
+      notice.hidden = stored || this._fallbackDismissedKey === key
+    }
+
+    this._onDismissClick = (event) => {
+      const dismiss = event.target.closest?.("[data-part='dismiss']")
+      const notice = this.el.querySelector("[data-action-bar-notice]")
+      if (!dismiss || !notice || !notice.contains(dismiss) || this.el.dataset.dismissalEvent) return
+
+      const key = notice.dataset.dismissalKey
+      if (!key) return
+      this._fallbackDismissedKey = key
+      try {
+        localStorage.setItem(`lantern:notice:${key}`, "dismissed")
+      } catch (_) {
+        // Keep the dismissal for this mounted page even if storage is unavailable.
+      }
+      notice.hidden = true
+    }
+
+    this._syncPromotion()
+    if (typeof ResizeObserver !== "undefined") {
+      this._promotionObserver = new ResizeObserver(this._syncPromotion)
+      this._promotionObserver.observe(this.el)
+    } else {
+      this.el.ownerDocument.defaultView.addEventListener("resize", this._syncPromotion)
+    }
+
+    this.el.addEventListener("click", this._onDismissClick)
+    this._syncNoticeDismissal()
+  },
+
+  updated() {
+    this._syncPromotion?.()
+    this._syncNoticeDismissal?.()
+  },
+
+  destroyed() {
+    this._promotionObserver?.disconnect()
+    this.el.ownerDocument.defaultView.removeEventListener("resize", this._syncPromotion)
+    this.el.removeEventListener("click", this._onDismissClick)
+  },
+}
+
 export const Hooks = {
   ChartHover,
   LineHover,
@@ -2943,6 +3015,7 @@ export const Hooks = {
   LanternTooltip,
   LanternToast,
   LanternSidebar,
+  LanternActionBar,
   LanternSelect,
   LanternSwitch,
   LanternRadio,
@@ -2970,6 +3043,7 @@ export {
   LanternTooltip,
   LanternToast,
   LanternSidebar,
+  LanternActionBar,
   LanternSelect,
   LanternSwitch,
   LanternRadio,

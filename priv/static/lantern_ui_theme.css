@@ -70,6 +70,10 @@
   /* info is blue, not the brand colour: accent-as-info read as an error next to danger */
   --lantern-info: var(--info, oklch(0.62 0.17 255));
 
+  /* Optional --lantern-tone-*-bg and --lantern-accent-text slots are undefined
+     by default. Alerts keep their original element-scoped color-mix background,
+     and promo text falls back to the local neutral foreground. */
+
   /* ── Focus ring ── */
   --lantern-ring: var(--lantern-accent);
   --lantern-ring-soft: color-mix(in oklab, var(--lantern-ring) 25%, transparent);

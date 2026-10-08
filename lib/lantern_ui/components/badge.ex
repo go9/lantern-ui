@@ -12,7 +12,7 @@ defmodule LanternUI.Components.Badge do
 
   attr(:color, :string,
     default: "neutral",
-    values: ~w(neutral primary accent info success warning danger),
+    values: ~w(neutral primary accent info success warning danger promo),
     doc: "Semantic color token for the badge surface."
   )
 

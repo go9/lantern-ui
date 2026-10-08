@@ -28,6 +28,18 @@ defmodule LanternUI.TablePrimitivesTest do
       assert html =~ ~s(data-size="sm")
       assert html =~ "Shipped"
     end
+
+    test "accepts the semantic promo color" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Badge.badge color="promo" variant="soft">New</Badge.badge>
+          """
+        end)
+
+      assert html =~ ~s(data-color="promo")
+      assert html =~ "New"
+    end
   end
 
   describe "table family" do

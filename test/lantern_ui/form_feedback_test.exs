@@ -186,6 +186,18 @@ defmodule LanternUI.FormFeedbackTest do
       refute html =~ "lui-alert-close"
     end
 
+    test "promo tone preserves data-color and adds the semantic tone hook" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Alert.alert id="promo" color="promo" title="A calm update" />
+          """
+        end)
+
+      assert html =~ ~s(data-color="promo")
+      assert html =~ ~s(data-tone="promo")
+    end
+
     test "close button only when hide_close is false" do
       html =
         render(fn assigns ->

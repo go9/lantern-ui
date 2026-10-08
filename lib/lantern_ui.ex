@@ -53,6 +53,7 @@ defmodule LanternUI do
     card: LanternUI.Components.Card,
     description_list: LanternUI.Components.DescriptionList,
     layout: LanternUI.Components.Layout,
+    action_bar: LanternUI.Components.ActionBar,
     badge: LanternUI.Components.Badge,
     table: LanternUI.Components.Table,
     tabs: LanternUI.Components.Tabs,
