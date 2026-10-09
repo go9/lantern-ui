@@ -145,7 +145,7 @@ if (CONSISTENCY_ONLY) {
         const css = fs.readFileSync(process.env.QA_BASELINE_CSS, "utf8")
         await page.setRequestInterception(true)
         page.on("request", (request) => {
-          if (request.url().endsWith("/lantern_ui.css")) request.respond({ status: 200, contentType: "text/css", body: css })
+          if (new URL(request.url()).pathname === "/lantern_ui.css") request.respond({ status: 200, contentType: "text/css", body: css })
           else request.continue()
         })
       }

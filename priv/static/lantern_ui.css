@@ -4953,6 +4953,14 @@ a.lui-waterfall-lane-inner:focus-visible {
 [data-lui-control-scale="legacy"] .lui-dt-chip:focus-visible {
   outline: revert; outline-offset: revert; box-shadow: 0 0 0 3px var(--lantern-ring-soft);
 }
+[data-lui-control-scale="legacy"] .lui-select-toggle:focus-visible,
+[data-lui-control-scale="legacy"] .lui-autocomplete-control:focus-within,
+[data-lui-control-scale="legacy"] .lui-tabs-list:focus-within .lui-tab:focus-visible,
+[data-lui-control-scale="legacy"] .lui-switch:has(.lui-switch-input:focus-visible),
+[data-lui-control-scale="legacy"] .lui-pg:focus-visible,
+[data-lui-control-scale="legacy"] .lui-kbd:focus-visible {
+  outline: revert; outline-offset: revert; box-shadow: none;
+}
 /* ── Keyboard shortcut badge (<kbd>) ── */
 .lui-kbd {
   display: inline-flex;
