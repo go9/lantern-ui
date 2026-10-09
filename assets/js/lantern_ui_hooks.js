@@ -283,6 +283,15 @@ const ChartInteraction = {
         this.touchTimer = setTimeout(() => this.hide(), 2200)
       }
     }
+    this.onPointerCancel = () => {
+      this.touchActive = false
+      if (this.frame) this.el.ownerDocument.defaultView.cancelAnimationFrame(this.frame)
+      this.frame = null
+      if (this.touchTimer) clearTimeout(this.touchTimer)
+      this.touchTimer = null
+      this.cancelHover()
+      this.hide()
+    }
     this.onFocusIn = (event) => {
       const target = event.target.closest?.("[data-chart-point]")
       if (target && this.el.contains(target)) this.show(this.points[Number(target.dataset.chartPoint)], target, true)
@@ -298,7 +307,7 @@ const ChartInteraction = {
         event.preventDefault()
         this.hide()
         target.blur()
-      } else if (event.key === "Enter") {
+      } else if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
         event.preventDefault()
         this.pushChartEvent(this.selectEvent, this.points[index])
       } else if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
@@ -312,6 +321,7 @@ const ChartInteraction = {
     this.svg.addEventListener("pointerdown", this.onPointerDown, { passive: true })
     this.svg.addEventListener("pointerleave", this.onPointerLeave)
     this.svg.addEventListener("pointerup", this.onPointerUp)
+    this.svg.addEventListener("pointercancel", this.onPointerCancel)
     this.svg.addEventListener("click", this.onClick)
     this.el.addEventListener("focusin", this.onFocusIn)
     this.el.addEventListener("focusout", this.onFocusOut)
@@ -420,6 +430,7 @@ const ChartInteraction = {
     this.svg?.removeEventListener("pointerdown", this.onPointerDown)
     this.svg?.removeEventListener("pointerleave", this.onPointerLeave)
     this.svg?.removeEventListener("pointerup", this.onPointerUp)
+    this.svg?.removeEventListener("pointercancel", this.onPointerCancel)
     this.svg?.removeEventListener("click", this.onClick)
     this.el.removeEventListener("focusin", this.onFocusIn)
     this.el.removeEventListener("focusout", this.onFocusOut)

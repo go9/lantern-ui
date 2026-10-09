@@ -13,6 +13,7 @@
 // --page-shell-wide-table  run only the page_shell horizontal reachability check
 import { createRequire } from "node:module"
 import fs from "node:fs"
+import { ensureChartShotsDir } from "./chart_shots.mjs"
 
 const require = createRequire(import.meta.url)
 const puppeteer = require(process.env.PUPPETEER_CORE || "puppeteer-core")
@@ -122,6 +123,7 @@ fs.mkdirSync(SHOTS, { recursive: true })
 const rows = []
 
 if (CHARTS_ONLY) {
+  const chartShots = ensureChartShotsDir(SHOTS)
   const types = ["line", "area", "stacked_area", "bar", "stacked_bar", "grouped_bar", "points"]
   for (const vw of VWS) {
     for (const theme of ["light", "dark"]) {
@@ -145,7 +147,6 @@ if (CHARTS_ONLY) {
           if (type === "line") {
             const initialHidden = await page.$eval('#qa-time-series .lui-time-series-chart__interaction', (overlay) => overlay.hasAttribute("hidden") && getComputedStyle(overlay).display === "none")
             if (!initialHidden) row.problems.push("chart hover overlay is visible before the first interaction")
-            const chartShots = `${SHOTS}/charts`
             await page.screenshot({ path: `${chartShots}/${vw}-${theme}-line.png`, fullPage: true })
             await page.evaluate(() => document.querySelector('[data-chart-point="0"]')?.focus())
             await page.keyboard.press("ArrowRight")
@@ -286,9 +287,7 @@ if (CHARTS_ONLY) {
             await page.mouse.move(0, 0)
           }
           if (errors.length) row.problems.push(`pageerror: ${errors[0]}`)
-          const dir = `${SHOTS}/charts`
-          fs.mkdirSync(dir, { recursive: true })
-          if (type !== "line") await page.screenshot({ path: `${dir}/${vw}-${theme}-${type}.png`, fullPage: true })
+          if (type !== "line") await page.screenshot({ path: `${chartShots}/${vw}-${theme}-${type}.png`, fullPage: true })
         } catch (error) {
           row.problems.push(`error: ${error.message.split("\n")[0]}`)
         }
@@ -304,7 +303,7 @@ if (CHARTS_ONLY) {
   await browser.close()
   const failed = rows.filter((row) => row.problems.length)
   console.log(`\n${rows.length} chart screenshots, ${failed.length} failing`)
-  fs.writeFileSync(`${SHOTS}/charts/matrix.json`, JSON.stringify(rows, null, 1))
+  fs.writeFileSync(`${chartShots}/matrix.json`, JSON.stringify(rows, null, 1))
   process.exit(failed.length ? 1 : 0)
 }
 

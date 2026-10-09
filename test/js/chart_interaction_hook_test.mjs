@@ -102,6 +102,10 @@ test("select_event pushes raw values for pointer and Enter; unset event is a no-
   assert.equal(enter.defaultPrevented, true)
   assert.equal(events.length, 2)
   assert.deepEqual(events[1].payload, events[0].payload)
+  const space = keydown(second, " ")
+  assert.equal(space.defaultPrevented, true)
+  assert.equal(events.length, 3)
+  assert.deepEqual(events[2].payload, events[0].payload)
   mounted.unmount()
 
   const unset = mountHook(hooks.ChartInteraction, fixture(), { rootId: "chart" })
@@ -144,5 +148,22 @@ test("hover_event cancels its pending push when the pointer leaves", async () =>
   pointer(svg, "pointerleave", 76)
   await sleep(180)
   assert.deepEqual(events, [])
+  mounted.unmount()
+})
+
+test("pointercancel clears touch state and cancels a pending hover", async () => {
+  const html = fixture().replace('<div id="chart"', '<div id="chart" data-hover-event="hover_date"')
+  const mounted = mountHook(hooks.ChartInteraction, html, { rootId: "chart" })
+  const events = []
+  mounted.hook.pushEvent = (name, payload) => events.push({ name, payload })
+  const svg = mounted.el.querySelector("svg")
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 150 })
+
+  pointer(svg, "pointerdown", 20, "touch")
+  pointer(svg, "pointercancel", 20, "touch")
+  await sleep(180)
+  assert.equal(mounted.hook.touchActive, false)
+  assert.deepEqual(events, [])
+  assert.equal(mounted.el.querySelector(".lui-time-series-chart__interaction").hasAttribute("hidden"), true)
   mounted.unmount()
 })

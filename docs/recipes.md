@@ -410,11 +410,15 @@ throughout: dates/date-times, numbers, or category strings. Mixed domains raise
 and a truly empty chart uses `empty_message`.
 
 Opt into selection events when a caller-owned panel should follow the point a
-reader chooses. `select_event` pushes on pointer click/tap and keyboard Enter;
+reader chooses. `select_event` pushes on pointer click/tap and keyboard Enter or
+Space;
 `hover_event` is optional and debounced. Both events carry `%{chart_id, x,
 values}`, where `x` is the normalized x key and `values` maps each series id to
-its raw value (or `nil` when that series has no point at the key). The chart
-continues to render from server assigns. For bar types, `reference_lines` draws
+its raw value (or `nil` when that series has no point at the key). If a
+comparison series repeats a primary series id, its value key is
+`comparison:<id>:<index>`. Date keys remain ISO dates; date-time keys remain
+ISO date-times. The chart continues to render from server assigns. For bar
+types, `reference_lines` draws
 token-colored dashed values and adds their labels and values to the data table;
 the caller remains responsible for computing averages.
 
