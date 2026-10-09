@@ -84,6 +84,27 @@ A compact trend sparkline (no axes).
 - `id` (:string, required) — Stable DOM id for the sparkline SVG.
 - `series` (:list, default []) — Numeric values plotted left-to-right.
 
+#### `time_series_chart/1`
+
+Render a generic series-first chart using server-computed SVG geometry.
+
+- `annotations` (:list, default []) — Optional markers keyed by x.
+- `aria_label` (:string, default "Time series chart") — Accessible name for the SVG.
+- `axes` (:boolean, default true) — Show x and y labels.
+- `class` (:string) — Extra classes merged onto the root element.
+- `comparison` (:list, default []) — Optional previous-period series set.
+- `curve` (:atom, values: linear, monotone, step, cardinal, default :linear) — Line interpolation: :linear, :monotone, :step or :cardinal.
+- `empty_message` (:string, default "No data") — Copy shown when no valid series remains.
+- `glyphs` (:boolean, default false) — Render a marker at each available point.
+- `grid` (:boolean, default true) — Show horizontal y-axis grid lines.
+- `height` (:integer, default 280) — SVG viewBox height.
+- `id` (:string, required) — Stable chart id.
+- `orientation` (:atom, values: vertical, horizontal, default :vertical) — Bar orientation; applies to bar chart types.
+- `series` (:list, default []) — Series maps with id, label, optional CSS token color and %{x, y} points.
+- `type` (:atom, values: line, area, points, stacked_area, bar, stacked_bar, grouped_bar, default :line) — Series renderer: line, area, points, stacked area, or bar grouping mode.
+- `value_format` (:any, default :number) — `:number`, `:currency`, or a 1-arity number formatter.
+- `visible_series` (:list) — Visible series ids; nil shows all.
+
 ### LanternUI.Components.Accordion
 
 Accordion — a WAI-ARIA APG accordion with the Fluxon 2.3.1 composition API.
@@ -2347,6 +2368,22 @@ From `docs/recipes.md` (Block 2: dashboard with stats, chart, and activity):
     </.card>
   </.stack>
 </.page_shell>
+```
+
+From `docs/recipes.md` (Generic time-series chart):
+
+```heex
+<.time_series_chart
+  id="portfolio-performance"
+  aria_label="Portfolio value over time"
+  series={[
+    %{id: :collection, label: "Collection", points: @collection_points},
+    %{id: :inventory, label: "Inventory", points: @inventory_points}
+  ]}
+  type={@chart_type}
+  curve={@curve}
+  visible_series={@visible_series}
+/>
 ```
 
 From `docs/recipes.md` (Block 3: flat index table with filter chips):

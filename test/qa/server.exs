@@ -6,6 +6,7 @@
 # Then `node test/qa/run.mjs` (see test/qa/README.md).
 Logger.configure(level: :warning)
 Code.require_file("matrix_live.ex", __DIR__)
+Code.require_file("charts_live.ex", __DIR__)
 
 defmodule LanternUI.QA.Layouts do
   use Phoenix.Component
@@ -53,6 +54,7 @@ defmodule LanternUI.QA.Router do
   scope "/" do
     pipe_through(:browser)
     live("/qa", LanternUI.QA.MatrixLive)
+    live("/charts", LanternUI.QA.ChartsLive)
   end
 end
 

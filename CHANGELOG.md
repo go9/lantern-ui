@@ -6,6 +6,9 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- Additive `time_series_chart/1` with signed line, area, points, stacked area, vertical/horizontal bar, grouped bar, comparison, and annotation geometry.
+
 ## [0.10.1] - 2026-10-08
 
 ### Added

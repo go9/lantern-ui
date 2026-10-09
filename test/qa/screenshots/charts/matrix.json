@@ -1,0 +1,198 @@
+[
+ {
+  "vw": 1440,
+  "theme": "light",
+  "type": "line",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 1440,
+  "theme": "light",
+  "type": "area",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 1440,
+  "theme": "light",
+  "type": "stacked_area",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 1440,
+  "theme": "light",
+  "type": "bar",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 1440,
+  "theme": "light",
+  "type": "stacked_bar",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 1440,
+  "theme": "light",
+  "type": "grouped_bar",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 1440,
+  "theme": "light",
+  "type": "points",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 1440,
+  "theme": "dark",
+  "type": "line",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 1440,
+  "theme": "dark",
+  "type": "area",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 1440,
+  "theme": "dark",
+  "type": "stacked_area",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 1440,
+  "theme": "dark",
+  "type": "bar",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 1440,
+  "theme": "dark",
+  "type": "stacked_bar",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 1440,
+  "theme": "dark",
+  "type": "grouped_bar",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 1440,
+  "theme": "dark",
+  "type": "points",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 390,
+  "theme": "light",
+  "type": "line",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 390,
+  "theme": "light",
+  "type": "area",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 390,
+  "theme": "light",
+  "type": "stacked_area",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 390,
+  "theme": "light",
+  "type": "bar",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 390,
+  "theme": "light",
+  "type": "stacked_bar",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 390,
+  "theme": "light",
+  "type": "grouped_bar",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 390,
+  "theme": "light",
+  "type": "points",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 390,
+  "theme": "dark",
+  "type": "line",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 390,
+  "theme": "dark",
+  "type": "area",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 390,
+  "theme": "dark",
+  "type": "stacked_area",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 390,
+  "theme": "dark",
+  "type": "bar",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 390,
+  "theme": "dark",
+  "type": "stacked_bar",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 390,
+  "theme": "dark",
+  "type": "grouped_bar",
+  "problems": [],
+  "status": "ok"
+ },
+ {
+  "vw": 390,
+  "theme": "dark",
+  "type": "points",
+  "problems": [],
+  "status": "ok"
+ }
+]
