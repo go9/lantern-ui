@@ -1429,11 +1429,13 @@
     transition: transform var(--lantern-duration) var(--lantern-ease); }
   .lui-app[data-nav-open] .lui-app-scrim { display: block; }
   .lui-app-main, .lui-app[data-collapsed] .lui-app-main { margin-left: 0;
-    padding: 1.25rem 1.25rem 4rem; }
-  /* Main's side padding drops to 1.25rem here, so the strip's bleed has to drop
-     with it — left at 1.5rem it hung a quarter rem off both edges. */
-  .lui-app-main > .lui-app-breadcrumb { margin-inline: -1.25rem;
-    padding-inline: 1.25rem; }
+    padding: 1.25rem var(--lui-page-gutter) 4rem; }
+  /* Keep the compact shell, legacy breadcrumb, and expanded table on the same
+     responsive page gutter. */
+  .lui-app-main > .lui-app-breadcrumb {
+    margin-inline: calc(-1 * var(--lui-page-gutter));
+    padding-inline: var(--lui-page-gutter);
+  }
   .lui-app-sidebar-foot { display: none; }
 }
 

@@ -1259,7 +1259,8 @@ if (!WIDE_TABLE_ONLY) {
             return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, height: r.height }
           }
           const appbar = rect(document.querySelector(".lui-appbar"))
-          const strip = rect(document.querySelector(".lui-page-strip"))
+          const stripEl = document.querySelector(".lui-page-strip")
+          const strip = rect(stripEl)
           const table = document.querySelector("#qa-strip-table")
           const toolbar = rect(table.querySelector(".lui-dt-chromerow"))
           const wrap = rect(table.querySelector(".lui-table-wrap"))
@@ -1273,12 +1274,15 @@ if (!WIDE_TABLE_ONLY) {
             .filter((item) => item.querySelector(".lui-nav-item-icon"))
             .map((item) => Boolean(item.title && item.dataset.tooltip))
           const switcher = document.querySelector("#qa-strip-switcher")
-          const sr = style(strip)
+          const sr = style(stripEl)
+          const stripContentLeft = strip.left + Number.parseFloat(sr.paddingLeft || "0")
+          const stripContentRight = strip.right - Number.parseFloat(sr.paddingRight || "0")
           const toolbarStyle = style(table.querySelector(".lui-dt-chromerow"))
           const headerStyle = style(table.querySelector(".lui-th"))
           const iconStyle = style(icon)
           return {
             appbar, strip, table: rect(table), toolbar, wrap, header,
+            stripContentLeft, stripContentRight,
             controls,
             collapsed: document.querySelector(".lui-app").hasAttribute("data-collapsed"),
             activeTitle: active?.title,
@@ -1302,6 +1306,9 @@ if (!WIDE_TABLE_ONLY) {
         if (!close(m.table.left, m.toolbar.left) || !close(m.table.right, m.toolbar.right) ||
             !close(m.table.left, m.wrap.left) || !close(m.table.right, m.wrap.right)) {
           row.problems.push("expanded table, toolbar, and table-wrap edges do not align")
+        }
+        if (!close(m.table.left, m.stripContentLeft) || !close(m.table.right, m.stripContentRight)) {
+          row.problems.push("expanded table edges do not match the shared page gutter")
         }
         if (m.tableZ <= m.stripZ || m.headerZ <= m.toolbarZ) row.problems.push("expanded table layers are out of order")
         if (!m.activeTitle || !m.iconRect || m.iconRect.width <= 0 || m.iconRect.height <= 0) {
