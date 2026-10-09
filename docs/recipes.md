@@ -414,6 +414,67 @@ Dense bars have a measurable server-rendered markup cost: each SVG bar is about
 other SVG content. Keep that cost in mind when choosing grouped or stacked bars
 for large series.
 
+`mise exec -- mix run bench/time_series_chart.exs` measures the full server render
+(normalization, geometry, SVG, interaction data, and HTML encoding) over 101
+samples after warmup. On an Apple M1 Mac mini with Elixir 1.15.7 / OTP 26, the
+single-series p95 was 13.88 ms for 365 points and 43.78 ms for 1,000 points;
+maximum HTML sizes were 178,316 and 485,372 bytes. Four series measured 34.8 ms
+p95 / 300,444 bytes at 365 points and 103.44 ms p95 / 815,859 bytes at 1,000
+points. The single-series 1,000-point result meets the 50 ms target; the four
+series result is a larger workload with proportionally more paths and serialized
+interaction data.
+
+Compose the chart with `chart_card/1` when it needs a headline and caller-owned
+tabs, ranges, settings, or footer content. `chart_settings/1` uses the existing
+Popover and sends one native `phx-change` event; the parent validates the nested
+`chart_settings` params and passes the resulting assigns back to both components.
+
+```heex
+<.chart_card id="portfolio-card" title="Portfolio value" value={@total_value}>
+  <:tabs><.button size="sm" variant="ghost">Value</.button></:tabs>
+  <:range_controls>
+    <.button size="sm" variant="outline" phx-click="range" phx-value-range="6M">6M</.button>
+    <.button size="sm" variant="outline" phx-click="range" phx-value-range="1Y">1Y</.button>
+  </:range_controls>
+  <:settings_trigger>
+    <.chart_settings
+      id="portfolio-settings"
+      series={@series}
+      type={Atom.to_string(@chart_type)}
+      curve={Atom.to_string(@curve)}
+      visible_series={@visible_series}
+      grid={@grid}
+      axes={@axes}
+      glyphs={@glyphs}
+      cumulative={@cumulative}
+      compare_previous={@compare_previous}
+      phx-change="chart_settings"
+    />
+  </:settings_trigger>
+  <.time_series_chart
+    id="portfolio-chart"
+    aria_label="Portfolio value over time"
+    series={@series}
+    type={@chart_type}
+    curve={@curve}
+    visible_series={@visible_series}
+    grid={@grid}
+    axes={@axes}
+    glyphs={@glyphs}
+  />
+  <:footer_note>Values update daily.</:footer_note>
+</.chart_card>
+```
+
+The settings form submits `%{"chart_settings" => params}` in one event. `type`
+and `curve` are strings in the submitted event; the component accepts chart
+types as either atoms or strings. `visible_series` is an array of checked ids
+and is omitted when none are checked. `grid`, `axes`, `glyphs`, `cumulative`, and
+`compare_previous` submit as `"true"` or `"false"` strings. Settings and range
+state stay with the parent LiveView. The chart's hover tooltip follows the
+nearest shared x value, keyboard points support arrows plus Home/End/Escape, and
+the expandable data table remains available for assistive technology and print.
+
 ## Block 3: flat index table with filter chips
 
 **When to use:** The page is a record list — one flat `data_table` with filter chips carrying counts, a status column on each row, search, pagination, row click, and an empty state. Title and the primary action live in the `page_shell`; no tabs, no group bands. `row_navigate` (or `row_patch`) makes each row one real link — Enter, middle-click and open-in-new-tab work, and checkboxes, buttons and menus inside the row keep their own clicks; use `row_click` with a `JS` command when the row is not a link. Do not also put `navigate` on the `list_row`. `fill` pins pagination only when the parent bounds the height (see "Fill list pages" above) — without a bound the table takes its natural height.

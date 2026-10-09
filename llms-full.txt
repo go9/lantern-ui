@@ -61,6 +61,40 @@ A categorical bar chart.
 - `series` (:list, default []) — Categories: %{label: String.t(), value: number, href: String.t() | nil}.
 - `value_format` (:any, default :number) — `:number` | `:currency` | a 1-arity function `(number -> String.t())`
 
+#### `chart_card/1`
+
+A token-styled chart card for a title, value, caller controls, and chart content.
+
+- `class` (:any) — Extra classes merged onto the card.
+- `id` (:string, required) — Stable chart card id.
+- `title` (:string, required) — Card heading.
+- `value` (:any) — Optional headline value displayed beside the title.
+Slots:
+- `:footer_note` — Optional explanatory note below the chart.
+- `:inner_block` (required) — Chart content.
+- `:range_controls` — Consumer-owned date-range controls.
+- `:settings_trigger` — A chart_settings/1 control, usually a popover trigger and panel.
+- `:tabs` — Optional chart tabs or other header controls.
+
+#### `chart_settings/1`
+
+Native server-owned chart controls inside LanternUI's existing Popover.
+
+- `allowed_types` (:list, default ["line", "area", "stacked_area", "bar", "stacked_bar", "grouped_bar", "points"]) — Chart type values offered by the native select.
+- `axes` (:boolean, default true) — Whether chart axes are enabled.
+- `compare_previous` (:boolean, default false) — Whether the consumer includes previous-period comparison data.
+- `cumulative` (:boolean, default false) — Whether the consumer uses cumulative values.
+- `curve` (:string, default "linear") — Current line or area curve.
+- `glyphs` (:boolean, default false) — Whether point glyphs are enabled.
+- `grid` (:boolean, default true) — Whether horizontal grid lines are enabled.
+- `id` (:string, required) — Stable settings popover id.
+- `rest` (:global) — Native form event attributes.
+- `series` (:list, default []) — Series to expose as visibility checkboxes.
+- `type` (:any, default "line") — Current chart type as an atom or string.
+- `visible_series` (:list) — Visible ids; nil checks every series.
+Slots:
+- `:trigger` — Optional custom popover trigger; defaults to a labeled Settings button.
+
 #### `line_chart/1`
 
 A multi-series time-series line chart with a legend and a shared crosshair tooltip.
@@ -2384,6 +2418,45 @@ From `docs/recipes.md` (Generic time-series chart):
   curve={@curve}
   visible_series={@visible_series}
 />
+```
+
+From `docs/recipes.md` (Generic time-series chart):
+
+```heex
+<.chart_card id="portfolio-card" title="Portfolio value" value={@total_value}>
+  <:tabs><.button size="sm" variant="ghost">Value</.button></:tabs>
+  <:range_controls>
+    <.button size="sm" variant="outline" phx-click="range" phx-value-range="6M">6M</.button>
+    <.button size="sm" variant="outline" phx-click="range" phx-value-range="1Y">1Y</.button>
+  </:range_controls>
+  <:settings_trigger>
+    <.chart_settings
+      id="portfolio-settings"
+      series={@series}
+      type={Atom.to_string(@chart_type)}
+      curve={Atom.to_string(@curve)}
+      visible_series={@visible_series}
+      grid={@grid}
+      axes={@axes}
+      glyphs={@glyphs}
+      cumulative={@cumulative}
+      compare_previous={@compare_previous}
+      phx-change="chart_settings"
+    />
+  </:settings_trigger>
+  <.time_series_chart
+    id="portfolio-chart"
+    aria_label="Portfolio value over time"
+    series={@series}
+    type={@chart_type}
+    curve={@curve}
+    visible_series={@visible_series}
+    grid={@grid}
+    axes={@axes}
+    glyphs={@glyphs}
+  />
+  <:footer_note>Values update daily.</:footer_note>
+</.chart_card>
 ```
 
 From `docs/recipes.md` (Block 3: flat index table with filter chips):
