@@ -1131,7 +1131,9 @@
   pointer-events: auto;
 }
 .lui-page-strip .lui-action-bar-notice { min-width: 0; }
-.lui-page-strip :is(button, input, select, [role="tab"]) { min-height: var(--lui-control-md-h); }
+.lui-page-strip :is(button, input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select, [role="tab"]) {
+  min-height: var(--lui-control-md-h);
+}
 /* Narrow strip: keep the back crumb and the current page; fold the rest into `…`. */
 @container lui-page-strip (max-width: 40rem) {
   .lui-page-strip-trail .lui-breadcrumb-item:not(:nth-last-child(-n + 2)) { display: none; }
@@ -1329,6 +1331,14 @@
   background: var(--lantern-accent-soft); }
 .lui-nav-item-active:hover { color: var(--lantern-accent); background: var(--lantern-accent-soft); }
 .lui-nav-item-icon { font-size: 1.05rem; flex-shrink: 0; }
+.lui-sidebar-tooltip {
+  position: fixed; z-index: var(--lantern-z-tooltip, 80); transform: translateY(-50%);
+  max-width: min(20rem, calc(100vw - 1rem)); padding: 0.35rem 0.55rem;
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm);
+  background: var(--lantern-surface); color: var(--lantern-fg);
+  box-shadow: var(--lantern-shadow-md); font-size: var(--lantern-text-sm);
+  font-weight: 500; white-space: nowrap; pointer-events: none;
+}
 /* A host heroicon (hero-*) renders as a CSS-mask span whose own hero-* class sets
    a larger default size (and loads after this file); constrain it to match
    lantern's inline icons. Two classes on the element out-specify the single
@@ -1775,9 +1785,11 @@
 .lui-dt-chromerow { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
   padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--lantern-border); }
 .lui-dt-chromerow { row-gap: 0.5rem; }
-.lui-dt-chromerow :is(button, input, select, [role="tab"], .lui-dt-chip, .lui-dt-expand) {
+.lui-dt-chromerow :is(button, input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select, [role="tab"], .lui-dt-chip, .lui-dt-expand) {
   box-sizing: border-box; min-height: var(--lui-control-md-h); }
-.lui-dt-chromerow :is(input, select) { height: var(--lui-control-md-h); }
+.lui-dt-chromerow :is(input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select) {
+  height: var(--lui-control-md-h);
+}
 .lui-dt-chromerow .lui-dt-quickfilters :is(button, [role="tab"]) { height: var(--lui-control-md-h); }
 .lui-dt-chromerow .lui-dt-quickfilters .lui-tabs-list[data-variant="segmented"] {
   box-sizing: border-box; height: var(--lui-control-md-h); min-height: var(--lui-control-md-h);
@@ -1786,7 +1798,18 @@
 .lui-dt-chromerow .lui-dt-quickfilters .lui-tab {
   box-sizing: border-box; height: var(--lui-control-md-h); min-height: var(--lui-control-md-h);
 }
-.lui-dt-bulkbar :is(button, input, select, [role="button"]) { min-height: var(--lui-control-md-h); }
+.lui-dt-bulkbar :is(button, input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select, [role="button"]) {
+  min-height: var(--lui-control-md-h);
+}
+
+/* New shell and table chrome follows the shared control-scale opt-out. Keep
+   strip/sidebar row geometry intact so the shell remains aligned; only the
+   controls inside those rows return to the consumer's legacy metrics. */
+[data-lui-control-scale="legacy"] {
+  --lui-control-sm-h: var(--lui-control-h-sm, 1.75rem);
+  --lui-control-md-h: var(--lui-control-h-md, 2rem);
+  --lui-control-lg-h: var(--lui-control-h-lg, 2.25rem);
+}
 .lui-dt-spacer { flex: 1; }
 .lui-dt-quickfilters { min-width: 0; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 .lui-dt-quickfilters::-webkit-scrollbar { display: none; }
@@ -2003,18 +2026,16 @@
 .lui-datatable.lui-datatable-flush .lui-dt-chromerow,
 .lui-datatable.lui-datatable-flush .lui-dt-pagination,
 .lui-datatable.lui-datatable-flush .lui-dt-bulkbar { padding-inline: 0; }
-/* The outer cells used to sit at the gutter on zero padding. That leaves a
-   rounded row highlight starting on the first glyph, so the padding comes back
-   and the table is pulled out by the same amount — the text still lands on the
-   gutter, and the band has somewhere to turn its corner. */
-.lui-datatable.lui-datatable-flush { --lui-dt-bleed: 0.6rem; }
+/* Cell padding gives the first and last columns room to breathe while the table
+   edge stays aligned with the overview, toolbar, and pagination. */
+.lui-datatable.lui-datatable-flush { --lui-dt-cell-inset: 0.6rem; }
 .lui-datatable.lui-datatable-flush .lui-table-wrap {
-  margin-inline: calc(var(--lui-dt-bleed) * -1);
+  margin-inline: 0;
 }
 .lui-datatable.lui-datatable-flush .lui-th:first-child,
-.lui-datatable.lui-datatable-flush .lui-td:first-child { padding-left: var(--lui-dt-bleed); }
+.lui-datatable.lui-datatable-flush .lui-td:first-child { padding-left: var(--lui-dt-cell-inset); }
 .lui-datatable.lui-datatable-flush .lui-th:last-child,
-.lui-datatable.lui-datatable-flush .lui-td:last-child { padding-right: var(--lui-dt-bleed); }
+.lui-datatable.lui-datatable-flush .lui-td:last-child { padding-right: var(--lui-dt-cell-inset); }
 .lui-datatable.lui-datatable-flush .lui-dt-cards { padding: 0.75rem 0 0; }
 
 /* The wrap carries the raised surface that makes a standalone table a panel, and
