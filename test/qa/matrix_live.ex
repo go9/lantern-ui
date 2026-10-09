@@ -405,7 +405,13 @@ defmodule LanternUI.QA.MatrixLive do
     >
       <:brand>Lantern QA</:brand>
       <:sidebar_header>
-        <button id="qa-strip-switcher" type="button" class="qa-switcher" title="Acme workspace" data-tooltip="Acme workspace">
+        <button
+          id="qa-strip-switcher"
+          type="button"
+          class="qa-switcher"
+          title="Acme workspace"
+          data-tooltip="Acme workspace"
+        >
           <span class="qa-avatar">AW</span>
           <span class="qa-switcher-name">Acme workspace</span>
         </button>
@@ -471,7 +477,13 @@ defmodule LanternUI.QA.MatrixLive do
     >
       <:brand>Lantern QA</:brand>
       <:sidebar_header>
-        <button id="qa-sidebar-switcher" type="button" class="qa-switcher" title="Acme workspace" data-tooltip="Acme workspace">
+        <button
+          id="qa-sidebar-switcher"
+          type="button"
+          class="qa-switcher"
+          title="Acme workspace"
+          data-tooltip="Acme workspace"
+        >
           <span class="qa-avatar">AW</span>
           <span class="qa-switcher-name">Acme workspace</span>
         </button>
