@@ -473,6 +473,16 @@ ResizeObserver changes. Without JavaScript, SVG aspect ratio stays uniform.
 Tick labels are skipped when they would overlap, and y labels get measured left
 padding.
 
+For a positive value chart whose changes should remain visible without a
+long flat line, pass `baseline={:auto}`; use `y_min={number}` when the caller
+owns a lower bound. Bars and gains should generally keep the zero baseline.
+`value_format` stays caller-owned: use a compact money formatter for currency
+ticks and tooltip values. A single-point line always renders a marker.
+
+The raw data table is visually hidden but remains available to screen readers
+by default. Pass `data_table={:disclosure}` only where a visible raw-data
+table is useful.
+
 The component includes zero in its signed y domain. Chart choices and visible
 series remain LiveView assigns; validate form events in the parent LiveView and
 pass the resulting values back as attrs. Set `type` to `:stacked_area`, `:bar`,
@@ -530,6 +540,10 @@ p95 / 300,444 bytes at 365 points and 103.44 ms p95 / 815,859 bytes at 1,000
 points. The single-series 1,000-point result meets the 50 ms target; the four
 series result is a larger workload with proportionally more paths and serialized
 interaction data.
+
+For an empty chart, pass one `empty` message to `chart_card/1`; it replaces
+the headline value, chart content, and footer. Add an optional
+`<:empty_action>` only when the reader can act on the empty state.
 
 Compose the chart with `chart_card/1` when it needs a headline and caller-owned
 tabs, ranges, settings, or footer content. `chart_settings/1` uses the existing

@@ -4585,6 +4585,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-chart-card__actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--lantern-space-sm); flex-wrap: wrap; }
 .lui-chart-card__tabs, .lui-chart-card__ranges, .lui-chart-card__settings { display: flex; align-items: center; gap: var(--lantern-space-xs); }
 .lui-chart-card__content { min-width: 0; margin-top: var(--lantern-space-md); }
+.lui-chart-card__empty { display: flex; min-height: 180px; flex-direction: column; align-items: center; justify-content: center; gap: var(--lantern-space-sm); color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); text-align: center; }
 .lui-chart-card__footer { margin-top: var(--lantern-space-sm); color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
 .lui-chart-settings__trigger { display: inline-flex; box-sizing: border-box; height: var(--lui-control-h-sm); min-height: var(--lui-control-h-sm); align-items: center; justify-content: center; gap: var(--lui-gap-8); padding: 0 var(--lui-control-px-sm); border: 1px solid var(--lantern-border); border-radius: var(--lui-control-radius); background: var(--lantern-surface); color: var(--lantern-fg); font-size: var(--lui-control-font-sm); line-height: var(--lui-control-line-height); cursor: pointer; }
 .lui-chart-settings__trigger:hover { background: var(--lantern-surface-hover); }

@@ -252,7 +252,8 @@ defmodule LanternUI.ChartsTest do
       assert html =~ ~s(id="generic")
       assert html =~ ~s(aria-label="Portfolio value")
       assert html =~ ~s(phx-hook="ChartInteraction")
-      assert html =~ "View chart data"
+      refute html =~ "View chart data"
+      assert html =~ "lui-sr-only lui-time-series-chart__data-table"
       assert html =~ "<caption>Portfolio value data table</caption>"
       assert html =~ ~s(aria-live="polite")
       assert html =~ "Collection"
@@ -320,6 +321,59 @@ defmodule LanternUI.ChartsTest do
       refute html =~ ~r/NaN|Infinity|nan|inf/
     end
 
+    test "visible raw data disclosure is opt-in" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "visible-data",
+          data_table: :disclosure,
+          series: [%{id: "a", label: "A", points: [%{x: "Jan", y: 2}]}]
+        )
+
+      assert html =~ "View chart data"
+      assert html =~ "lui-time-series-chart__table-details"
+      refute html =~ "lui-sr-only lui-time-series-chart__data-table"
+    end
+
+    test "chart SSR keeps a uniform aspect ratio and accepts a caller width and height" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "sized",
+          width: 480,
+          height: 300,
+          series: [%{id: "a", label: "A", points: [%{x: "Jan", y: 2}]}]
+        )
+
+      assert html =~ ~s(viewBox="0 0 480 300")
+      assert html =~ ~s(preserveAspectRatio="xMinYMin meet")
+      assert html =~ ~s(style="--lui-chart-height:300px")
+      refute html =~ ~s(preserveAspectRatio="none")
+    end
+
+    test "single point has a marker and auto baseline keeps a flat value range visible" do
+      point = [%{id: "value", label: "Value", points: [%{x: "Jan", y: 5_000}]}]
+      zero = render_component(&LanternUI.Charts.time_series_chart/1, id: "zero", series: point)
+
+      auto =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "auto",
+          series: point,
+          baseline: :auto
+        )
+
+      bounded =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "bounded",
+          series: point,
+          y_min: 4_000
+        )
+
+      assert auto =~ "lui-time-series-chart__point"
+      assert zero =~ ~s(class="lui-time-series-chart__zero")
+      refute auto =~ ~s(class="lui-time-series-chart__zero")
+      assert auto =~ ~r/>\s*4700\s*</
+      assert bounded =~ ~r/>\s*4000\s*</
+    end
+
     test "missing x keys break a path instead of connecting across the gap" do
       html =
         render_component(&LanternUI.Charts.time_series_chart/1,
@@ -356,21 +410,6 @@ defmodule LanternUI.ChartsTest do
                        ]
                      )
                    end
-    end
-
-    test "SSR chart has uniform aspect ratio and caller dimensions" do
-      html =
-        render_component(&LanternUI.Charts.time_series_chart/1,
-          id: "sized",
-          width: 480,
-          height: 300,
-          series: [%{id: "a", label: "A", points: [%{x: "Jan", y: 2}]}]
-        )
-
-      assert html =~ ~s(viewBox="0 0 480 300")
-      assert html =~ ~s(preserveAspectRatio="xMinYMin meet")
-      assert html =~ ~s(style="--lui-chart-height:300px")
-      refute html =~ ~s(preserveAspectRatio="none")
     end
 
     test "Date and DateTime x values use the same Unix epoch" do

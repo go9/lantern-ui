@@ -103,6 +103,23 @@ for (const width of widths) for (const theme of ['light', 'dark']) for (const ty
   results.push(row)
   await page.close()
 }
+for (const width of widths) for (const theme of ['light', 'dark']) {
+  const page = await browser.newPage()
+  await page.setViewport({ width, height: 900 })
+  await page.goto(`${base}/charts?type=line&theme=${theme}&empty=1`, { waitUntil: 'networkidle2' })
+  await page.waitForSelector('.phx-connected', { timeout: 8000 })
+  const empty = await page.$eval('#qa-chart-card', (card) => ({
+    message: card.querySelector('.lui-chart-card__empty')?.textContent.trim(),
+    value: !!card.querySelector('.lui-chart-card__value'),
+    chart: !!card.querySelector('.lui-time-series-chart'),
+    footer: !!card.querySelector('.lui-chart-card__footer'),
+  }))
+  const row = { width, theme, type: 'empty', problems: [] }
+  if (empty.message !== 'No history in this period' || empty.value || empty.chart || empty.footer) row.problems.push(`duplicate empty content: ${JSON.stringify(empty)}`)
+  await page.screenshot({ path: `${shots}/${width}-${theme}-empty.png`, fullPage: true })
+  results.push(row)
+  await page.close()
+}
 await browser.close()
 fs.writeFileSync(`${shots}/matrix.json`, JSON.stringify(results, null, 2))
 const failed = results.filter((row) => row.problems.length)

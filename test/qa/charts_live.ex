@@ -41,6 +41,7 @@ defmodule LanternUI.QA.ChartsLive do
      assign(socket,
        type: type,
        orientation: orientation,
+       empty: params["empty"] == "1",
        theme: theme,
        series: series,
        selected_point: nil,
@@ -76,7 +77,12 @@ defmodule LanternUI.QA.ChartsLive do
         <h1>Generic chart · {@type}</h1>
         <span>Positive and negative values · April–August</span>
       </header>
-      <.chart_card id="qa-chart-card" title="Portfolio value" value="$8,420">
+      <.chart_card
+        id="qa-chart-card"
+        title="Portfolio value"
+        value="$8,420"
+        empty={if @empty, do: "No history in this period", else: nil}
+      >
         <:tabs><.button size="sm" variant="ghost">Value</.button></:tabs>
         <:range_controls>
           <.button size="sm" variant="outline">1M</.button>
