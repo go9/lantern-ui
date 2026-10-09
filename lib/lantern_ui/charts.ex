@@ -1378,8 +1378,11 @@ defmodule LanternUI.Charts do
     %{key: {:time, value}, value: value, label: Calendar.strftime(datetime, "%b %-d")}
   end
 
-  defp normalize_x(%NaiveDateTime{} = datetime),
-    do: NaiveDateTime.to_iso8601(datetime) |> normalize_x()
+  defp normalize_x(%NaiveDateTime{} = datetime) do
+    datetime
+    |> DateTime.from_naive!("Etc/UTC")
+    |> normalize_x()
+  end
 
   defp normalize_x(value) when is_number(value) and abs(value) <= 1.0e15 do
     %{key: {:number, value}, value: value, label: number_label(value)}

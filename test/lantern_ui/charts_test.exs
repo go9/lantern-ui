@@ -302,7 +302,12 @@ defmodule LanternUI.ChartsTest do
           id: "same-instant",
           series: [
             %{id: "date", label: "Date", points: [%{x: ~D[1970-01-01], y: 1}]},
-            %{id: "datetime", label: "DateTime", points: [%{x: ~U[1970-01-01 00:00:00Z], y: 2}]}
+            %{id: "datetime", label: "DateTime", points: [%{x: ~U[1970-01-01 00:00:00Z], y: 2}]},
+            %{
+              id: "naive-datetime",
+              label: "NaiveDateTime",
+              points: [%{x: ~N[1970-01-01 00:00:00], y: 3}]
+            }
           ]
         )
 
@@ -310,7 +315,7 @@ defmodule LanternUI.ChartsTest do
         Regex.scan(~r/<path d="M([^,]+),/, html, capture: :all_but_first)
         |> List.flatten()
 
-      assert x_coordinates == ["366.0", "366.0"]
+      assert x_coordinates == ["366.0", "366.0", "366.0"]
     end
 
     test "stacked area omits empty sign bands so the zero line stays visible" do
