@@ -272,7 +272,10 @@ const ChartInteraction = {
       this.touchActive = event.pointerType === "touch"
     }
     this.onPointerLeave = (event) => {
-      if (!this.touchActive && !this.el.contains(event.relatedTarget)) this.hide()
+      if (!this.touchActive && !this.el.contains(event.relatedTarget)) {
+        this.cancelHover()
+        this.hide()
+      }
     }
     this.onPointerUp = (event) => {
       if (event.pointerType === "touch") {
@@ -399,13 +402,19 @@ const ChartInteraction = {
   },
 
   hide() {
+    this.cancelHover()
     this.overlay?.setAttribute("hidden", "")
+  },
+
+  cancelHover() {
+    if (this.hoverTimer) clearTimeout(this.hoverTimer)
+    this.hoverTimer = null
   },
 
   cleanup() {
     if (this.frame) this.el.ownerDocument.defaultView.cancelAnimationFrame(this.frame)
     if (this.touchTimer) clearTimeout(this.touchTimer)
-    if (this.hoverTimer) clearTimeout(this.hoverTimer)
+    this.cancelHover()
     this.frame = null
     this.svg?.removeEventListener("pointermove", this.onPointerMove)
     this.svg?.removeEventListener("pointerdown", this.onPointerDown)

@@ -130,3 +130,19 @@ test("hover_event debounces pointer movement to the latest shared x", async () =
   }])
   mounted.unmount()
 })
+
+test("hover_event cancels its pending push when the pointer leaves", async () => {
+  const html = fixture().replace('<div id="chart"', '<div id="chart" data-hover-event="hover_date"')
+  const mounted = mountHook(hooks.ChartInteraction, html, { rootId: "chart" })
+  const events = []
+  mounted.hook.pushEvent = (name, payload) => events.push({ name, payload })
+  const svg = mounted.el.querySelector("svg")
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 150 })
+
+  pointer(svg, "pointermove", 76)
+  await sleep(30)
+  pointer(svg, "pointerleave", 76)
+  await sleep(180)
+  assert.deepEqual(events, [])
+  mounted.unmount()
+})
