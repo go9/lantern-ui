@@ -12,6 +12,7 @@ All notable changes to this project are documented here. The format follows
 - Opt-in URL-owned expanded data tables (`expandable` / `expanded`) with query-preserving patches, Shift+E / Escape shortcuts, and a transient app-shell sidebar rail that leaves the saved collapse preference intact.
 - Server-owned data-table all-matching selection via `all_matching?` and `excluded_ids`, with caller-translatable selection, select-all, and clear labels.
 - Generic `<.media_tile>` container cell primitive with configurable aspect ratios, banner, overlay, caption, and footer slots, selectable/overlay hooks, skeleton loading and empty states, and `<.media_tile_grid>` companion (flicker #3669).
+- Additive `<:sparkline>` slot and `data-tone` variant support to `<.stat_card>` and `<.stat_grid>`, reusing the existing `sparkline/1` primitive with semantic tone tinting.
 - Additive `time_series_chart/1` with signed line, area, points, stacked area, vertical/horizontal bar, grouped bar, comparison, and annotation geometry.
 - `chart_card/1` composition slots and `chart_settings/1` native LiveView controls over the existing Popover.
 - Shared-x chart interaction with a clamped tooltip, keyboard Home/End/Escape, an accessible data-table caption, and keyboard-only live announcements.

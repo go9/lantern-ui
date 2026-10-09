@@ -114,6 +114,7 @@ A compact trend sparkline (no axes).
 
 - `aria_label` (:string, default "Sparkline") — Accessible name for the SVG.
 - `class` (:string) — Extra classes merged onto the root element.
+- `color` (:string) — Optional stroke and fill color; defaults to var(--lantern-chart-1).
 - `height` (:integer, default 40) — SVG viewBox height in CSS pixels.
 - `id` (:string, required) — Stable DOM id for the sparkline SVG.
 - `series` (:list, default []) — Numeric values plotted left-to-right.
@@ -1813,9 +1814,14 @@ Renders one compact summary metric.
 - `class` (:any) — Extra classes merged onto the card.
 - `href` (:string) — Optional LiveView navigation target.
 - `icon` (:string) — Optional host heroicon class shown by the label.
+- `id` (:string) — Stable DOM id for the card.
 - `label` (:string, required) — Short caption identifying the metric.
+- `sparkline_series` (:list) — Optional numeric list rendered as a trend sparkline when no :sparkline slot is passed.
 - `subtitle` (:string) — Optional muted context below the value.
+- `tone` (:string, values: neutral, info, success, warning, danger, promo, ) — Optional semantic tone for subtle card tinting and sparkline accent.
 - `value` (:any, required) — Primary metric value to display.
+Slots:
+- `:sparkline` — Optional trend sparkline slot rendered with the metric.
 
 #### `stat_grid/1`
 
@@ -1825,10 +1831,13 @@ Renders a responsive collection of summary metrics; emits nothing when empty.
 - `rest` (:global) — Arbitrary HTML attributes passed through to the grid.
 Slots:
 - `:stat` — A summary metric card; provide its value with the :value attribute or inner content.
+  - `id` — Stable DOM id for the card.
   - `label` — Short caption identifying the metric.
   - `value` — Primary metric value; inner slot content takes precedence when present.
   - `icon` — Optional host heroicon class shown by the label.
   - `subtitle` — Optional muted context below the value.
+  - `tone` — Optional semantic tone for tinting and sparkline accent.
+  - `sparkline_series` — Optional numeric list rendered as a trend sparkline.
   - `href` — Optional LiveView navigation target.
   - `class` — Extra classes merged onto this card.
 

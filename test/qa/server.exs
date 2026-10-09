@@ -8,6 +8,7 @@ Logger.configure(level: :warning)
 Code.require_file("matrix_live.ex", __DIR__)
 Code.require_file("charts_live.ex", __DIR__)
 Code.require_file("tiles_live.ex", __DIR__)
+Code.require_file("stats_live.ex", __DIR__)
 
 defmodule LanternUI.QA.Layouts do
   use Phoenix.Component
@@ -57,6 +58,7 @@ defmodule LanternUI.QA.Router do
     live("/qa", LanternUI.QA.MatrixLive)
     live("/charts", LanternUI.QA.ChartsLive)
     live("/tiles", LanternUI.QA.TilesLive)
+    live("/stats", LanternUI.QA.StatsLive)
   end
 end
 
