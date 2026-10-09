@@ -409,6 +409,29 @@ throughout: dates/date-times, numbers, or category strings. Mixed domains raise
 `ArgumentError` with the conflicting domain kinds; malformed points are ignored,
 and a truly empty chart uses `empty_message`.
 
+Opt into selection events when a caller-owned panel should follow the point a
+reader chooses. `select_event` pushes on pointer click/tap and keyboard Enter;
+`hover_event` is optional and debounced. Both events carry `%{chart_id, x,
+values}`, where `x` is the normalized x key and `values` maps each series id to
+its raw value (or `nil` when that series has no point at the key). The chart
+continues to render from server assigns. For bar types, `reference_lines` draws
+token-colored dashed values and adds their labels and values to the data table;
+the caller remains responsible for computing averages.
+
+```heex
+<.time_series_chart
+  id="monthly-sales"
+  type={:bar}
+  select_event="select_sales_month"
+  hover_event="hover_sales_month"
+  reference_lines={[%{label: "Average", value: @average_sales}]}
+  series={@sales_series}
+/>
+```
+
+Handle `"select_sales_month"` or `"hover_sales_month"` in the parent LiveView's
+`handle_event/3`; validate the chart id and x key before updating any panel.
+
 Dense bars have a measurable server-rendered markup cost: each SVG bar is about
 100 bytes, so 1,000 bars add roughly 100 KB before the chart wrapper, labels, and
 other SVG content. Keep that cost in mind when choosing grouped or stacked bars

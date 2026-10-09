@@ -245,6 +245,9 @@ const ChartInteraction = {
   setup() {
     this.points = JSON.parse(this.el.dataset.interaction || "[]")
     this.seriesLabels = JSON.parse(this.el.dataset.seriesLabel || "[]")
+    this.seriesIds = JSON.parse(this.el.dataset.seriesId || "[]")
+    this.selectEvent = this.el.dataset.selectEvent
+    this.hoverEvent = this.el.dataset.hoverEvent
     this.svg = this.el.querySelector("svg")
     this.overlay = this.el.querySelector('[data-part="crosshair"]')?.closest(".lui-time-series-chart__interaction")
     this.live = this.el.querySelector('[data-part="live"]')
@@ -256,8 +259,13 @@ const ChartInteraction = {
       if (this.frame) return
       this.frame = this.el.ownerDocument.defaultView.requestAnimationFrame(() => {
         this.frame = null
-        this.showAtClientX(this.pendingClientX)
+        const point = this.showAtClientX(this.pendingClientX)
+        if (point) this.scheduleHover(point)
       })
+    }
+    this.onClick = (event) => {
+      const point = this.showAtClientX(event.clientX)
+      if (point) this.pushChartEvent(this.selectEvent, point)
     }
     this.onPointerDown = (event) => {
       this.onPointerMove(event)
@@ -287,6 +295,9 @@ const ChartInteraction = {
         event.preventDefault()
         this.hide()
         target.blur()
+      } else if (event.key === "Enter") {
+        event.preventDefault()
+        this.pushChartEvent(this.selectEvent, this.points[index])
       } else if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
         event.preventDefault()
         const next = event.key === "Home" ? 0 : event.key === "End" ? this.focusPoints.length - 1 :
@@ -298,6 +309,7 @@ const ChartInteraction = {
     this.svg.addEventListener("pointerdown", this.onPointerDown, { passive: true })
     this.svg.addEventListener("pointerleave", this.onPointerLeave)
     this.svg.addEventListener("pointerup", this.onPointerUp)
+    this.svg.addEventListener("click", this.onClick)
     this.el.addEventListener("focusin", this.onFocusIn)
     this.el.addEventListener("focusout", this.onFocusOut)
     this.el.addEventListener("keydown", this.onKeyDown)
@@ -311,6 +323,29 @@ const ChartInteraction = {
     let nearest = this.points[0]
     for (const point of this.points) if (Math.abs(point.x - x) < Math.abs(nearest.x - x)) nearest = point
     this.show(nearest)
+    return nearest
+  },
+
+  eventPayload(point) {
+    return {
+      chart_id: this.el.id,
+      x: point.x_value,
+      values: Object.fromEntries(this.seriesIds.map((id, index) => [id, point.raw_values?.[index] ?? null])),
+    }
+  },
+
+  pushChartEvent(eventName, point) {
+    if (!eventName || !point || typeof this.pushEvent !== "function") return
+    this.pushEvent(eventName, this.eventPayload(point))
+  },
+
+  scheduleHover(point) {
+    if (!this.hoverEvent) return
+    if (this.hoverTimer) clearTimeout(this.hoverTimer)
+    this.hoverTimer = setTimeout(() => {
+      this.hoverTimer = null
+      this.pushChartEvent(this.hoverEvent, point)
+    }, 150)
   },
 
   show(point, focusTarget = null, announce = false) {
@@ -370,11 +405,13 @@ const ChartInteraction = {
   cleanup() {
     if (this.frame) this.el.ownerDocument.defaultView.cancelAnimationFrame(this.frame)
     if (this.touchTimer) clearTimeout(this.touchTimer)
+    if (this.hoverTimer) clearTimeout(this.hoverTimer)
     this.frame = null
     this.svg?.removeEventListener("pointermove", this.onPointerMove)
     this.svg?.removeEventListener("pointerdown", this.onPointerDown)
     this.svg?.removeEventListener("pointerleave", this.onPointerLeave)
     this.svg?.removeEventListener("pointerup", this.onPointerUp)
+    this.svg?.removeEventListener("click", this.onClick)
     this.el.removeEventListener("focusin", this.onFocusIn)
     this.el.removeEventListener("focusout", this.onFocusOut)
     this.el.removeEventListener("keydown", this.onKeyDown)

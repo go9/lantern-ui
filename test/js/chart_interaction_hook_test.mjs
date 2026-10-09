@@ -3,12 +3,12 @@ import assert from "node:assert/strict"
 import { hooks, mountHook, keydown, sleep } from "./helpers/dom.mjs"
 
 const points = [
-  { x: 20, label: "Jan 1", values: ["$10", "$4"], coords: [80, 120], positions: [{ x: 20, y: 80 }, { x: 20, y: 120 }] },
-  { x: 80, label: "Feb 1", values: ["$12", null], coords: [60, null], positions: [{ x: 80, y: 60 }, null] },
+  { x: 20, label: "Jan 1", x_value: "2026-01-01", values: ["$10", "$4"], raw_values: [10, 4], coords: [80, 120], positions: [{ x: 20, y: 80 }, { x: 20, y: 120 }] },
+  { x: 80, label: "Feb 1", x_value: "2026-02-01", values: ["$12", null], raw_values: [12, null], coords: [60, null], positions: [{ x: 80, y: 60 }, null] },
 ]
 
 function fixture() {
-  return `<div id="chart" data-interaction='${JSON.stringify(points)}' data-series-label='["Collection","Inventory"]'>
+  return `<div id="chart" data-interaction='${JSON.stringify(points)}' data-series-label='["Collection","Inventory"]' data-series-id='["collection","inventory"]'>
     <svg viewBox="0 0 100 150"><g class="lui-time-series-chart__interaction" hidden>
       <line data-part="crosshair" x1="0" x2="0"></line>
       <circle data-part="series-point" data-series-index="0"></circle>
@@ -80,5 +80,53 @@ test("touch, keyboard traversal, announcement, update and destroy are safe", asy
   pointer(oldSvg, "pointermove", 20)
   await sleep(30)
   assert.equal(oldSvg.querySelector('[data-part="crosshair"]')?.getAttribute("x1"), xBeforePatch)
+  mounted.unmount()
+})
+
+test("select_event pushes raw values for pointer and Enter; unset event is a no-op", () => {
+  const html = fixture().replace('<div id="chart"', '<div id="chart" data-select-event="select_date"')
+  const mounted = mountHook(hooks.ChartInteraction, html, { rootId: "chart" })
+  const events = []
+  mounted.hook.pushEvent = (name, payload) => events.push({ name, payload })
+  const svg = mounted.el.querySelector("svg")
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 150 })
+
+  pointer(svg, "click", 76)
+  assert.deepEqual(events, [{
+    name: "select_date",
+    payload: { chart_id: "chart", x: "2026-02-01", values: { collection: 12, inventory: null } },
+  }])
+
+  const second = mounted.el.querySelector('[data-chart-point="1"]')
+  const enter = keydown(second, "Enter")
+  assert.equal(enter.defaultPrevented, true)
+  assert.equal(events.length, 2)
+  assert.deepEqual(events[1].payload, events[0].payload)
+  mounted.unmount()
+
+  const unset = mountHook(hooks.ChartInteraction, fixture(), { rootId: "chart" })
+  const unsetEvents = []
+  unset.hook.pushEvent = (...args) => unsetEvents.push(args)
+  unset.el.querySelector('[data-chart-point="0"]').dispatchEvent(new unset.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+  assert.deepEqual(unsetEvents, [])
+  unset.unmount()
+})
+
+test("hover_event debounces pointer movement to the latest shared x", async () => {
+  const html = fixture().replace('<div id="chart"', '<div id="chart" data-hover-event="hover_date"')
+  const mounted = mountHook(hooks.ChartInteraction, html, { rootId: "chart" })
+  const events = []
+  mounted.hook.pushEvent = (name, payload) => events.push({ name, payload })
+  const svg = mounted.el.querySelector("svg")
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 150 })
+
+  pointer(svg, "pointermove", 20)
+  await sleep(25)
+  pointer(svg, "pointermove", 76)
+  await sleep(180)
+  assert.deepEqual(events, [{
+    name: "hover_date",
+    payload: { chart_id: "chart", x: "2026-02-01", values: { collection: 12, inventory: null } },
+  }])
   mounted.unmount()
 })

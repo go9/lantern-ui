@@ -132,8 +132,11 @@ Render a generic series-first chart using server-computed SVG geometry.
 - `glyphs` (:boolean, default false) — Render a marker at each available point.
 - `grid` (:boolean, default true) — Show horizontal y-axis grid lines.
 - `height` (:integer, default 280) — SVG viewBox height.
+- `hover_event` (:string) — Optional debounced LiveView event pushed while hovering.
 - `id` (:string, required) — Stable chart id.
 - `orientation` (:atom, values: vertical, horizontal, default :vertical) — Bar orientation; applies to bar chart types.
+- `reference_lines` (:list, default []) — Optional horizontal reference lines: %{label, value}.
+- `select_event` (:string) — Optional LiveView event pushed when an x value is selected.
 - `series` (:list, default []) — Series maps with id, label, optional CSS token color and %{x, y} points.
 - `type` (:atom, values: line, area, points, stacked_area, bar, stacked_bar, grouped_bar, default :line) — Series renderer: line, area, points, stacked area, or bar grouping mode.
 - `value_format` (:any, default :number) — `:number`, `:currency`, or a 1-arity number formatter.
@@ -2417,6 +2420,19 @@ From `docs/recipes.md` (Generic time-series chart):
   type={@chart_type}
   curve={@curve}
   visible_series={@visible_series}
+/>
+```
+
+From `docs/recipes.md` (Generic time-series chart):
+
+```heex
+<.time_series_chart
+  id="monthly-sales"
+  type={:bar}
+  select_event="select_sales_month"
+  hover_event="hover_sales_month"
+  reference_lines={[%{label: "Average", value: @average_sales}]}
+  series={@sales_series}
 />
 ```
 

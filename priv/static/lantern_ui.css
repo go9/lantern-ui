@@ -4183,6 +4183,8 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-time-series-chart__annotation.tone-success line { stroke: var(--lantern-success); }
 .lui-time-series-chart__annotation.tone-warning line { stroke: var(--lantern-warning); }
 .lui-time-series-chart__annotation.tone-danger line { stroke: var(--lantern-danger); }
+.lui-time-series-chart__reference line { stroke: var(--lantern-accent); stroke-dasharray: 5 4; stroke-width: 1.5; }
+.lui-time-series-chart__reference text { fill: var(--lantern-fg-muted); font-size: 10px; }
 .lui-time-series-chart__point { fill: var(--lui-series-color); stroke: var(--lantern-surface); stroke-width: 1.5; }
 .lui-time-series-chart__empty { display: flex; min-height: 180px; align-items: center; justify-content: center; color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
 .lui-time-series-chart__legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; padding: 0 4px; }

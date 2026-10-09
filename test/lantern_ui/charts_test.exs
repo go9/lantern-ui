@@ -260,6 +260,52 @@ defmodule LanternUI.ChartsTest do
       assert html =~ ~s(class="lui-time-series-chart__zero")
       assert html =~ "C"
       refute html =~ ~r/NaN|Infinity|nan|inf/
+      refute html =~ "data-select-event"
+      refute html =~ "lui-time-series-chart__reference"
+    end
+
+    test "selection event receives raw x and series values; reference lines reach the table" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "selectable",
+          type: :bar,
+          select_event: "select_date",
+          hover_event: "hover_date",
+          reference_lines: [%{label: "Average", value: 12}],
+          series: [
+            %{
+              id: :sales,
+              label: "Sales",
+              points: [%{x: ~D[2026-01-01], y: 8}, %{x: ~D[2026-02-01], y: 16}]
+            },
+            %{id: :orders, label: "Orders", points: [%{x: ~D[2026-01-01], y: 2}]}
+          ]
+        )
+
+      assert html =~ ~s(data-select-event="select_date")
+      assert html =~ ~s(data-hover-event="hover_date")
+      assert html =~ ~s(data-series-id="[&quot;sales&quot;,&quot;orders&quot;]")
+
+      interaction =
+        html
+        |> Floki.parse_fragment!()
+        |> Floki.find("#selectable")
+        |> Floki.attribute("data-interaction")
+        |> hd()
+        |> Jason.decode!()
+
+      assert Enum.at(interaction, 0)["x_value"] == "2026-01-01T00:00:00.000000Z"
+      assert Enum.at(interaction, 0)["raw_values"] == [8, 2]
+      assert Enum.at(interaction, 1)["raw_values"] == [16, nil]
+      assert html =~ "lui-time-series-chart__reference"
+
+      assert File.read!("priv/static/lantern_ui.css") =~
+               ".lui-time-series-chart__reference line { stroke: var(--lantern-accent); stroke-dasharray: 5 4;"
+
+      assert html =~ "Average"
+      assert html =~ "12"
+      assert html =~ "<tfoot>"
+      refute html =~ ~r/NaN|Infinity|nan|inf/
     end
 
     test "missing x keys break a path instead of connecting across the gap" do
