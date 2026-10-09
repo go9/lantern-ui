@@ -90,7 +90,7 @@ Native server-owned chart controls inside LanternUI's existing Popover.
 - `id` (:string, required) — Stable settings popover id.
 - `rest` (:global) — Native form event attributes.
 - `series` (:list, default []) — Series to expose as visibility checkboxes.
-- `type` (:string, default "line") — Current chart type.
+- `type` (:any, default "line") — Current chart type as an atom or string.
 - `visible_series` (:list) — Visible ids; nil checks every series.
 Slots:
 - `:trigger` — Optional custom popover trigger; defaults to a labeled Settings button.

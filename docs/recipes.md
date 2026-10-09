@@ -467,8 +467,9 @@ Popover and sends one native `phx-change` event; the parent validates the nested
 ```
 
 The settings form submits `%{"chart_settings" => params}` in one event. `type`
-and `curve` are strings; `visible_series` is an array of checked ids and is
-omitted when none are checked. `grid`, `axes`, `glyphs`, `cumulative`, and
+and `curve` are strings in the submitted event; the component accepts chart
+types as either atoms or strings. `visible_series` is an array of checked ids
+and is omitted when none are checked. `grid`, `axes`, `glyphs`, `cumulative`, and
 `compare_previous` submit as `"true"` or `"false"` strings. Settings and range
 state stay with the parent LiveView. The chart's hover tooltip follows the
 nearest shared x value, keyboard points support arrows plus Home/End/Escape, and

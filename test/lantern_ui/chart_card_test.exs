@@ -36,6 +36,41 @@ defmodule LanternUI.ChartCardTest do
     assert :binary.match(html, "Chart content") < :binary.match(html, "Prices update daily")
   end
 
+  test "chart_card omits optional slots and a nil value" do
+    html =
+      render(fn assigns ->
+        ~H"""
+        <Charts.chart_card id="empty-card" title="Empty chart" value={nil}>
+          Chart content
+        </Charts.chart_card>
+        """
+      end)
+
+    assert html =~ "Chart content"
+    refute html =~ "lui-chart-card__value"
+    refute html =~ "lui-chart-card__tabs"
+    refute html =~ "lui-chart-card__ranges"
+    refute html =~ "lui-chart-card__settings"
+    refute html =~ "lui-chart-card__footer"
+  end
+
+  test "multiple chart cards keep their section and heading ids distinct" do
+    html =
+      render(fn assigns ->
+        ~H"""
+        <div>
+          <Charts.chart_card id="first-card" title="First">First chart</Charts.chart_card>
+          <Charts.chart_card id="second-card" title="Second">Second chart</Charts.chart_card>
+        </div>
+        """
+      end)
+
+    assert html =~ ~s(id="first-card" class="lui-chart-card")
+    assert html =~ ~s(id="first-card-title")
+    assert html =~ ~s(id="second-card" class="lui-chart-card")
+    assert html =~ ~s(id="second-card-title")
+  end
+
   test "chart_settings emits native fields under the documented form event and defaults visible series" do
     html =
       render(fn assigns ->
@@ -65,5 +100,52 @@ defmodule LanternUI.ChartCardTest do
     assert html =~ ~s(name="chart_settings[compare_previous]" value="true" checked)
     assert html =~ "Cumulative values"
     assert html =~ "Compare previous period"
+  end
+
+  test "chart_settings accepts atom chart types and marks the selected atom option" do
+    html =
+      render(fn assigns ->
+        ~H"""
+        <Charts.chart_settings
+          id="atom-settings"
+          type={:stacked_area}
+          allowed_types={[:line, :stacked_area]}
+          series={[]}
+        />
+        """
+      end)
+
+    assert html =~ ~s(<option value="stacked_area" selected>)
+    assert html =~ "Stacked area"
+    assert html =~ ~s(<option value="line">)
+  end
+
+  test "chart_settings preserves an explicitly empty visible series selection" do
+    html =
+      render(fn assigns ->
+        ~H"""
+        <Charts.chart_settings
+          id="empty-selection-settings"
+          series={[%{id: :collection, label: "Collection"}]}
+          visible_series={[]}
+        />
+        """
+      end)
+
+    refute html =~ ~s(name="chart_settings[visible_series][]" value="collection" checked)
+  end
+
+  test "chart_settings renders a custom trigger without its default trigger" do
+    html =
+      render(fn assigns ->
+        ~H"""
+        <Charts.chart_settings id="custom-settings">
+          <:trigger><button type="button">Custom settings</button></:trigger>
+        </Charts.chart_settings>
+        """
+      end)
+
+    assert html =~ "Custom settings"
+    refute html =~ ~s(class="lui-chart-settings__trigger")
   end
 end

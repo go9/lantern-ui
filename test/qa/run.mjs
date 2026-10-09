@@ -261,6 +261,25 @@ if (CHARTS_ONLY) {
             await page.screenshot({ path: `${cardDir}/${vw}-${theme}-card-settings.png`, fullPage: true })
             await page.keyboard.press("Escape")
             await page.waitForFunction(() => document.querySelector('#qa-chart-settings [data-part="content"]')?.hidden, { timeout: 2000 })
+            await page.emulateMediaType("print")
+            const printControlsHidden = await page.evaluate(() => {
+              const hidden = (selector) => {
+                const element = document.querySelector(selector)
+                return !element || getComputedStyle(element).display === "none"
+              }
+              return {
+                cardSettings: hidden(".lui-chart-card__settings"),
+                trigger: hidden("#qa-chart-settings .lui-chart-settings__trigger"),
+                form: hidden("#qa-chart-settings .lui-chart-settings"),
+                chartVisible: getComputedStyle(document.querySelector("#qa-time-series")).display !== "none",
+              }
+            })
+            if (!printControlsHidden.cardSettings || !printControlsHidden.trigger || !printControlsHidden.form) {
+              row.problems.push("print still shows chart settings controls")
+            }
+            if (!printControlsHidden.chartVisible) row.problems.push("print hides the static chart")
+            await page.screenshot({ path: `${cardDir}/${vw}-${theme}-card-settings-print.png`, fullPage: true })
+            await page.emulateMediaType("screen")
             await page.evaluate(() => document.querySelector('#qa-time-series [data-chart-point="0"]')?.focus())
             await page.keyboard.press("Escape")
             await page.waitForFunction(() => document.querySelector('#qa-time-series [data-part="crosshair"]')?.closest("g[hidden]"), { timeout: 2000 })

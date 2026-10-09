@@ -899,7 +899,7 @@ defmodule LanternUI.Charts do
     doc: "Chart type values offered by the native select."
   )
 
-  attr(:type, :string, default: "line", doc: "Current chart type.")
+  attr(:type, :any, default: "line", doc: "Current chart type as an atom or string.")
   attr(:curve, :string, default: "linear", doc: "Current line or area curve.")
   attr(:visible_series, :list, default: nil, doc: "Visible ids; nil checks every series.")
   attr(:grid, :boolean, default: true, doc: "Whether horizontal grid lines are enabled.")
@@ -916,16 +916,16 @@ defmodule LanternUI.Charts do
 
   def chart_settings(assigns) do
     types =
-      Enum.filter(
-        assigns.allowed_types,
-        &(&1 in ~w(line area stacked_area bar stacked_bar grouped_bar points))
-      )
+      assigns.allowed_types
+      |> Enum.map(&to_string/1)
+      |> Enum.filter(&(&1 in ~w(line area stacked_area bar stacked_bar grouped_bar points)))
 
     visible_ids = assigns.visible_series || Enum.map(assigns.series, &to_string(&1.id))
 
     assigns =
       assigns
       |> assign(:allowed_types, if(types == [], do: ["line"], else: types))
+      |> assign(:type, to_string(assigns.type))
       |> assign(:visible_ids, MapSet.new(Enum.map(visible_ids, &to_string/1)))
 
     ~H"""
@@ -1022,10 +1022,14 @@ defmodule LanternUI.Charts do
     """
   end
 
-  defp chart_type_label("stacked_area"), do: "Stacked area"
-  defp chart_type_label("stacked_bar"), do: "Stacked bar"
-  defp chart_type_label("grouped_bar"), do: "Grouped bar"
-  defp chart_type_label(type), do: String.capitalize(type)
+  defp chart_type_label(type) do
+    case to_string(type) do
+      "stacked_area" -> "Stacked area"
+      "stacked_bar" -> "Stacked bar"
+      "grouped_bar" -> "Grouped bar"
+      type -> String.capitalize(type)
+    end
+  end
 
   defp time_series_geometry(assigns) do
     series = normalize_time_series(assigns.series)

@@ -4208,6 +4208,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 @media print {
   .lui-time-series-chart__legend { break-inside: avoid; }
   .lui-time-series-chart__interaction, .lui-time-series-chart__focus-point, .lui-time-series-chart__live { display: none !important; }
+  .lui-chart-card__settings, .lui-chart-settings__trigger, .lui-chart-settings { display: none !important; }
   .lui-time-series-chart__table-details > summary { display: none; }
   .lui-time-series-chart__table-details > table { display: table; }
 }
