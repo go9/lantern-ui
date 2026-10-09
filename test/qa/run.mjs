@@ -143,6 +143,10 @@ if (CHARTS_ONLY) {
           })
           if (!box.width || !box.height) row.problems.push("chart SVG has no visible dimensions")
           if (type === "line") {
+            const initialHidden = await page.$eval('#qa-time-series .lui-time-series-chart__interaction', (overlay) => overlay.hasAttribute("hidden") && getComputedStyle(overlay).display === "none")
+            if (!initialHidden) row.problems.push("chart hover overlay is visible before the first interaction")
+            const chartShots = `${SHOTS}/charts`
+            await page.screenshot({ path: `${chartShots}/${vw}-${theme}-line.png`, fullPage: true })
             await page.evaluate(() => document.querySelector('[data-chart-point="0"]')?.focus())
             await page.keyboard.press("ArrowRight")
             const keyboard = await page.$eval('#qa-time-series [data-part="live"]', (el) => el.textContent)
@@ -181,7 +185,7 @@ if (CHARTS_ONLY) {
                   plotLeft: rect.left + Number(tooltip.dataset.plotLeft) * scale,
                   plotRight: rect.left + Number(tooltip.dataset.plotRight) * scale,
                   crosshairX: crosshair.left,
-                  visible: !svg.querySelector('[data-part="crosshair"]').closest("g[hidden]"),
+                  visible: !svg.querySelector('[data-part="crosshair"]').closest("g[hidden]") && getComputedStyle(svg.querySelector('[data-part="crosshair"]').closest("g")).display !== "none",
                   label: tooltip.querySelector('[data-part="tooltip-date"]').textContent,
                 }
               })
@@ -197,6 +201,7 @@ if (CHARTS_ONLY) {
             await sleep(80)
             const mouseFirst = await verifyTooltip(firstPoint.label)
             await page.screenshot({ path: `${shotDir}/${vw}-${theme}-mouse-first.png`, fullPage: true })
+            await page.screenshot({ path: `${shotDir}/${vw}-${theme}-interaction.png`, fullPage: true })
             await page.mouse.move(lastClient.x, lastClient.y)
             await sleep(80)
             const mouseLast = await verifyTooltip(lastPoint.label)
@@ -232,8 +237,7 @@ if (CHARTS_ONLY) {
           if (errors.length) row.problems.push(`pageerror: ${errors[0]}`)
           const dir = `${SHOTS}/charts`
           fs.mkdirSync(dir, { recursive: true })
-          await page.screenshot({ path: `${dir}/${vw}-${theme}-${type}.png`, fullPage: true })
-          if (type === "line") await page.screenshot({ path: `${dir}/${vw}-${theme}-interaction.png`, fullPage: true })
+          if (type !== "line") await page.screenshot({ path: `${dir}/${vw}-${theme}-${type}.png`, fullPage: true })
         } catch (error) {
           row.problems.push(`error: ${error.message.split("\n")[0]}`)
         }

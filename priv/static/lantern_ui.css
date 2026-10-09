@@ -4189,6 +4189,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-time-series-chart__legend-item { display: inline-flex; align-items: center; gap: 6px; color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
 .lui-time-series-chart__legend-item i { width: 10px; height: 3px; border-radius: 2px; background: var(--lui-series-color); }
 .lui-time-series-chart__interaction { pointer-events: none; }
+.lui-time-series-chart__interaction[hidden] { display: none; }
 .lui-time-series-chart__interaction [data-part="crosshair"] { stroke: var(--lantern-fg-muted); stroke-width: 1; stroke-dasharray: 4 3; }
 .lui-time-series-chart__interaction [data-part="series-point"] { fill: var(--lui-series-color); stroke: var(--lantern-surface); stroke-width: 2; r: 4px; }
 .lui-time-series-chart__interaction [data-part="tooltip"] rect { fill: var(--lantern-surface); stroke: var(--lantern-border-strong); stroke-width: 1; }
