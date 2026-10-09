@@ -3,6 +3,8 @@ defmodule LanternUI.QA.DateRangeLive do
   use Phoenix.LiveView
   use LanternUI
 
+  alias LanternUI.Components.DateRangePopover
+
   def mount(params, _session, socket) do
     theme = if params["theme"] == "dark", do: "dark", else: "light"
 
@@ -37,12 +39,27 @@ defmodule LanternUI.QA.DateRangeLive do
   end
 
   def handle_event("range_1_change", %{"date_range" => params}, socket) do
-    {:noreply, assign(socket, :date_range_1, params)}
+    {:noreply, assign(socket, :date_range_1, resolve_preset(params))}
   end
 
   def handle_event("range_2_change", %{"chart_range" => params}, socket) do
-    {:noreply, assign(socket, :date_range_2, params)}
+    {:noreply, assign(socket, :date_range_2, resolve_preset(params))}
   end
+
+  defp resolve_preset(%{"preset" => preset} = params) do
+    case DateRangePopover.preset_range(preset, ~D[2026-10-09]) do
+      %{start_date: start_date, end_date: end_date} ->
+        Map.merge(params, %{
+          "start_date" => Date.to_iso8601(start_date),
+          "end_date" => Date.to_iso8601(end_date)
+        })
+
+      nil ->
+        params
+    end
+  end
+
+  defp resolve_preset(params), do: params
 
   def render(assigns) do
     ~H"""
@@ -78,6 +95,8 @@ defmodule LanternUI.QA.DateRangeLive do
           <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
             <.date_range_popover
               id="qa-date-popover-1"
+              today={~D[2026-10-09]}
+              time_zone="Etc/UTC"
               preset={@date_range_1["preset"]}
               start_date={@date_range_1["start_date"]}
               end_date={@date_range_1["end_date"]}
@@ -105,6 +124,8 @@ defmodule LanternUI.QA.DateRangeLive do
             <:range_controls>
               <.date_range_popover
                 id="qa-date-popover-2"
+                today={~D[2026-10-09]}
+                time_zone="Etc/UTC"
                 name_prefix="chart_range"
                 preset={@date_range_2["preset"]}
                 start_date={@date_range_2["start_date"]}
@@ -126,6 +147,8 @@ defmodule LanternUI.QA.DateRangeLive do
           <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
             <.date_range_popover
               id="qa-date-popover-error"
+              today={~D[2026-10-09]}
+              time_zone="Etc/UTC"
               preset={@date_range_custom["preset"]}
               start_date={@date_range_custom["start_date"]}
               end_date={@date_range_custom["end_date"]}

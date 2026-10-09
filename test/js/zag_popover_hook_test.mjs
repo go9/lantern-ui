@@ -27,7 +27,9 @@ function fixture({ id = "pop1", mode = "client", open = false, extraRoot = "" } 
     <div data-scope="popover" data-part="trigger" class="lui-popover-trigger"><button>Filters</button></div>
     <div data-scope="popover" data-part="positioner">
       <div data-scope="popover" data-part="content" class="lui-popover-panel" role="dialog" hidden>
+        <button id="panel-first">First</button>
         <div id="panel-body">Body</div>
+        <button id="panel-last">Last</button>
       </div>
     </div>
   </div>`
@@ -77,6 +79,32 @@ test("client mode: clicking inside the panel does not close it (surface, not men
   )
   await sleep()
   assert.equal(component().api.open, true)
+})
+
+test("modal popover keeps Tab focus inside the open panel", async () => {
+  const { el, component, document, window } = mount(
+    fixture({ extraRoot: 'data-modal="true"' })
+  )
+  window.HTMLElement.prototype.getClientRects = function getClientRects() {
+    return this.closest("[hidden]") ? [] : [{}]
+  }
+  await sleep()
+  el.querySelector('[data-part="trigger"] button').click()
+  await waitFor(() => component().api.open === true)
+
+  const first = el.querySelector("#panel-first")
+  const last = el.querySelector("#panel-last")
+  assert.equal(content(el).getAttribute("aria-modal"), "true")
+  await sleep(80)
+  last.focus()
+  last.dispatchEvent(new window.KeyboardEvent("keydown", {
+    key: "Tab",
+    bubbles: true,
+    cancelable: true,
+  }))
+  await sleep()
+
+  assert.equal(document.activeElement.id, first.id)
 })
 
 test("client mode: outside pointerdown dismisses the panel", async () => {

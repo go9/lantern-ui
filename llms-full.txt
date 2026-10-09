@@ -782,6 +782,8 @@ Renders a date range popover with presets and comparison toggling.
 - `rest` (:global) — Global form event attributes.
 - `show_compare` (:boolean, default true) — Whether to render the comparison toggle checkbox.
 - `start_date` (:any) — Current start date (ISO string or Date struct).
+- `time_zone` (:string, default "Etc/UTC") — Time zone used to determine today's date when `today` is not supplied.
+- `today` (:any) — Date or DateTime used as the current day for preset ranges; defaults to the selected time zone's date.
 - `trigger_label` (:string) — Optional custom label on the trigger button; auto-generated when omitted.
 Slots:
 - `:trigger` — Optional custom trigger element.
@@ -1518,6 +1520,7 @@ Click-triggered floating panel holding arbitrary content.
 - `container_class` (:any) — Extra classes on the popover root wrapper.
 - `controlled` (:boolean, default false) — Server-driven open state: `open` is truth, patches flow into the machine.
 - `id` (:string) — Stable DOM id for the overlay hook; auto-generated when omitted, mirroring Fluxon's popover (drop-in parity).
+- `modal` (:boolean, default false) — Trap focus inside the open popover and make it modal.
 - `on_change` (:string) — Server event pushed on open change (`lantern:popover:set-open` replies).
 - `on_change_client` (:string) — Bubbling DOM CustomEvent dispatched on open change.
 - `open` (:boolean) — Open state for `controlled` mode (client mode ignores it).
@@ -2245,6 +2248,20 @@ From `docs/recipes.md` (Metric cards with trends):
     sparkline_label={metric.trend_label}
   />
 </.stat_grid>
+```
+
+From `docs/recipes.md` (Date range filter):
+
+```heex
+<.date_range_popover
+  id="activity-range"
+  preset={@range["preset"]}
+  start_date={@range["start_date"]}
+  end_date={@range["end_date"]}
+  today={@today}
+  time_zone="Etc/UTC"
+  phx-change="range_changed"
+/>
 ```
 
 From `docs/recipes.md` (Linear-style list row):

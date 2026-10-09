@@ -383,6 +383,20 @@ From `docs/recipes.md` (Metric cards with trends):
 </.stat_grid>
 ```
 
+From `docs/recipes.md` (Date range filter):
+
+```heex
+<.date_range_popover
+  id="activity-range"
+  preset={@range["preset"]}
+  start_date={@range["start_date"]}
+  end_date={@range["end_date"]}
+  today={@today}
+  time_zone="Etc/UTC"
+  phx-change="range_changed"
+/>
+```
+
 From `docs/recipes.md` (Linear-style list row):
 
 ```heex

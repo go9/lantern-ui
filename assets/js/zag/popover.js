@@ -74,6 +74,7 @@ function popoverLayoutProps(el) {
   return {
     id: el.id,
     disabled: getBoolean(el, "disabled"),
+    modal: getBoolean(el, "modal"),
     dir: getDir(el),
     positioning: floating({ placement: getString(el, "placement") || "bottom-start" }),
   }

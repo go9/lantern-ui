@@ -61,6 +61,17 @@ defmodule LanternUI.Components.DateRangePopover do
     doc: "Current end date (ISO string or Date struct)."
   )
 
+  attr(:today, :any,
+    default: nil,
+    doc:
+      "Date or DateTime used as the current day for preset ranges; defaults to the selected time zone's date."
+  )
+
+  attr(:time_zone, :string,
+    default: "Etc/UTC",
+    doc: "Time zone used to determine today's date when `today` is not supplied."
+  )
+
   attr(:min, :any, default: nil, doc: "Optional earliest selectable date.")
   attr(:max, :any, default: nil, doc: "Optional latest selectable date.")
 
@@ -134,8 +145,13 @@ defmodule LanternUI.Components.DateRangePopover do
     norm_preset = normalize_preset(assigns.preset)
     presets = Enum.map(assigns.presets, &normalize_preset/1)
 
-    # Compute or format default start and end dates if not explicitly provided
-    {start_val, end_val} = resolve_dates(norm_preset, assigns.start_date, assigns.end_date)
+    today =
+      if norm_preset in ~w(7D 30D 90D MTD QTD YTD) do
+        resolve_today(assigns.today, assigns.time_zone)
+      end
+
+    {start_val, end_val} =
+      resolve_dates(norm_preset, assigns.start_date, assigns.end_date, today)
 
     display_label =
       assigns.trigger_label || format_range_label(norm_preset, start_val, end_val)
@@ -154,6 +170,7 @@ defmodule LanternUI.Components.DateRangePopover do
     <Popover.popover
       id={@id}
       placement={@placement}
+      modal
       class={Class.merge(["lui-date-range-popover__panel", @class])}
     >
       <%= if @trigger != [] do %>
@@ -476,19 +493,28 @@ defmodule LanternUI.Components.DateRangePopover do
 
   defp parse_bound(_), do: ~D[1970-01-01]
 
-  defp resolve_dates(preset, start_d, end_d) do
+  defp resolve_dates(preset, start_d, end_d, today) do
     cond do
-      start_d != nil or end_d != nil ->
-        {iso_date(start_d), iso_date(end_d)}
-
       preset in ~w(7D 30D 90D MTD QTD YTD) ->
-        range = preset_range(preset)
+        range = preset_range(preset, today)
         {iso_date(range.start_date), iso_date(range.end_date)}
 
       true ->
-        {nil, nil}
+        {iso_date(start_d), iso_date(end_d)}
     end
   end
+
+  defp resolve_today(%Date{} = today, _time_zone), do: today
+  defp resolve_today(%DateTime{} = today, _time_zone), do: DateTime.to_date(today)
+
+  defp resolve_today(today, _time_zone) when is_binary(today) do
+    case Date.from_iso8601(today) do
+      {:ok, date} -> date
+      _ -> raise ArgumentError, "today must be a Date, DateTime, or ISO-8601 date string"
+    end
+  end
+
+  defp resolve_today(nil, time_zone), do: DateTime.now!(time_zone) |> DateTime.to_date()
 
   defp iso_date(nil), do: nil
   defp iso_date(%Date{} = d), do: Date.to_iso8601(d)

@@ -19,6 +19,7 @@ defmodule LanternUI.DateRangePopoverTest do
       assert html =~ "Last 30 days"
       assert html =~ "lui-date-range-popover__panel"
       assert html =~ "role=\"radiogroup\""
+      assert html =~ "data-modal"
       assert html =~ "aria-label=\"Date range presets\""
       assert html =~ "value=\"30D\""
       assert html =~ "checked"
@@ -73,6 +74,37 @@ defmodule LanternUI.DateRangePopoverTest do
       assert html =~ "name=\"analytics[start_date]\" value=\"2026-09-01\""
       assert html =~ "name=\"analytics[end_date]\" value=\"2026-09-30\""
       assert html =~ "name=\"analytics[compare_previous]\""
+    end
+
+    test "a selected preset overrides stale dates using the injected date and zone" do
+      html =
+        render_component(&DateRangePopover.date_range_popover/1,
+          id: "injected-today",
+          preset: "7D",
+          start_date: "2026-01-01",
+          end_date: "2026-01-02",
+          today: ~D[2026-10-09],
+          time_zone: "America/New_York"
+        )
+
+      assert html =~ "name=\"date_range[start_date]\" value=\"2026-10-03\""
+      assert html =~ "name=\"date_range[end_date]\" value=\"2026-10-09\""
+      refute html =~ "2026-01-01"
+      refute html =~ "2026-01-02"
+    end
+
+    test "custom ranges retain their caller supplied dates" do
+      html =
+        render_component(&DateRangePopover.date_range_popover/1,
+          id: "custom-preserves-dates",
+          preset: "custom",
+          start_date: "2026-10-01",
+          end_date: "2026-10-08",
+          today: ~D[2026-10-09]
+        )
+
+      assert html =~ "name=\"date_range[start_date]\" value=\"2026-10-01\""
+      assert html =~ "name=\"date_range[end_date]\" value=\"2026-10-08\""
     end
 
     test "renders comparison toggle and custom label" do

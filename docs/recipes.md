@@ -79,6 +79,22 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 </.stat_grid>
 ```
 
+## Date range filter
+
+**When to use:** A dashboard date filter with standard presets and a custom range. The selected preset owns its calculated dates; custom mode keeps the caller's dates. Supply `today` (and `time_zone` when deriving it) when the page needs reproducible ranges. The popover traps focus while open.
+
+```heex
+<.date_range_popover
+  id="activity-range"
+  preset={@range["preset"]}
+  start_date={@range["start_date"]}
+  end_date={@range["end_date"]}
+  today={@today}
+  time_zone="Etc/UTC"
+  phx-change="range_changed"
+/>
+```
+
 ## Linear-style list row
 
 **When to use:** A dense issue row — priority glyph, id, status glyph, title, tags, progress ring, date — in a flat list.

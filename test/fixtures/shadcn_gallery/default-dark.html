@@ -714,6 +714,116 @@
 /* ── Dropdown menu ── */
 .lui-date-range-row { display: flex; align-items: center; gap: 0.5rem; }
 .lui-date-range-sep { color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
+
+/* ── Date range popover ── */
+.lui-date-range-popover { display: inline-block; position: relative; }
+.lui-date-range-popover__trigger {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  min-height: 2rem; padding: 0 0.65rem;
+  font-family: inherit; font-size: var(--lantern-text-sm); font-weight: 500;
+  color: var(--lantern-fg); background: var(--lantern-surface);
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm);
+  cursor: pointer; transition: all var(--lantern-duration) var(--lantern-ease);
+}
+.lui-date-range-popover__trigger:hover:not(:disabled) {
+  background: var(--lantern-surface-hover); border-color: var(--lantern-border-strong);
+}
+.lui-date-range-popover__trigger:focus-visible {
+  outline: 2px solid var(--lantern-ring); outline-offset: 2px;
+}
+.lui-date-range-popover__trigger:disabled {
+  opacity: 0.5; cursor: not-allowed;
+}
+.lui-date-range-popover__calendar-icon { width: 0.95rem; height: 0.95rem; color: var(--lantern-fg-muted); flex-shrink: 0; }
+.lui-date-range-popover__trigger-text { white-space: nowrap; }
+.lui-date-range-popover__chevron { width: 0.85rem; height: 0.85rem; color: var(--lantern-fg-muted); flex-shrink: 0; }
+.lui-date-range-popover__panel {
+  width: 270px; max-width: calc(100vw - 2rem);
+  padding: 0.75rem; border-radius: var(--lantern-radius-md, 9px);
+  background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
+  box-shadow: var(--lantern-shadow-md);
+}
+.lui-date-range-popover__form { display: flex; flex-direction: column; gap: 0.75rem; }
+.lui-date-range-popover__presets {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.375rem;
+}
+.lui-date-range-popover__preset-pill {
+  display: flex; align-items: center; justify-content: center;
+  padding: 0.35rem 0.25rem; font-size: var(--lantern-text-xs, 0.75rem); font-weight: 500;
+  border-radius: var(--lantern-radius-sm); border: 1px solid var(--lantern-border);
+  background: var(--lantern-surface); color: var(--lantern-fg-muted);
+  cursor: pointer; user-select: none; transition: all var(--lantern-duration) var(--lantern-ease);
+}
+.lui-date-range-popover__preset-pill:hover {
+  background: var(--lantern-surface-hover); color: var(--lantern-fg);
+}
+.lui-date-range-popover__preset-pill.is-active {
+  background: var(--lantern-primary); color: var(--lantern-primary-fg, #ffffff);
+  border-color: var(--lantern-primary); font-weight: 600;
+}
+.lui-date-range-popover__inputs {
+  display: flex; align-items: flex-end; gap: 0.375rem;
+}
+.lui-date-range-popover__field {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.2rem;
+}
+.lui-date-range-popover__label {
+  font-size: var(--lantern-text-xs, 0.75rem); color: var(--lantern-fg-muted); font-weight: 500;
+}
+.lui-date-range-popover__input {
+  width: 100%; min-height: 1.85rem; padding: 0.2rem 0.35rem;
+  font-family: inherit; font-size: var(--lantern-text-xs, 0.75rem);
+  background: var(--lantern-surface); color: var(--lantern-fg);
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm);
+  outline: none; box-sizing: border-box;
+}
+.lui-date-range-popover__input:focus {
+  border-color: var(--lantern-ring); box-shadow: 0 0 0 1px var(--lantern-ring);
+}
+.lui-date-range-popover__input[aria-invalid="true"] {
+  border-color: var(--lantern-danger, #dc2626);
+}
+.lui-date-range-popover__input:disabled {
+  opacity: 0.6; cursor: not-allowed; background: var(--lantern-surface-subtle, transparent);
+}
+.lui-date-range-popover__sep {
+  align-self: center; font-size: var(--lantern-text-xs, 0.75rem); color: var(--lantern-fg-muted);
+  padding: 0 0.1rem; margin-bottom: 0.2rem;
+}
+.lui-date-range-popover__compare {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: var(--lantern-text-xs, 0.75rem); color: var(--lantern-fg-muted);
+  cursor: pointer; user-select: none;
+}
+.lui-date-range-popover__compare input[type="checkbox"] {
+  accent-color: var(--lantern-primary); cursor: pointer;
+}
+.lui-date-range-popover__error {
+  display: flex; align-items: center; gap: 0.375rem;
+  padding: 0.375rem 0.5rem; border-radius: var(--lantern-radius-sm);
+  background: var(--lantern-tone-danger-bg, #fef2f2);
+  color: var(--lantern-danger, #dc2626);
+  font-size: var(--lantern-text-xs, 0.75rem); font-weight: 500;
+}
+.lui-date-range-popover__error svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+.lui-date-range-popover__actions {
+  display: flex; justify-content: flex-end; padding-top: 0.25rem;
+}
+.lui-date-range-popover__apply-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 1.75rem; padding: 0 0.75rem;
+  font-family: inherit; font-size: var(--lantern-text-xs, 0.75rem); font-weight: 600;
+  border-radius: var(--lantern-radius-sm); border: none;
+  background: var(--lantern-primary); color: var(--lantern-primary-fg, #ffffff);
+  cursor: pointer; transition: background var(--lantern-duration) var(--lantern-ease);
+}
+.lui-date-range-popover__apply-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+.lui-date-range-popover__apply-btn:disabled {
+  opacity: 0.5; cursor: not-allowed;
+}
+
 .lui-popover { display: inline-block; position: relative; }
 .lui-popover-panel { z-index: var(--lantern-z-popover, 70); padding: 0;
   max-height: var(--available-height, none); max-width: var(--available-width, none); overflow-y: auto;
@@ -5432,7 +5542,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-773" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-2438" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5449,7 +5559,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-805" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-2470" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5466,7 +5576,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-837" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-2502" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5483,7 +5593,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-869" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-2534" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
