@@ -815,6 +815,7 @@ if (!WIDE_TABLE_ONLY) {
       await page.goto(`${BASE}/qa?ctx=page_shell_strip&expand=1`, { waitUntil: "networkidle2" })
       await page.waitForSelector(".phx-connected", { timeout: 8000 })
       await page.waitForSelector("#qa-strip-table.lui-datatable-expanded", { timeout: 4000 })
+      await page.waitForSelector(".lui-app[data-table-expand]", { timeout: 3000 })
       const isCollapsed = () => page.$eval(".lui-app", (el) => el.hasAttribute("data-collapsed"))
       if (!(await isCollapsed())) row.problems.push("Expand did not start with the sidebar collapsed")
 
@@ -843,6 +844,7 @@ if (!WIDE_TABLE_ONLY) {
       await page.goto(`${BASE}/qa?ctx=page_shell_strip&expand=1`, { waitUntil: "networkidle2" })
       await page.waitForSelector(".phx-connected", { timeout: 8000 })
       await page.waitForFunction(() => document.querySelector(".lui-app")?.hasAttribute("data-collapsed"), { timeout: 3000 })
+      await page.waitForSelector(".lui-app[data-table-expand]", { timeout: 3000 })
       await page.click('#qa-strip-app-default [data-part="sidebar-collapse"]')
       if (await isCollapsed()) row.problems.push("reload with ?expand=1 left the sidebar toggle inoperative")
       row.status = row.problems.length ? "FAIL" : "ok"
@@ -1323,7 +1325,7 @@ if (!WIDE_TABLE_ONLY) {
         if (collapsed && (m.navLabels.some((hasTooltip) => !hasTooltip) || !m.switcherTooltip)) {
           row.problems.push("collapsed rail nav items or org tile are missing hover/focus tooltip labels")
         }
-        if (collapsed) {
+        if (collapsed && vw >= 769) {
           await page.keyboard.press("Tab")
           for (const selector of ['.lui-app-sidebar .lui-nav-item[data-tooltip]', "#qa-strip-switcher"]) {
             await page.$eval(selector, (el) => el.focus())

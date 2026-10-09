@@ -90,20 +90,32 @@ test("sidebar transient collapse never writes localStorage and restores its prio
   m.unmount()
 })
 
-test("manual sidebar collapse during expansion persists the reader preference", () => {
-  const m = mountHook(hooks.LanternSidebar, '<div id="shell"><button data-part="sidebar-collapse"></button></div>', {
+test("manual sidebar toggle during expansion is session-only and survives patches", () => {
+  const m = mountHook(hooks.LanternSidebar, '<div id="shell"><div data-expandable="true" data-expanded="true" data-table-id="records"></div><button data-part="sidebar-collapse"></button></div>', {
     rootId: "shell",
   })
+  m.window.localStorage.setItem("lui-sidebar:shell", "true")
+  m.hook.syncCollapsed()
+  m.hook.syncTablesFromDOM()
+  assert.equal(m.el.hasAttribute("data-collapsed"), true)
+
   m.el.dispatchEvent(
     new m.window.CustomEvent("lantern:table-expand", { bubbles: true, detail: { tableId: "records", expanded: true } })
   )
   m.document.querySelector("[data-part=sidebar-collapse]").dispatchEvent(
     new m.window.MouseEvent("click", { bubbles: true })
   )
-  assert.equal(m.window.localStorage.getItem("lui-sidebar:shell"), "false")
+  assert.equal(m.el.hasAttribute("data-collapsed"), false)
+  assert.equal(m.window.localStorage.getItem("lui-sidebar:shell"), "true")
+  m.hook.updated()
+  assert.equal(m.el.hasAttribute("data-collapsed"), false)
+
+  m.document.querySelector("[data-table-id=records]").dataset.expanded = "false"
   m.el.dispatchEvent(
     new m.window.CustomEvent("lantern:table-expand", { bubbles: true, detail: { tableId: "records", expanded: false } })
   )
+  m.hook.updated()
   assert.equal(m.el.hasAttribute("data-collapsed"), false)
+  assert.equal(m.window.localStorage.getItem("lui-sidebar:shell"), "true")
   m.unmount()
 })
