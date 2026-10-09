@@ -120,6 +120,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `date_time_picker/1` — Date + time picker (`YYYY-MM-DDTHH:MM:SS.mmm`).
 - `time_picker/1` — Time-only picker (`HH:MM:SS.mmm`, segments only — no popover).
 
+### LanternUI.Components.DateRangePopover
+
+- `date_range_popover/1` — Renders a date range popover with presets and comparison toggling.
+
 ### LanternUI.Components.DatetimeField
 
 - `datetime_field/1` — A segmented, directly-editable date/time field — the trigger primitive the date pickers compose (HeroUI-style: `2 / 3 / 2026, 8:45 AM`).

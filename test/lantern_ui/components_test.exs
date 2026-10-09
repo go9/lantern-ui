@@ -537,6 +537,7 @@ defmodule LanternUI.ComponentsTest do
                :command,
                :data_table,
                :date_picker,
+               :date_range_popover,
                :datetime_field,
                :description_list,
                :dropdown,

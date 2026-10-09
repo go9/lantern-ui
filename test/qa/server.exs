@@ -9,6 +9,7 @@ Code.require_file("matrix_live.ex", __DIR__)
 Code.require_file("charts_live.ex", __DIR__)
 Code.require_file("tiles_live.ex", __DIR__)
 Code.require_file("stats_live.ex", __DIR__)
+Code.require_file("date_range_live.ex", __DIR__)
 
 defmodule LanternUI.QA.Layouts do
   use Phoenix.Component
@@ -59,6 +60,7 @@ defmodule LanternUI.QA.Router do
     live("/charts", LanternUI.QA.ChartsLive)
     live("/tiles", LanternUI.QA.TilesLive)
     live("/stats", LanternUI.QA.StatsLive)
+    live("/date_range", LanternUI.QA.DateRangeLive)
   end
 end
 

@@ -756,6 +756,36 @@ Slots:
 - `:outer_prefix` — Affix outside the control, before the wrap.
 - `:outer_suffix` — Affix outside the control, after the wrap.
 
+### LanternUI.Components.DateRangePopover
+
+Anchored popover for date-range selection with standard presets and comparison toggling.
+
+#### `date_range_popover/1`
+
+Renders a date range popover with presets and comparison toggling.
+
+- `apply_button` (:boolean, default false) — Whether to render an explicit Apply submit button.
+- `class` (:any) — Extra classes merged onto the popover panel.
+- `compare_label` (:string, default "Compare with previous period") — Label for the comparison checkbox.
+- `compare_previous` (:boolean, default false) — Whether comparison with previous period is checked.
+- `disabled` (:boolean, default false) — Whether the control is disabled.
+- `editable_dates` (:boolean, default true) — Whether date inputs are editable even when a non-custom preset is selected.
+- `end_date` (:any) — Current end date (ISO string or Date struct).
+- `error` (:string) — Optional validation error message to display in the panel.
+- `id` (:string, required) — Stable popover DOM id.
+- `max` (:any) — Optional latest selectable date.
+- `min` (:any) — Optional earliest selectable date.
+- `name_prefix` (:string, default "date_range") — Form parameter namespace.
+- `placement` (:string, values: bottom-start, bottom-end, top-start, top-end, default "bottom-start") — Popover anchor placement.
+- `preset` (:string, default "30D") — Active preset code; one of 7D, 30D, 90D, MTD, QTD, YTD, or custom.
+- `presets` (:list, default ["7D", "30D", "90D", "MTD", "QTD", "YTD", "custom"]) — List of preset codes offered.
+- `rest` (:global) — Global form event attributes.
+- `show_compare` (:boolean, default true) — Whether to render the comparison toggle checkbox.
+- `start_date` (:any) — Current start date (ISO string or Date struct).
+- `trigger_label` (:string) — Optional custom label on the trigger button; auto-generated when omitted.
+Slots:
+- `:trigger` — Optional custom trigger element.
+
 ### LanternUI.Components.DatetimeField
 
 A segmented, directly-editable date/time field — the trigger primitive the date pickers compose (HeroUI-style: `2 / 3 / 2026, 8:45 AM`).

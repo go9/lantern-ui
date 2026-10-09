@@ -42,6 +42,7 @@ defmodule LanternUI do
     calendar: LanternUI.Components.Calendar,
     datetime_field: LanternUI.Components.DatetimeField,
     date_picker: LanternUI.Components.DatePicker,
+    date_range_popover: LanternUI.Components.DateRangePopover,
     checkbox: LanternUI.Components.Checkbox,
     modal: LanternUI.Components.Modal,
     command: LanternUI.Components.Command,
