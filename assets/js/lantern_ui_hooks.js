@@ -1266,6 +1266,7 @@ const LanternSidebar = {
     if (manual && this.transientCollapse) {
       this.transientCollapse.userChoice = collapsed
       this.sessionCollapseChoice = collapsed
+      this.el.toggleAttribute("data-table-expand-sidebar-open", !collapsed)
       return
     }
     if (manual) {
@@ -1289,11 +1290,14 @@ const LanternSidebar = {
         }
       }
       this.el.setAttribute("data-table-expand", "")
-      this.el.toggleAttribute("data-collapsed", this.transientCollapse.userChoice ?? true)
+      const userChoice = this.transientCollapse.userChoice
+      this.el.toggleAttribute("data-table-expand-sidebar-open", userChoice === false)
+      this.el.toggleAttribute("data-collapsed", userChoice ?? true)
       return
     }
     if (!this.transientCollapse) return
     this.el.removeAttribute("data-table-expand")
+    this.el.removeAttribute("data-table-expand-sidebar-open")
     this.el.toggleAttribute(
       "data-collapsed",
       this.transientCollapse.userChoice ?? this.transientCollapse.wasCollapsed,
@@ -1338,7 +1342,9 @@ const LanternSidebar = {
   updated() {
     this.syncTablesFromDOM()
     if (this.transientCollapse) {
-      this.el.toggleAttribute("data-collapsed", this.transientCollapse.userChoice ?? true)
+      const userChoice = this.transientCollapse.userChoice
+      this.el.toggleAttribute("data-table-expand-sidebar-open", userChoice === false)
+      this.el.toggleAttribute("data-collapsed", userChoice ?? true)
     } else if (this.sessionCollapseChoice !== null) {
       this.el.toggleAttribute("data-collapsed", this.sessionCollapseChoice)
     } else {

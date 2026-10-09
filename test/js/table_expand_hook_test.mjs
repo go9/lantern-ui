@@ -106,9 +106,11 @@ test("manual sidebar toggle during expansion is session-only and survives patche
     new m.window.MouseEvent("click", { bubbles: true })
   )
   assert.equal(m.el.hasAttribute("data-collapsed"), false)
+  assert.equal(m.el.hasAttribute("data-table-expand-sidebar-open"), true)
   assert.equal(m.window.localStorage.getItem("lui-sidebar:shell"), "true")
   m.hook.updated()
   assert.equal(m.el.hasAttribute("data-collapsed"), false)
+  assert.equal(m.el.hasAttribute("data-table-expand-sidebar-open"), true)
 
   m.document.querySelector("[data-table-id=records]").dataset.expanded = "false"
   m.el.dispatchEvent(
@@ -116,6 +118,7 @@ test("manual sidebar toggle during expansion is session-only and survives patche
   )
   m.hook.updated()
   assert.equal(m.el.hasAttribute("data-collapsed"), false)
+  assert.equal(m.el.hasAttribute("data-table-expand-sidebar-open"), false)
   assert.equal(m.window.localStorage.getItem("lui-sidebar:shell"), "true")
   m.unmount()
 })

@@ -788,10 +788,12 @@ if (!WIDE_TABLE_ONLY) {
       await page.waitForSelector("#qa-strip-table.lui-datatable-expanded", { timeout: 4000 })
       await page.waitForSelector(".lui-app[data-table-expand]", { timeout: 3000 })
       const isCollapsed = () => page.$eval(".lui-app", (el) => el.hasAttribute("data-collapsed"))
+      const sidebarWidth = () => page.$eval(".lui-app-sidebar", (el) => el.getBoundingClientRect().width)
       if (!(await isCollapsed())) row.problems.push("Expand did not start with the sidebar collapsed")
 
       await page.click('#qa-strip-app-default [data-part="sidebar-collapse"]')
-      if (await isCollapsed()) row.problems.push("sidebar toggle could not open the rail during Expand")
+      await page.waitForFunction(() => document.querySelector(".lui-app-sidebar")?.getBoundingClientRect().width > 200, { timeout: 4000 })
+      if (await isCollapsed() || (await sidebarWidth()) < 200) row.problems.push("sidebar toggle could not open the rail during Expand")
       const savedPreference = await page.evaluate(() => localStorage.getItem("lui-sidebar:qa-strip-app-default"))
       if (savedPreference !== "true") {
         const debug = await page.evaluate(() => ({
@@ -805,11 +807,13 @@ if (!WIDE_TABLE_ONLY) {
 
       await page.$eval("#qa-shell-patch", (el) => el.click())
       await page.waitForFunction(() => document.querySelector("#qa-root")?.textContent.includes("patch 1"), { timeout: 4000 })
-      if (await isCollapsed()) row.problems.push("LiveView patch re-collapsed the explicitly opened sidebar")
+      await page.waitForFunction(() => document.querySelector(".lui-app-sidebar")?.getBoundingClientRect().width > 200, { timeout: 4000 })
+      if (await isCollapsed() || (await sidebarWidth()) < 200) row.problems.push("LiveView patch re-collapsed the explicitly opened sidebar")
 
       await page.click('#qa-strip-table [data-part="expand"]')
       await page.waitForFunction(() => !document.querySelector("#qa-strip-table")?.classList.contains("lui-datatable-expanded"), { timeout: 4000 })
-      if (await isCollapsed()) row.problems.push("leaving Expand did not restore the explicit open choice")
+      await page.waitForFunction(() => document.querySelector(".lui-app-sidebar")?.getBoundingClientRect().width > 200, { timeout: 4000 })
+      if (await isCollapsed() || (await sidebarWidth()) < 200) row.problems.push("leaving Expand did not restore the explicit open choice")
 
       await page.evaluate(() => localStorage.removeItem("lui-sidebar:qa-strip-app-default"))
       await page.goto(`${BASE}/qa?ctx=page_shell_strip&expand=1`, { waitUntil: "networkidle2" })
@@ -817,7 +821,17 @@ if (!WIDE_TABLE_ONLY) {
       await page.waitForFunction(() => document.querySelector(".lui-app")?.hasAttribute("data-collapsed"), { timeout: 3000 })
       await page.waitForSelector(".lui-app[data-table-expand]", { timeout: 3000 })
       await page.click('#qa-strip-app-default [data-part="sidebar-collapse"]')
-      if (await isCollapsed()) row.problems.push("reload with ?expand=1 left the sidebar toggle inoperative")
+      await page.waitForFunction(() => document.querySelector(".lui-app-sidebar")?.getBoundingClientRect().width > 200, { timeout: 4000 })
+      if (await isCollapsed() || (await sidebarWidth()) < 200) row.problems.push("reload with ?expand=1 left the sidebar toggle inoperative")
+
+      await page.goto(`${BASE}/qa?ctx=page_shell_strip`, { waitUntil: "networkidle2" })
+      await page.evaluate(() => localStorage.setItem("lui-sidebar:qa-strip-app-default", "false"))
+      await page.goto(`${BASE}/qa?ctx=page_shell_strip&expand=1`, { waitUntil: "networkidle2" })
+      await page.waitForSelector("#qa-strip-table.lui-datatable-expanded", { timeout: 4000 })
+      await page.click('#qa-strip-table [data-part="expand"]')
+      await page.waitForFunction(() => !document.querySelector("#qa-strip-table")?.classList.contains("lui-datatable-expanded"), { timeout: 4000 })
+      await page.waitForFunction(() => document.querySelector(".lui-app-sidebar")?.getBoundingClientRect().width > 200, { timeout: 4000 })
+      if (await isCollapsed() || (await sidebarWidth()) < 200) row.problems.push("leaving Expand without a toggle did not restore the pre-expand open state")
       row.status = row.problems.length ? "FAIL" : "ok"
     } catch (e) {
       row.problems.push(`error: ${e.message.split("\n")[0]}`)

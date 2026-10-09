@@ -948,7 +948,7 @@
 }
 
 /* ── App shell (top bar + fixed sidebar + main) ── */
-.lui-app { --lui-sidebar-w: 15rem; --lui-appbar-h: 3.25rem;
+.lui-app { --lui-sidebar-expanded-w: 15rem; --lui-sidebar-w: var(--lui-sidebar-expanded-w); --lui-appbar-h: 3.25rem;
   /* Page-shell sticky rows account for the fixed bar when the document scrolls. */
   --lui-shell-appbar-offset: var(--lui-appbar-h);
   min-height: 100vh; background: var(--lantern-surface); color: var(--lantern-fg);
@@ -1961,7 +1961,8 @@
 .lui-datatable-expanded .lui-dt-list,
 .lui-datatable-expanded .lui-dt-cards { flex: 1 1 auto; min-height: 0; overflow: auto; }
 .lui-datatable-expanded .lui-dt-expand { color: var(--lantern-accent); }
-.lui-app[data-table-expand] { --lui-sidebar-w: 4.75rem; }
+.lui-app[data-table-expand]:not([data-table-expand-sidebar-open]) { --lui-sidebar-w: 4.75rem; }
+.lui-app[data-table-expand][data-table-expand-sidebar-open] { --lui-sidebar-w: var(--lui-sidebar-expanded-w); }
 .lui-app .lui-datatable-expanded { --lui-table-expand-top: var(--lui-appbar-h);
   --lui-table-expand-left: calc(var(--lui-sidebar-w) + var(--lui-page-gutter));
   --lui-table-expand-right: var(--lui-page-gutter); right: var(--lui-table-expand-right); }
