@@ -176,9 +176,9 @@ defmodule LanternUI do
     {except_keys, except_funs} = Enum.split_with(except, &is_atom/1)
 
     for {_key, module} <- LanternUI.__filter_components__(only_keys, except_keys) do
-      exports = module.__info__(:functions)
-      mod_only = Enum.filter(only_funs, &(&1 in exports))
-      mod_except = Enum.filter(except_funs, &(&1 in exports))
+      components = LanternUI.__component_imports__(module)
+      mod_only = Enum.filter(only_funs, &(&1 in components))
+      mod_except = Enum.filter(except_funs, &(&1 in components))
 
       cond do
         only_funs != [] and mod_only == [] ->
@@ -192,9 +192,18 @@ defmodule LanternUI do
           quote do: import(unquote(module), except: unquote(mod_except))
 
         true ->
-          quote do: import(unquote(module))
+          quote do: import(unquote(module), only: unquote(components))
       end
     end
+  end
+
+  @doc false
+  def __component_imports__(module) do
+    module.__components__()
+    |> Enum.filter(fn {_name, metadata} -> metadata.kind == :def end)
+    |> Enum.map(fn {name, _metadata} -> {name, 1} end)
+    |> Enum.filter(&(&1 in module.__info__(:functions)))
+    |> Enum.sort()
   end
 
   @doc false

@@ -6,6 +6,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- `use LanternUI` imports only documented function components. Public helpers
+  remain available through their module names and no longer conflict with
+  consumer-local functions such as `parse_date/1`.
+
 ### Added
 - Standalone `<.kbd>` keycap badge primitive (`LanternUI.Components.Kbd.kbd/1`) and `<.kbd_group>` with `size` (`xs`, `sm`, `md`, `lg`), `variant` (`outline`, `subtle`, `solid`, `ghost`), `keys` list/string support with symbol mapping (`⌘`, `⇧`, `⌥`, `⌃`, `Esc`, etc.), and full theme token styling.
 - Print styles for app-shell and table pages: hide interactive chrome and restore tables to natural document flow.
