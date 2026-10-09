@@ -51,6 +51,7 @@ defmodule LanternUI do
     breadcrumb: LanternUI.Components.Breadcrumb,
     empty_state: LanternUI.Components.EmptyState,
     card: LanternUI.Components.Card,
+    media_tile: LanternUI.Components.MediaTile,
     description_list: LanternUI.Components.DescriptionList,
     layout: LanternUI.Components.Layout,
     action_bar: LanternUI.Components.ActionBar,

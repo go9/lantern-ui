@@ -549,6 +549,7 @@ defmodule LanternUI.ComponentsTest do
                :list_row,
                :loading,
                :log_view,
+               :media_tile,
                :menu,
                :message,
                :message_scroller,

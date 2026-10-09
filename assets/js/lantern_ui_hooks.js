@@ -2245,6 +2245,79 @@ const LanternRowClick = {
   },
 }
 
+const TILE_INTERACTIVE =
+  'a:not(.lui-media-tile-link), button, input, select, textarea, label, summary, [role="button"], [data-tile-ignore]'
+
+const LanternMediaTile = {
+  mounted() {
+    this.toggle = () => {
+      if (this.el.dataset.selectable !== "true") return
+      const nextSelected = this.el.dataset.selected !== "true"
+      const eventName = this.el.dataset.tileSelect
+
+      if (eventName && this.pushEvent) {
+        this.pushEvent(eventName, { id: this.el.id, selected: nextSelected })
+      } else {
+        const checkbox = this.el.querySelector('[data-part="selection"] [role="checkbox"]')
+        if (checkbox) {
+          checkbox.setAttribute("data-checked", String(nextSelected))
+          checkbox.setAttribute("aria-checked", String(nextSelected))
+        }
+        this.el.dataset.selected = String(nextSelected)
+        this.el.setAttribute("aria-selected", String(nextSelected))
+        this.el.dispatchEvent(
+          new CustomEvent("lantern:tile:select", {
+            bubbles: true,
+            detail: { id: this.el.id, selected: nextSelected },
+          })
+        )
+      }
+    }
+
+    this.onClick = (e) => {
+      if (e.defaultPrevented || e.button !== 0) return
+      const checkbox = e.target.closest('[data-part="selection"] [role="checkbox"]')
+      if (checkbox) {
+        this.toggle()
+        return
+      }
+      const interactive = e.target.closest(TILE_INTERACTIVE)
+      if (interactive && interactive !== this.el) return
+
+      if (this.el.dataset.selectable === "true") {
+        this.toggle()
+      }
+    }
+
+    this.onKeydown = (e) => {
+      if (!e.target.closest('[data-part="selection"] [role="checkbox"]')) return
+      if (e.key === " " || e.key === "Enter") {
+        e.preventDefault()
+        this.toggle()
+      }
+    }
+
+    this.onImageError = (e) => {
+      const image = e.target.closest('[data-part="image"]')
+      if (!image) return
+      image.hidden = true
+      const empty = this.el.querySelector('[data-part="empty"]')
+      if (empty) empty.hidden = false
+      this.el.dataset.empty = "true"
+    }
+
+    this.el.addEventListener("click", this.onClick)
+    this.el.addEventListener("keydown", this.onKeydown)
+    this.el.addEventListener("error", this.onImageError, true)
+  },
+
+  destroyed() {
+    this.el.removeEventListener("click", this.onClick)
+    this.el.removeEventListener("keydown", this.onKeydown)
+    this.el.removeEventListener("error", this.onImageError, true)
+  },
+}
+
 // Runtime theming: loads persisted --lantern-* overrides and injects them as a
 // stylesheet (light overrides on :root/.light, dark overrides on .dark and the
 // system media query), so user-selected themes track the active theme instead
@@ -3356,6 +3429,7 @@ export const Hooks = {
   LanternAccordion,
   LanternTableChrome,
   LanternRowClick,
+  LanternMediaTile,
   LanternTheme,
 }
 export {
@@ -3385,6 +3459,7 @@ export {
   LanternAccordion,
   LanternTableChrome,
   LanternRowClick,
+  LanternMediaTile,
   LanternTheme,
 }
 export default Hooks

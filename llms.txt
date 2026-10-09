@@ -185,6 +185,11 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `log_line/1` — Log view: monospace lines with a timestamp gutter and per-line severity.
 - `log_view/1` — Log view: monospace lines with a timestamp gutter and per-line severity.
 
+### LanternUI.Components.MediaTile
+
+- `media_tile/1` — Renders a generic media tile cell.
+- `media_tile_grid/1` — Responsive grid container for `media_tile/1` components.
+
 ### LanternUI.Components.Menu
 
 - `menu/1` — Menu button and menubar — no Fluxon equivalent.

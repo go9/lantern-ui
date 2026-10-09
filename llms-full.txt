@@ -1207,6 +1207,46 @@ Slots:
 - `:actions` — Controls rendered at the right of the header (filters, toggles).
 - `:inner_block` (required) — One or more `log_line/1` children.
 
+### LanternUI.Components.MediaTile
+
+A generic, domain-agnostic media container cell for visual grids and cards.
+
+#### `media_tile/1`
+
+Renders a generic media tile cell.
+
+- `aspect_ratio` (:string, default "5/7") — Aspect ratio of the media well (e.g.
+- `class` (:any) — Extra classes merged onto the root element.
+- `empty` (:boolean, default false) — Display empty state placeholder.
+- `empty_text` (:string, default "No image") — Accessible text and message when empty.
+- `href` (:string) — Optional navigation target making the tile interactive.
+- `id` (:string) — Stable DOM id for the tile root.
+- `image_alt` (:string, default "") — Accessible alt text for the image.
+- `image_fit` (:string, values: cover, contain, fill, none, default "cover") — CSS object-fit behavior.
+- `image_src` (:string) — Source URL for the media image.
+- `loading` (:boolean, default false) — Display skeleton loading state.
+- `rest` (:global) — Arbitrary HTML or LiveView attributes passed through.
+- `selectable` (:boolean, default false) — Whether the tile can be selected.
+- `selected` (:boolean, default false) — Whether the tile is currently selected.
+Slots:
+- `:banner` — Top overlay banner across the media well.
+- `:caption` — Structured text content below the media well.
+- `:footer` — Bottom strip below caption.
+- `:inner_block` — Custom media content inside the well (replaces image).
+- `:overlay` — Floating overlays inside the media well (chips, badges, quick actions).
+
+#### `media_tile_grid/1`
+
+Responsive grid container for `media_tile/1` components.
+
+- `class` (:any) — Extra classes merged onto the grid container.
+- `columns` (:integer) — Explicit column count.
+- `gap` (:string) — Custom grid gap (e.g.
+- `min` (:string, default "160px") — Minimum tile width when auto-filling columns.
+- `rest` (:global) — Arbitrary HTML attributes passed through.
+Slots:
+- `:inner_block` (required) — Media tiles to render.
+
 ### LanternUI.Components.Menu
 
 Menu button and menubar — no Fluxon equivalent.
