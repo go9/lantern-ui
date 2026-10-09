@@ -67,8 +67,25 @@ defmodule LanternUI.KbdTest do
 
       assert html =~ ~s(<span)
       assert html =~ ~s(class="lui-kbd-group")
-      assert html =~ ~s(<kbd class="lui-kbd" data-size="md" data-variant="subtle">⌘</kbd>)
-      assert html =~ ~s(<kbd class="lui-kbd" data-size="md" data-variant="subtle">K</kbd>)
+      assert html =~ ~s(role="group" aria-label="Command + K")
+
+      assert html =~
+               ~s(<kbd class="lui-kbd" data-size="md" data-variant="subtle" aria-hidden="true">⌘</kbd>)
+
+      assert html =~
+               ~s(<kbd class="lui-kbd" data-size="md" data-variant="subtle" aria-hidden="true">K</kbd>)
+    end
+
+    test "a standalone glyph key has a readable accessible name" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Kbd.kbd keys={:command} />
+          """
+        end)
+
+      assert html =~ ~s(role="img" aria-label="Command")
+      assert html =~ ~s(<span aria-hidden="true">⌘</span>)
     end
 
     test "merges custom class and passes global rest attributes" do

@@ -7,14 +7,14 @@ defmodule LanternUI.Components.Kbd do
 
   ## Examples
 
-      <.kbd>⌘K</.kbd>
+      <.kbd keys={[:command, "K"]} />
       <.kbd size="xs">Esc</.kbd>
       <.kbd variant="outline">Shift+E</.kbd>
       <.kbd keys={[:command, "K"]} />
       <.kbd keys={["Ctrl", "Shift", "P"]} />
 
       <.kbd_group>
-        <.kbd>⌘</.kbd>
+        <.kbd keys={:command} />
         <span class="lui-kbd-sep">+</span>
         <.kbd>K</.kbd>
       </.kbd_group>
@@ -70,12 +70,18 @@ defmodule LanternUI.Components.Kbd do
     assigns = assign(assigns, :computed_class, Class.merge(["lui-kbd-group", assigns.class]))
 
     ~H"""
-    <span class={@computed_class} {@rest}>
+    <span
+      class={@computed_class}
+      role="group"
+      aria-label={Enum.map_join(@keys, " + ", &accessible_key_name/1)}
+      {@rest}
+    >
       <kbd
         :for={k <- @keys}
         class="lui-kbd"
         data-size={@size}
         data-variant={@variant}
+        aria-hidden="true"
       >{render_key(k)}</kbd>
     </span>
     """
@@ -89,9 +95,11 @@ defmodule LanternUI.Components.Kbd do
       class={@computed_class}
       data-size={@size}
       data-variant={@variant}
+      role={if key_symbol?(@keys), do: "img"}
+      aria-label={if key_symbol?(@keys), do: accessible_key_name(@keys)}
       {@rest}
     ><%= if @keys do %>
-      {render_key(@keys)}
+      <span aria-hidden={if key_symbol?(@keys), do: "true"}>{render_key(@keys)}</span>
     <% else %>
       {render_slot(@inner_block)}
     <% end %></kbd>
@@ -127,6 +135,28 @@ defmodule LanternUI.Components.Kbd do
   def symbol(key) when is_atom(key), do: Map.get(@symbols, key, Atom.to_string(key))
   def symbol(key) when is_binary(key), do: key
   def symbol(other), do: to_string(other)
+
+  defp key_symbol?(key), do: symbol(key) in Map.values(@symbols)
+
+  defp accessible_key_name(key) do
+    case symbol(key) do
+      "⌘" -> "Command"
+      "⇧" -> "Shift"
+      "⌥" -> "Option"
+      "⌃" -> "Control"
+      "↵" -> "Enter"
+      "⇥" -> "Tab"
+      "⌫" -> "Backspace"
+      "⌦" -> "Delete"
+      "↑" -> "Up arrow"
+      "↓" -> "Down arrow"
+      "←" -> "Left arrow"
+      "→" -> "Right arrow"
+      "␣" -> "Space"
+      "Esc" -> "Escape"
+      other -> other
+    end
+  end
 
   defp render_key(key), do: symbol(key)
 end

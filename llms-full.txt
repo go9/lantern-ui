@@ -2289,6 +2289,15 @@ From `docs/recipes.md` (Date range filter):
 />
 ```
 
+From `docs/recipes.md` (Keyboard shortcut hint):
+
+```heex
+<.button variant="outline">
+  Save
+  <.kbd keys={[:command, "S"]} />
+</.button>
+```
+
 From `docs/recipes.md` (Linear-style list row):
 
 ```heex

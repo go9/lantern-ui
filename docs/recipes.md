@@ -95,6 +95,17 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 />
 ```
 
+## Keyboard shortcut hint
+
+**When to use:** A small keycap beside an action label or a shortcut hint in help text. Pass symbolic glyph keys through `keys` so assistive technology receives names such as “Command” and “Shift.”
+
+```heex
+<.button variant="outline">
+  Save
+  <.kbd keys={[:command, "S"]} />
+</.button>
+```
+
 ## Linear-style list row
 
 **When to use:** A dense issue row — priority glyph, id, status glyph, title, tags, progress ring, date — in a flat list.

@@ -47,19 +47,19 @@ defmodule LanternUI.QA.KbdLive do
           <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <span style="font-size: 0.875rem; color: var(--lantern-fg-muted);">Outline:</span>
-              <.kbd variant="outline">⌘K</.kbd>
+              <.kbd variant="outline" keys={[:command, "K"]} />
             </div>
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <span style="font-size: 0.875rem; color: var(--lantern-fg-muted);">Subtle:</span>
-              <.kbd variant="subtle">⌘K</.kbd>
+              <.kbd variant="subtle" keys={[:command, "K"]} />
             </div>
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <span style="font-size: 0.875rem; color: var(--lantern-fg-muted);">Solid:</span>
-              <.kbd variant="solid">⌘K</.kbd>
+              <.kbd variant="solid" keys={[:command, "K"]} />
             </div>
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <span style="font-size: 0.875rem; color: var(--lantern-fg-muted);">Ghost:</span>
-              <.kbd variant="ghost">⌘K</.kbd>
+              <.kbd variant="ghost" keys={[:command, "K"]} />
             </div>
           </div>
         </section>
@@ -118,7 +118,7 @@ defmodule LanternUI.QA.KbdLive do
           </h2>
           <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
             <.kbd_group>
-              <.kbd>⌘</.kbd>
+              <.kbd keys={:command} />
               <span class="lui-kbd-sep">+</span>
               <.kbd>Shift</.kbd>
               <span class="lui-kbd-sep">+</span>

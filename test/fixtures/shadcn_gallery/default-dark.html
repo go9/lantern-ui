@@ -4704,6 +4704,88 @@ a.lui-waterfall-lane-inner:focus-visible {
   .lui-media-tile-caption { padding: var(--lantern-space-xs); }
   .lui-media-tile-footer { padding: var(--lantern-space-xs); }
 }
+/* ── Keyboard shortcut badge (<kbd>) ── */
+.lui-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--lantern-font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+  vertical-align: middle;
+  border-radius: var(--lantern-radius-sm, 4px);
+  box-sizing: border-box;
+}
+
+/* Variants */
+.lui-kbd[data-variant="outline"] {
+  background: var(--lantern-surface-raised, var(--lantern-surface));
+  color: var(--lantern-fg-muted);
+  border: 1px solid var(--lantern-border);
+  box-shadow: 0 1px 0 var(--lantern-border-strong, var(--lantern-border));
+}
+
+.lui-kbd[data-variant="subtle"] {
+  background: var(--lantern-surface-sunken);
+  color: var(--lantern-fg-subtle, var(--lantern-fg-muted));
+  border: 1px solid transparent;
+}
+
+.lui-kbd[data-variant="solid"] {
+  background: var(--lantern-fg);
+  color: var(--lantern-bg);
+  border: 1px solid var(--lantern-fg);
+}
+
+.lui-kbd[data-variant="ghost"] {
+  background: transparent;
+  color: var(--lantern-fg-muted);
+  border: 1px solid transparent;
+}
+
+/* Sizes */
+.lui-kbd[data-size="xs"] {
+  min-height: 1.15rem;
+  min-width: 1.15rem;
+  padding: 0 0.25rem;
+  font-size: 0.65rem;
+}
+
+.lui-kbd[data-size="sm"] {
+  min-height: 1.35rem;
+  min-width: 1.35rem;
+  padding: 0 0.35rem;
+  font-size: 0.75rem;
+}
+
+.lui-kbd[data-size="md"] {
+  min-height: 1.6rem;
+  min-width: 1.6rem;
+  padding: 0 0.45rem;
+  font-size: 0.85rem;
+}
+
+.lui-kbd[data-size="lg"] {
+  min-height: 1.85rem;
+  min-width: 1.85rem;
+  padding: 0 0.55rem;
+  font-size: 0.95rem;
+}
+
+/* Group */
+.lui-kbd-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  vertical-align: middle;
+}
+
+.lui-kbd-group .lui-kbd-sep {
+  font-size: var(--lantern-text-xs, 0.75rem);
+  color: var(--lantern-fg-subtle, var(--lantern-fg-muted));
+}
 
 /*
  * LanternUI design tokens + default theme.
@@ -5542,7 +5624,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-2438" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-967" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5559,7 +5641,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-2470" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-999" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5576,7 +5658,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-2502" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-1031" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5593,7 +5675,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-2534" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-1063" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
