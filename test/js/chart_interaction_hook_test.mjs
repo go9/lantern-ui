@@ -35,10 +35,10 @@ test("ChartInteraction snaps all series to shared x and updates only the rendere
   await sleep(30)
 
   assert.equal(Number(mounted.el.querySelector('[data-part="crosshair"]').getAttribute("x1")), 86)
-  assert.equal(mounted.el.querySelector('[data-part="tooltip-date"]').textContent, "Feb 1")
-  assert.match(mounted.el.querySelector('[data-part="tooltip"]').getAttribute("transform"), /translate\(.*\)/)
-  assert.equal(mounted.el.querySelectorAll('[data-part="tooltip-row"]')[0].textContent, "Collection: $12")
-  assert.equal(mounted.el.querySelectorAll('[data-part="tooltip-row"]')[1].textContent, "Inventory: —")
+  assert.equal(mounted.el.querySelector('[data-part="html-tooltip-date"]').textContent, "Feb 1")
+  assert.equal(mounted.el.querySelector('[data-part="html-tooltip"]').hidden, false)
+  assert.equal(mounted.el.querySelectorAll('[data-part="html-tooltip-value"]')[0].textContent, "$12")
+  assert.equal(mounted.el.querySelectorAll('[data-part="html-tooltip-value"]')[1].textContent, "—")
   assert.equal(mounted.el.querySelector('[data-part="series-point"][data-series-index="1"]').hasAttribute("hidden"), true)
   assert.deepEqual([...svg.children], originalChildren)
   mounted.unmount()
@@ -50,7 +50,7 @@ test("touch, keyboard traversal, announcement, update and destroy are safe", asy
   svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 150 })
   pointer(svg, "pointerdown", 19, "touch")
   await sleep(30)
-  assert.equal(mounted.el.querySelector('[data-part="tooltip-date"]').textContent, "Jan 1")
+  assert.equal(mounted.el.querySelector('[data-part="html-tooltip-date"]').textContent, "Jan 1")
   assert.equal(mounted.el.querySelector('[data-part="live"]').textContent, "")
 
   const first = mounted.el.querySelector('[data-chart-point="0"]')
