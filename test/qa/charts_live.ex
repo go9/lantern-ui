@@ -13,7 +13,7 @@ defmodule LanternUI.QA.ChartsLive do
       %{
         id: :collection,
         label: "Collection",
-        color: "var(--lantern-chart-1, var(--lantern-accent))",
+        color: "var(--lantern-chart-1)",
         points: [
           %{x: "Apr", y: -18},
           %{x: "May", y: 26},
@@ -25,7 +25,7 @@ defmodule LanternUI.QA.ChartsLive do
       %{
         id: :inventory,
         label: "Inventory",
-        color: "var(--lantern-chart-2, var(--lantern-success))",
+        color: "var(--lantern-chart-2)",
         points: [
           %{x: "Apr", y: 32},
           %{x: "May", y: -12},
