@@ -4698,3 +4698,85 @@ a.lui-waterfall-lane-inner:focus-visible {
   .lui-media-tile-caption { padding: var(--lantern-space-xs); }
   .lui-media-tile-footer { padding: var(--lantern-space-xs); }
 }
+/* ── Keyboard shortcut badge (<kbd>) ── */
+.lui-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--lantern-font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+  vertical-align: middle;
+  border-radius: var(--lantern-radius-sm, 4px);
+  box-sizing: border-box;
+}
+
+/* Variants */
+.lui-kbd[data-variant="outline"] {
+  background: var(--lantern-surface-raised, var(--lantern-surface));
+  color: var(--lantern-fg-muted);
+  border: 1px solid var(--lantern-border);
+  box-shadow: 0 1px 0 var(--lantern-border-strong, var(--lantern-border));
+}
+
+.lui-kbd[data-variant="subtle"] {
+  background: var(--lantern-surface-sunken);
+  color: var(--lantern-fg-subtle, var(--lantern-fg-muted));
+  border: 1px solid transparent;
+}
+
+.lui-kbd[data-variant="solid"] {
+  background: var(--lantern-fg);
+  color: var(--lantern-bg);
+  border: 1px solid var(--lantern-fg);
+}
+
+.lui-kbd[data-variant="ghost"] {
+  background: transparent;
+  color: var(--lantern-fg-muted);
+  border: 1px solid transparent;
+}
+
+/* Sizes */
+.lui-kbd[data-size="xs"] {
+  min-height: 1.15rem;
+  min-width: 1.15rem;
+  padding: 0 0.25rem;
+  font-size: 0.65rem;
+}
+
+.lui-kbd[data-size="sm"] {
+  min-height: 1.35rem;
+  min-width: 1.35rem;
+  padding: 0 0.35rem;
+  font-size: 0.75rem;
+}
+
+.lui-kbd[data-size="md"] {
+  min-height: 1.6rem;
+  min-width: 1.6rem;
+  padding: 0 0.45rem;
+  font-size: 0.85rem;
+}
+
+.lui-kbd[data-size="lg"] {
+  min-height: 1.85rem;
+  min-width: 1.85rem;
+  padding: 0 0.55rem;
+  font-size: 0.95rem;
+}
+
+/* Group */
+.lui-kbd-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  vertical-align: middle;
+}
+
+.lui-kbd-group .lui-kbd-sep {
+  font-size: var(--lantern-text-xs, 0.75rem);
+  color: var(--lantern-fg-subtle, var(--lantern-fg-muted));
+}

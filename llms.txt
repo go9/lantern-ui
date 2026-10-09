@@ -165,6 +165,11 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `inspector_section/1` — Sticky right-rail inspector: optional section headings and a dense `description_list`.
 - `property_row/1` — Sticky right-rail inspector: optional section headings and a dense `description_list`.
 
+### LanternUI.Components.Kbd
+
+- `kbd/1` — Standalone keyboard shortcut hint `<kbd>` component.
+- `kbd_group/1` — Standalone keyboard shortcut hint `<kbd>` component.
+
 ### LanternUI.Components.Layout
 
 - `app_shell/1` — App shell — a full-width top bar (brand + inline context + actions) over a fixed, collapsible left sidebar and a main content column.

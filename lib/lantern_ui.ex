@@ -96,7 +96,8 @@ defmodule LanternUI do
     avatar: LanternUI.Components.Avatar,
     message: LanternUI.Components.Message,
     message_scroller: LanternUI.Components.MessageScroller,
-    message_scroller_item: LanternUI.Components.MessageScroller
+    message_scroller_item: LanternUI.Components.MessageScroller,
+    kbd: LanternUI.Components.Kbd
   }
 
   @doc false

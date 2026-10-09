@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Standalone `<.kbd>` keycap badge primitive (`LanternUI.Components.Kbd.kbd/1`) and `<.kbd_group>` with `size` (`xs`, `sm`, `md`, `lg`), `variant` (`outline`, `subtle`, `solid`, `ghost`), `keys` list/string support with symbol mapping (`⌘`, `⇧`, `⌥`, `⌃`, `Esc`, etc.), and full theme token styling.
 - Print styles for app-shell and table pages: hide interactive chrome and restore tables to natural document flow.
 - Data table active-filter chips and an accessible Zag `Filters & view` popover. Popover filter changes stage until Apply; Reset and Clear filters are caller-labelable. Optional saved-view actions emit generic consumer events without adding persistence policy.
 - Opt-in URL-owned expanded data tables (`expandable` / `expanded`) with query-preserving patches, Shift+E / Escape shortcuts, and a transient app-shell sidebar rail that leaves the saved collapse preference intact.

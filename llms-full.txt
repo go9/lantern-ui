@@ -1034,6 +1034,31 @@ Sticky right-rail inspector: optional section headings and a dense `description_
 Slots:
 - `:inner_block` (required) — Value: text or any inline control.
 
+### LanternUI.Components.Kbd
+
+Standalone keyboard shortcut hint `<kbd>` component.
+
+#### `kbd/1`
+
+Standalone keyboard shortcut hint `<kbd>` component.
+
+- `class` (:any) — Extra classes merged onto the element.
+- `keys` (:any) — Optional shortcut key or list of shortcut keys (atoms or strings).
+- `rest` (:global) — Arbitrary HTML attributes passed through.
+- `size` (:string, values: xs, sm, md, lg, default "sm") — Size scale for the keycap.
+- `variant` (:string, values: outline, subtle, solid, ghost, default "outline") — Surface style of the keycap.
+Slots:
+- `:inner_block` — Keyboard hint text or key contents.
+
+#### `kbd_group/1`
+
+Standalone keyboard shortcut hint `<kbd>` component.
+
+- `class` (:any) — Extra classes merged onto the group container.
+- `rest` (:global) — Arbitrary HTML attributes passed through.
+Slots:
+- `:inner_block` (required) — Group of <.kbd> elements and optional separators.
+
 ### LanternUI.Components.Layout
 
 App shell — a full-width top bar (brand + inline context + actions) over a fixed, collapsible left sidebar and a main content column.

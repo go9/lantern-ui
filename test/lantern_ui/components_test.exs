@@ -546,6 +546,7 @@ defmodule LanternUI.ComponentsTest do
                :icon,
                :icon_button,
                :inspector,
+               :kbd,
                :layout,
                :list_row,
                :loading,
