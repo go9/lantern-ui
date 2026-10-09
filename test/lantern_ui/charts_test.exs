@@ -358,6 +358,21 @@ defmodule LanternUI.ChartsTest do
                    end
     end
 
+    test "SSR chart has uniform aspect ratio and caller dimensions" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "sized",
+          width: 480,
+          height: 300,
+          series: [%{id: "a", label: "A", points: [%{x: "Jan", y: 2}]}]
+        )
+
+      assert html =~ ~s(viewBox="0 0 480 300")
+      assert html =~ ~s(preserveAspectRatio="xMinYMin meet")
+      assert html =~ ~s(style="--lui-chart-height:300px")
+      refute html =~ ~s(preserveAspectRatio="none")
+    end
+
     test "Date and DateTime x values use the same Unix epoch" do
       html =
         render_component(&LanternUI.Charts.time_series_chart/1,
@@ -377,7 +392,7 @@ defmodule LanternUI.ChartsTest do
         Regex.scan(~r/<path d="M([^,]+),/, html, capture: :all_but_first)
         |> List.flatten()
 
-      assert x_coordinates == ["366.0", "366.0", "366.0"]
+      assert x_coordinates == ["496.0", "496.0", "496.0"]
     end
 
     test "stacked area omits empty sign bands so the zero line stays visible" do
@@ -476,7 +491,7 @@ defmodule LanternUI.ChartsTest do
           annotations: [%{id: "launch", x: "May", label: "Launch"}]
         )
 
-      assert String.contains?(html, "x1=\"366.0\" x2=\"366.0\"")
+      assert String.contains?(html, "x1=\"496.0\" x2=\"496.0\"")
       assert html =~ "Launch"
     end
 

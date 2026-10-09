@@ -631,7 +631,13 @@ defmodule LanternUI.Charts do
     doc: "Series maps with id, label, optional CSS token color and %{x, y} points."
   )
 
-  attr(:height, :integer, default: 280, doc: "SVG viewBox height.")
+  attr(:height, :integer, default: 240, doc: "Fixed chart height in CSS pixels.")
+
+  attr(:width, :integer,
+    default: 960,
+    doc: "SSR plot width; the hook fits it to the measured container width."
+  )
+
   attr(:class, :string, default: nil, doc: "Extra classes merged onto the root element.")
 
   attr(:type, :atom,
@@ -694,7 +700,10 @@ defmodule LanternUI.Charts do
     <div
       id={@id}
       class={Class.merge(["lui-time-series-chart", @class])}
+      style={"--lui-chart-height:#{@height}px"}
       data-chart-type={@chart_type}
+      data-plot-left={@plot_left}
+      data-plot-right={@plot_right}
       data-interaction={Jason.encode!(@interaction_points)}
       data-series-label={Jason.encode!(@interaction_labels)}
       data-series-id={if @interaction_enabled, do: Jason.encode!(@interaction_series_ids)}
@@ -704,7 +713,8 @@ defmodule LanternUI.Charts do
     >
       <svg
         :if={@has_data}
-        viewBox={"0 0 #{@vb_w} #{@height}"}
+        viewBox={"0 0 #{@width} #{@height}"}
+        preserveAspectRatio="xMinYMin meet"
         role="group"
         aria-label={@aria_label}
         class="lui-time-series-chart__svg"
@@ -730,10 +740,22 @@ defmodule LanternUI.Charts do
           y2={@plot_bottom}
         />
         <g :if={@show_axes} class="lui-time-series-chart__labels">
-          <text :for={{label, y} <- @y_ticks} x={@plot_left - 8} y={y + 3} text-anchor="end">
+          <text
+            :for={{label, y} <- @y_ticks}
+            class="lui-time-series-chart__y-tick"
+            x={@plot_left - 8}
+            y={y + 3}
+            text-anchor="end"
+          >
             {label}
           </text>
-          <text :for={{label, x, anchor} <- @x_ticks} x={x} y={@height - 8} text-anchor={anchor}>
+          <text
+            :for={{label, x, anchor} <- @x_ticks}
+            class="lui-time-series-chart__x-tick"
+            x={x}
+            y={@height - 8}
+            text-anchor={anchor}
+          >
             {label}
           </text>
         </g>
@@ -1097,6 +1119,8 @@ defmodule LanternUI.Charts do
       {[], _} ->
         %{
           has_data: false,
+          plot_left: @margin.left,
+          plot_right: assigns.width - @margin.right,
           chart_type: assigns.type,
           legend: [],
           interaction_labels: [],
@@ -1123,7 +1147,7 @@ defmodule LanternUI.Charts do
 
   defp build_time_series_geometry(assigns, series, comparison, all_points, kind) do
     plot_left = @margin.left
-    plot_right = @vb_w - @margin.right
+    plot_right = assigns.width - @margin.right
     plot_top = 18
     plot_bottom = assigns.height - @margin.bottom
     primary_points = Enum.flat_map(series, & &1.points)
@@ -1272,7 +1296,7 @@ defmodule LanternUI.Charts do
       has_data: all_points != [],
       chart_type: assigns.type,
       height: assigns.height,
-      vb_w: @vb_w,
+      vb_w: assigns.width,
       plot_left: plot_left,
       plot_right: plot_right,
       plot_top: plot_top,

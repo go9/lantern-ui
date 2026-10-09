@@ -467,6 +467,12 @@ separate sides of zero.
 />
 ```
 
+The SVG keeps the requested pixel `height` (240 by default); the hook fits its
+server-rendered 960px geometry to the measured container width on mount and
+ResizeObserver changes. Without JavaScript, SVG aspect ratio stays uniform.
+Tick labels are skipped when they would overlap, and y labels get measured left
+padding.
+
 The component includes zero in its signed y domain. Chart choices and visible
 series remain LiveView assigns; validate form events in the parent LiveView and
 pass the resulting values back as attrs. Set `type` to `:stacked_area`, `:bar`,

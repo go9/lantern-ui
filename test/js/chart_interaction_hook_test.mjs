@@ -8,8 +8,8 @@ const points = [
 ]
 
 function fixture() {
-  return `<div id="chart" data-interaction='${JSON.stringify(points)}' data-series-label='["Collection","Inventory"]' data-series-id='["collection","inventory"]'>
-    <svg viewBox="0 0 100 150"><g class="lui-time-series-chart__interaction" hidden>
+  return `<div id="chart" data-plot-left="20" data-plot-right="80" data-interaction='${JSON.stringify(points)}' data-series-label='["Collection","Inventory"]' data-series-id='["collection","inventory"]'>
+    <svg viewBox="0 0 100 150"><g class="lui-time-series-chart__labels"><text class="lui-time-series-chart__x-tick" x="20">Jan</text><text class="lui-time-series-chart__x-tick" x="80">Feb</text></g><g class="lui-time-series-chart__series"><path d="M20,80L80,60"></path></g><g class="lui-time-series-chart__interaction" hidden>
       <line data-part="crosshair" x1="0" x2="0"></line>
       <circle data-part="series-point" data-series-index="0"></circle>
       <circle data-part="series-point" data-series-index="1"></circle>
@@ -35,7 +35,7 @@ test("ChartInteraction snaps all series to shared x and updates only the rendere
   pointer(svg, "pointermove", 76)
   await sleep(30)
 
-  assert.equal(mounted.el.querySelector('[data-part="crosshair"]').getAttribute("x1"), "80")
+  assert.equal(Number(mounted.el.querySelector('[data-part="crosshair"]').getAttribute("x1")), 86)
   assert.equal(mounted.el.querySelector('[data-part="tooltip-date"]').textContent, "Feb 1")
   assert.match(mounted.el.querySelector('[data-part="tooltip"]').getAttribute("transform"), /translate\(.*\)/)
   assert.equal(mounted.el.querySelectorAll('[data-part="tooltip-row"]')[0].textContent, "Collection: $12")
@@ -127,7 +127,7 @@ test("hover_event debounces pointer movement to the latest shared x", async () =
   pointer(svg, "pointermove", 20)
   await sleep(25)
   pointer(svg, "pointermove", 76)
-  await sleep(180)
+  await sleep(350)
   assert.deepEqual(events, [{
     name: "hover_date",
     payload: { chart_id: "chart", x: "2026-02-01", values: { collection: 12, inventory: null } },
@@ -146,7 +146,7 @@ test("hover_event cancels its pending push when the pointer leaves", async () =>
   pointer(svg, "pointermove", 76)
   await sleep(30)
   pointer(svg, "pointerleave", 76)
-  await sleep(180)
+  await sleep(350)
   assert.deepEqual(events, [])
   mounted.unmount()
 })
@@ -161,9 +161,27 @@ test("pointercancel clears touch state and cancels a pending hover", async () =>
 
   pointer(svg, "pointerdown", 20, "touch")
   pointer(svg, "pointercancel", 20, "touch")
-  await sleep(180)
+  await sleep(350)
   assert.equal(mounted.hook.touchActive, false)
   assert.deepEqual(events, [])
   assert.equal(mounted.el.querySelector(".lui-time-series-chart__interaction").hasAttribute("hidden"), true)
+  mounted.unmount()
+})
+
+
+test("ChartInteraction fits x geometry to the measured width without scaling glyphs", () => {
+  const mounted = mountHook(hooks.ChartInteraction, fixture(), { rootId: "chart" })
+  let width = 320
+  mounted.el.getBoundingClientRect = () => ({ width })
+  mounted.hook.fitWidth()
+  const svg = mounted.el.querySelector("svg")
+  assert.equal(svg.viewBox.baseVal.width, 320)
+  assert.equal(svg.getAttribute("preserveAspectRatio"), "xMinYMin meet")
+  assert.equal(Number(svg.querySelector('.lui-time-series-chart__x-tick').getAttribute("x")), 20)
+  assert.match(svg.querySelector('.lui-time-series-chart__series path').getAttribute("transform"), /^matrix\(/)
+  width = 500
+  mounted.hook.fitWidth()
+  assert.equal(svg.viewBox.baseVal.width, 500)
+  assert.equal(Number(svg.querySelectorAll('.lui-time-series-chart__x-tick')[1].getAttribute("x")), 486)
   mounted.unmount()
 })
