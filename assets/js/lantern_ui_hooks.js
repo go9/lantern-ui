@@ -1185,11 +1185,13 @@ const LanternSidebar = {
 
   mounted() {
     this.navOpen = false
+    this.transientTables = new Set()
+    this.transientCollapse = null
     this.syncCollapsed()
 
     this.onClick = (e) => {
       if (e.target.closest('[data-part="sidebar-collapse"]')) {
-        return this.setCollapsed(!this.el.hasAttribute("data-collapsed"))
+        return this.setCollapsed(!this.el.hasAttribute("data-collapsed"), true)
       }
       if (e.target.closest('[data-part="sidebar-toggle"]')) return this.setNav(!this.navOpen)
       if (e.target.closest('[data-part="sidebar-scrim"]')) return this.setNav(false)
@@ -1217,6 +1219,16 @@ const LanternSidebar = {
     }
     this.el.addEventListener("click", this.onClick)
 
+    this.onTableExpand = (e) => {
+      const { tableId, expanded } = e.detail || {}
+      if (!tableId) return
+      if (expanded) this.transientTables.add(tableId)
+      else this.transientTables.delete(tableId)
+      this.syncTransientCollapse()
+    }
+    this.el.addEventListener("lantern:table-expand", this.onTableExpand)
+    this.syncTablesFromDOM()
+
     this.onKey = (e) => e.key === "Escape" && this.setNav(false)
     document.addEventListener("keydown", this.onKey)
 
@@ -1225,11 +1237,43 @@ const LanternSidebar = {
     this.mq.addEventListener("change", this.onMq)
   },
 
-  setCollapsed(collapsed) {
+  setCollapsed(collapsed, manual = true) {
     this.el.toggleAttribute("data-collapsed", collapsed)
+    if (manual && this.transientCollapse) this.transientCollapse.manual = true
+    if (manual) this.persistCollapsed(collapsed)
+  },
+
+  persistCollapsed(collapsed) {
     try {
       localStorage.setItem(this.key(), String(collapsed))
     } catch (_) {}
+  },
+
+  syncTransientCollapse() {
+    if (this.transientTables.size > 0) {
+      if (!this.transientCollapse) {
+        this.transientCollapse = { wasCollapsed: this.el.hasAttribute("data-collapsed"), manual: false }
+      }
+      this.el.setAttribute("data-table-expand", "")
+      if (!this.transientCollapse.manual) this.el.setAttribute("data-collapsed", "")
+      return
+    }
+    if (!this.transientCollapse) return
+    this.el.removeAttribute("data-table-expand")
+    if (!this.transientCollapse.manual) {
+      this.el.toggleAttribute("data-collapsed", this.transientCollapse.wasCollapsed)
+    }
+    this.transientCollapse = null
+  },
+
+  syncTablesFromDOM() {
+    const expanded = new Set(
+      [...this.el.querySelectorAll('[data-expandable="true"][data-expanded="true"]')]
+        .map((table) => table.dataset.tableId)
+        .filter(Boolean)
+    )
+    this.transientTables = expanded
+    this.syncTransientCollapse()
   },
 
   setNav(open) {
@@ -1250,12 +1294,20 @@ const LanternSidebar = {
   },
 
   updated() {
-    this.syncCollapsed()
+    this.syncTablesFromDOM()
+    if (this.transientCollapse) {
+      if (!this.transientCollapse.manual) this.el.setAttribute("data-collapsed", "")
+    } else {
+      this.syncCollapsed()
+    }
     this.el.toggleAttribute("data-nav-open", this.navOpen)
   },
 
   destroyed() {
     this.el.removeEventListener("click", this.onClick)
+    this.el.removeEventListener("lantern:table-expand", this.onTableExpand)
+    this.transientTables.clear()
+    this.syncTransientCollapse()
     document.removeEventListener("keydown", this.onKey)
     this.mq.removeEventListener("change", this.onMq)
     if (this.navOpen) document.body.style.overflow = ""
@@ -1969,6 +2021,8 @@ const LanternSelect = {
 const LanternTableChrome = {
   mounted() {
     this.path = this.el.dataset.path
+    this.expanded = this.el.dataset.expanded === "true"
+    this.dispatchExpanded()
 
     this.onInput = (e) => {
       const t = e.target
@@ -1979,10 +2033,24 @@ const LanternTableChrome = {
     }
     this.onChange = (e) => {
       const rich = e.target.closest('[data-part="filter-rich"]')
-      if (e.target.matches('[data-part="filter"]') || rich) this.apply((rich || e.target).dataset.field)
+      // Filter controls are drafts until Apply. Search and quick-filter links
+      // remain immediate so the toolbar stays useful without opening the panel.
+      if (
+        (e.target.matches('[data-part="filter"]') || rich) &&
+        !e.target.closest(".lui-dt-filterpanel-inner")
+      ) {
+        this.apply((rich || e.target).dataset.field)
+      }
     }
     this.onClick = (e) => {
-      if (!e.target.closest('[data-part="clear-filters"]')) return
+      const apply = e.target.closest('[data-part="apply-filters"]')
+      if (apply) {
+        this.apply("*")
+        return
+      }
+
+      const reset = e.target.closest('[data-part="reset-filters"], [data-part="clear-filters"]')
+      if (!reset) return
       // Each rich filter clears through its own control, so it can reset its
       // label and aria state; that fires a change we do not want to act on
       // once per filter, hence the suspend.
@@ -2000,6 +2068,49 @@ const LanternTableChrome = {
     this.el.addEventListener("input", this.onInput)
     this.el.addEventListener("change", this.onChange)
     this.el.addEventListener("click", this.onClick)
+    this.onKeydown = (e) => {
+      if (!this.el.dataset.expandable || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return
+      const owner = e.target?.closest?.('[data-expandable="true"]')
+      if (owner && owner !== this.el) return
+      if (!owner && e.__lanternTableExpandHandled) return
+      if (e.key === "Escape" && this.expanded) {
+        // Focused controls and open popovers/dialogs get first use of Escape.
+        if (e.target?.closest?.(
+          'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="dialog"], [role="menu"], [role="listbox"], [data-part="content"], [data-part="positioner"], [aria-expanded="true"]'
+        )) return
+        e.__lanternTableExpandHandled = true
+        e.preventDefault()
+        this.patch(this.expandedUrl(false))
+        return
+      }
+      if (e.key.toLowerCase() !== "e" || !e.shiftKey) return
+      if (e.target?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]')) return
+      e.__lanternTableExpandHandled = true
+      e.preventDefault()
+      this.patch(this.expandedUrl(!this.expanded))
+    }
+    document.addEventListener("keydown", this.onKeydown)
+  },
+
+  expandedUrl(expanded) {
+    const url = new URL(window.location.href)
+    if (expanded) url.searchParams.set("expand", "1")
+    else url.searchParams.delete("expand")
+    return `${url.pathname}${url.search}${url.hash}`
+  },
+
+  dispatchExpanded() {
+    this.el.dispatchEvent(new CustomEvent("lantern:table-expand", {
+      bubbles: true,
+      detail: { tableId: this.el.dataset.tableId, expanded: this.expanded },
+    }))
+  },
+
+  updated() {
+    const expanded = this.el.dataset.expanded === "true"
+    if (expanded === this.expanded) return
+    this.expanded = expanded
+    this.dispatchExpanded()
   },
 
   // `source` is the field the reader just changed, or "*" for clear-all: the
@@ -2087,6 +2198,12 @@ const LanternTableChrome = {
     clearTimeout(this.debounce)
     this.el.removeEventListener("input", this.onInput)
     this.el.removeEventListener("change", this.onChange)
+    this.el.removeEventListener("click", this.onClick)
+    document.removeEventListener("keydown", this.onKeydown)
+    if (this.expanded) {
+      this.expanded = false
+      this.dispatchExpanded()
+    }
   },
 }
 

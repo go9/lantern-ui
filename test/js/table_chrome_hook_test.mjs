@@ -28,7 +28,12 @@ function mountChrome(html, { params = {}, keepFilters = [] } = {}) {
     `data-keep-filters='${JSON.stringify(keepFilters)}'`,
   ].join(" ")
 
-  const mount = mountHook(definition, `<div id="chrome" ${attrs}>${html}</div>`, { rootId: "chrome" })
+  const mount = mountHook(
+    definition,
+    `<div id="chrome" ${attrs}><div class="lui-dt-filterpanel-inner">${html}` +
+      `<button type="button" data-part="apply-filters">Apply</button></div></div>`,
+    { rootId: "chrome" }
+  )
   const patched = []
   mount.hook.patch = (url) => patched.push(url)
   return { ...mount, patched, last: () => patched[patched.length - 1] }
@@ -41,6 +46,10 @@ function query(url) {
 
 function change(el) {
   el.dispatchEvent(new el.ownerDocument.defaultView.Event("change", { bubbles: true }))
+}
+
+function apply(mount) {
+  mount.el.querySelector('[data-part="apply-filters"]').click()
 }
 
 const richSelect = (field, options, { op = "==", multiple = false } = {}) => `
@@ -57,6 +66,8 @@ test("a rich filter applies the value on its native select", () => {
 
   native.value = "15"
   change(native)
+  assert.equal(mount.patched.length, 0, "panel changes are staged")
+  apply(mount)
 
   assert.deepEqual(query(mount.last()), [
     ["filters[0][field]", "user_id"],
@@ -72,6 +83,7 @@ test("a multiple rich filter sends every selected value under op=in", () => {
   native.options[0].selected = true
   native.options[2].selected = true
   change(native)
+  apply(mount)
 
   assert.deepEqual(query(mount.last()), [
     ["filters[0][field]", "status"],
@@ -91,6 +103,7 @@ test("an unset rich filter contributes nothing", () => {
 
   native.value = ""
   change(native)
+  apply(mount)
 
   assert.deepEqual(query(mount.last()), [])
   mount.unmount()
@@ -105,6 +118,7 @@ test("filters the row does not own survive a rich filter change", () => {
 
   native.value = "15"
   change(native)
+  apply(mount)
 
   // The tab's filter is kept, the sort is kept, and the page is dropped: a
   // narrower result set has no page 3 to land on.
@@ -126,7 +140,7 @@ test("clear-filters resets rich filters through their own control, and patches o
 
   native.value = "15"
   change(native)
-  assert.equal(mount.patched.length, 1)
+  assert.equal(mount.patched.length, 0)
 
   // The clear button each rich filter owns resets its own label and aria state;
   // the hook clicks it rather than reaching past it. That fires a change per
@@ -138,7 +152,7 @@ test("clear-filters resets rich filters through their own control, and patches o
 
   mount.el.querySelector('[data-part="clear-filters"]').click()
 
-  assert.equal(mount.patched.length, 2)
+  assert.equal(mount.patched.length, 1)
   assert.deepEqual(query(mount.last()), [])
   mount.unmount()
 })
@@ -181,6 +195,7 @@ test("a panel control that has a value overrides the kept filter for its field",
 
   select.value = "todo"
   change(select)
+  apply(mount)
 
   assert.deepEqual(query(mount.last()), [
     ["filters[0][field]", "status"],
@@ -200,6 +215,7 @@ test("clearing the panel select drops its own filter but keeps unowned chips", (
 
   select.value = ""
   change(select)
+  apply(mount)
 
   assert.deepEqual(query(mount.last()), [
     ["filters[0][field]", "kind"],

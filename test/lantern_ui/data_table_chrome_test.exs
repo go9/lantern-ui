@@ -23,6 +23,19 @@ defmodule LanternUI.DataTableChromeTest do
   end
 
   defp table(assigns) do
+    assigns =
+      Map.merge(
+        %{
+          quick_filters_label: "Quick filters",
+          active_filters_label: "Active filters",
+          view_label: "View",
+          save_view_label: "Save current view",
+          load_view_label: "Load saved view",
+          saved_view_event: nil
+        },
+        assigns
+      )
+
     ~H"""
     <DataTable.data_table
       id="t"
@@ -31,7 +44,13 @@ defmodule LanternUI.DataTableChromeTest do
       path="/orders"
       search_field={:search}
       search_placeholder="Search orders…"
+      quick_filters_label={@quick_filters_label}
+      active_filters_label={@active_filters_label}
+      view_label={@view_label}
+      save_view_label={@save_view_label}
+      load_view_label={@load_view_label}
       view={@view}
+      saved_view_event={@saved_view_event}
     >
       <:stat label="Revenue" value="$12k" href="/rev" />
       <:stat label="Open" value="18" />
@@ -72,7 +91,80 @@ defmodule LanternUI.DataTableChromeTest do
     """
   end
 
-  defp base, do: %{rows: [%{id: 1, name: "Ada"}], meta: @meta, view: "table"}
+  defp table_with_saved_view_event(assigns) do
+    ~H"""
+    <DataTable.data_table
+      id="saved"
+      rows={@rows}
+      meta={@meta}
+      path="/orders"
+      saved_view_event="saved-view"
+    >
+      <:col :let={row} label="Name">{row.name}</:col>
+    </DataTable.data_table>
+    """
+  end
+
+  defp expandable_table(assigns) do
+    assigns =
+      Map.merge(
+        %{
+          expand_label: "Expand",
+          expanded_label: "Exit expand",
+          expand_aria_label: "Expand table",
+          expanded_aria_label: "Exit expanded view"
+        },
+        assigns
+      )
+
+    ~H"""
+    <DataTable.data_table
+      id="t"
+      rows={@rows}
+      meta={@meta}
+      path="/orders"
+      expandable
+      expanded={@expanded}
+      expand_label={@expand_label}
+      expanded_label={@expanded_label}
+      expand_aria_label={@expand_aria_label}
+      expanded_aria_label={@expanded_aria_label}
+    >
+      <:col :let={r} label="Name">{r.name}</:col>
+    </DataTable.data_table>
+    """
+  end
+
+  defp base do
+    %{
+      rows: [%{id: 1, name: "Ada"}],
+      meta: @meta,
+      view: "table",
+      quick_filters_label: "Quick filters",
+      active_filters_label: "Active filters",
+      view_label: "View",
+      save_view_label: "Save current view",
+      load_view_label: "Load saved view",
+      saved_view_event: nil
+    }
+  end
+
+  test "search-only tables do not render an empty filters and view popover" do
+    assigns = %{__changed__: nil, meta: @meta}
+
+    html =
+      (fn a ->
+         ~H"""
+         <DataTable.data_table id="search-only" rows={[]} meta={@meta} path="/orders" search_field={:name}>
+           <:col :let={row} label="Name">{row.name}</:col>
+         </DataTable.data_table>
+         """
+       end).(assigns)
+      |> rendered_to_string()
+
+    assert html =~ ~s(id="search-only-chrome")
+    refute html =~ ~s(id="search-only-filters")
+  end
 
   test "stat overview renders with collapse hook and linked/static stats" do
     html = render(&table/1, base())
@@ -83,6 +175,56 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ "$12k"
     assert html =~ ~s(href="/rev")
     assert html =~ "lui-dt-stat-static"
+  end
+
+  test "expand control preserves current query params and reflects URL-owned state" do
+    meta = %{params: %{"order_by" => ["name"], "view" => "cards"}}
+
+    html =
+      render(&expandable_table/1, %{rows: [%{id: 1, name: "Ada"}], meta: meta, expanded: false})
+
+    assert html =~ ~s(class="lui-dt-expand")
+    assert html =~ ~s(aria-label="Expand table")
+    assert html =~ ~s(data-expandable="true")
+    assert html =~ ~s(href="/orders?expand=1&amp;order_by[]=name&amp;view=cards")
+
+    expanded_html =
+      render(&expandable_table/1, %{
+        rows: [%{id: 1, name: "Ada"}],
+        meta: Map.put(meta, :params, Map.put(meta.params, "expand", "1")),
+        expanded: true
+      })
+
+    assert expanded_html =~ "lui-datatable-expanded"
+    assert expanded_html =~ ~s(aria-label="Exit expanded view")
+    assert expanded_html =~ ~s(&quot;expand&quot;:&quot;1&quot;)
+    [_, exit_href] = Regex.run(~r/<a href="([^"]+)"[^>]*class="lui-dt-expand"/, expanded_html)
+
+    exit_query =
+      exit_href
+      |> String.replace("&amp;", "&")
+      |> URI.parse()
+      |> Map.fetch!(:query)
+      |> URI.decode_query()
+
+    refute Map.has_key?(exit_query, "expand")
+    assert exit_query["view"] == "cards"
+  end
+
+  test "expand control text and accessible labels can be translated" do
+    html =
+      render(&expandable_table/1, %{
+        rows: [],
+        meta: @meta,
+        expanded: true,
+        expand_label: "Agrandir",
+        expanded_label: "Quitter le plein écran",
+        expand_aria_label: "Agrandir le tableau",
+        expanded_aria_label: "Quitter le tableau agrandi"
+      })
+
+    assert html =~ ~s(aria-label="Quitter le tableau agrandi")
+    assert html =~ "Quitter le plein écran"
   end
 
   test "tabs render with counts; preset matching current filters is active" do
@@ -167,12 +309,15 @@ defmodule LanternUI.DataTableChromeTest do
 
   defp count(h, n), do: length(String.split(h, n)) - 1
 
-  test "filters live in the settings popover with active-count badge and clear button" do
+  test "filters live in the Zag filters and view popover with active-count badge and clear button" do
     html = render(&table/1, base())
 
     # settings popover wraps the filter controls
     assert html =~ ~s(id="t-filters")
-    assert html =~ ~s(aria-label="Table settings")
+    assert html =~ ~s(aria-label="Filters &amp; view")
+    assert html =~ ~s(data-zag)
+    assert html =~ ~s(data-part="apply-filters")
+    assert html =~ ~s(data-part="reset-filters")
     assert html =~ "lui-dt-filterpanel"
     # status filter is active in @meta but channel (the declared filter) is not,
     # so no badge and no clear button
@@ -231,6 +376,65 @@ defmodule LanternUI.DataTableChromeTest do
     assert search < settings
   end
 
+  test "active filters render removable chips that preserve unrelated query state" do
+    meta =
+      put_in(@meta.params["filters"], %{
+        "0" => %{"field" => "status", "value" => "pending"},
+        "1" => %{"field" => "search", "value" => "ada"}
+      })
+
+    html = render(&table/1, %{base() | meta: meta})
+
+    assert html =~ "lui-dt-chip"
+    assert html =~ "status: pending"
+    assert html =~ "Search: ada"
+    assert html =~ ~s(href="/orders?filters[0][field]=search)
+    assert html =~ "order_by"
+    assert html =~ "view=table"
+  end
+
+  test "filter indexes sort numerically when there are ten or more filters" do
+    filters =
+      Map.new(0..11, fn index ->
+        {Integer.to_string(index), %{"field" => "field_#{index}", "value" => "value_#{index}"}}
+      end)
+
+    html = render(&table/1, %{base() | meta: put_in(@meta.params["filters"], filters)})
+    positions = Enum.map(0..11, &(:binary.match(html, "field_#{&1}: value_#{&1}") |> elem(0)))
+
+    assert positions == Enum.sort(positions)
+  end
+
+  test "chrome labels can be translated by the caller" do
+    html =
+      render(&table/1, %{
+        base()
+        | quick_filters_label: "Fast filters",
+          active_filters_label: "Current filters",
+          view_label: "Display",
+          save_view_label: "Store this view",
+          load_view_label: "Open stored views",
+          saved_view_event: "saved-view"
+      })
+
+    assert html =~ ~s(aria-label="Fast filters")
+    assert html =~ ~s(aria-label="Current filters")
+    assert html =~ ">Display</span>"
+    assert html =~ ">Store this view</button>"
+    assert html =~ ">Open stored views</button>"
+  end
+
+  test "saved view hooks emit generic consumer events with current URL configuration" do
+    html = render(&table_with_saved_view_event/1, base())
+
+    assert html =~ ~s(aria-label="Filters &amp; view")
+    assert html =~ ~s(phx-click="saved-view")
+    assert html =~ ~s(phx-value-action="save")
+    assert html =~ ~s(phx-value-action="list")
+    assert html =~ "order_by"
+    assert html =~ "view"
+  end
+
   test "card shell wraps everything; typed filters render text and range controls" do
     assigns = %{__changed__: nil}
 
@@ -267,6 +471,77 @@ defmodule LanternUI.DataTableChromeTest do
 
     assert html =~ ~s(phx-click="select_all_matching")
     assert html =~ "Select all 30"
+  end
+
+  test "all-matching selection stays compact across pages and excludes unchecked ids" do
+    html =
+      render(
+        fn assigns ->
+          ~H"""
+          <DataTable.data_table
+            id="t"
+            rows={@rows}
+            meta={@meta}
+            path="/orders"
+            all_matching?
+            excluded_ids={MapSet.new([2])}
+            selection_label="%{count} chosen"
+            select_all_label="Choose all %{count} results"
+            clear_label="Deselect"
+          >
+            <:col :let={row} label="Name">{row.name}</:col>
+          </DataTable.data_table>
+          """
+        end,
+        %{rows: [%{id: 1, name: "Ada"}, %{id: 2, name: "Alan"}], meta: @meta}
+      )
+
+    assert html =~ "29 chosen"
+    assert html =~ "Deselect"
+    refute html =~ "Choose all 30 results"
+    assert html =~ ~s(aria-label="Select all on page")
+
+    assert html =~ ~r/<input[^>]+phx-value-id="1"[^>]+checked/ or
+             html =~ ~r/<input[^>]+checked[^>]+phx-value-id="1"/
+
+    refute html =~ ~r/<input[^>]+phx-value-id="2"[^>]+checked/ or
+             html =~ ~r/<input[^>]+checked[^>]+phx-value-id="2"/
+  end
+
+  test "empty all-matching selection does not render the bulk bar or its actions" do
+    for {total_count, excluded_ids} <- [{0, [1]}, {2, [1, 2]}] do
+      html =
+        render(
+          fn assigns ->
+            ~H"""
+            <DataTable.data_table
+              id="empty-selection"
+              rows={[]}
+              meta={%{total_count: @total_count, current_page: 1, total_pages: 1, params: %{}}}
+              path="/orders"
+              all_matching?
+              excluded_ids={MapSet.new(@excluded_ids)}
+            >
+              <:col :let={row} label="Name">{row.name}</:col>
+              <:bulk_action label="Archive" event="bulk-archive" />
+            </DataTable.data_table>
+            """
+          end,
+          %{total_count: total_count, excluded_ids: excluded_ids}
+        )
+
+      refute html =~ "lui-dt-bulkbar"
+      refute html =~ "bulk-archive"
+      refute html =~ "0 selected"
+    end
+  end
+
+  test "selection labels are caller-translatable and select-all emits its generic event" do
+    html = render_with_selection()
+    assert html =~ "1 selected"
+    assert html =~ "Select all 30"
+    assert html =~ ~s(phx-click="select_all_matching")
+    assert html =~ ~s(phx-click="clear_selection")
   end
 
   defp render_with_selection do

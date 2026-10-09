@@ -27,24 +27,27 @@ defmodule LanternUI.Components.DataTable do
     command on click/Enter instead, for rows that are not links.
   - Selection is server-owned: rows emit `toggle_select` (`phx-value-id`),
     the header checkbox emits `select_all_page`, the bulk bar emits
-    `clear_selection` and each `bulk_action`'s `event` — all to `target`
-    (defaults to the parent LiveView). Same contract as the baseline.
+    `select_all_matching`, `clear_selection`, and each `bulk_action`'s `event`
+    — all to `target` (defaults to the parent LiveView). Set `all_matching?`
+    with `excluded_ids` to represent every result without materializing IDs.
 
   The built-in search box keeps every other active filter (tab presets, filter
   panel values) in the URL it patches.
 
-  Search, filter bar, tabs, and the stat overview arrive as chrome slots in a
-  follow-up; this is the core.
+  Filter chips, quick filters, and the Filters & view popover share one chrome
+  row. Filter changes are staged in the popover until Apply; search and quick
+  filter navigation remain immediate. Saved-view controls emit a generic
+  consumer event and do not prescribe persistence.
   """
   use Phoenix.Component
 
   alias LanternUI.Class
   alias LanternUI.Components.Button
-  alias LanternUI.Components.Dropdown
   alias LanternUI.Components.EmptyState
   alias LanternUI.Components.Icon
   alias LanternUI.Components.Badge
   alias LanternUI.Components.Pagination
+  alias LanternUI.Components.Popover
   alias LanternUI.Components.Select
   alias LanternUI.Components.Stat
   alias LanternUI.Components.Tabs
@@ -58,6 +61,28 @@ defmodule LanternUI.Components.DataTable do
     default: MapSet.new(),
     doc: "MapSet (or enumerable) of selected row ids."
   )
+
+  attr(:all_matching?, :boolean,
+    default: false,
+    doc: "Whether all results matching the current query are selected."
+  )
+
+  attr(:excluded_ids, :any,
+    default: MapSet.new(),
+    doc: "MapSet of matching row ids explicitly excluded while `all_matching?` is true."
+  )
+
+  attr(:selection_label, :string,
+    default: "%{count} selected",
+    doc: "Bulk selection summary; `%{count}` is replaced with the selected count."
+  )
+
+  attr(:select_all_label, :string,
+    default: "Select all %{count}",
+    doc: "Action to select every result matching the current query; `%{count}` is replaced."
+  )
+
+  attr(:clear_label, :string, default: "Clear", doc: "Bulk selection clear action label.")
 
   attr(:row_id, :any, default: nil, doc: "row -> id fn; defaults to & &1.id")
 
@@ -114,6 +139,51 @@ defmodule LanternUI.Components.DataTable do
     doc: "Placeholder for the toolbar search input."
   )
 
+  attr(:filters_label, :string,
+    default: "Filters & view",
+    doc: "Accessible label for the filters and view popover."
+  )
+
+  attr(:quick_filters_label, :string,
+    default: "Quick filters",
+    doc: "Accessible label for the quick filter tabs."
+  )
+
+  attr(:active_filters_label, :string,
+    default: "Active filters",
+    doc: "Accessible label for the active filter chips."
+  )
+
+  attr(:view_label, :string, default: "View", doc: "Label for the view switcher.")
+
+  attr(:save_view_label, :string,
+    default: "Save current view",
+    doc: "Label for saving the current view."
+  )
+
+  attr(:load_view_label, :string,
+    default: "Load saved view",
+    doc: "Label for opening saved views."
+  )
+
+  attr(:apply_label, :string, default: "Apply", doc: "Label for applying filter changes.")
+  attr(:reset_label, :string, default: "Reset", doc: "Label for resetting filter controls.")
+
+  attr(:clear_filters_label, :string,
+    default: "Clear filters",
+    doc: "Label for clearing active filters."
+  )
+
+  attr(:saved_view_event, :string,
+    default: nil,
+    doc: "Optional LiveView event for generic saved-view actions."
+  )
+
+  attr(:saved_views_label, :string,
+    default: "Saved views",
+    doc: "Heading for saved-view event hooks."
+  )
+
   attr(:view, :string,
     default: "table",
     values: ~w(table cards list),
@@ -153,6 +223,33 @@ defmodule LanternUI.Components.DataTable do
       "Stretch to the parent's height (the parent must be a flex column with a definite height). " <>
         "The rows area — table body, list, or cards — scrolls internally; overview, chrome, and " <>
         "pagination stay pinned. Without it the table is its natural content height."
+  )
+
+  attr(:expandable, :boolean,
+    default: false,
+    doc: "Render an Expand control and enable the Shift+E / Escape shortcuts."
+  )
+
+  attr(:expanded, :boolean,
+    default: false,
+    doc: "URL-owned expanded state; set from handle_params when `expand=1`."
+  )
+
+  attr(:expand_label, :string, default: "Expand", doc: "Text shown on the expand control.")
+
+  attr(:expanded_label, :string,
+    default: "Exit expand",
+    doc: "Text shown on the control while the table is expanded."
+  )
+
+  attr(:expand_aria_label, :string,
+    default: "Expand table",
+    doc: "Accessible label for the expand control."
+  )
+
+  attr(:expanded_aria_label, :string,
+    default: "Exit expanded view",
+    doc: "Accessible label for the control while the table is expanded."
   )
 
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
@@ -220,14 +317,22 @@ defmodule LanternUI.Components.DataTable do
       assigns
       |> assign(:row_id_fn, assigns.row_id || (& &1.id))
       |> assign(:row_click?, !assigns.row_navigate && !assigns.row_patch && !!assigns.row_click)
-      |> assign(:selection_count, MapSet.size(assigns.selected_ids))
+      |> assign(:selected_id_set, MapSet.new(assigns.selected_ids))
+      |> assign(:excluded_id_set, MapSet.new(assigns.excluded_ids))
       |> assign(:page_ids, Enum.map(assigns.rows, assigns.row_id || (& &1.id)))
+      |> assign(
+        :active_filters,
+        active_filters(assigns.meta, assigns.search_field, assigns.filter)
+      )
+      |> assign(:total_count, Map.get(assigns.meta, :total_count) || 0)
+      |> assign(:selection_count, selection_count(assigns))
 
     assigns =
       assign(
         assigns,
         :all_selected?,
-        assigns.page_ids != [] and Enum.all?(assigns.page_ids, &(&1 in assigns.selected_ids))
+        assigns.page_ids != [] and
+          Enum.all?(assigns.page_ids, &selected_id?(&1, assigns))
       )
 
     assigns = resolve_views(assigns)
@@ -240,10 +345,12 @@ defmodule LanternUI.Components.DataTable do
           "lui-datatable",
           @fill && "lui-datatable-fill",
           @flush && "lui-datatable-flush",
+          @expandable && @expanded && "lui-datatable-expanded",
           @class
         ])
       }
       data-view={@view}
+      data-expanded={if @expandable && @expanded, do: "true"}
       phx-hook={@row_click? && "LanternRowClick"}
       {@rest}
     >
@@ -291,30 +398,62 @@ defmodule LanternUI.Components.DataTable do
 
       <div
         :if={
-          @tab != [] || @toolbar != [] || @search_field || @filter != [] || @card != [] ||
-            @list_item != []
+          @tab != [] || @toolbar != [] || @search_field || @filter != [] || @saved_view_event ||
+            @card != [] || @list_item != [] || @expandable
         }
         id={"#{@id}-chrome"}
         class="lui-dt-chromerow"
         phx-hook="LanternTableChrome"
         data-path={@path}
-        data-params={Jason.encode!(chrome_base_params(@meta, @view, @card != [] || @list_item != []))}
+        data-table-id={@id}
+        data-expandable={if @expandable, do: "true"}
+        data-expanded={if @expandable && @expanded, do: "true"}
+        data-params={
+          Jason.encode!(chrome_base_params(@meta, @view, @card != [] || @list_item != [], @expanded))
+        }
         data-keep-filters={Jason.encode!(unowned_filters(@meta, @search_field, @filter))}
       >
-        <Tabs.tabs_list :if={@tab != []} active_tab={active_tab(@tab, @meta, @search_field)} size="sm">
-          <:tab
-            :for={{tab, i} <- Enum.with_index(@tab)}
-            name={"tab-#{i}"}
-            patch={tab_path(@path, @meta, tab[:filters] || [], @search_field)}
+        <div :if={@tab != []} class="lui-dt-quickfilters" aria-label={@quick_filters_label}>
+          <Tabs.tabs_list active_tab={active_tab(@tab, @meta, @search_field)} size="sm">
+            <:tab
+              :for={{tab, i} <- Enum.with_index(@tab)}
+              name={"tab-#{i}"}
+              patch={tab_path(@path, @meta, tab[:filters] || [], @search_field)}
+            >
+              {tab[:label]}
+              <Badge.badge :if={tab[:count]} size="sm" color="neutral">{tab[:count]}</Badge.badge>
+            </:tab>
+          </Tabs.tabs_list>
+        </div>
+
+        <div :if={@active_filters != []} class="lui-dt-chips" aria-label={@active_filters_label}>
+          <.link
+            :for={filter <- @active_filters}
+            patch={
+              remove_filter_path(@path, @meta, filter.index, @view, @card != [] || @list_item != [])
+            }
+            class="lui-dt-chip"
+            aria-label={"Remove #{filter.label} filter: #{filter.value}"}
           >
-            {tab[:label]}
-            <Badge.badge :if={tab[:count]} size="sm" color="neutral">{tab[:count]}</Badge.badge>
-          </:tab>
-        </Tabs.tabs_list>
+            <span>{filter.label}: {filter.value}</span>
+            <Icon.icon name="x-mark" />
+          </.link>
+        </div>
 
         <div class="lui-dt-spacer"></div>
 
         {render_slot(@toolbar)}
+
+        <.link
+          :if={@expandable}
+          patch={expand_path(@path, @meta, @expanded)}
+          class="lui-dt-expand"
+          aria-label={if @expanded, do: @expanded_aria_label, else: @expand_aria_label}
+          data-part="expand"
+        >
+          <Icon.icon name="window" />
+          <span>{if @expanded, do: @expanded_label, else: @expand_label}</span>
+        </.link>
 
         <div :if={@search_field} class="lui-dt-search">
           <Icon.icon name="magnifying-glass" />
@@ -329,44 +468,21 @@ defmodule LanternUI.Components.DataTable do
           />
         </div>
 
-        <div :if={length(@available_views) > 1} class="lui-dt-viewtoggle">
-          <.link
-            :if={"list" in @available_views}
-            patch={view_path(@path, @meta, "list")}
-            class={["lui-vt", @view == "list" && "lui-vt-active"]}
-            aria-label="List view"
-          >
-            <Icon.icon name="bars-3" class="lui-vt-icon" />
-          </.link>
-          <.link
-            :if={"table" in @available_views}
-            patch={view_path(@path, @meta, "table")}
-            class={["lui-vt", @view == "table" && "lui-vt-active"]}
-            aria-label="Table view"
-          >
-            <Icon.icon name="view-columns" class="lui-vt-icon" />
-          </.link>
-          <.link
-            :if={"cards" in @available_views}
-            patch={view_path(@path, @meta, "cards")}
-            class={["lui-vt", @view == "cards" && "lui-vt-active"]}
-            aria-label="Grid view"
-          >
-            <Icon.icon name="squares-2x2" class="lui-vt-icon" />
-          </.link>
-        </div>
-
-        <Dropdown.dropdown :if={@filter != []} id={"#{@id}-filters"} placement="bottom-end">
-          <:toggle>
-            <Button.button size="sm" variant="outline" type="button" aria-label="Table settings">
-              <Icon.icon name="adjustments-horizontal" />
-              <Badge.badge :if={active_filter_count(@meta, @filter) > 0} size="sm" color="accent">
-                {active_filter_count(@meta, @filter)}
-              </Badge.badge>
-            </Button.button>
-          </:toggle>
-          <Dropdown.dropdown_custom>
-            <div class="lui-dt-filterpanel">
+        <Popover.popover
+          :if={@filter != [] || length(@available_views) > 1 || @saved_view_event}
+          id={"#{@id}-filters"}
+          class="lui-dt-filterpanel"
+          placement="bottom-end"
+        >
+          <Button.button size="sm" variant="outline" type="button" aria-label={@filters_label}>
+            <Icon.icon name="adjustments-horizontal" />
+            {@filters_label}
+            <Badge.badge :if={active_filter_count(@meta, @filter) > 0} size="sm" color="accent">
+              {active_filter_count(@meta, @filter)}
+            </Badge.badge>
+          </Button.button>
+          <:content>
+            <div class="lui-dt-filterpanel-inner">
               <div :for={filter <- @filter} class="lui-dt-filterrow">
                 <label class="lui-dt-filterlabel">{filter[:label] || to_string(filter[:field])}</label>
                 <%= case filter[:type] || :select do %>
@@ -458,23 +574,71 @@ defmodule LanternUI.Components.DataTable do
                 class="lui-dt-clearfilters"
                 data-part="clear-filters"
               >
-                <Icon.icon name="x-mark" /> Clear filters
+                <Icon.icon name="x-mark" /> {@clear_filters_label}
               </button>
+              <div :if={length(@available_views) > 1} class="lui-dt-viewrow">
+                <span class="lui-dt-filterlabel">{@view_label}</span>
+                <div class="lui-dt-viewtoggle">
+                  <.link
+                    :if={"list" in @available_views}
+                    patch={view_path(@path, @meta, "list")}
+                    class={["lui-vt", @view == "list" && "lui-vt-active"]}
+                    aria-label="List view"
+                  ><Icon.icon name="bars-3" class="lui-vt-icon" /></.link>
+                  <.link
+                    :if={"table" in @available_views}
+                    patch={view_path(@path, @meta, "table")}
+                    class={["lui-vt", @view == "table" && "lui-vt-active"]}
+                    aria-label="Table view"
+                  ><Icon.icon name="view-columns" class="lui-vt-icon" /></.link>
+                  <.link
+                    :if={"cards" in @available_views}
+                    patch={view_path(@path, @meta, "cards")}
+                    class={["lui-vt", @view == "cards" && "lui-vt-active"]}
+                    aria-label="Grid view"
+                  ><Icon.icon name="squares-2x2" class="lui-vt-icon" /></.link>
+                </div>
+              </div>
+              <section
+                :if={@saved_view_event}
+                class="lui-dt-savedviews"
+                aria-label={@saved_views_label}
+              >
+                <h3 class="lui-dt-filterlabel">{@saved_views_label}</h3>
+                <button
+                  type="button"
+                  phx-click={@saved_view_event}
+                  phx-value-action="save"
+                  phx-value-params={Jason.encode!(saved_view_params(@meta, @view))}
+                  class="lui-dt-savedview"
+                >{@save_view_label}</button>
+                <button
+                  type="button"
+                  phx-click={@saved_view_event}
+                  phx-value-action="list"
+                  phx-value-params={Jason.encode!(saved_view_params(@meta, @view))}
+                  class="lui-dt-savedview"
+                >{@load_view_label}</button>
+              </section>
+              <footer class="lui-dt-filterfooter">
+                <button type="button" class="lui-dt-resetfilters" data-part="reset-filters">{@reset_label}</button>
+                <button type="button" class="lui-dt-applyfilters" data-part="apply-filters">{@apply_label}</button>
+              </footer>
             </div>
-          </Dropdown.dropdown_custom>
-        </Dropdown.dropdown>
+          </:content>
+        </Popover.popover>
       </div>
 
       <div :if={@selection_count > 0} class="lui-dt-bulkbar">
-        <span class="lui-dt-bulkcount">{@selection_count} selected</span>
+        <span class="lui-dt-bulkcount">{label_with_count(@selection_label, @selection_count)}</span>
         <button
-          :if={Map.get(@meta, :total_count) && @selection_count < Map.get(@meta, :total_count)}
+          :if={!@all_matching? && @selection_count < @total_count}
           type="button"
           class="lui-dt-selectall"
           phx-click="select_all_matching"
           phx-target={@target}
         >
-          Select all {Map.get(@meta, :total_count)}
+          {label_with_count(@select_all_label, @total_count)}
         </button>
         <Button.button
           :for={action <- @bulk_action}
@@ -487,7 +651,7 @@ defmodule LanternUI.Components.DataTable do
           <Icon.icon :if={action[:icon]} name={action[:icon]} /> {action[:label]}
         </Button.button>
         <Button.button size="sm" variant="ghost" phx-click="clear_selection" phx-target={@target}>
-          Clear
+          {@clear_label}
         </Button.button>
       </div>
 
@@ -583,7 +747,7 @@ defmodule LanternUI.Components.DataTable do
               class={
                 Class.merge([
                   "lui-tr",
-                  @row_id_fn.(row) in @selected_ids && "lui-tr-selected",
+                  selected_id?(@row_id_fn.(row), assigns) && "lui-tr-selected",
                   row_linked?(assigns, row) && "lui-row-linked"
                 ])
               }
@@ -593,7 +757,7 @@ defmodule LanternUI.Components.DataTable do
                 <input
                   type="checkbox"
                   class="lui-checkbox"
-                  checked={@row_id_fn.(row) in @selected_ids}
+                  checked={selected_id?(@row_id_fn.(row), assigns)}
                   phx-click="toggle_select"
                   phx-value-id={@row_id_fn.(row)}
                   phx-target={@target}
@@ -637,6 +801,20 @@ defmodule LanternUI.Components.DataTable do
     </div>
     """
   end
+
+  defp selection_count(%{all_matching?: true, meta: meta, excluded_ids: excluded_ids}) do
+    max((Map.get(meta, :total_count) || 0) - MapSet.size(MapSet.new(excluded_ids)), 0)
+  end
+
+  defp selection_count(%{selected_ids: selected_ids}), do: MapSet.size(MapSet.new(selected_ids))
+
+  defp selected_id?(id, %{all_matching?: true, excluded_id_set: excluded_ids}),
+    do: not MapSet.member?(excluded_ids, id)
+
+  defp selected_id?(id, %{selected_id_set: selected_ids}), do: MapSet.member?(selected_ids, id)
+
+  defp label_with_count(label, count),
+    do: String.replace(label, "%{count}", Integer.to_string(count))
 
   # The row's destination: `{:navigate | :patch, path}` or nil. Link wins over
   # `row_click`, which is a hook-driven fallback for rows that run a JS command.
@@ -774,9 +952,11 @@ defmodule LanternUI.Components.DataTable do
   # The chrome hook rebuilds the URL from these on every search/filter/clear, so
   # anything omitted here is silently dropped. `view` lives outside Flop's params,
   # which is why searching used to bounce you back to the default view.
-  defp chrome_base_params(meta, view, toggleable?) do
+  defp chrome_base_params(meta, view, toggleable?, expanded?) do
     base = base_params(meta) |> Map.drop(["filters", "page"])
-    if toggleable?, do: Map.put(base, "view", view), else: base
+
+    base = if toggleable?, do: Map.put(base, "view", view), else: base
+    if expanded?, do: Map.put(base, "expand", "1"), else: base
   end
 
   # The chrome row rebuilds `filters` from the controls it can see, so anything
@@ -832,9 +1012,81 @@ defmodule LanternUI.Components.DataTable do
     end
   end
 
-  defp normalize_filters(filters) when is_map(filters), do: Map.values(filters)
+  defp normalize_filters(filters) when is_map(filters) do
+    filters
+    |> Enum.sort_by(fn {key, _value} ->
+      case Integer.parse(to_string(key)) do
+        {index, ""} -> {0, index}
+        _ -> {1, to_string(key)}
+      end
+    end)
+    |> Enum.map(&elem(&1, 1))
+  end
+
   defp normalize_filters(filters) when is_list(filters), do: filters
   defp normalize_filters(_), do: []
+
+  defp active_filters(meta, search_field, filter_slots) do
+    search = search_field && to_string(search_field)
+
+    meta
+    |> base_params()
+    |> Map.get("filters", %{})
+    |> normalize_filters()
+    |> Enum.with_index()
+    |> Enum.flat_map(fn {filter, index} ->
+      field = to_string(filter["field"] || "")
+      value = filter["value"]
+
+      if is_nil(value) or value == "" do
+        []
+      else
+        slot = Enum.find(filter_slots, &(to_string(&1[:field]) == field))
+        label = if field == search, do: "Search", else: (slot && slot[:label]) || field
+        values = List.wrap(value) |> Enum.map(&option_name(slot, &1)) |> Enum.join(", ")
+        [%{index: index, label: label, value: values}]
+      end
+    end)
+  end
+
+  defp option_name(nil, value), do: to_string(value)
+
+  defp option_name(slot, value) do
+    case Enum.find(slot[:options] || [], &(to_string(opt_value(&1)) == to_string(value))) do
+      nil -> to_string(value)
+      option -> opt_label(option)
+    end
+  end
+
+  defp remove_filter_path(path, meta, index, view, toggleable?) do
+    params =
+      base_params(meta)
+      |> Map.delete("page")
+      |> then(fn params -> if toggleable?, do: Map.put(params, "view", view), else: params end)
+
+    filters =
+      params
+      |> Map.get("filters", %{})
+      |> normalize_filters()
+      |> Enum.with_index()
+      |> Enum.reject(fn {_filter, filter_index} -> filter_index == index end)
+      |> Enum.map(&elem(&1, 0))
+      |> Enum.with_index()
+      |> Map.new(fn {filter, filter_index} -> {to_string(filter_index), filter} end)
+
+    params =
+      if filters == %{},
+        do: Map.delete(params, "filters"),
+        else: Map.put(params, "filters", filters)
+
+    path <> "?" <> Plug.Conn.Query.encode(params)
+  end
+
+  defp saved_view_params(meta, view) do
+    base_params(meta)
+    |> Map.delete("page")
+    |> Map.put("view", view)
+  end
 
   # A tab is active when its filter preset matches the current filters exactly
   # (both normalized to field=>value); the presetless tab is active otherwise
@@ -897,6 +1149,12 @@ defmodule LanternUI.Components.DataTable do
   defp view_path(path, meta, view) do
     params = base_params(meta) |> Map.put("view", view)
     path <> "?" <> Plug.Conn.Query.encode(params)
+  end
+
+  defp expand_path(path, meta, expanded?) do
+    params = base_params(meta)
+    params = if expanded?, do: Map.delete(params, "expand"), else: Map.put(params, "expand", "1")
+    if map_size(params) == 0, do: path, else: path <> "?" <> Plug.Conn.Query.encode(params)
   end
 
   defp filter_values(meta, field) do

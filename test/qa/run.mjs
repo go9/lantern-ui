@@ -682,6 +682,33 @@ for (const vw of [1440, 768, 390]) {
       if (measurements.documentOverflows) row.problems.push("nested page shell document overflows horizontally")
       row.measurements = measurements
       await page.screenshot({ path: `${SHOTS}/${vw}-${ctx}.png` })
+
+      await page.emulateMediaType("print")
+      const printed = await page.evaluate(() => {
+        const display = (selector) => getComputedStyle(document.querySelector(selector)).display
+        const style = (selector) => getComputedStyle(document.querySelector(selector))
+        return {
+          appbarHidden: display(".lui-appbar") === "none",
+          sidebarHidden: display(".lui-app-sidebar") === "none",
+          tableChromeHidden: display("#qa-app-shell-table .lui-dt-chromerow") === "none",
+          paginationHidden: display("#qa-app-shell-table .lui-dt-pagination") === "none",
+          tableVisible: display("#qa-app-shell-table") !== "none",
+          tablePosition: style("#qa-app-shell-table").position,
+          tableOverflow: style("#qa-app-shell-table .lui-table-wrap").overflowY,
+          headerGroup: style("#qa-app-shell-table .lui-thead").display,
+          rows: document.querySelectorAll("#qa-app-shell-table .lui-tr").length,
+        }
+      })
+      if (!printed.appbarHidden || !printed.sidebarHidden) row.problems.push("print still shows app-shell navigation")
+      if (!printed.tableChromeHidden || !printed.paginationHidden) row.problems.push("print still shows table controls")
+      if (!printed.tableVisible || printed.tablePosition !== "static" || printed.tableOverflow !== "visible") {
+        row.problems.push("print table did not return to natural document flow")
+      }
+      if (printed.headerGroup !== "table-header-group") row.problems.push("print table header is not a repeating header group")
+      if (printed.rows < 3) row.problems.push("print table rows are missing")
+      row.print = printed
+      await page.screenshot({ path: `${SHOTS}/${vw}-${ctx}-print.png`, fullPage: true })
+      await page.emulateMediaType("screen")
     } catch (e) {
       row.problems.push(`error: ${e.message.split("\n")[0]}`)
       await page.screenshot({ path: `${SHOTS}/${vw}-${ctx}.png` }).catch(() => {})
