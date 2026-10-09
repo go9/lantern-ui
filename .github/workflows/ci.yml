@@ -74,3 +74,8 @@ jobs:
           done
           curl --fail --silent "$BASE/consistency" >/dev/null
           node test/qa/run.mjs --consistency --consistency-legacy
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: control-sizing-qa
+          path: /tmp/lantern-ui-consistency

@@ -299,7 +299,7 @@ if (CONSISTENCY_ONLY) {
       }
       legacy.legacyComparison = { compared: compared.length, differences: compared.filter((item) => item.fields.length) }
       legacy.status = legacy.problems.length ? "FAIL" : "ok"
-      console.log(`${legacy.status} 1440 light legacy comparison: ${compared.length} sampled controls, ${legacy.problems.length} findings`)
+      console.log(`${legacy.status} 1440 light legacy comparison: ${compared.length} sampled controls, ${legacy.problems.length} findings ${JSON.stringify(legacy.legacyComparison.differences)}`)
     }
   }
   fs.writeFileSync(`${reportDir}/consistency-measurements.json`, JSON.stringify(rows, null, 2))
