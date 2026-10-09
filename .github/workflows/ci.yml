@@ -62,7 +62,6 @@ jobs:
       - name: Control sizing browser gate
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
-          PUPPETEER_CORE: ./node_modules/puppeteer-core
           BASE: http://127.0.0.1:4013
           QA_BASELINE_CSS: /tmp/lantern-ui-pre-scale.css
           QA_REPORT_DIR: /tmp/lantern-ui-consistency
