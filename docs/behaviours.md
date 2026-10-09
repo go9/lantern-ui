@@ -208,3 +208,118 @@ markup is the 0.10 markup.
   </.page_shell>
 </.app_shell>
 ```
+
+## Printing tables
+
+When printing, LanternUI hides app navigation, page actions, table filters,
+selection controls, pagination, and expand controls. Table rows return to
+natural document flow with visible overflow, a repeating table header, and rows
+kept together across page breaks where possible. No consumer setup is required.
+
+## Data table filters and saved-view hooks
+
+`data_table/1` renders quick filters, active removable filter chips, search, and
+the `Filters & view` control in one chrome row. Filters configured with
+`:filter` render in the Zag popover and are staged until `Apply`; `Reset` clears
+the panel controls, while `Clear filters` clears configured filters. Their
+labels can be supplied with `filters_label`, `apply_label`, `reset_label`, and
+`clear_filters_label`. Search and quick-filter links continue to update the URL
+immediately.
+
+The popover reuses LanternUI's searchable Zag select when `searchable` is set;
+there is no separate table combobox implementation. When `saved_view_event` is
+provided, the popover emits that LiveView event with `phx-value-action` set to
+`save` or `list` and `phx-value-params` containing the current non-page URL
+configuration. Persistence and saved-view schemas belong to the consuming app.
+
+## Expandable data tables
+
+`data_table/1` can opt into a URL-owned expanded mode with `expandable`. The
+host derives `expanded` from `handle_params/3` and accepts the `expand=1` query
+parameter. The Expand control and Shift+E / Escape shortcuts patch that query
+while preserving the current route parameters. Shift+E is ignored while focus
+is in an input, select, textarea, textbox, or contenteditable region.
+
+Inside `app_shell/1`, expanded tables temporarily collapse the sidebar to a
+76px rail. This transient collapse does not read or write the saved sidebar
+preference; leaving expanded mode restores the prior state. A manual sidebar
+toggle remains an explicit preference change.
+
+```heex
+<.data_table
+  id="records"
+  rows={@rows}
+  meta={@meta}
+  path={~p"/records"}
+  expandable
+  expanded={@expanded?}
+>
+  <:col :let={row} label="Name">{row.name}</:col>
+</.data_table>
+```
+
+```elixir
+def handle_params(params, _uri, socket) do
+  {:noreply, assign(socket, :expanded?, params["expand"] == "1")}
+end
+```
+
+## Data table selection
+
+Selection remains owned by the host LiveView. The default `selected_ids` set
+models explicit row selections. For a large matching result set, set
+`all_matching?` and pass an `excluded_ids` set; the component derives the
+selected count as `meta.total_count - excluded_ids` and marks rows selected
+without building a set of every matching ID. Selection events remain generic:
+`toggle_select`, `select_all_page`, `select_all_matching`, and
+`clear_selection`.
+
+`selection_label`, `select_all_label`, and `clear_label` provide caller-owned
+labels for translation. The first two accept `%{count}` as a placeholder,
+which works with Gettext's interpolation conventions.
+
+```heex
+<.data_table
+  id="records"
+  rows={@rows}
+  meta={@meta}
+  path={~p"/records"}
+  all_matching?={@all_matching?}
+  excluded_ids={@excluded_ids}
+  selection_label={gettext("%{count} selected")}
+  select_all_label={gettext("Select all %{count}")}
+  clear_label={gettext("Clear")}
+>
+  <:col :let={row} label="Name">{row.name}</:col>
+</.data_table>
+```
+
+Clear the all-matching state and its exclusions when the query changes. The
+example below keeps selection across page-only changes and resets it when any
+other query parameter changes:
+
+```elixir
+def mount(_params, _session, socket) do
+  {:ok,
+   assign(socket,
+     all_matching?: false,
+     excluded_ids: MapSet.new(),
+     selection_query: nil
+   )}
+end
+
+def handle_params(params, _uri, socket) do
+  selection_query = Map.drop(params, ["page"])
+
+  if selection_query == socket.assigns.selection_query do
+    {:noreply, socket}
+  else
+    {:noreply,
+     assign(socket,
+       selection_query: selection_query,
+       all_matching?: false,
+       excluded_ids: MapSet.new()
+     )}
+  end
+end
+```

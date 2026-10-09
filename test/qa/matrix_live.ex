@@ -7,7 +7,7 @@ defmodule LanternUI.QA.MatrixLive do
   use LanternUI
 
   @cmps ~w(select select_search dropdown menu popover tooltip autocomplete date_picker command user_menu)
-  @ctxs ~w(plain card card_transform scroll table modal sheet side_panel scroll_area data_table page_shell action_bar app_page_shell app_page_shell_compact page_shell_strip page_shell_strip_compact sidebar_header sidebar_header_collapsed edge_br edge_bl sticky tall patch nested)
+  @ctxs ~w(plain card card_transform scroll table modal sheet side_panel scroll_area data_table data_table_selection page_shell action_bar app_page_shell app_page_shell_compact page_shell_strip page_shell_strip_compact sidebar_header sidebar_header_collapsed edge_br edge_bl sticky tall patch nested)
   def cmps, do: @cmps
   def ctxs, do: @ctxs
 
@@ -20,6 +20,7 @@ defmodule LanternUI.QA.MatrixLive do
        n: 0,
        shell_empty?: params["shell_empty"] == "1",
        shell_dismissed_notice?: params["shell_dismissed_notice"] == "1",
+       expand?: params["expand"] == "1",
        dismissed: false
      )
      |> assign(:page_title, "QA matrix"), layout: false}
@@ -31,12 +32,15 @@ defmodule LanternUI.QA.MatrixLive do
   def handle_event("bump", _, socket), do: {:noreply, update(socket, :n, &(&1 + 1))}
   def handle_event(_, _, socket), do: {:noreply, socket}
 
+  def handle_params(params, _uri, socket),
+    do: {:noreply, assign(socket, :expand?, params["expand"] == "1")}
+
   def render(assigns) do
     ~H"""
     <div id="qa-root" style={root_style(@ctx)}>
       <button
         :if={
-          @ctx not in ~w(page_shell action_bar page_shell_strip page_shell_strip_compact sidebar_header sidebar_header_collapsed)
+          @ctx not in ~w(data_table_selection page_shell action_bar page_shell_strip page_shell_strip_compact sidebar_header sidebar_header_collapsed)
         }
         id="qa-patch"
         type="button"
@@ -52,6 +56,7 @@ defmodule LanternUI.QA.MatrixLive do
         dismissed={@dismissed}
         shell_empty?={@shell_empty?}
         shell_dismissed_notice?={@shell_dismissed_notice?}
+        expand?={@expand?}
       />
     </div>
     """
@@ -69,6 +74,7 @@ defmodule LanternUI.QA.MatrixLive do
   attr(:dismissed, :boolean, default: false)
   attr(:shell_empty?, :boolean, default: false)
   attr(:shell_dismissed_notice?, :boolean, default: false)
+  attr(:expand?, :boolean, default: false)
 
   defp ctx(%{name: "plain"} = assigns) do
     ~H"""
@@ -143,7 +149,10 @@ defmodule LanternUI.QA.MatrixLive do
         rows: for(i <- 1..3, do: %{id: i, name: "row #{i}"}),
         meta: %{
           flop: %{},
-          params: %{},
+          params: %{
+            "filters" => %{"0" => %{"field" => "status", "value" => "open"}},
+            "order_by" => ["name"]
+          },
           current_page: 1,
           total_pages: 1,
           page_size: 10,
@@ -152,12 +161,63 @@ defmodule LanternUI.QA.MatrixLive do
       )
 
     ~H"""
-    <div style="height:240px;display:flex;flex-direction:column;width:560px">
-      <.data_table id="qa-dt" rows={@rows} meta={@meta} path="/qa" fill>
+    <div style="height:360px;display:flex;flex-direction:column;width:100%">
+      <.data_table
+        id="qa-dt"
+        rows={@rows}
+        meta={@meta}
+        path="/qa"
+        fill
+        search_field={:name}
+        saved_view_event="saved-view"
+      >
+        <:tab label="All items" count={3} />
+        <:tab label="Open" count={2} filters={[%{field: "status", value: "open"}]} />
+        <:filter
+          field={:status}
+          label="Status"
+          options={[{"Open", "open"}, {"Closed", "closed"}]}
+          searchable
+        />
         <:col :let={r} label="Name">{r.name}</:col>
         <:col :let={r} label="Action">
           <.sub :if={r.id == 3} cmp={@cmp} n={@n} />
         </:col>
+      </.data_table>
+    </div>
+    """
+  end
+
+  defp ctx(%{name: "data_table_selection"} = assigns) do
+    assigns =
+      assign(assigns,
+        rows: for(i <- 1..32, do: %{id: i, name: "Record #{i}"}),
+        meta: %{
+          flop: %{},
+          params: %{},
+          current_page: 1,
+          total_pages: 4,
+          page_size: 10,
+          total_count: 32
+        }
+      )
+
+    ~H"""
+    <div style="min-height:100vh;padding:16px;box-sizing:border-box;background:var(--lantern-surface);color:var(--lantern-fg);">
+      <.data_table
+        id="qa-selection-table"
+        rows={Enum.take(@rows, 10)}
+        meta={@meta}
+        path="/qa"
+        all_matching?
+        excluded_ids={MapSet.new([2, 7])}
+        selection_label="%{count} selected"
+        select_all_label="Select all %{count} results"
+        clear_label="Clear selection"
+      >
+        <:col :let={row} label="Record">{row.name}</:col>
+        <:col :let={row} label="Status">Ready {row.id}</:col>
+        <:col :let={row} label="Owner">Team {rem(row.id, 4)}</:col>
       </.data_table>
     </div>
     """
@@ -305,6 +365,9 @@ defmodule LanternUI.QA.MatrixLive do
             meta={@meta}
             path="/qa"
             show_checkboxes={false}
+            search_field={:name}
+            expandable
+            expanded={@expand?}
           >
             <:col :let={row} label="Record">{row.name}</:col>
             <:col :let={row} label="Status">Ready {row.id}</:col>

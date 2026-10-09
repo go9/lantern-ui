@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Print styles for app-shell and table pages: hide interactive chrome and restore tables to natural document flow.
+- Data table active-filter chips and an accessible Zag `Filters & view` popover. Popover filter changes stage until Apply; Reset and Clear filters are caller-labelable. Optional saved-view actions emit generic consumer events without adding persistence policy.
+- Opt-in URL-owned expanded data tables (`expandable` / `expanded`) with query-preserving patches, Shift+E / Escape shortcuts, and a transient app-shell sidebar rail that leaves the saved collapse preference intact.
+- Server-owned data-table all-matching selection via `all_matching?` and `excluded_ids`, with caller-translatable selection, select-all, and clear labels.
 - Additive `time_series_chart/1` with signed line, area, points, stacked area, vertical/horizontal bar, grouped bar, comparison, and annotation geometry.
 - `chart_card/1` composition slots and `chart_settings/1` native LiveView controls over the existing Popover.
 - Shared-x chart interaction with a clamped tooltip, keyboard Home/End/Escape, an accessible data-table caption, and keyboard-only live announcements.
