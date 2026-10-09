@@ -29,6 +29,7 @@
     "@zag-js/types": "^1.44.0",
     "@zag-js/vanilla": "^1.44.0",
     "esbuild": "^0.25.9",
-    "jsdom": "^26.1.0"
+    "jsdom": "^26.1.0",
+    "puppeteer-core": "^25.13.0"
   }
 }

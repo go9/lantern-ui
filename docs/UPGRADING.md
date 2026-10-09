@@ -131,6 +131,20 @@ charts do not gain selection events unless configured.
 
 ## Styling changes and how to keep the old look or adopt the new look
 
+### Control sizing (0.12, unreleased)
+
+Sized controls now share `--lui-control-h-sm`, `--lui-control-h-md`, and
+`--lui-control-h-lg` tokens (28px, 32px, and 36px). Button sizes `xs`/`sm`
+map to 28px, `md` to 32px, and `lg`/`xl` to 36px; related controls use
+matching font, icon, radius, focus-ring, and gap tokens. Badges keep their
+compact component-specific heights. The default metrics and focus outline
+change for controls covered by the scale.
+
+To restore their pre-scale metrics inside a subtree, add
+`data-lui-control-scale="legacy"` to an ancestor. This opts that subtree out
+of the control-scale rules; it does not roll back unrelated styling or markup
+changes described in this guide. Remove the attribute to use the shared scale.
+
 The shell changes above are opt-in. Tone-slot alert backgrounds are opt-in.
 However, not every visual change is currently selectable. The new print media
 rules change the existing `.lui-app` from its fixed-height, overflow-hidden
@@ -153,17 +167,13 @@ used by the new promo tone. New chart colors and promo styling affect pages
 only when those new APIs/tones are used. Inspect the app's own token overrides
 and custom `.lui-*` selectors as part of upgrade review.
 
-There is **no shipped global legacy-style switch yet** for the existing
-`.lui-app` and data-table styling changes. To keep the exact 0.9 appearance,
-remain on 0.9.x until a compatibility switch exists; per-selector overrides
-can restore individual declarations but are not a supported complete rollback.
-The proposed root-scoped option is tracked in Flicker ticket #3672 (owner
-decision required); do not assume
-`data-lantern-style="legacy"` is implemented. The owner must choose whether
-the new styling is the default or opt-in and whether a legacy mode gets a
-removal date. Apps choosing the new look can upgrade to 0.10.x/main and opt in
-to `page_shell`, `compact`, `strip`, tone slots, and other new components as
-needed.
+There is no global legacy-style switch for the existing `.lui-app` and
+data-table styling changes described above. The control-scale opt-out applies
+only to control metrics and focus styles; it does not restore the exact 0.9
+appearance. Per-selector overrides can restore individual declarations but
+are not a supported complete rollback. Apps choosing the new look can upgrade
+to 0.10.x/main and opt in to `page_shell`, `compact`, `strip`, tone slots, and
+other new components as needed.
 
 ## Deprecations and removal timeline
 

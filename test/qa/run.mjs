@@ -28,6 +28,8 @@ const CMPS = arg("cmp") || "select select_search dropdown menu popover tooltip a
 const VWS = (arg("vw") || ["1440", "390"]).map(Number)
 const WIDE_TABLE_ONLY = process.argv.includes("--page-shell-wide-table")
 const CHARTS_ONLY = process.argv.includes("--charts")
+const CONSISTENCY_ONLY = process.argv.includes("--consistency")
+const CONSISTENCY_LEGACY = process.argv.includes("--consistency-legacy")
 const SHELL_VWS = [1440, 1100, 768, 390]
 
 // trigger: where the real click/hover lands. panel: the floating surface.
@@ -122,7 +124,192 @@ const browser = await puppeteer.launch({
 fs.mkdirSync(SHOTS, { recursive: true })
 const rows = []
 
-if (CHARTS_ONLY) {
+if (CONSISTENCY_ONLY) {
+  const reportDir = process.env.QA_REPORT_DIR || SHOTS
+  fs.mkdirSync(reportDir, { recursive: true })
+  const scale = { sm: 28, md: 32, lg: 36 }
+  const combos = [
+    { vw: 1440, theme: "light" },
+    { vw: 1440, theme: "dark" },
+    { vw: 390, theme: "light" },
+    { vw: 390, theme: "dark" },
+  ]
+  if (CONSISTENCY_LEGACY) combos.push({ vw: 1440, theme: "light", legacy: true })
+  if (CONSISTENCY_LEGACY && process.env.QA_BASELINE_CSS) combos.push({ vw: 1440, theme: "light", baseline: true })
+
+  for (const { vw, theme, legacy = false, baseline = false } of combos) {
+    const page = await browser.newPage()
+    await page.setViewport({ width: vw, height: vw < 600 ? 844 : 1000, isMobile: vw < 600, hasTouch: vw < 600 })
+    const row = { vw, theme, legacy, baseline, problems: [], controls: [], toolbarRows: [] }
+    try {
+      if (baseline && process.env.QA_BASELINE_CSS) {
+        const css = fs.readFileSync(process.env.QA_BASELINE_CSS, "utf8")
+        await page.setRequestInterception(true)
+        page.on("request", (request) => {
+          if (new URL(request.url()).pathname === "/lantern_ui.css") request.respond({ status: 200, contentType: "text/css", body: css })
+          else request.continue()
+        })
+      }
+      await page.goto(`${BASE}/consistency?theme=${theme}${legacy ? "&legacy=1" : ""}`, { waitUntil: "networkidle2" })
+      await page.waitForSelector(".phx-connected", { timeout: 8000 })
+      await page.waitForSelector("#qa-consistency-shell", { timeout: 4000 })
+      await sleep(150)
+      const result = await page.evaluate((scale) => {
+        const isVisible = (el) => {
+          const r = el.getBoundingClientRect(), s = getComputedStyle(el)
+          return r.width > 0 && r.height > 0 && s.display !== "none" && s.visibility !== "hidden" && !el.closest("[hidden]")
+        }
+        const normalized = (raw) => {
+          const size = raw || "md"
+          if (["xs", "sm", "icon-xs", "icon-sm"].includes(size)) return "sm"
+          if (["lg", "xl", "icon-lg", "icon-xl"].includes(size)) return "lg"
+          return "md"
+        }
+        const targetFor = (el) => {
+          const kind = el.dataset.qaControl
+          if (kind === "input" || kind === "search") return el.closest(".lui-field")?.querySelector(".lui-input-wrap") || el
+        if (kind === "select") return el.closest(".lui-field")?.querySelector(".lui-select-native") || el
+        if (kind === "multiselect") return el.querySelector(".lui-select-toggle") || el
+        if (kind === "textarea") return el.querySelector(".lui-textarea") || el
+        if (kind === "wrap-button") return el
+          if (kind === "combobox") return el.closest(".lui-autocomplete")?.querySelector(".lui-autocomplete-control") || el
+          if (kind === "tabs") return el
+          if (kind === "toggle") return el.closest(".lui-switch-field")?.querySelector(".lui-switch") || el
+          if (kind === "kbd") return el.querySelector(".lui-kbd") || el
+          if (kind === "menu-trigger") return el.querySelector(".lui-menu-trigger .lui-btn") || el
+          return el
+        }
+        const candidates = new Set([...document.querySelectorAll(
+          "[data-qa-control], .lui-consistency-qa .lui-btn, .lui-consistency-qa .lui-dt-chip, " +
+          ".lui-consistency-qa .lui-dt-search, .lui-consistency-qa .lui-dt-expand, " +
+          ".lui-consistency-qa .lui-dt-resetfilters, .lui-consistency-qa .lui-dt-applyfilters, .lui-consistency-qa .lui-dt-filtertext, " +
+          ".lui-consistency-qa .lui-pg, .lui-consistency-qa .lui-tabs-list, " +
+          ".lui-consistency-qa .lui-kbd, .lui-consistency-qa .lui-autocomplete-control, " +
+          ".lui-consistency-qa .lui-select-toggle, .lui-consistency-qa .lui-chart-settings__field select"
+        )].filter((el) => el.dataset.qaControl !== "badge"))
+        const measurements = new Map()
+        ;[...candidates].filter(isVisible).forEach((el, index) => {
+          const target = targetFor(el)
+          if (!isVisible(target)) return
+          const r = target.getBoundingClientRect(), s = getComputedStyle(target)
+          const isMoreTrigger = target.classList.contains("lui-action-bar-more-trigger")
+          const sized = el.dataset.qaSize || el.closest("[data-qa-size]")?.dataset.qaSize || (isMoreTrigger ? "sm" : null) || el.dataset.size || el.closest("[data-size]")?.dataset.size ||
+            (target.matches(".lui-dt-search, .lui-dt-chip, .lui-dt-expand, .lui-dt-resetfilters, .lui-dt-applyfilters, .lui-dt-filtertext, .lui-chart-settings__trigger") ? "sm" : "md")
+          const size = normalized(sized)
+          const tokenName = `--lui-control-h-${size}`
+          const token = getComputedStyle(document.documentElement).getPropertyValue(tokenName).trim()
+          const height = Math.round(r.height * 100) / 100
+          const tokenHeight = token.endsWith("rem")
+            ? Number.parseFloat(token) * Number.parseFloat(getComputedStyle(document.documentElement).fontSize)
+            : Number.parseFloat(token)
+          const expected = Number.isFinite(tokenHeight) ? tokenHeight : scale[size]
+          const css = (name) => s[name]
+          const record = {
+            id: el.id || `${el.className || el.tagName.toLowerCase()}-${index}`,
+            kind: el.dataset.qaControl || el.className?.baseVal || el.className || el.tagName.toLowerCase(),
+            size,
+            token: token || `${expected}px`,
+            expectedHeight: expected,
+            proposedHeight: scale[size],
+            height,
+            delta: Math.round((height - expected) * 100) / 100,
+            width: Math.round(r.width * 100) / 100,
+            padding: { top: css("paddingTop"), right: css("paddingRight"), bottom: css("paddingBottom"), left: css("paddingLeft") },
+            fontSize: css("fontSize"),
+            lineHeight: css("lineHeight"),
+            borderRadius: css("borderRadius"),
+            gap: css("gap"),
+            selector: el.id ? `#${CSS.escape(el.id)}` : el.tagName.toLowerCase() + (el.classList.length ? `.${[...el.classList].join(".")}` : ""),
+            clipping: (() => {
+              const clipped = [target, ...target.querySelectorAll("*")].filter((node) => {
+                const style = getComputedStyle(node)
+                return !node.classList.contains("lui-sr-only") && ["hidden", "clip"].includes(style.overflowX) && node.scrollWidth > node.clientWidth + 1
+              }).map((node) => node.className?.baseVal || node.className || node.tagName.toLowerCase())
+              return { clipped }
+            })(),
+          }
+          if (!measurements.has(target)) measurements.set(target, record)
+        })
+        const controls = [...measurements.values()]
+        const rowSelectors = [
+          ...[...document.querySelectorAll("[data-qa-toolbar-row]")].map((el) => `[data-qa-toolbar-row="${CSS.escape(el.dataset.qaToolbarRow)}"]`),
+          "#qa-consistency-table .lui-dt-chromerow",
+          "#qa-consistency-action-bar .lui-action-bar-inline",
+          "#qa-consistency-shell .lui-page-strip-actions",
+        ]
+        const toolbarRows = [...new Set(rowSelectors)].map((selector) => {
+          const el = document.querySelector(selector)
+          if (!el) return { selector, heights: [], mixed: false }
+          if (el.matches(".lui-consistency-density")) return { selector, heights: [], mixed: false }
+          const items = [...el.querySelectorAll(".lui-btn, .lui-tabs-list, .lui-dt-chip, .lui-dt-search, .lui-dt-expand, .lui-dt-resetfilters, .lui-dt-applyfilters, .lui-dt-filtertext, .lui-pg, .lui-select-native, .lui-select-toggle, .lui-autocomplete-control, .lui-input-wrap, .lui-kbd, .lui-chart-settings__trigger")].filter(isVisible)
+          const heights = items.map((item) => Math.round(item.getBoundingClientRect().height * 100) / 100)
+          return { selector, heights, mixed: heights.length > 1 && Math.max(...heights) - Math.min(...heights) > 1 }
+        })
+        return { controls, toolbarRows, documentWidth: document.documentElement.scrollWidth, viewportWidth: innerWidth }
+      }, scale)
+      row.controls = result.controls
+      row.toolbarRows = result.toolbarRows
+      row.documentWidth = result.documentWidth
+      row.viewportWidth = result.viewportWidth
+      if (!legacy && !baseline) {
+        for (const control of row.controls) {
+          if (control.kind !== "wrap-button" && control.kind !== "textarea") {
+            if (Math.abs(control.delta) > 1) row.problems.push(`${control.id}: ${control.height}px is ${control.delta > 0 ? "+" : ""}${control.delta}px from ${control.size} token (${control.expectedHeight}px)`)
+            if (Math.abs(control.expectedHeight - control.proposedHeight) > 1) row.problems.push(`${control.size} token is ${control.expectedHeight}px, expected proposed ${control.proposedHeight}px`)
+          }
+          if (control.clipping.clipped.length) row.problems.push(`${control.id}: clipped content/icon ${JSON.stringify(control.clipping.clipped)}`)
+        }
+        for (const toolbar of row.toolbarRows) {
+          if (toolbar.mixed) row.problems.push(`${toolbar.selector}: mixed control heights ${[...new Set(toolbar.heights)].join("/ ")}px`)
+        }
+      }
+      if (!baseline && result.documentWidth > result.viewportWidth + 1) row.problems.push(`document overflows horizontally by ${result.documentWidth - result.viewportWidth}px`)
+      await page.screenshot({ path: `${reportDir}/${vw}-${theme}${baseline ? "-baseline" : legacy ? "-legacy" : ""}.png`, fullPage: true })
+    } catch (e) {
+      row.problems.push(`error: ${e.message.split("\n")[0]}`)
+    }
+    row.status = row.problems.length ? "FAIL" : "ok"
+    rows.push(row)
+    console.log(`${row.status} ${vw} ${theme}${baseline ? " baseline" : legacy ? " legacy" : ""}: ${row.controls.length} controls, ${row.problems.length} findings`)
+    await page.close()
+  }
+  if (CONSISTENCY_LEGACY && process.env.QA_BASELINE_CSS) {
+    const baseline = rows.find((row) => row.baseline)
+    const legacy = rows.find((row) => row.legacy)
+    if (baseline && legacy) {
+      const sample = (controls) => {
+        const selected = new Map()
+        for (const control of controls) {
+          if (control.kind === "wrap-button" || control.kind === "menu-trigger" || control.kind === "popover-trigger") continue
+          const key = `${control.kind}:${control.size}`
+          if (!selected.has(key)) selected.set(key, control)
+        }
+        return selected
+      }
+      const oldSamples = sample(baseline.controls)
+      const currentSamples = sample(legacy.controls)
+      const compared = []
+      for (const [key, control] of currentSamples) {
+        const prior = oldSamples.get(key)
+        if (!prior) continue
+        const fields = ["height", "fontSize", "lineHeight", "borderRadius", "padding"]
+        const differences = fields.filter((field) => JSON.stringify(control[field]) !== JSON.stringify(prior[field]))
+        compared.push({ key, id: control.id, fields: differences })
+        if (differences.length) legacy.problems.push(`${control.id}: legacy differs from pre-scale stylesheet in ${differences.join(", ")}`)
+      }
+      legacy.legacyComparison = { compared: compared.length, differences: compared.filter((item) => item.fields.length) }
+      legacy.status = legacy.problems.length ? "FAIL" : "ok"
+      console.log(`${legacy.status} 1440 light legacy comparison: ${compared.length} sampled controls, ${legacy.problems.length} findings ${JSON.stringify(legacy.legacyComparison.differences)}`)
+    }
+  }
+  fs.writeFileSync(`${reportDir}/consistency-measurements.json`, JSON.stringify(rows, null, 2))
+  const summaries = rows.map((row) => `${row.vw}px ${row.theme}: ${row.controls.length} measurements, ${row.problems.length} findings`).join("\n")
+  fs.writeFileSync(`${reportDir}/consistency-summary.txt`, `${summaries}\n`)
+  const failed = rows.filter((row) => row.problems.length)
+  console.log(`\n${rows.length} consistency cases, ${failed.length} failing`)
+  await browser.close()
+  process.exit(failed.length && !process.env.QA_REPORT_ONLY ? 1 : 0)
+} else if (CHARTS_ONLY) {
   const chartShots = ensureChartShotsDir(SHOTS)
   const types = ["line", "area", "stacked_area", "bar", "stacked_bar", "grouped_bar", "points"]
   for (const vw of VWS) {

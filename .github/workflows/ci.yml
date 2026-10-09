@@ -10,6 +10,8 @@ jobs:
       MIX_ENV: test
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # Must match the toolchain the repo is actually developed on. The HEEx
       # formatter changed between 1.18 and 1.19, so a repo formatted with 1.19
@@ -55,3 +57,25 @@ jobs:
       - run: mix lantern.lint
       - run: mix lantern.llms --check
       - run: npm test
+      - uses: browser-actions/setup-chrome@v1
+        id: chrome
+      - name: Control sizing browser gate
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+          BASE: http://127.0.0.1:4013
+          QA_BASELINE_CSS: /tmp/lantern-ui-pre-scale.css
+          QA_REPORT_DIR: /tmp/lantern-ui-consistency
+        run: |
+          git show origin/main:priv/static/lantern_ui.css > "$QA_BASELINE_CSS"
+          PORT=4013 mix run --no-halt test/qa/server.exs > /tmp/lantern-ui-qa-server.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent "$BASE/consistency" >/dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent "$BASE/consistency" >/dev/null
+          node test/qa/run.mjs --consistency --consistency-legacy
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: control-sizing-qa
+          path: /tmp/lantern-ui-consistency

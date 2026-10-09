@@ -25,6 +25,10 @@ mix lantern.llms --check              # llms.txt must be regenerated when compon
 npm run build                         # rebuild committed bundles
 # floating-panel matrix (needs Chrome + puppeteer-core): see header of test/qa/run.mjs
 # MIX_ENV=test PORT=4013 mix run test/qa/server.exs & ; BASE=http://127.0.0.1:4013 node test/qa/run.mjs
+# control consistency kitchen sink (Brave + puppeteer-core installed outside the repo):
+# MIX_ENV=test PORT=4013 mix run --no-halt test/qa/server.exs
+# git show origin/main:priv/static/lantern_ui.css > /tmp/lantern-ui-pre-scale.css
+BASE=http://127.0.0.1:4013 CHROME_PATH="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" QA_BASELINE_CSS=/tmp/lantern-ui-pre-scale.css node test/qa/run.mjs --consistency --consistency-legacy
 ```
 
 ## Rules

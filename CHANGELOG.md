@@ -11,6 +11,9 @@ All notable changes to this project are documented here. The format follows
   remain available through their module names and no longer conflict with
   consumer-local functions such as `parse_date/1`.
 
+### Visual changes
+- Standardize controls on shared 28/32/36px `--lui-control-h-*` sizes. Buttons map `xs`/`sm` to 28px, `md` to 32px, and `lg`/`xl` to 36px; icon buttons become square, with 10/12/14px horizontal padding, 14/16/18px icons, and 8px gaps. Fields, native and custom selects, comboboxes, textareas, chart settings, and table filters use shared font, padding, and 6px control-radius tokens; textarea padding is 10/12/14px. Small and medium tabs map to 28/32px with 4px segmented gaps and tighter inner radii. Switch rows gain 28/32/36px minimum heights and tracks become 16/18/20px. Badges retain their compact 18/20/24px component heights. Table search, filter actions, expand controls, and chips use the 28px small-control scale; pagination buttons become 32px square, and action-bar gaps/more triggers follow the shared tokens. Keycaps map to the 28/32/36px scale. Listed focusable controls change from the prior box-shadow ring to a 2px outline with 2px offset. Hosts can set `data-lui-control-scale="legacy"` on an ancestor to restore pre-scale metrics.
+
 ### Added
 - Standalone `<.kbd>` keycap badge primitive (`LanternUI.Components.Kbd.kbd/1`) and `<.kbd_group>` with `size` (`xs`, `sm`, `md`, `lg`), `variant` (`outline`, `subtle`, `solid`, `ghost`), `keys` list/string support with symbol mapping (`⌘`, `⇧`, `⌥`, `⌃`, `Esc`, etc.), and full theme token styling.
 - Print styles for app-shell and table pages: hide interactive chrome and restore tables to natural document flow.
