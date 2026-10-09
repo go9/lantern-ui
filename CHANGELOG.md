@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Print styles for app-shell and table pages: hide interactive chrome and restore tables to natural document flow.
 - Additive `time_series_chart/1` with signed line, area, points, stacked area, vertical/horizontal bar, grouped bar, comparison, and annotation geometry.
 - `chart_card/1` composition slots and `chart_settings/1` native LiveView controls over the existing Popover.
 - Shared-x chart interaction with a clamped tooltip, keyboard Home/End/Escape, an accessible data-table caption, and keyboard-only live announcements.

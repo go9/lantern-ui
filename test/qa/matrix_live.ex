@@ -305,6 +305,7 @@ defmodule LanternUI.QA.MatrixLive do
             meta={@meta}
             path="/qa"
             show_checkboxes={false}
+            search_field={:name}
           >
             <:col :let={row} label="Record">{row.name}</:col>
             <:col :let={row} label="Status">Ready {row.id}</:col>

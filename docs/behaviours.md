@@ -208,3 +208,10 @@ markup is the 0.10 markup.
   </.page_shell>
 </.app_shell>
 ```
+
+## Printing tables
+
+When printing, LanternUI hides app navigation, page actions, table filters,
+selection controls, pagination, and expand controls. Table rows return to
+natural document flow with visible overflow, a repeating table header, and rows
+kept together across page breaks where possible. No consumer setup is required.

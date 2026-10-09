@@ -4196,6 +4196,70 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-time-series-chart__interaction [data-part="tooltip"] text { fill: var(--lantern-fg); font-size: 10px; }
 .lui-time-series-chart__focus-point { fill: transparent; stroke: transparent; cursor: crosshair; }
 .lui-time-series-chart__focus-point:focus-visible { fill: var(--lantern-surface); stroke: var(--lantern-ring); stroke-width: 2; outline: none; }
+
+/* Printed tables use document flow: shell chrome and interactive controls leave,
+   while rows, headers, titles, and counts remain available to the print stream. */
+@media print {
+  :root,
+  html.dark:not(.light) {
+    color-scheme: light;
+    --lantern-surface: Canvas;
+    --lantern-surface-raised: Canvas;
+    --lantern-surface-sunken: color-mix(in srgb, CanvasText 5%, Canvas);
+    --lantern-surface-hover: color-mix(in srgb, CanvasText 5%, Canvas);
+    --lantern-fg: CanvasText;
+    --lantern-fg-muted: color-mix(in srgb, CanvasText 65%, Canvas);
+    --lantern-border: color-mix(in srgb, CanvasText 18%, Canvas);
+    --lantern-border-strong: color-mix(in srgb, CanvasText 35%, Canvas);
+  }
+  .lui-app { min-height: 0; height: auto; overflow: visible; background: var(--lantern-surface); color: var(--lantern-fg); }
+  .lui-appbar,
+  .lui-app-sidebar,
+  .lui-app-scrim,
+  .lui-app-breadcrumb,
+  .lui-page-shell-strip .lui-page-strip-actions,
+  .lui-action-bar,
+  .lui-dt-chromerow,
+  .lui-dt-bulkbar,
+  .lui-dt-pagination,
+  .lui-dt-expand,
+  .lui-dt-info,
+  .lui-dt-overview-head,
+  .lui-dt-selectall,
+  .lui-dt-bulkbar button,
+  .lui-datatable .lui-th-check,
+  .lui-datatable .lui-td-check,
+  .lui-datatable .lui-th-actions,
+  .lui-datatable .lui-td-actions,
+  .lui-datatable .lui-dt-list-actions { display: none !important; }
+  .lui-app-body { padding-top: 0; }
+  .lui-app-main,
+  .lui-app[data-collapsed] .lui-app-main { height: auto; margin: 0; padding: 0; overflow: visible; display: block; }
+  .lui-app-main > *,
+  .lui-page-shell > *,
+  .lui-page-content,
+  .lui-page-content > * { height: auto !important; min-height: 0 !important; max-height: none !important;
+    overflow: visible !important; flex: none !important; }
+  .lui-page-shell,
+  .lui-page-topline,
+  .lui-datatable,
+  .lui-datatable-fill,
+  .lui-datatable-expanded,
+  .lui-table-wrap,
+  .lui-dt-list,
+  .lui-dt-cards { position: static !important; inset: auto !important; height: auto !important;
+    min-height: 0 !important; max-height: none !important; overflow: visible !important;
+    display: block; transform: none !important; box-shadow: none !important; }
+  .lui-datatable,
+  .lui-datatable-fill { border: 0; flex: none; }
+  .lui-datatable .lui-table-wrap,
+  .lui-datatable .lui-dt-list,
+  .lui-datatable .lui-dt-cards { flex: none; overflow: visible; }
+  .lui-datatable .lui-th { position: static; }
+  .lui-datatable .lui-table { width: 100%; }
+  .lui-datatable .lui-thead { display: table-header-group; }
+  .lui-datatable .lui-tr { break-inside: avoid; page-break-inside: avoid; }
+}
 .lui-time-series-chart__table-details { margin-top: 8px; color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
 .lui-time-series-chart__table-details summary { width: fit-content; cursor: pointer; }
 .lui-time-series-chart__table-details table { width: 100%; border-collapse: collapse; margin-top: 8px; }
