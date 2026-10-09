@@ -51,6 +51,8 @@ defmodule LanternUI.QA.ConsistencyLive do
         .lui-consistency-formrow { display:flex; align-items:flex-end; gap:12px; overflow-x:auto; padding:4px 2px; }
         .lui-consistency-formrow > .lui-field { flex:1 0 190px; min-width:170px; }
         .lui-consistency-popover-content { min-width:180px; padding:12px; }
+        .lui-consistency-wrap-button { width:150px; height:auto; min-height:var(--lui-control-h-md); white-space:normal; line-height:1.15; }
+        .lui-consistency-density { display:flex; align-items:flex-start; gap:12px; overflow-x:auto; padding:4px 2px; }
         .lui-consistency-qa .lui-dt-chromerow { flex-wrap:nowrap; }
         @media (max-width:600px) { .lui-consistency-qa { padding:12px; } .lui-consistency-head h1 { font-size:20px; } }
       </style>
@@ -93,6 +95,40 @@ defmodule LanternUI.QA.ConsistencyLive do
                 <span :if={!String.starts_with?(size, "icon")}>{size}</span>
               </.button>
             </div>
+          </div>
+          <div class="lui-consistency-formrow" data-qa-toolbar-row="textarea-md">
+            <.textarea
+              id="qa-textarea"
+              name="notes"
+              label="Notes"
+              size="md"
+              rows={3}
+              value="A multiline control\nwith a second line."
+              data-qa-control="textarea"
+              data-qa-size="md"
+            />
+            <.select
+              id="qa-multiselect"
+              name="tags"
+              label="Tags with chips"
+              size="md"
+              multiple
+              searchable
+              options={[{"Operations", "ops"}, {"Finance", "finance"}, {"Engineering", "engineering"}]}
+              value={["ops", "finance"]}
+              data-qa-control="multiselect"
+              data-qa-size="md"
+            />
+          </div>
+          <div class="lui-consistency-line" data-qa-toolbar-row="wrapped-button">
+            <span class="lui-consistency-label">Wrapping label</span>
+            <.button
+              class="lui-consistency-wrap-button"
+              size="md"
+              variant="outline"
+              data-qa-control="wrap-button"
+              data-qa-size="md"
+            >Apply these changes to all selected items</.button>
           </div>
 
           <div class="lui-consistency-line" data-qa-row="split-buttons">
@@ -156,6 +192,15 @@ defmodule LanternUI.QA.ConsistencyLive do
               native
               options={[{"Open", "open"}, {"Closed", "closed"}]}
               data-qa-control="select"
+              data-qa-size={size}
+            />
+            <.select
+              id={"qa-rich-select-#{size}"}
+              name={"rich_status_#{size}"}
+              label="Custom select"
+              size={size}
+              options={[{"Open", "open"}, {"Closed", "closed"}]}
+              data-qa-control="custom-select"
               data-qa-size={size}
             />
             <.autocomplete
@@ -267,6 +312,57 @@ defmodule LanternUI.QA.ConsistencyLive do
             />
             <:col :let={row} label="Item">{row.name}</:col>
           </.data_table>
+
+          <div class="lui-consistency-line" data-qa-toolbar-row="remaining-controls">
+            <span class="lui-consistency-label">Settings / toast</span>
+            <button type="button" class="lui-chart-settings__trigger" data-qa-control="chart-settings">Chart settings</button>
+            <label class="lui-chart-settings__field"><span>Chart range</span><select
+              data-qa-control="chart-settings-select"
+              data-qa-size="md"
+            ><option>30 days</option></select></label>
+            <div class="lui-toast-actions">
+              <.button size="sm" data-qa-control="toast-button" data-qa-size="sm">Undo</.button>
+            </div>
+            <button
+              type="button"
+              class="lui-dt-resetfilters"
+              data-qa-control="filter-action"
+              data-qa-size="sm"
+            >Reset filters</button>
+            <button
+              type="button"
+              class="lui-dt-applyfilters"
+              data-qa-control="filter-action"
+              data-qa-size="sm"
+            >Apply filters</button>
+          </div>
+
+          <div
+            :for={density <- ~w(compact comfortable)}
+            class="lui-consistency-density"
+            data-qa-toolbar-row={"density-#{density}"}
+            data-lantern-density={density}
+          >
+            <span class="lui-consistency-label">Table density · {density}</span>
+            <.data_table
+              id={"qa-consistency-table-#{density}"}
+              rows={@rows}
+              meta={@meta}
+              path="/consistency"
+              search_field={:name}
+              search_placeholder="Search items"
+              expandable
+              data-qa-density={density}
+            >
+              <:tab label="All" count={24} />
+              <:filter
+                field={:status}
+                label="Status"
+                options={[{"Open", "open"}, {"Closed", "closed"}]}
+              />
+              <:col :let={row} label="Item">{row.name}</:col>
+            </.data_table>
+          </div>
 
           <.pagination
             id="qa-consistency-pagination"

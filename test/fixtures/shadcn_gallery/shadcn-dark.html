@@ -2586,7 +2586,7 @@
 .lui-toast:not(:has(.lui-toast-header)) .lui-toast-close { position: absolute; top: 0.35rem; right: 0.35rem; }
 .lui-toast:not(:has(.lui-toast-header)) .lui-toast-message { padding-right: 1.75rem; }
 .lui-toast-actions { display: flex; justify-content: flex-end; padding: 0 0.65rem 0.65rem; background: var(--lantern-surface); }
-.lui-toast-actions .lui-btn { min-height: 2rem; }
+.lui-toast-actions .lui-btn { min-height: var(--lui-control-h-sm); }
 .lui-toast-progress {
   position: absolute;
   right: 0;
@@ -4518,13 +4518,14 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-chart-card__tabs, .lui-chart-card__ranges, .lui-chart-card__settings { display: flex; align-items: center; gap: var(--lantern-space-xs); }
 .lui-chart-card__content { min-width: 0; margin-top: var(--lantern-space-md); }
 .lui-chart-card__footer { margin-top: var(--lantern-space-sm); color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
-.lui-chart-settings__trigger { display: inline-flex; min-height: 2rem; align-items: center; justify-content: center; padding: 0 var(--lantern-space-sm); border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm); background: var(--lantern-surface); color: var(--lantern-fg); font: inherit; cursor: pointer; }
+.lui-chart-settings__trigger { display: inline-flex; box-sizing: border-box; height: var(--lui-control-h-sm); min-height: var(--lui-control-h-sm); align-items: center; justify-content: center; gap: var(--lui-gap-8); padding: 0 var(--lui-control-px-sm); border: 1px solid var(--lantern-border); border-radius: var(--lui-control-radius); background: var(--lantern-surface); color: var(--lantern-fg); font-size: var(--lui-control-font-sm); line-height: var(--lui-control-line-height); cursor: pointer; }
 .lui-chart-settings__trigger:hover { background: var(--lantern-surface-hover); }
+.lui-chart-settings__field select:focus-visible { outline: var(--lui-focus-ring-width) solid var(--lui-focus-ring-color); outline-offset: var(--lui-focus-ring-offset); }
 .lui-chart-settings__trigger:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: 2px; }
 .lui-chart-settings__panel { width: min(23rem, calc(100vw - 2 * var(--lantern-space-lg))); max-height: min(80vh, 36rem); overflow: auto; padding: var(--lantern-space-lg); }
 .lui-chart-settings { display: grid; gap: var(--lantern-space-md); color: var(--lantern-fg); }
 .lui-chart-settings__field { display: grid; gap: var(--lantern-space-xs); color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
-.lui-chart-settings__field select { width: 100%; min-height: 2.25rem; padding: 0 var(--lantern-space-sm); border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm); background: var(--lantern-surface); color: var(--lantern-fg); font: inherit; }
+.lui-chart-settings__field select { width: 100%; box-sizing: border-box; height: var(--lui-control-h-md); min-height: var(--lui-control-h-md); padding: 0 var(--lui-control-px-md); border: 1px solid var(--lantern-border); border-radius: var(--lui-control-radius); background: var(--lantern-surface); color: var(--lantern-fg); font: inherit; font-size: var(--lui-control-font-md); line-height: var(--lui-control-line-height); }
 .lui-chart-settings__series, .lui-chart-settings__toggles { display: grid; gap: var(--lantern-space-sm); margin: 0; padding: var(--lantern-space-md); border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm); }
 .lui-chart-settings__series legend, .lui-chart-settings__toggles legend { padding: 0 var(--lantern-space-xs); color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
 .lui-chart-settings__check { display: flex; align-items: center; gap: var(--lantern-space-sm); min-height: 1.5rem; color: var(--lantern-fg); font-size: var(--lantern-text-sm); cursor: pointer; }
@@ -4790,6 +4791,12 @@ a.lui-waterfall-lane-inner:focus-visible {
 }
 .lui-input-wrap { gap: var(--lui-gap-8); padding-inline: var(--lui-control-px-md); }
 .lui-input { font-size: var(--lui-control-font-md); line-height: var(--lui-control-line-height); }
+.lui-field[data-size] .lui-select-toggle { box-sizing: border-box; border-radius: var(--lui-control-radius); }
+.lui-field[data-size="xs"] .lui-select-toggle,
+.lui-field[data-size="sm"] .lui-select-toggle { height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); font-size: var(--lui-control-font-sm); }
+.lui-field[data-size="md"] .lui-select-toggle { height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); font-size: var(--lui-control-font-md); }
+.lui-field[data-size="lg"] .lui-select-toggle,
+.lui-field[data-size="xl"] .lui-select-toggle { height: var(--lui-control-h-lg); padding-inline: var(--lui-control-px-lg); font-size: var(--lui-control-font-lg); }
 .lui-field[data-size="xs"] .lui-input-wrap,
 .lui-field[data-size="sm"] .lui-input-wrap,
 .lui-field[data-size="xs"] .lui-select-native,
@@ -4830,6 +4837,12 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-select-native:focus-visible, .lui-select-toggle:focus-visible { outline: none; }
 .lui-autocomplete-control { height: var(--lui-control-h-md); min-height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); }
 .lui-autocomplete-input { font-size: var(--lui-control-font-md); line-height: var(--lui-control-line-height); }
+.lui-textarea { border-radius: var(--lui-control-radius); font-size: var(--lui-control-font-md); }
+.lui-field[data-size="xs"] .lui-textarea,
+.lui-field[data-size="sm"] .lui-textarea { font-size: var(--lui-control-font-sm); padding: var(--lui-control-px-sm); }
+.lui-field[data-size="md"] .lui-textarea { font-size: var(--lui-control-font-md); padding: var(--lui-control-px-md); }
+.lui-field[data-size="lg"] .lui-textarea,
+.lui-field[data-size="xl"] .lui-textarea { font-size: var(--lui-control-font-lg); padding: var(--lui-control-px-lg); }
 
 .lui-tabs-list[data-variant="segmented"] { border-radius: var(--lui-control-radius); gap: var(--lui-gap-4); }
 .lui-tab { gap: var(--lui-gap-4); }
@@ -4851,10 +4864,6 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-switch[data-size="md"] .lui-switch-track { height: 1.125rem; }
 .lui-switch[data-size="lg"] .lui-switch-track { height: 1.25rem; }
 
-.lui-badge[data-size="sm"] { box-sizing: border-box; height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); font-size: var(--lui-control-font-sm); }
-.lui-badge[data-size="md"] { box-sizing: border-box; height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); font-size: var(--lui-control-font-md); }
-.lui-badge[data-size="lg"] { box-sizing: border-box; height: var(--lui-control-h-lg); padding-inline: var(--lui-control-px-lg); font-size: var(--lui-control-font-lg); }
-.lui-badge { gap: var(--lui-gap-4); }
 .lui-dt-chip { box-sizing: border-box; height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); gap: var(--lui-gap-4); }
 .lui-dt-chip .lui-icon { width: var(--lui-control-icon-sm); height: var(--lui-control-icon-sm); }
 .lui-kbd { height: var(--lui-control-h-md); min-height: var(--lui-control-h-md); border-radius: var(--lui-control-radius); font-size: var(--lui-control-font-md); padding-inline: var(--lui-control-px-md); }
@@ -4870,6 +4879,8 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-dt-chromerow .lui-dt-search input { font-size: var(--lui-control-font-sm); line-height: var(--lui-control-line-height); }
 .lui-dt-chromerow .lui-dt-chip { height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); }
 .lui-dt-chromerow .lui-dt-expand { box-sizing: border-box; height: var(--lui-control-h-sm); min-height: var(--lui-control-h-sm); padding: 0 var(--lui-control-px-sm); line-height: var(--lui-control-line-height); }
+.lui-dt-resetfilters, .lui-dt-applyfilters { box-sizing: border-box; min-height: var(--lui-control-h-sm); padding: 0 var(--lui-control-px-sm); border-radius: var(--lui-control-radius); font-size: var(--lui-control-font-sm); line-height: var(--lui-control-line-height); }
+.lui-dt-filtertext { box-sizing: border-box; height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); border-radius: var(--lui-control-radius); font-size: var(--lui-control-font-sm); line-height: var(--lui-control-line-height); }
 .lui-pg { box-sizing: border-box; height: var(--lui-control-h-md); min-width: var(--lui-control-h-md); font-size: var(--lui-control-font-sm); border-radius: var(--lui-control-radius); }
 .lui-pg-size { gap: var(--lui-gap-4); padding-inline: var(--lui-control-px-sm); }
 
@@ -4908,11 +4919,18 @@ a.lui-waterfall-lane-inner:focus-visible {
 [data-lui-control-scale="legacy"] .lui-btn[data-size="icon-sm"] { width: 1.75rem; }
 [data-lui-control-scale="legacy"] .lui-btn[data-size="icon-lg"] { width: 2.25rem; }
 [data-lui-control-scale="legacy"] .lui-btn[data-size="icon-xl"] { width: 2.5rem; }
-[data-lui-control-scale="legacy"] .lui-badge[data-size="sm"] { height: 1.125rem; font-size: 0.6875rem; padding-inline: 0.5rem; }
-[data-lui-control-scale="legacy"] .lui-badge[data-size="md"] { height: 1.25rem; font-size: 0.71875rem; padding-inline: 0.5625rem; }
-[data-lui-control-scale="legacy"] .lui-badge[data-size="lg"] { height: 1.5rem; font-size: 0.8125rem; padding-inline: 0.7rem; }
-[data-lui-control-scale="legacy"] .lui-badge { box-sizing: content-box; gap: 0.3em; }
 [data-lui-control-scale="legacy"] .lui-dt-chip { height: auto; padding: 0.2rem 0.5rem; }
+[data-lui-control-scale="legacy"] .lui-field[data-size] .lui-select-toggle { box-sizing: border-box; height: var(--lantern-control-h); padding: 0 var(--lantern-control-px); border-radius: var(--lantern-radius); font-size: var(--lantern-text); }
+[data-lui-control-scale="legacy"] .lui-textarea { border-radius: var(--lantern-radius); font-size: var(--lantern-text); padding: 0.5rem 0.625rem; }
+[data-lui-control-scale="legacy"] .lui-field[data-size="xs"] .lui-textarea { font-size: 0.75rem; padding: 0.35rem 0.5rem; }
+[data-lui-control-scale="legacy"] .lui-field[data-size="sm"] .lui-textarea { font-size: var(--lantern-text-sm); padding: 0.4rem 0.55rem; }
+[data-lui-control-scale="legacy"] .lui-field[data-size="lg"] .lui-textarea { font-size: 0.875rem; padding: 0.6rem 0.75rem; }
+[data-lui-control-scale="legacy"] .lui-field[data-size="xl"] .lui-textarea { font-size: 0.9375rem; padding: 0.7rem 0.85rem; }
+[data-lui-control-scale="legacy"] .lui-dt-resetfilters, [data-lui-control-scale="legacy"] .lui-dt-applyfilters { box-sizing: border-box; min-height: var(--lantern-control-h); padding: 0.25rem 0.75rem; border-radius: var(--lantern-radius); font: inherit; line-height: normal; }
+[data-lui-control-scale="legacy"] .lui-dt-filtertext { box-sizing: content-box; height: 1.9rem; padding: 0 0.55rem; border-radius: var(--lantern-radius-sm); font-size: var(--lantern-text-sm); line-height: normal; }
+[data-lui-control-scale="legacy"] .lui-toast-actions .lui-btn { min-height: 2rem; }
+[data-lui-control-scale="legacy"] .lui-chart-settings__trigger { box-sizing: border-box; height: auto; min-height: 2rem; padding: 0 var(--lantern-space-sm); border-radius: var(--lantern-radius-sm); font: inherit; line-height: normal; }
+[data-lui-control-scale="legacy"] .lui-chart-settings__field select { box-sizing: border-box; height: auto; min-height: 2.25rem; padding: 0 var(--lantern-space-sm); border-radius: var(--lantern-radius-sm); font: inherit; line-height: normal; }
 [data-lui-control-scale="legacy"] .lui-input-wrap,
 [data-lui-control-scale="legacy"] .lui-select-native,
 [data-lui-control-scale="legacy"] .lui-autocomplete-control,
@@ -4953,11 +4971,38 @@ a.lui-waterfall-lane-inner:focus-visible {
 [data-lui-control-scale="legacy"] .lui-kbd[data-size="sm"] { height: auto; min-height: 1.35rem; padding: 0 0.35rem; font-size: 0.75rem; }
 [data-lui-control-scale="legacy"] .lui-kbd[data-size="md"] { height: auto; min-height: 1.6rem; padding: 0 0.45rem; font-size: 0.85rem; }
 [data-lui-control-scale="legacy"] .lui-kbd[data-size="lg"] { height: auto; min-height: 1.85rem; padding: 0 0.55rem; font-size: 0.95rem; }
+[data-lui-control-scale="legacy"] .lui-btn { line-height: normal; font-size: var(--lantern-text); }
+[data-lui-control-scale="legacy"] .lui-btn[data-size^="icon"] { padding: 0; }
+[data-lui-control-scale="legacy"] .lui-btn[data-size="xs"] { padding-inline: 0.5rem; font-size: var(--lantern-text-sm); }
+[data-lui-control-scale="legacy"] .lui-btn[data-size="sm"] { padding-inline: 0.625rem; font-size: var(--lantern-text-sm); }
+[data-lui-control-scale="legacy"] .lui-btn[data-size="md"],
+[data-lui-control-scale="legacy"] .lui-btn[data-size="icon-md"],
+[data-lui-control-scale="legacy"] .lui-btn[data-size="icon"] { padding-inline: var(--lantern-control-px); font-size: var(--lantern-text); }
+[data-lui-control-scale="legacy"] .lui-btn[data-size="lg"] { padding-inline: 1rem; font-size: var(--lantern-text); }
+[data-lui-control-scale="legacy"] .lui-btn[data-size="xl"] { padding-inline: 1.25rem; font-size: 0.875rem; }
+[data-lui-control-scale="legacy"] .lui-action-bar-inline { gap: 0.375rem; }
+[data-lui-control-scale="legacy"] .lui-tabs-list[data-variant="segmented"] { border-radius: calc(var(--lantern-radius) + 1px); }
+[data-lui-control-scale="legacy"] .lui-pg { border-radius: var(--lantern-radius-sm); padding: 0 0.4rem; font-size: var(--lantern-text-sm); }
+[data-lui-control-scale="legacy"] .lui-pg-size { padding: 0 0.6rem; }
+[data-lui-control-scale="legacy"] .lui-field[data-size="md"] .lui-textarea { font-size: var(--lantern-text); padding: 0.5rem 0.625rem; }
+[data-lui-control-scale="legacy"] .lui-dt-search { padding: 0 var(--lantern-control-px); }
+[data-lui-control-scale="legacy"] .lui-input-wrap, [data-lui-control-scale="legacy"] .lui-field .lui-input-wrap { padding: 0 0.625rem; }
+[data-lui-control-scale="legacy"] .lui-autocomplete-control, [data-lui-control-scale="legacy"] .lui-field[data-size] .lui-autocomplete-control { padding: 0 var(--lantern-control-px); }
+[data-lui-control-scale="legacy"] .lui-field[data-size] .lui-select-native { padding: 0 1.9rem 0 var(--lantern-control-px); font-size: var(--lantern-text); line-height: normal; }
+[data-lui-control-scale="legacy"] .lui-action-bar-more-trigger, [data-lui-control-scale="legacy"] .lui-action-bar-menu .lui-menu-trigger .lui-btn { padding-inline: 0.375rem; }
 [data-lui-control-scale="legacy"] .lui-btn:focus-visible,
 [data-lui-control-scale="legacy"] .lui-input-wrap:focus-within,
 [data-lui-control-scale="legacy"] .lui-select-native:focus-visible,
 [data-lui-control-scale="legacy"] .lui-dt-chip:focus-visible {
   outline: revert; outline-offset: revert; box-shadow: 0 0 0 3px var(--lantern-ring-soft);
+}
+[data-lui-control-scale="legacy"] .lui-select-toggle:focus-visible,
+[data-lui-control-scale="legacy"] .lui-autocomplete-control:focus-within,
+[data-lui-control-scale="legacy"] .lui-tabs-list:focus-within .lui-tab:focus-visible,
+[data-lui-control-scale="legacy"] .lui-switch:has(.lui-switch-input:focus-visible),
+[data-lui-control-scale="legacy"] .lui-pg:focus-visible,
+[data-lui-control-scale="legacy"] .lui-kbd:focus-visible {
+  outline: revert; outline-offset: revert; box-shadow: none;
 }
 /* ── Keyboard shortcut badge (<kbd>) ── */
 .lui-kbd {
@@ -5879,7 +5924,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-840" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-4802" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5896,7 +5941,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-872" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-4834" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5913,7 +5958,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-904" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-4866" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5930,7 +5975,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-936" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-4898" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
