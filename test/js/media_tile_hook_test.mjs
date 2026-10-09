@@ -43,9 +43,10 @@ test("clicking a selectable tile pushes the select event", () => {
 
 test("clicks on interactive buttons, links, or ignored elements do not toggle selection", () => {
   const m = mountTile(`
-    <article id="tile-1" class="lui-media-tile" data-selectable="true" data-selected="false" data-tile-select="toggle_item">
+    <article id="tile-1" class="lui-media-tile lui-media-tile-selectable" data-selectable="true" data-selected="false" data-loading="false" data-empty="false" data-tile-select="toggle_item" aria-selected="false" phx-hook="LanternMediaTile">
       <div class="lui-media-tile-well">
         <button id="favorite-btn" type="button">Fav</button>
+        <a class="lui-media-tile-link" href="/item/1"></a>
       </div>
       <div class="lui-media-tile-caption">
         <a id="detail-link" href="/item">Details</a>
@@ -54,8 +55,8 @@ test("clicks on interactive buttons, links, or ignored elements do not toggle se
     </article>
   `)
 
-  for (const id of ["favorite-btn", "detail-link", "ignore-elem"]) {
-    click(m.document.getElementById(id))
+  for (const id of ["favorite-btn", "detail-link", "ignore-elem", "lui-media-tile-link"]) {
+    click(id === "lui-media-tile-link" ? m.document.querySelector(`.${id}`) : m.document.getElementById(id))
   }
 
   assert.deepEqual(m.pushed, [])
@@ -90,7 +91,7 @@ test("Space and Enter on the focused checkbox toggle selection", () => {
 
 test("non-selectable tiles ignore clicks and keys", () => {
   const m = mountTile(`
-    <article id="tile-1" class="lui-media-tile" data-selectable="false" data-selected="false">
+    <article id="tile-1" class="lui-media-tile" data-selectable="false" data-selected="false" data-loading="false" data-empty="false" phx-hook="LanternMediaTile">
       <div class="lui-media-tile-caption"><span id="title">Item</span></div>
     </article>
   `)
@@ -120,7 +121,7 @@ test("a failed image reveals the already-rendered empty state", () => {
 
 test("destroyed cleanly unhooks event listeners", () => {
   const m = mountTile(`
-    <article id="tile-1" class="lui-media-tile" data-selectable="true" data-selected="false" data-tile-select="toggle_item">
+    <article id="tile-1" class="lui-media-tile lui-media-tile-selectable" data-selectable="true" data-selected="false" data-loading="false" data-empty="false" data-tile-select="toggle_item" aria-selected="false" phx-hook="LanternMediaTile">
       <div class="lui-media-tile-caption"><span id="title">Item</span></div>
     </article>
   `)

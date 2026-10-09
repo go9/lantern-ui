@@ -2246,7 +2246,7 @@ const LanternRowClick = {
 }
 
 const TILE_INTERACTIVE =
-  'a:not(.lui-media-tile-link), button, input, select, textarea, label, summary, [role="button"], [data-tile-ignore]'
+  'a, button, input, select, textarea, label, summary, [role="button"], [data-tile-ignore]'
 
 const LanternMediaTile = {
   mounted() {
