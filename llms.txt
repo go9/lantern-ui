@@ -341,6 +341,27 @@ their replacement. Full attribute tables are in llms-full.txt.
 From docs/recipes.md and README.md (same sources the recipe tests render).
 Copy these blocks instead of inventing markup.
 
+From `docs/recipes.md` (Media grid):
+
+```heex
+<.media_tile_grid min="180px">
+  <.media_tile
+    :for={item <- @items}
+    id={item.id}
+    image_src={item.image_url}
+    image_alt={item.name}
+    selectable
+    selected={item.id in @selected_ids}
+    on_select="toggle_item"
+  >
+    <:caption>
+      <strong>{item.name}</strong>
+      <span>{item.description}</span>
+    </:caption>
+  </.media_tile>
+</.media_tile_grid>
+```
+
 From `docs/recipes.md` (Linear-style list row):
 
 ```heex

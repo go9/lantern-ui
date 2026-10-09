@@ -1225,6 +1225,7 @@ Renders a generic media tile cell.
 - `image_fit` (:string, values: cover, contain, fill, none, default "cover") — CSS object-fit behavior.
 - `image_src` (:string) — Source URL for the media image.
 - `loading` (:boolean, default false) — Display skeleton loading state.
+- `on_select` (:string) — LiveView event to emit when selection changes.
 - `rest` (:global) — Arbitrary HTML or LiveView attributes passed through.
 - `selectable` (:boolean, default false) — Whether the tile can be selected.
 - `selected` (:boolean, default false) — Whether the tile is currently selected.
@@ -2166,6 +2167,27 @@ Slots:
 ## Copy-paste recipes
 
 From docs/recipes.md and README.md (same sources the recipe tests render).
+
+From `docs/recipes.md` (Media grid):
+
+```heex
+<.media_tile_grid min="180px">
+  <.media_tile
+    :for={item <- @items}
+    id={item.id}
+    image_src={item.image_url}
+    image_alt={item.name}
+    selectable
+    selected={item.id in @selected_ids}
+    on_select="toggle_item"
+  >
+    <:caption>
+      <strong>{item.name}</strong>
+      <span>{item.description}</span>
+    </:caption>
+  </.media_tile>
+</.media_tile_grid>
+```
 
 From `docs/recipes.md` (Linear-style list row):
 

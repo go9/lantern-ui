@@ -37,6 +37,29 @@ Blocks inherit the host's body font and measure: the gallery fixture sets `font-
 
 Grouped tables and group headers are banned. A page that listed rows under tinted collapsible group headers becomes one flat list: a status column on each row, rows ordered by status then recency, and quick-filter chips or a tabs-free filter. Whatever the group header said (status name, count) must stay visible per row or in the filter chips with counts.
 
+## Media grid
+
+**When to use:** A visual collection where each item needs an image, optional selection, a short caption, and actions. Supply `on_select` for server-owned selection; the component keeps the checkbox and its event hook keyboard accessible.
+
+```heex
+<.media_tile_grid min="180px">
+  <.media_tile
+    :for={item <- @items}
+    id={item.id}
+    image_src={item.image_url}
+    image_alt={item.name}
+    selectable
+    selected={item.id in @selected_ids}
+    on_select="toggle_item"
+  >
+    <:caption>
+      <strong>{item.name}</strong>
+      <span>{item.description}</span>
+    </:caption>
+  </.media_tile>
+</.media_tile_grid>
+```
+
 ## Linear-style list row
 
 **When to use:** A dense issue row — priority glyph, id, status glyph, title, tags, progress ring, date — in a flat list.

@@ -4270,6 +4270,8 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-time-series-chart__annotation.tone-success line { stroke: var(--lantern-success); }
 .lui-time-series-chart__annotation.tone-warning line { stroke: var(--lantern-warning); }
 .lui-time-series-chart__annotation.tone-danger line { stroke: var(--lantern-danger); }
+.lui-time-series-chart__reference line { stroke: var(--lantern-accent); stroke-dasharray: 5 4; stroke-width: 1.5; }
+.lui-time-series-chart__reference text { fill: var(--lantern-fg-muted); font-size: 10px; }
 .lui-time-series-chart__point { fill: var(--lui-series-color); stroke: var(--lantern-surface); stroke-width: 1.5; }
 .lui-time-series-chart__empty { display: flex; min-height: 180px; align-items: center; justify-content: center; color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
 .lui-time-series-chart__legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; padding: 0 4px; }
@@ -4390,6 +4392,197 @@ a.lui-waterfall-lane-inner:focus-visible {
   .lui-chart-card__header { display: grid; }
   .lui-chart-card__actions { justify-content: flex-start; }
   .lui-chart-card__value { font-size: 1.25rem; }
+}
+
+/* ── Media Tile ──────────────────────────────────────────────────────────── */
+.lui-media-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--lantern-surface);
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius);
+  box-shadow: var(--lantern-shadow);
+  overflow: hidden;
+  transition: border-color var(--lantern-duration, 150ms) ease, box-shadow var(--lantern-duration, 150ms) ease;
+  color: var(--lantern-fg);
+}
+.lui-media-tile:hover {
+  border-color: var(--lantern-border-strong);
+}
+.lui-media-tile[data-selected="true"] {
+  border-color: var(--lantern-primary);
+  box-shadow: 0 0 0 1px var(--lantern-primary), var(--lantern-shadow);
+}
+.lui-media-tile:focus-visible {
+  outline: 2px solid var(--lantern-ring);
+  outline-offset: 2px;
+}
+.lui-media-tile-linked {
+  cursor: pointer;
+}
+.lui-media-tile-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.lui-media-tile-link:focus-visible {
+  outline: 2px solid var(--lantern-ring);
+  outline-offset: -2px;
+}
+.lui-media-tile-linked :is(a:not(.lui-media-tile-link), button, input, select, textarea, label, summary, [role="button"], [data-tile-ignore]) {
+  position: relative;
+  z-index: 5;
+}
+.lui-media-tile-well {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--lui-media-tile-aspect, 5 / 7);
+  background: var(--lantern-muted);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lui-media-tile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.lui-media-tile-image[data-fit="contain"] {
+  object-fit: contain;
+}
+.lui-media-tile-image[data-fit="fill"] {
+  object-fit: fill;
+}
+.lui-media-tile-image[data-fit="none"] {
+  object-fit: none;
+}
+.lui-media-tile-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lui-media-tile-skeleton {
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+.lui-media-tile-skeleton .lui-skeleton,
+.lui-media-tile-skeleton-body {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+.lui-media-tile-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--lantern-space-xs);
+  width: 100%;
+  height: 100%;
+  padding: var(--lantern-space-md);
+  color: var(--lantern-fg-muted);
+  text-align: center;
+  background: var(--lantern-surface-sunken);
+}
+.lui-media-tile-empty-icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--lantern-fg-muted);
+  opacity: 0.7;
+}
+.lui-media-tile-empty-text {
+  font-size: var(--lantern-text-xs);
+  line-height: 1.25;
+}
+.lui-media-tile-banner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.lui-media-tile-banner > * {
+  pointer-events: auto;
+}
+.lui-media-tile-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--lantern-space-xs);
+}
+.lui-media-tile-overlay > * {
+  pointer-events: auto;
+}
+.lui-media-tile-selection {
+  position: absolute;
+  top: var(--lantern-space-xs);
+  left: var(--lantern-space-xs);
+  z-index: 4;
+}
+.lui-media-tile-checkbox {
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: var(--lantern-radius-sm);
+  border: 1px solid var(--lantern-border-strong);
+  background: var(--lantern-surface);
+  color: var(--lantern-primary-fg, #fff);
+  box-shadow: var(--lantern-shadow);
+  transition: all var(--lantern-duration, 150ms) ease;
+}
+.lui-media-tile-checkbox[data-checked="true"] {
+  background: var(--lantern-primary);
+  border-color: var(--lantern-primary);
+}
+.lui-media-tile-check-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+.lui-media-tile-caption {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lantern-space-xs);
+  padding: var(--lantern-space-sm);
+  font-size: var(--lantern-text-sm);
+  line-height: 1.35;
+}
+.lui-media-tile-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--lantern-space-xs);
+  padding: var(--lantern-space-xs) var(--lantern-space-sm) var(--lantern-space-sm);
+  border-top: 1px solid var(--lantern-border);
+  margin-top: auto;
+  font-size: var(--lantern-text-xs);
+  color: var(--lantern-fg-muted);
+}
+.lui-media-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--lui-media-tile-columns, auto-fill), minmax(var(--lui-media-tile-min, 160px), 1fr));
+  gap: var(--lui-media-tile-gap, var(--lantern-space-md));
+  width: 100%;
+}
+@media (max-width: 40rem) {
+  .lui-media-tile-caption { padding: var(--lantern-space-xs); }
+  .lui-media-tile-footer { padding: var(--lantern-space-xs); }
 }
 
 /*
@@ -5229,7 +5422,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-1640" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-1704" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5246,7 +5439,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1672" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-1736" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5263,7 +5456,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1704" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-1768" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5280,7 +5473,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1736" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-1800" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
