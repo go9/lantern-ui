@@ -39,6 +39,28 @@
   --lui-actionbar-h: 2.75rem;
   --lui-strip-h: 2.75rem;
   --lui-shell-h: calc(var(--lui-topline-h) + var(--lui-actionbar-h));
+  --lui-control-h-sm: 1.75rem;
+  --lui-control-h-md: 2rem;
+  --lui-control-h-lg: 2.25rem;
+  --lui-control-font-sm: 0.75rem;
+  --lui-control-font-md: 0.8125rem;
+  --lui-control-font-lg: 0.875rem;
+  --lui-control-line-height: 1;
+  --lui-control-px-sm: 0.625rem;
+  --lui-control-px-md: 0.75rem;
+  --lui-control-px-lg: 0.875rem;
+  --lui-control-icon-sm: 0.875rem;
+  --lui-control-icon-md: 1rem;
+  --lui-control-icon-lg: 1.125rem;
+  --lui-control-radius: 0.375rem;
+  --lui-focus-ring-width: 2px;
+  --lui-focus-ring-offset: 2px;
+  --lui-focus-ring-color: var(--lantern-ring);
+  --lui-gap-4: 0.25rem;
+  --lui-gap-8: 0.5rem;
+  --lui-gap-12: 0.75rem;
+  --lui-gap-16: 1rem;
+  --lui-gap-24: 1.5rem;
 }
 
 /* ── Icon ── */
@@ -4695,8 +4717,241 @@ a.lui-waterfall-lane-inner:focus-visible {
   width: 100%;
 }
 @media (max-width: 40rem) {
-  .lui-media-tile-caption { padding: var(--lantern-space-xs); }
+.lui-media-tile-caption { padding: var(--lantern-space-xs); }
   .lui-media-tile-footer { padding: var(--lantern-space-xs); }
+}
+
+/* ── Shared control scale ────────────────────────────────────────────────
+ * All size-bearing controls map to the same 28/32/36px targets. The legacy
+ * opt-out below restores the prior per-component measurements. */
+.lui-btn {
+  box-sizing: border-box;
+  gap: var(--lui-gap-8);
+  border-radius: var(--lui-control-radius);
+  font-size: var(--lui-control-font-md);
+  line-height: var(--lui-control-line-height);
+}
+.lui-btn[data-size="xs"],
+.lui-btn[data-size="sm"],
+.lui-btn[data-size="icon-xs"],
+.lui-btn[data-size="icon-sm"] {
+  height: var(--lui-control-h-sm);
+  font-size: var(--lui-control-font-sm);
+  padding-inline: var(--lui-control-px-sm);
+}
+.lui-btn[data-size="md"],
+.lui-btn[data-size="icon-md"],
+.lui-btn[data-size="icon"] {
+  height: var(--lui-control-h-md);
+  font-size: var(--lui-control-font-md);
+  padding-inline: var(--lui-control-px-md);
+}
+.lui-btn[data-size="lg"],
+.lui-btn[data-size="xl"],
+.lui-btn[data-size="icon-lg"],
+.lui-btn[data-size="icon-xl"] {
+  height: var(--lui-control-h-lg);
+  font-size: var(--lui-control-font-lg);
+  padding-inline: var(--lui-control-px-lg);
+}
+.lui-btn[data-size^="icon"] { padding-inline: 0; }
+.lui-btn[data-size="icon-xs"], .lui-btn[data-size="icon-sm"] {
+  width: var(--lui-control-h-sm);
+}
+.lui-btn[data-size="icon-md"], .lui-btn[data-size="icon"] {
+  width: var(--lui-control-h-md);
+}
+.lui-btn[data-size="icon-lg"], .lui-btn[data-size="icon-xl"] {
+  width: var(--lui-control-h-lg);
+}
+.lui-btn[data-size="xs"] .lui-icon, .lui-btn[data-size="sm"] .lui-icon,
+.lui-btn[data-size="icon-xs"] .lui-icon, .lui-btn[data-size="icon-sm"] .lui-icon {
+  width: var(--lui-control-icon-sm); height: var(--lui-control-icon-sm);
+}
+.lui-btn[data-size="md"] .lui-icon, .lui-btn[data-size="icon-md"] .lui-icon,
+.lui-btn[data-size="icon"] .lui-icon {
+  width: var(--lui-control-icon-md); height: var(--lui-control-icon-md);
+}
+.lui-btn[data-size="lg"] .lui-icon, .lui-btn[data-size="xl"] .lui-icon,
+.lui-btn[data-size="icon-lg"] .lui-icon, .lui-btn[data-size="icon-xl"] .lui-icon {
+  width: var(--lui-control-icon-lg); height: var(--lui-control-icon-lg);
+}
+
+.lui-input-wrap, .lui-color-wrap, .lui-dtf, .lui-select-native,
+.lui-select-toggle, .lui-autocomplete-control, .lui-dt-search {
+  box-sizing: border-box;
+  border-radius: var(--lui-control-radius);
+}
+.lui-input-wrap { gap: var(--lui-gap-8); padding-inline: var(--lui-control-px-md); }
+.lui-input { font-size: var(--lui-control-font-md); line-height: var(--lui-control-line-height); }
+.lui-field[data-size="xs"] .lui-input-wrap,
+.lui-field[data-size="sm"] .lui-input-wrap,
+.lui-field[data-size="xs"] .lui-select-native,
+.lui-field[data-size="sm"] .lui-select-native,
+.lui-field[data-size="xs"] .lui-autocomplete-control,
+.lui-field[data-size="sm"] .lui-autocomplete-control {
+  height: var(--lui-control-h-sm);
+  min-height: var(--lui-control-h-sm);
+  padding-inline: var(--lui-control-px-sm);
+}
+.lui-field[data-size="xs"] .lui-input, .lui-field[data-size="sm"] .lui-input,
+.lui-field[data-size="xs"] .lui-select-native, .lui-field[data-size="sm"] .lui-select-native,
+.lui-field[data-size="xs"] .lui-autocomplete-input, .lui-field[data-size="sm"] .lui-autocomplete-input {
+  font-size: var(--lui-control-font-sm);
+  line-height: var(--lui-control-line-height);
+}
+.lui-field[data-size="md"] .lui-input-wrap,
+.lui-field[data-size="md"] .lui-select-native,
+.lui-field[data-size="md"] .lui-autocomplete-control {
+  height: var(--lui-control-h-md); min-height: var(--lui-control-h-md);
+}
+.lui-field[data-size="lg"] .lui-input-wrap,
+.lui-field[data-size="xl"] .lui-input-wrap,
+.lui-field[data-size="lg"] .lui-select-native,
+.lui-field[data-size="xl"] .lui-select-native,
+.lui-field[data-size="lg"] .lui-autocomplete-control,
+.lui-field[data-size="xl"] .lui-autocomplete-control {
+  height: var(--lui-control-h-lg); min-height: var(--lui-control-h-lg);
+  padding-inline: var(--lui-control-px-lg);
+}
+.lui-field[data-size="lg"] .lui-input, .lui-field[data-size="xl"] .lui-input,
+.lui-field[data-size="lg"] .lui-select-native, .lui-field[data-size="xl"] .lui-select-native,
+.lui-field[data-size="lg"] .lui-autocomplete-input, .lui-field[data-size="xl"] .lui-autocomplete-input {
+  font-size: var(--lui-control-font-lg);
+  line-height: var(--lui-control-line-height);
+}
+.lui-select-native { height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); }
+.lui-select-native:focus-visible, .lui-select-toggle:focus-visible { outline: none; }
+.lui-autocomplete-control { height: var(--lui-control-h-md); min-height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); }
+.lui-autocomplete-input { font-size: var(--lui-control-font-md); line-height: var(--lui-control-line-height); }
+
+.lui-tabs-list[data-variant="segmented"] { border-radius: var(--lui-control-radius); gap: var(--lui-gap-4); }
+.lui-tab { gap: var(--lui-gap-4); }
+.lui-tabs-list[data-size="sm"], .lui-tabs-list[data-size="md"] { box-sizing: border-box; height: var(--lui-control-h-md); }
+.lui-tabs-list[data-size="sm"] .lui-tab,
+.lui-tabs-list[data-size="md"] .lui-tab {
+  box-sizing: border-box; height: 100%; padding: 0 var(--lui-control-px-md);
+  border-radius: calc(var(--lui-control-radius) - 2px); font-size: var(--lui-control-font-md);
+  line-height: var(--lui-control-line-height);
+}
+.lui-tabs-list[data-size="sm"] { height: var(--lui-control-h-sm); }
+.lui-tabs-list[data-size="sm"] .lui-tab { padding-inline: var(--lui-control-px-sm); font-size: var(--lui-control-font-sm); }
+.lui-switch-row { align-items: center; gap: var(--lui-gap-8); }
+.lui-switch { box-sizing: border-box; align-items: center; }
+.lui-switch[data-size="sm"] { min-height: var(--lui-control-h-sm); }
+.lui-switch[data-size="md"] { min-height: var(--lui-control-h-md); }
+.lui-switch[data-size="lg"] { min-height: var(--lui-control-h-lg); }
+.lui-switch[data-size="sm"] .lui-switch-track { height: 1rem; }
+.lui-switch[data-size="md"] .lui-switch-track { height: 1.125rem; }
+.lui-switch[data-size="lg"] .lui-switch-track { height: 1.25rem; }
+
+.lui-badge[data-size="sm"] { box-sizing: border-box; height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); font-size: var(--lui-control-font-sm); }
+.lui-badge[data-size="md"] { box-sizing: border-box; height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); font-size: var(--lui-control-font-md); }
+.lui-badge[data-size="lg"] { box-sizing: border-box; height: var(--lui-control-h-lg); padding-inline: var(--lui-control-px-lg); font-size: var(--lui-control-font-lg); }
+.lui-badge { gap: var(--lui-gap-4); }
+.lui-dt-chip { box-sizing: border-box; height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); gap: var(--lui-gap-4); }
+.lui-dt-chip .lui-icon { width: var(--lui-control-icon-sm); height: var(--lui-control-icon-sm); }
+.lui-kbd { height: var(--lui-control-h-md); min-height: var(--lui-control-h-md); border-radius: var(--lui-control-radius); font-size: var(--lui-control-font-md); padding-inline: var(--lui-control-px-md); }
+.lui-kbd[data-size="xs"], .lui-kbd[data-size="sm"] { height: var(--lui-control-h-sm); min-height: var(--lui-control-h-sm); font-size: var(--lui-control-font-sm); padding-inline: var(--lui-control-px-sm); }
+.lui-kbd[data-size="lg"] { height: var(--lui-control-h-lg); min-height: var(--lui-control-h-lg); font-size: var(--lui-control-font-lg); padding-inline: var(--lui-control-px-lg); }
+
+.lui-action-bar-inline { gap: var(--lui-gap-4); }
+.lui-action-bar-more-trigger { box-sizing: border-box; height: var(--lui-control-h-sm); min-width: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); }
+.lui-action-bar-menu .lui-menu-trigger .lui-btn { height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); font-size: var(--lui-control-font-sm); }
+.lui-dt-chromerow { gap: var(--lui-gap-8); }
+.lui-dt-chromerow .lui-tabs-list[data-size="sm"] { height: var(--lui-control-h-sm); }
+.lui-dt-chromerow .lui-dt-search { box-sizing: border-box; height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); gap: var(--lui-gap-4); }
+.lui-dt-chromerow .lui-dt-search input { font-size: var(--lui-control-font-sm); line-height: var(--lui-control-line-height); }
+.lui-dt-chromerow .lui-dt-chip { height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); }
+.lui-dt-chromerow .lui-dt-expand { box-sizing: border-box; height: var(--lui-control-h-sm); min-height: var(--lui-control-h-sm); padding: 0 var(--lui-control-px-sm); line-height: var(--lui-control-line-height); }
+.lui-pg { box-sizing: border-box; height: var(--lui-control-h-md); min-width: var(--lui-control-h-md); font-size: var(--lui-control-font-sm); border-radius: var(--lui-control-radius); }
+.lui-pg-size { gap: var(--lui-gap-4); padding-inline: var(--lui-control-px-sm); }
+
+.lui-btn:focus-visible, .lui-input-wrap:focus-within, .lui-color-wrap:focus-within,
+.lui-dtf:focus-within, .lui-select-native:focus-visible, .lui-select-toggle:focus-visible,
+.lui-autocomplete-control:focus-within, .lui-tabs-list:focus-within .lui-tab:focus-visible,
+.lui-switch:has(.lui-switch-input:focus-visible), .lui-dt-chip:focus-visible,
+.lui-pg:focus-visible, .lui-kbd:focus-visible {
+  outline: var(--lui-focus-ring-width) solid var(--lui-focus-ring-color);
+  outline-offset: var(--lui-focus-ring-offset);
+  box-shadow: none;
+}
+
+/* Set this on the application root to recover the pre-scale component metrics. */
+[data-lui-control-scale="legacy"] {
+  --lui-control-h-sm: 1.75rem;
+  --lui-control-h-md: var(--lantern-control-h);
+  --lui-control-h-lg: 2.25rem;
+  --lui-control-font-sm: var(--lantern-text-sm);
+  --lui-control-font-md: var(--lantern-text);
+  --lui-control-font-lg: 0.875rem;
+  --lui-control-px-sm: 0.625rem;
+  --lui-control-px-md: var(--lantern-control-px);
+  --lui-control-px-lg: 1rem;
+  --lui-control-radius: var(--lantern-radius);
+}
+[data-lui-control-scale="legacy"] .lui-btn[data-size="xs"],
+[data-lui-control-scale="legacy"] .lui-btn[data-size="icon-xs"] { height: 1.5rem; }
+[data-lui-control-scale="legacy"] .lui-btn[data-size="sm"],
+[data-lui-control-scale="legacy"] .lui-btn[data-size="icon-sm"] { height: 1.75rem; }
+[data-lui-control-scale="legacy"] .lui-btn[data-size="lg"],
+[data-lui-control-scale="legacy"] .lui-btn[data-size="icon-lg"] { height: 2.25rem; }
+[data-lui-control-scale="legacy"] .lui-btn[data-size="xl"],
+[data-lui-control-scale="legacy"] .lui-btn[data-size="icon-xl"] { height: 2.5rem; }
+[data-lui-control-scale="legacy"] .lui-btn[data-size="icon-xs"] { width: 1.5rem; }
+[data-lui-control-scale="legacy"] .lui-btn[data-size="icon-sm"] { width: 1.75rem; }
+[data-lui-control-scale="legacy"] .lui-btn[data-size="icon-lg"] { width: 2.25rem; }
+[data-lui-control-scale="legacy"] .lui-btn[data-size="icon-xl"] { width: 2.5rem; }
+[data-lui-control-scale="legacy"] .lui-badge[data-size="sm"] { height: 1.125rem; font-size: 0.6875rem; padding-inline: 0.5rem; }
+[data-lui-control-scale="legacy"] .lui-badge[data-size="md"] { height: 1.25rem; font-size: 0.71875rem; padding-inline: 0.5625rem; }
+[data-lui-control-scale="legacy"] .lui-badge[data-size="lg"] { height: 1.5rem; font-size: 0.8125rem; padding-inline: 0.7rem; }
+[data-lui-control-scale="legacy"] .lui-badge { box-sizing: content-box; gap: 0.3em; }
+[data-lui-control-scale="legacy"] .lui-dt-chip { height: auto; padding: 0.2rem 0.5rem; }
+[data-lui-control-scale="legacy"] .lui-input-wrap,
+[data-lui-control-scale="legacy"] .lui-select-native,
+[data-lui-control-scale="legacy"] .lui-autocomplete-control,
+[data-lui-control-scale="legacy"] .lui-dt-search { box-sizing: content-box; }
+[data-lui-control-scale="legacy"] .lui-field[data-size="xs"] .lui-input-wrap,
+[data-lui-control-scale="legacy"] .lui-field[data-size="xs"] .lui-select-native { height: 1.5rem; }
+[data-lui-control-scale="legacy"] .lui-field[data-size="sm"] .lui-input-wrap,
+[data-lui-control-scale="legacy"] .lui-field[data-size="sm"] .lui-select-native { height: 1.75rem; }
+[data-lui-control-scale="legacy"] .lui-field[data-size="lg"] .lui-input-wrap,
+[data-lui-control-scale="legacy"] .lui-field[data-size="lg"] .lui-select-native { height: 2.25rem; }
+[data-lui-control-scale="legacy"] .lui-field[data-size="xl"] .lui-input-wrap,
+[data-lui-control-scale="legacy"] .lui-field[data-size="xl"] .lui-select-native { height: 2.5rem; }
+[data-lui-control-scale="legacy"] .lui-autocomplete-control { min-height: var(--lantern-control-h); height: auto; }
+[data-lui-control-scale="legacy"] .lui-tabs-list[data-size="sm"],
+[data-lui-control-scale="legacy"] .lui-tabs-list[data-size="md"] { box-sizing: content-box; height: auto; }
+[data-lui-control-scale="legacy"] .lui-tabs-list[data-size="md"] .lui-tab { height: auto; padding: 0.25rem 0.7rem; font-size: var(--lantern-text); }
+[data-lui-control-scale="legacy"] .lui-tabs-list[data-size="sm"] .lui-tab { height: auto; padding: 0.2rem 0.55rem; font-size: var(--lantern-text-sm); }
+[data-lui-control-scale="legacy"] .lui-tabs-list[data-variant="segmented"] { padding: 3px; }
+[data-lui-control-scale="legacy"] .lui-switch { min-height: 0; }
+[data-lui-control-scale="legacy"] .lui-action-bar-more-trigger { height: var(--lantern-control-h); min-width: 2rem; }
+[data-lui-control-scale="legacy"] .lui-dt-chromerow .lui-dt-search { height: var(--lantern-control-h); }
+[data-lui-control-scale="legacy"] .lui-dt-chromerow .lui-dt-chip { height: auto; padding: 0.2rem 0.5rem; }
+[data-lui-control-scale="legacy"] .lui-dt-chromerow .lui-dt-expand { height: auto; min-height: 2rem; padding: 0.25rem 0.55rem; line-height: normal; }
+[data-lui-control-scale="legacy"] .lui-pg { height: auto; min-height: 1.75rem; }
+[data-lui-control-scale="legacy"] .lui-select-native { box-sizing: border-box; height: var(--lantern-control-h); }
+[data-lui-control-scale="legacy"] .lui-autocomplete-control { box-sizing: border-box; height: var(--lantern-control-h); min-height: var(--lantern-control-h); }
+[data-lui-control-scale="legacy"] .lui-field[data-size] .lui-select-native { height: var(--lantern-control-h); }
+[data-lui-control-scale="legacy"] .lui-field[data-size="lg"] .lui-select-native { height: 32px; min-height: 32px; }
+[data-lui-control-scale="legacy"] .lui-field[data-size] .lui-autocomplete-control { box-sizing: border-box; height: var(--lantern-control-h); min-height: var(--lantern-control-h); }
+[data-lui-control-scale="legacy"] .lui-tabs-list[data-size="md"] { box-sizing: border-box; height: var(--lantern-control-h); }
+[data-lui-control-scale="legacy"] .lui-switch[data-size="sm"] .lui-switch-track { height: 1.1rem; }
+[data-lui-control-scale="legacy"] .lui-switch[data-size="md"] .lui-switch-track { height: 1.35rem; }
+[data-lui-control-scale="legacy"] .lui-switch[data-size="lg"] .lui-switch-track { height: 1.6rem; }
+[data-lui-control-scale="legacy"] .lui-action-bar-menu .lui-menu-trigger .lui-action-bar-more-trigger { height: var(--lantern-control-h); }
+[data-lui-control-scale="legacy"] .lui-dt-chromerow .lui-dt-expand { box-sizing: content-box; }
+[data-lui-control-scale="legacy"] .lui-pg:not(.lui-pg-size) { box-sizing: content-box; }
+[data-lui-control-scale="legacy"] .lui-kbd[data-size="xs"] { height: auto; min-height: 1.15rem; padding: 0 0.25rem; font-size: 0.65rem; }
+[data-lui-control-scale="legacy"] .lui-kbd[data-size="sm"] { height: auto; min-height: 1.35rem; padding: 0 0.35rem; font-size: 0.75rem; }
+[data-lui-control-scale="legacy"] .lui-kbd[data-size="md"] { height: auto; min-height: 1.6rem; padding: 0 0.45rem; font-size: 0.85rem; }
+[data-lui-control-scale="legacy"] .lui-kbd[data-size="lg"] { height: auto; min-height: 1.85rem; padding: 0 0.55rem; font-size: 0.95rem; }
+[data-lui-control-scale="legacy"] .lui-btn:focus-visible,
+[data-lui-control-scale="legacy"] .lui-input-wrap:focus-within,
+[data-lui-control-scale="legacy"] .lui-select-native:focus-visible,
+[data-lui-control-scale="legacy"] .lui-dt-chip:focus-visible {
+  outline: revert; outline-offset: revert; box-shadow: 0 0 0 3px var(--lantern-ring-soft);
 }
 /* ── Keyboard shortcut badge (<kbd>) ── */
 .lui-kbd {
