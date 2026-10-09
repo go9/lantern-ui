@@ -70,6 +70,14 @@
   /* info is blue, not the brand colour: accent-as-info read as an error next to danger */
   --lantern-info: var(--info, oklch(0.62 0.17 255));
 
+  /* Accessible, host-overridable series palette for generic charts. */
+  --lantern-chart-1: var(--chart-1, oklch(0.646 0.222 41.116));
+  --lantern-chart-2: var(--chart-2, oklch(0.6 0.118 184.704));
+  --lantern-chart-3: var(--chart-3, oklch(0.398 0.07 227.392));
+  --lantern-chart-4: var(--chart-4, oklch(0.828 0.189 84.429));
+  --lantern-chart-5: var(--chart-5, oklch(0.769 0.188 70.08));
+  --lantern-chart-6: oklch(0.58 0.16 300);
+
   /* Optional --lantern-tone-*-bg and --lantern-accent-text slots are undefined
      by default. Alerts keep their original element-scoped color-mix background,
      and promo text falls back to the local neutral foreground. */
@@ -188,6 +196,12 @@
   --lantern-danger: var(--danger, #dc2626);
   --lantern-success: var(--success, #16a34a);
   --lantern-warning: var(--warning, #d97706);
+  --lantern-chart-1: var(--chart-1, oklch(0.646 0.222 41.116));
+  --lantern-chart-2: var(--chart-2, oklch(0.6 0.118 184.704));
+  --lantern-chart-3: var(--chart-3, oklch(0.398 0.07 227.392));
+  --lantern-chart-4: var(--chart-4, oklch(0.828 0.189 84.429));
+  --lantern-chart-5: var(--chart-5, oklch(0.769 0.188 70.08));
+  --lantern-chart-6: oklch(0.58 0.16 300);
 
   /* ── Spacing ── */
   --lantern-space-xs: 0.25rem;
@@ -232,6 +246,12 @@
   --lantern-danger: var(--danger, #ef4444);
   --lantern-success: var(--success, #22c55e);
   --lantern-warning: var(--warning, #f59e0b);
+  --lantern-chart-1: var(--chart-1, oklch(0.7 0.18 41.116));
+  --lantern-chart-2: var(--chart-2, oklch(0.7 0.12 184.704));
+  --lantern-chart-3: var(--chart-3, oklch(0.72 0.1 227.392));
+  --lantern-chart-4: var(--chart-4, oklch(0.82 0.16 84.429));
+  --lantern-chart-5: var(--chart-5, oklch(0.78 0.16 70.08));
+  --lantern-chart-6: oklch(0.74 0.14 300);
 
   /* ── Spacing ── */
   --lantern-space-xs: 0.25rem;
@@ -270,6 +290,12 @@
     --lantern-danger: var(--danger, #ef4444);
     --lantern-success: var(--success, #22c55e);
     --lantern-warning: var(--warning, #f59e0b);
+    --lantern-chart-1: var(--chart-1, oklch(0.7 0.18 41.116));
+    --lantern-chart-2: var(--chart-2, oklch(0.7 0.12 184.704));
+    --lantern-chart-3: var(--chart-3, oklch(0.72 0.1 227.392));
+    --lantern-chart-4: var(--chart-4, oklch(0.82 0.16 84.429));
+    --lantern-chart-5: var(--chart-5, oklch(0.78 0.16 70.08));
+    --lantern-chart-6: oklch(0.74 0.14 300);
 
     /* ── Spacing ── */
     --lantern-space-xs: 0.25rem;
@@ -370,6 +396,12 @@
   --lantern-danger: var(--destructive);
   --lantern-danger-fg: var(--destructive-foreground);
   --lantern-ring: var(--ring);
+  --lantern-chart-1: var(--chart-1);
+  --lantern-chart-2: var(--chart-2);
+  --lantern-chart-3: var(--chart-3);
+  --lantern-chart-4: var(--chart-4);
+  --lantern-chart-5: var(--chart-5);
+  --lantern-chart-6: oklch(0.58 0.16 300);
   --lantern-ring-soft: color-mix(in oklab, var(--ring) 50%, transparent);
   --lantern-radius: var(--radius);
   --lantern-radius-sm: calc(var(--radius) - 4px);
@@ -387,6 +419,12 @@
 [data-lantern-theme="shadcn"].dark,
 .dark [data-lantern-theme="shadcn"],
 [data-lantern-theme="shadcn"] .dark {
+  --lantern-chart-1: var(--chart-1);
+  --lantern-chart-2: var(--chart-2);
+  --lantern-chart-3: var(--chart-3);
+  --lantern-chart-4: var(--chart-4);
+  --lantern-chart-5: var(--chart-5);
+  --lantern-chart-6: oklch(0.74 0.14 300);
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);

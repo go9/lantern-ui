@@ -188,6 +188,43 @@ defmodule LanternUI.ChartsTest do
   end
 
   describe "time_series_chart/1" do
+    test "legacy chart functions keep their established SVG signatures" do
+      area_html = area([%{date: "2024-01-01", value: 2}, %{date: "2024-01-02", value: 4}])
+
+      sparkline_html =
+        render_component(&LanternUI.Charts.sparkline/1, id: "legacy-spark", series: [1, 2, 3])
+
+      bar_html =
+        render_component(&LanternUI.Charts.bar_chart/1,
+          id: "legacy-bar",
+          series: [%{label: "A", value: 2}, %{label: "B", value: 4}]
+        )
+
+      line_html =
+        render_component(&LanternUI.Charts.line_chart/1,
+          id: "legacy-line",
+          series: [
+            %{
+              label: "A",
+              color: "var(--lantern-primary)",
+              points: [{~U[2024-01-01 00:00:00Z], 2}, {~U[2024-01-02 00:00:00Z], 4}]
+            }
+          ]
+        )
+
+      assert area_html =~ ~s(id="c-hover" phx-hook="ChartHover")
+      assert area_html =~ ~s(id="c-grad")
+      assert area_html =~ ~s(stroke-width="1.5")
+      assert sparkline_html =~ ~s(id="legacy-spark")
+      assert sparkline_html =~ ~s(viewBox="0 0 160 40")
+      assert sparkline_html =~ ~s(stroke-width="1.75")
+      assert bar_html =~ ~s(aria-label="Bar chart")
+      assert bar_html =~ "<rect"
+      assert line_html =~ ~s(id="legacy-line-hover" phx-hook="LineHover")
+      assert line_html =~ "var(--lantern-primary)"
+      assert line_html =~ ~s(stroke-width="1.75")
+    end
+
     test "renders the additive series-first contract with a signed zero axis" do
       html =
         render_component(&LanternUI.Charts.time_series_chart/1,
@@ -234,15 +271,106 @@ defmodule LanternUI.ChartsTest do
       assert length(Regex.scan(~r/class="lui-time-series-chart__line"/, html)) == 3
     end
 
-    test "invalid and mixed x domains render a deterministic empty state" do
+    test "invalid points render a deterministic empty state" do
       html =
         render_component(&LanternUI.Charts.time_series_chart/1,
           id: "invalid",
-          series: [%{id: "a", label: "Invalid", points: [%{x: 1, y: 1}, %{x: "category", y: 2}]}]
+          series: [%{id: "a", label: "Invalid", points: [%{x: nil, y: 1}, %{x: 2, y: :bad}]}]
         )
 
       assert html =~ "No data"
       refute html =~ "<svg"
+    end
+
+    test "heterogeneous x domains raise a clear error instead of hiding data" do
+      assert_raise ArgumentError,
+                   ~r/homogeneous x domain.*mixed domains: numbers, category strings/,
+                   fn ->
+                     render_component(&LanternUI.Charts.time_series_chart/1,
+                       id: "mixed",
+                       series: [
+                         %{id: "a", label: "Numbers", points: [%{x: 1, y: 2}]},
+                         %{id: "b", label: "Categories", points: [%{x: "Apr", y: 3}]}
+                       ]
+                     )
+                   end
+    end
+
+    test "Date and DateTime x values use the same Unix epoch" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "same-instant",
+          series: [
+            %{id: "date", label: "Date", points: [%{x: ~D[1970-01-01], y: 1}]},
+            %{id: "datetime", label: "DateTime", points: [%{x: ~U[1970-01-01 00:00:00Z], y: 2}]}
+          ]
+        )
+
+      x_coordinates =
+        Regex.scan(~r/<path d="M([^,]+),/, html, capture: :all_but_first)
+        |> List.flatten()
+
+      assert x_coordinates == ["366.0", "366.0"]
+    end
+
+    test "stacked area omits empty sign bands so the zero line stays visible" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "positive-stack",
+          type: :stacked_area,
+          series: [%{id: "a", label: "Positive", points: [%{x: "Apr", y: 2}, %{x: "May", y: 4}]}]
+        )
+
+      assert length(Regex.scan(~r/class="lui-time-series-chart__area"/, html)) == 1
+      assert length(Regex.scan(~r/class="lui-time-series-chart__zero"/, html)) == 1
+      refute html =~ "lui-time-series-chart__line"
+    end
+
+    test "an all-zero stacked area still renders its valid data and zero axis" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "zero-stack",
+          type: :stacked_area,
+          series: [%{id: "a", label: "Zero", points: [%{x: "Apr", y: 0}, %{x: "May", y: 0}]}]
+        )
+
+      assert html =~ "<svg"
+      assert html =~ "lui-time-series-chart__zero"
+      refute html =~ "lui-time-series-chart__area"
+      refute html =~ "No data"
+    end
+
+    test "single-series sign keeps the caller color and adds a dashed negative cue" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "signed-custom-color",
+          series: [
+            %{
+              id: "custom",
+              label: "Custom",
+              color: "var(--lantern-chart-1)",
+              points: [%{x: "Apr", y: -2}, %{x: "May", y: 2}]
+            }
+          ]
+        )
+
+      assert String.contains?(html, "--lui-series-color:var(--lantern-chart-1)")
+      assert String.contains?(html, "stroke-dasharray=\"4 2\"")
+      assert html =~ "lui-time-series-chart__gain-negative"
+      refute html =~ "var(--lantern-success)"
+      refute html =~ "var(--lantern-danger)"
+    end
+
+    test "single-series sign keeps semantic colors when no custom color is supplied" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "signed-default-color",
+          series: [%{id: "a", label: "A", points: [%{x: 1, y: -2}, %{x: 2, y: 2}]}]
+        )
+
+      assert html =~ "--lui-series-color:var(--lantern-success)"
+      assert html =~ "--lui-series-color:var(--lantern-danger)"
+      assert html =~ "stroke-dasharray=\"4 2\""
     end
 
     test "the points mode renders glyphs without connecting paths" do

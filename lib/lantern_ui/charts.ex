@@ -709,7 +709,13 @@ defmodule LanternUI.Charts do
             :if={path.line != ""}
             d={path.line}
             class="lui-time-series-chart__line"
-            stroke-dasharray={if(path.class == "lui-time-series-chart__comparison", do: "4 4")}
+            stroke-dasharray={
+              cond do
+                path.class == "lui-time-series-chart__comparison" -> "4 4"
+                String.ends_with?(path.class, "__gain-negative") -> "4 2"
+                true -> nil
+              end
+            }
           />
           <circle
             :for={{x, y} <- path.points}
@@ -762,7 +768,11 @@ defmodule LanternUI.Charts do
         %{has_data: false, chart_type: assigns.type, legend: []}
 
       {_, nil} ->
-        %{has_data: false, chart_type: assigns.type, legend: []}
+        kinds = all_points |> Enum.map(fn point -> point.key |> elem(0) end) |> Enum.uniq()
+        names = Enum.map_join(kinds, ", ", &x_domain_name/1)
+
+        raise ArgumentError,
+              "time_series_chart expects one homogeneous x domain (dates/date-times, numbers, or category strings); received mixed domains: #{names}"
 
       {_, kind} ->
         build_time_series_geometry(assigns, series, comparison, all_points, kind)
@@ -886,7 +896,7 @@ defmodule LanternUI.Charts do
       )
 
     %{
-      has_data: paths != [],
+      has_data: all_points != [],
       chart_type: assigns.type,
       height: assigns.height,
       vb_w: @vb_w,
@@ -978,7 +988,7 @@ defmodule LanternUI.Charts do
             class:
               "lui-time-series-chart__series" <>
                 if(signed?, do: " lui-time-series-chart__gain-#{sign}", else: ""),
-            color: if(signed?, do: segment_color, else: color),
+            color: if(signed? and is_nil(item.color), do: segment_color, else: color),
             line: line,
             fill: fill,
             points: if(assigns.glyphs or assigns.type == :points, do: coords, else: []),
@@ -1045,7 +1055,7 @@ defmodule LanternUI.Charts do
     end)
   end
 
-  defp build_stacked_area_paths(series, axis_keys, xf, yf, curve) do
+  defp build_stacked_area_paths(series, axis_keys, xf, yf, _curve) do
     initial = {Map.new(axis_keys, &{&1, 0}), Map.new(axis_keys, &{&1, 0})}
 
     {paths, _final} =
@@ -1073,6 +1083,9 @@ defmodule LanternUI.Charts do
 
         bands =
           [positive_band, negative_band]
+          |> Enum.reject(fn band ->
+            Enum.all?(band, fn {_key, base, top} -> base == 0 and top == 0 end)
+          end)
           |> Enum.map(fn band ->
             lower = Enum.map(band, fn {key, base, _top} -> {xf.(key), yf.(base)} end)
             upper = Enum.map(band, fn {key, _base, top} -> {xf.(key), yf.(top)} end)
@@ -1080,7 +1093,7 @@ defmodule LanternUI.Charts do
             %{
               class: "lui-time-series-chart__series",
               color: color,
-              line: Geometry.curve_path(upper, curve),
+              line: "",
               # Linear fill boundaries preserve the lower/upper ordering at every x.
               fill: Geometry.band_path(upper, lower, :linear),
               points: [],
@@ -1350,7 +1363,7 @@ defmodule LanternUI.Charts do
   defp normalize_time_points(_), do: []
 
   defp normalize_x(%Date{} = date) do
-    value = Date.to_gregorian_days(date) * 86_400_000_000
+    value = (Date.to_gregorian_days(date) - 719_528) * 86_400_000_000
     %{key: {:time, value}, value: value, label: Date.to_iso8601(date)}
   end
 
@@ -1385,6 +1398,10 @@ defmodule LanternUI.Charts do
     kinds = points |> Enum.map(fn point -> point.key |> elem(0) end) |> Enum.uniq()
     if length(kinds) == 1, do: hd(kinds), else: nil
   end
+
+  defp x_domain_name(:time), do: "dates/date-times"
+  defp x_domain_name(:number), do: "numbers"
+  defp x_domain_name(:category), do: "category strings"
 
   defp sort_x_keys(keys, :category), do: keys
   defp sort_x_keys(keys, _kind), do: Enum.sort(keys)

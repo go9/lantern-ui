@@ -400,7 +400,15 @@ pass the resulting values back as attrs. Set `type` to `:stacked_area`, `:bar`,
 `:stacked_bar`, or `:grouped_bar` for those renderers, and use
 `orientation={:horizontal}` for horizontal bars. Comparison series align on x
 keys and render as a dashed overlay. Annotations use the same x keys and may
-set a semantic `tone`.
+set a semantic `tone`. A chart with non-empty points must use one x domain
+throughout: dates/date-times, numbers, or category strings. Mixed domains raise
+`ArgumentError` with the conflicting domain kinds; malformed points are ignored,
+and a truly empty chart uses `empty_message`.
+
+Dense bars have a measurable server-rendered markup cost: each SVG bar is about
+100 bytes, so 1,000 bars add roughly 100 KB before the chart wrapper, labels, and
+other SVG content. Keep that cost in mind when choosing grouped or stacked bars
+for large series.
 
 ## Block 3: flat index table with filter chips
 

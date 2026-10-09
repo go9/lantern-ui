@@ -17,9 +17,14 @@ defmodule LanternUI.ShadcnPresetTest do
       assert @theme_css =~ "--foreground: oklch(0.145 0 0);"
       assert @theme_css =~ "--radius: 0.625rem;"
       assert @theme_css =~ "--chart-1:"
+      for index <- 1..6, do: assert(@theme_css =~ "--lantern-chart-#{index}:")
       assert @theme_css =~ "--sidebar:"
       assert @theme_css =~ ".dark[data-lantern-theme=\"shadcn\"]"
       assert @theme_css =~ "--background: oklch(0.145 0 0);"
+
+      [_, dark_theme] = String.split(@theme_css, ".dark {", parts: 2)
+      dark_rule = dark_theme |> String.split("}", parts: 2) |> hd()
+      for index <- 1..6, do: assert(dark_rule =~ "--lantern-chart-#{index}:")
     end
 
     test "re-points lantern tokens and moves to h-9 proportions" do
