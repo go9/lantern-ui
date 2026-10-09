@@ -74,27 +74,11 @@ published. Check `mix hex.info lantern_ui` before choosing a dependency pin.
   Public component attrs/events remain additive except for the `page_header`
   compile warning and the filter interaction change described above.
 
-- **Check helper-name collisions with `use LanternUI`.** Main's date-range
-  component exports `parse_date/1`; it is brought into the component import
-  namespace. The `can-we-settle` consumer fails to compile because its LiveView
-  already defines a local `parse_date/1` (`imported ... conflicts with local
-  function`). Rename the app helper to an app-specific name such as
-  `parse_iso_date/1`, or change the app's component import setup so the helper
-  is not imported. Repeat this check for local helpers named `normalize_preset/1`,
-  `preset_range/2`, `comparison_range/2`, and `validate_range/3` when adding the
-  date-range API.
-
-  Before:
-
-  ```elixir
-  defp parse_date(value) when is_binary(value), do: Date.from_iso8601(value)
-  ```
-
-  After:
-
-  ```elixir
-  defp parse_iso_date(value) when is_binary(value), do: Date.from_iso8601(value)
-  ```
+- **`use LanternUI` imports function components only.** Other public functions,
+  including date-range helpers such as `parse_date/1`, remain available through
+  their component module names and are not added to the consumer's local import
+  namespace. Apps can keep helpers named `parse_date/1`, `format_date/1`, or
+  similar without renaming them to avoid a LanternUI import conflict.
 
 There is no new package dependency or raised runtime floor in the release diff:
 `elixir: "~> 1.15"`, `phoenix_live_view: "~> 1.0"`, and `jason: "~> 1.0"` remain.
