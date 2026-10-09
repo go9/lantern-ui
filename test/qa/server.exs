@@ -74,7 +74,7 @@ defmodule LanternUI.QA.Endpoint do
   @session [store: :cookie, key: "_qa", signing_salt: "qa_salt_qa"]
   socket("/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session]])
 
-  plug(Plug.Static, at: "/", from: {:lantern_ui, "priv/static"}, gzip: false)
+  plug(Plug.Static, at: "/", from: Path.expand("../../priv/static", __DIR__), gzip: false)
   plug(Plug.Static, at: "/js", from: {:phoenix, "priv/static"}, only: ~w(phoenix.mjs))
 
   plug(Plug.Static,

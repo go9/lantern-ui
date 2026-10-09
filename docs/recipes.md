@@ -484,6 +484,10 @@ throughout: dates/date-times, numbers, or category strings. Mixed domains raise
 `ArgumentError` with the conflicting domain kinds; malformed points are ignored,
 and a truly empty chart uses `empty_message`.
 
+Bar hover snaps to the rendered bar center and highlights the active bar. The
+clamped HTML tooltip uses the page font, theme tokens, and one aligned value
+per series; it does not scale with the SVG.
+
 Opt into selection events when a caller-owned panel should follow the point a
 reader chooses. `select_event` pushes on pointer click/tap and keyboard Enter or
 Space;

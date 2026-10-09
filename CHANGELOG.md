@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Fixed
+- Align bar, grouped bar, and stacked bar crosshairs with the hovered bar center and replace distorted SVG tooltip text with a clamped, token-styled HTML overlay.
 - Fit time-series plots to measured container width at a fixed requested height, preserve native text size during resize, and skip colliding axis ticks.
 - `use LanternUI` imports only documented function components. Public helpers remain available through their module names and no longer conflict with consumer-local functions such as `parse_date/1`.
 - Align the app sidebar workspace header with the sticky page strip, use a shared page gutter and 28/32/36px control scale, and position expanded data tables below the token-sized strip at every viewport width.

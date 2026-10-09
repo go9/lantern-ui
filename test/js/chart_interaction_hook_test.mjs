@@ -9,15 +9,14 @@ const points = [
 
 function fixture() {
   return `<div id="chart" data-plot-left="20" data-plot-right="80" data-interaction='${JSON.stringify(points)}' data-series-label='["Collection","Inventory"]' data-series-id='["collection","inventory"]'>
-    <svg viewBox="0 0 100 150"><g class="lui-time-series-chart__labels"><text class="lui-time-series-chart__x-tick" x="20">Jan</text><text class="lui-time-series-chart__x-tick" x="80">Feb</text></g><g class="lui-time-series-chart__series"><path d="M20,80L80,60"></path></g><g class="lui-time-series-chart__interaction" hidden>
+    <svg viewBox="0 0 100 150"><g class="lui-time-series-chart__interaction" hidden>
       <line data-part="crosshair" x1="0" x2="0"></line>
       <circle data-part="series-point" data-series-index="0"></circle>
       <circle data-part="series-point" data-series-index="1"></circle>
-      <g data-part="tooltip" data-base-x="8" data-base-y="8" data-plot-left="4" data-plot-right="96" data-plot-top="4" data-plot-bottom="146" data-tooltip-width="40" data-tooltip-height="30"><rect width="40" height="30"></rect><text data-part="tooltip-date"></text>
-        <text data-part="tooltip-row" data-series-index="0"></text>
-        <text data-part="tooltip-row" data-series-index="1"></text></g>
     </g><circle data-chart-point="0" tabindex="0"></circle>
     <circle data-chart-point="1" tabindex="-1"></circle></svg>
+    <div data-part="html-tooltip" hidden><span data-part="html-tooltip-date"></span>
+      <strong data-part="html-tooltip-value"></strong><strong data-part="html-tooltip-value"></strong></div>
     <span data-part="live" aria-live="polite"></span></div>`
 }
 
@@ -170,7 +169,8 @@ test("pointercancel clears touch state and cancels a pending hover", async () =>
 
 
 test("ChartInteraction fits x geometry to the measured width without scaling glyphs", () => {
-  const mounted = mountHook(hooks.ChartInteraction, fixture(), { rootId: "chart" })
+  const sizingFixture = fixture().replace('<svg viewBox="0 0 100 150"><g class="lui-time-series-chart__interaction"', '<svg viewBox="0 0 100 150"><g class="lui-time-series-chart__labels"><text class="lui-time-series-chart__x-tick" x="20">Jan</text><text class="lui-time-series-chart__x-tick" x="80">Feb</text></g><g class="lui-time-series-chart__series"><path d="M20,80L80,60"></path></g><g class="lui-time-series-chart__interaction"')
+  const mounted = mountHook(hooks.ChartInteraction, sizingFixture, { rootId: "chart" })
   let width = 320
   mounted.el.getBoundingClientRect = () => ({ width })
   mounted.hook.fitWidth()
@@ -190,12 +190,29 @@ test("ChartInteraction fits x geometry to the measured width without scaling gly
 })
 
 test("ChartInteraction recalculates curved and stepped path coordinates without SVG transforms", () => {
-  const html = fixture().replace('M20,80L80,60', 'M20,80 C30,70 70,60 80,60 H20 V90 Z')
+  const html = fixture().replace('<g class="lui-time-series-chart__interaction"', '<g class="lui-time-series-chart__series"><path d="M20,80 C30,70 70,60 80,60 H20 V90 Z"></path></g><g class="lui-time-series-chart__interaction"')
   const mounted = mountHook(hooks.ChartInteraction, html, { rootId: "chart" })
   mounted.el.getBoundingClientRect = () => ({ width: 320 })
   mounted.hook.fitWidth()
   const path = mounted.el.querySelector('.lui-time-series-chart__series path')
   assert.equal(path.getAttribute("d"), "M 20 80 C 67.7 70 258.3 60 306 60 H 20 V 90 Z")
   assert.equal(path.hasAttribute("transform"), false)
+  mounted.unmount()
+})
+
+test("bar hover snaps to the rendered active bar center", async () => {
+  const html = fixture()
+    .replace('<div id="chart"', '<div id="chart" data-chart-type="grouped_bar"')
+    .replace('<g class="lui-time-series-chart__interaction"', '<g class="lui-time-series-chart__series"><rect class="lui-time-series-chart__bar" data-band-index="1" data-series-index="0" x="68" width="18" y="30" height="30"></rect></g><g class="lui-time-series-chart__interaction"')
+  const mounted = mountHook(hooks.ChartInteraction, html, { rootId: "chart" })
+  const svg = mounted.el.querySelector("svg")
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 150 })
+  const bar = mounted.el.querySelector('.lui-time-series-chart__bar')
+  pointer(bar, "pointermove", 80)
+  await sleep(40)
+  const center = Number(bar.getAttribute("x")) + Number(bar.getAttribute("width")) / 2
+  assert.equal(Number(mounted.el.querySelector('[data-part="crosshair"]').getAttribute("x1")), center)
+  assert.equal(bar.hasAttribute('data-active'), true)
+  assert.equal(mounted.el.querySelector('[data-part="html-tooltip"]').hidden, false)
   mounted.unmount()
 })

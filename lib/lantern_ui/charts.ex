@@ -783,6 +783,8 @@ defmodule LanternUI.Charts do
           <rect
             :for={bar <- path.bars}
             class="lui-time-series-chart__bar"
+            data-band-index={bar.band_index}
+            data-series-index={bar.series_index}
             x={bar.x}
             y={bar.y}
             width={bar.width}
@@ -836,34 +838,6 @@ defmodule LanternUI.Charts do
             data-series-index={index}
             style={"--lui-series-color:#{Enum.at(@interaction_colors, index)}"}
           />
-          <g
-            data-part="tooltip"
-            data-base-x={@plot_left + 8}
-            data-base-y={@plot_top + 8}
-            data-plot-left={@plot_left + 4}
-            data-plot-right={@plot_right - 4}
-            data-plot-top={@plot_top + 4}
-            data-plot-bottom={@plot_bottom - 4}
-            data-tooltip-width="196"
-            data-tooltip-height={28 + 17 * @interaction_series_count}
-          >
-            <rect
-              x={@plot_left + 8}
-              y={@plot_top + 8}
-              width="196"
-              height={28 + 17 * @interaction_series_count}
-              rx="6"
-            />
-            <text data-part="tooltip-date" x={@plot_left + 18} y={@plot_top + 26}></text>
-            <text
-              :for={{_label, index} <- Enum.with_index(@interaction_labels)}
-              data-part="tooltip-row"
-              data-series-index={index}
-              x={@plot_left + 18}
-              y={@plot_top + 44 + 17 * index}
-            >
-            </text>
-          </g>
         </g>
         <circle
           :for={{point, index} <- Enum.with_index(@interaction_points)}
@@ -909,6 +883,26 @@ defmodule LanternUI.Charts do
           </tfoot>
         </table>
       </details>
+      <div
+        :if={@has_data}
+        class="lui-time-series-chart__tooltip"
+        data-part="html-tooltip"
+        aria-hidden="true"
+        hidden
+      >
+        <div class="lui-time-series-chart__tooltip-date" data-part="html-tooltip-date"></div>
+        <div
+          :for={{label, index} <- Enum.with_index(@interaction_labels)}
+          class="lui-time-series-chart__tooltip-row"
+          data-series-index={index}
+        >
+          <span class="lui-time-series-chart__tooltip-label"><i
+            style={"--lui-series-color:#{Enum.at(@interaction_colors, index)}"}
+            aria-hidden="true"
+          ></i>{label}</span>
+          <strong data-part="html-tooltip-value"></strong>
+        </div>
+      </div>
       <span class="lui-time-series-chart__live" data-part="live" aria-live="polite" aria-atomic="true"></span>
     </div>
     """
@@ -1190,7 +1184,14 @@ defmodule LanternUI.Charts do
     curve =
       if assigns.curve in [:linear, :monotone, :step, :cardinal], do: assigns.curve, else: :linear
 
-    x_ticks = time_series_x_ticks(axis_keys, kind, xf)
+    band_xf = fn key ->
+      plot_left + (Map.fetch!(x_positions, key) + 0.5) * ((plot_right - plot_left) / count)
+    end
+
+    vertical_bars? =
+      assigns.type in [:bar, :stacked_bar, :grouped_bar] and assigns.orientation == :vertical
+
+    x_ticks = time_series_x_ticks(axis_keys, kind, if(vertical_bars?, do: band_xf, else: xf))
 
     interaction_positions =
       time_series_interaction_positions(
@@ -1201,7 +1202,7 @@ defmodule LanternUI.Charts do
         assigns,
         {plot_left, plot_right},
         {plot_top, plot_bottom},
-        xf,
+        if(vertical_bars?, do: band_xf, else: xf),
         yf,
         numeric_x
       )
@@ -1286,7 +1287,7 @@ defmodule LanternUI.Charts do
         assigns.annotations,
         kind,
         x_positions,
-        xf,
+        if(vertical_bars?, do: band_xf, else: xf),
         plot_top,
         plot_bottom,
         annotation_orientation
@@ -1349,7 +1350,17 @@ defmodule LanternUI.Charts do
       interaction_points:
         Enum.map(axis_keys, fn key ->
           %{
-            x: Geometry.round1(xf.(key)),
+            x:
+              Geometry.round1(
+                if(
+                  assigns.type in [:bar, :stacked_bar, :grouped_bar] and
+                    assigns.orientation == :vertical,
+                  do:
+                    plot_left +
+                      (Map.fetch!(x_positions, key) + 0.5) * ((plot_right - plot_left) / count),
+                  else: xf.(key)
+                )
+              ),
             label: x_key_label(key, kind),
             values:
               Enum.map(interaction_series, fn item ->
@@ -1788,6 +1799,8 @@ defmodule LanternUI.Charts do
                   y2 = yf.(next)
 
                   %{
+                    band_index: index,
+                    series_index: series_index,
                     x: Geometry.round1(center - width / 2),
                     y: Geometry.round1(min(y1, y2)),
                     width: Geometry.round1(width),
@@ -1800,6 +1813,8 @@ defmodule LanternUI.Charts do
                   x2 = numeric_x.(next)
 
                   %{
+                    band_index: index,
+                    series_index: series_index,
                     x: Geometry.round1(min(x1, x2)),
                     y: Geometry.round1(center - width / 2),
                     width: Geometry.round1(max(abs(x2 - x1), 0.5)),
