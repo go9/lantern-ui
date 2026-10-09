@@ -135,11 +135,19 @@ defmodule LanternUI.Charts do
   attr(:id, :string, required: true, doc: "Stable DOM id for the sparkline SVG.")
   attr(:series, :list, default: [], doc: "Numeric values plotted left-to-right.")
   attr(:height, :integer, default: 40, doc: "SVG viewBox height in CSS pixels.")
+
+  attr(:color, :string,
+    default: nil,
+    doc: "Optional stroke and fill color; defaults to var(--lantern-chart-1)."
+  )
+
   attr(:class, :string, default: nil, doc: "Extra classes merged onto the root element.")
   attr(:aria_label, :string, default: "Sparkline", doc: "Accessible name for the SVG.")
 
   def sparkline(assigns) do
-    assigns = assign(assigns, spark_geometry(assigns.series, assigns.height))
+    accent = assigns[:color] || @accent
+    geom = spark_geometry(assigns.series, assigns.height) |> Map.put(:accent, accent)
+    assigns = assign(assigns, geom)
 
     ~H"""
     <svg

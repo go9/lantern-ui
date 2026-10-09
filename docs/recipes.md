@@ -37,6 +37,75 @@ Blocks inherit the host's body font and measure: the gallery fixture sets `font-
 
 Grouped tables and group headers are banned. A page that listed rows under tinted collapsible group headers becomes one flat list: a status column on each row, rows ordered by status then recency, and quick-filter chips or a tabs-free filter. Whatever the group header said (status name, count) must stay visible per row or in the filter chips with counts.
 
+## Media grid
+
+**When to use:** A visual collection where each item needs an image, optional selection, a short caption, and actions. Supply `on_select` for server-owned selection; the component keeps the checkbox and its event hook keyboard accessible.
+
+```heex
+<.media_tile_grid min="180px">
+  <.media_tile
+    :for={item <- @items}
+    id={item.id}
+    image_src={item.image_url}
+    image_alt={item.name}
+    selectable
+    selected={item.id in @selected_ids}
+    on_select="toggle_item"
+  >
+    <:caption>
+      <strong>{item.name}</strong>
+      <span>{item.description}</span>
+    </:caption>
+  </.media_tile>
+</.media_tile_grid>
+```
+
+## Metric cards with trends
+
+**When to use:** A compact dashboard summary with a small trend line. Sparklines are decorative unless `sparkline_label` gives an informative trend an accessible name. Tone accents use the theme's semantic tokens; metric and subtitle text keep foreground tokens for light and dark contrast.
+
+```heex
+<.stat_grid>
+  <:stat
+    :for={metric <- @metrics}
+    id={metric.id}
+    label={metric.label}
+    value={metric.value}
+    subtitle={metric.context}
+    tone={metric.tone}
+    sparkline_series={metric.history}
+    sparkline_label={metric.trend_label}
+  />
+</.stat_grid>
+```
+
+## Date range filter
+
+**When to use:** A dashboard date filter with standard presets and a custom range. The selected preset owns its calculated dates; custom mode keeps the caller's dates. Supply `today` (and `time_zone` when deriving it) when the page needs reproducible ranges. The popover traps focus while open.
+
+```heex
+<.date_range_popover
+  id="activity-range"
+  preset={@range["preset"]}
+  start_date={@range["start_date"]}
+  end_date={@range["end_date"]}
+  today={@today}
+  time_zone="Etc/UTC"
+  phx-change="range_changed"
+/>
+```
+
+## Keyboard shortcut hint
+
+**When to use:** A small keycap beside an action label or a shortcut hint in help text. Pass symbolic glyph keys through `keys` so assistive technology receives names such as “Command” and “Shift.”
+
+```heex
+<.button variant="outline">
+  Save
+  <.kbd keys={[:command, "S"]} />
+</.button>
+```
+
 ## Linear-style list row
 
 **When to use:** A dense issue row — priority glyph, id, status glyph, title, tags, progress ring, date — in a flat list.

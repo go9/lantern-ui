@@ -114,6 +114,7 @@ A compact trend sparkline (no axes).
 
 - `aria_label` (:string, default "Sparkline") — Accessible name for the SVG.
 - `class` (:string) — Extra classes merged onto the root element.
+- `color` (:string) — Optional stroke and fill color; defaults to var(--lantern-chart-1).
 - `height` (:integer, default 40) — SVG viewBox height in CSS pixels.
 - `id` (:string, required) — Stable DOM id for the sparkline SVG.
 - `series` (:list, default []) — Numeric values plotted left-to-right.
@@ -755,6 +756,38 @@ Slots:
 - `:outer_prefix` — Affix outside the control, before the wrap.
 - `:outer_suffix` — Affix outside the control, after the wrap.
 
+### LanternUI.Components.DateRangePopover
+
+Anchored popover for date-range selection with standard presets and comparison toggling.
+
+#### `date_range_popover/1`
+
+Renders a date range popover with presets and comparison toggling.
+
+- `apply_button` (:boolean, default false) — Whether to render an explicit Apply submit button.
+- `class` (:any) — Extra classes merged onto the popover panel.
+- `compare_label` (:string, default "Compare with previous period") — Label for the comparison checkbox.
+- `compare_previous` (:boolean, default false) — Whether comparison with previous period is checked.
+- `disabled` (:boolean, default false) — Whether the control is disabled.
+- `editable_dates` (:boolean, default true) — Whether date inputs are editable even when a non-custom preset is selected.
+- `end_date` (:any) — Current end date (ISO string or Date struct).
+- `error` (:string) — Optional validation error message to display in the panel.
+- `id` (:string, required) — Stable popover DOM id.
+- `max` (:any) — Optional latest selectable date.
+- `min` (:any) — Optional earliest selectable date.
+- `name_prefix` (:string, default "date_range") — Form parameter namespace.
+- `placement` (:string, values: bottom-start, bottom-end, top-start, top-end, default "bottom-start") — Popover anchor placement.
+- `preset` (:string, default "30D") — Active preset code; one of 7D, 30D, 90D, MTD, QTD, YTD, or custom.
+- `presets` (:list, default ["7D", "30D", "90D", "MTD", "QTD", "YTD", "custom"]) — List of preset codes offered.
+- `rest` (:global) — Global form event attributes.
+- `show_compare` (:boolean, default true) — Whether to render the comparison toggle checkbox.
+- `start_date` (:any) — Current start date (ISO string or Date struct).
+- `time_zone` (:string, default "Etc/UTC") — Time zone used to determine today's date when `today` is not supplied.
+- `today` (:any) — Date or DateTime used as the current day for preset ranges; defaults to the selected time zone's date.
+- `trigger_label` (:string) — Optional custom label on the trigger button; auto-generated when omitted.
+Slots:
+- `:trigger` — Optional custom trigger element.
+
 ### LanternUI.Components.DatetimeField
 
 A segmented, directly-editable date/time field — the trigger primitive the date pickers compose (HeroUI-style: `2 / 3 / 2026, 8:45 AM`).
@@ -1001,6 +1034,31 @@ Sticky right-rail inspector: optional section headings and a dense `description_
 Slots:
 - `:inner_block` (required) — Value: text or any inline control.
 
+### LanternUI.Components.Kbd
+
+Standalone keyboard shortcut hint `<kbd>` component.
+
+#### `kbd/1`
+
+Standalone keyboard shortcut hint `<kbd>` component.
+
+- `class` (:any) — Extra classes merged onto the element.
+- `keys` (:any) — Optional shortcut key or list of shortcut keys (atoms or strings).
+- `rest` (:global) — Arbitrary HTML attributes passed through.
+- `size` (:string, values: xs, sm, md, lg, default "sm") — Size scale for the keycap.
+- `variant` (:string, values: outline, subtle, solid, ghost, default "outline") — Surface style of the keycap.
+Slots:
+- `:inner_block` — Keyboard hint text or key contents.
+
+#### `kbd_group/1`
+
+Standalone keyboard shortcut hint `<kbd>` component.
+
+- `class` (:any) — Extra classes merged onto the group container.
+- `rest` (:global) — Arbitrary HTML attributes passed through.
+Slots:
+- `:inner_block` (required) — Group of <.kbd> elements and optional separators.
+
 ### LanternUI.Components.Layout
 
 App shell — a full-width top bar (brand + inline context + actions) over a fixed, collapsible left sidebar and a main content column.
@@ -1206,6 +1264,47 @@ Log view: monospace lines with a timestamp gutter and per-line severity.
 Slots:
 - `:actions` — Controls rendered at the right of the header (filters, toggles).
 - `:inner_block` (required) — One or more `log_line/1` children.
+
+### LanternUI.Components.MediaTile
+
+A generic, domain-agnostic media container cell for visual grids and cards.
+
+#### `media_tile/1`
+
+Renders a generic media tile cell.
+
+- `aspect_ratio` (:string, default "5/7") — Aspect ratio of the media well (e.g.
+- `class` (:any) — Extra classes merged onto the root element.
+- `empty` (:boolean, default false) — Display empty state placeholder.
+- `empty_text` (:string, default "No image") — Accessible text and message when empty.
+- `href` (:string) — Optional navigation target making the tile interactive.
+- `id` (:string) — Stable DOM id for the tile root.
+- `image_alt` (:string, default "") — Accessible alt text for the image.
+- `image_fit` (:string, values: cover, contain, fill, none, default "cover") — CSS object-fit behavior.
+- `image_src` (:string) — Source URL for the media image.
+- `loading` (:boolean, default false) — Display skeleton loading state.
+- `on_select` (:string) — LiveView event to emit when selection changes.
+- `rest` (:global) — Arbitrary HTML or LiveView attributes passed through.
+- `selectable` (:boolean, default false) — Whether the tile can be selected.
+- `selected` (:boolean, default false) — Whether the tile is currently selected.
+Slots:
+- `:banner` — Top overlay banner across the media well.
+- `:caption` — Structured text content below the media well.
+- `:footer` — Bottom strip below caption.
+- `:inner_block` — Custom media content inside the well (replaces image).
+- `:overlay` — Floating overlays inside the media well (chips, badges, quick actions).
+
+#### `media_tile_grid/1`
+
+Responsive grid container for `media_tile/1` components.
+
+- `class` (:any) — Extra classes merged onto the grid container.
+- `columns` (:integer) — Explicit column count.
+- `gap` (:string) — Custom grid gap (e.g.
+- `min` (:string, default "160px") — Minimum tile width when auto-filling columns.
+- `rest` (:global) — Arbitrary HTML attributes passed through.
+Slots:
+- `:inner_block` (required) — Media tiles to render.
 
 ### LanternUI.Components.Menu
 
@@ -1446,6 +1545,7 @@ Click-triggered floating panel holding arbitrary content.
 - `container_class` (:any) — Extra classes on the popover root wrapper.
 - `controlled` (:boolean, default false) — Server-driven open state: `open` is truth, patches flow into the machine.
 - `id` (:string) — Stable DOM id for the overlay hook; auto-generated when omitted, mirroring Fluxon's popover (drop-in parity).
+- `modal` (:boolean, default false) — Trap focus inside the open popover and make it modal.
 - `on_change` (:string) — Server event pushed on open change (`lantern:popover:set-open` replies).
 - `on_change_client` (:string) — Bubbling DOM CustomEvent dispatched on open change.
 - `open` (:boolean) — Open state for `controlled` mode (client mode ignores it).
@@ -1772,9 +1872,15 @@ Renders one compact summary metric.
 - `class` (:any) — Extra classes merged onto the card.
 - `href` (:string) — Optional LiveView navigation target.
 - `icon` (:string) — Optional host heroicon class shown by the label.
+- `id` (:string) — Stable DOM id for the card.
 - `label` (:string, required) — Short caption identifying the metric.
+- `sparkline_label` (:string) — Accessible name for an informative sparkline; without one, the sparkline is decorative.
+- `sparkline_series` (:list) — Optional numeric list rendered as a trend sparkline when no :sparkline slot is passed.
 - `subtitle` (:string) — Optional muted context below the value.
+- `tone` (:string, values: neutral, info, success, warning, danger, promo, ) — Optional semantic tone for subtle card tinting and sparkline accent.
 - `value` (:any, required) — Primary metric value to display.
+Slots:
+- `:sparkline` — Optional trend sparkline slot rendered with the metric.
 
 #### `stat_grid/1`
 
@@ -1784,10 +1890,14 @@ Renders a responsive collection of summary metrics; emits nothing when empty.
 - `rest` (:global) — Arbitrary HTML attributes passed through to the grid.
 Slots:
 - `:stat` — A summary metric card; provide its value with the :value attribute or inner content.
+  - `id` — Stable DOM id for the card.
   - `label` — Short caption identifying the metric.
   - `value` — Primary metric value; inner slot content takes precedence when present.
   - `icon` — Optional host heroicon class shown by the label.
   - `subtitle` — Optional muted context below the value.
+  - `tone` — Optional semantic tone for tinting and sparkline accent.
+  - `sparkline_series` — Optional numeric list rendered as a trend sparkline.
+  - `sparkline_label` — Accessible name for an informative sparkline.
   - `href` — Optional LiveView navigation target.
   - `class` — Extra classes merged onto this card.
 
@@ -2126,6 +2236,67 @@ Slots:
 ## Copy-paste recipes
 
 From docs/recipes.md and README.md (same sources the recipe tests render).
+
+From `docs/recipes.md` (Media grid):
+
+```heex
+<.media_tile_grid min="180px">
+  <.media_tile
+    :for={item <- @items}
+    id={item.id}
+    image_src={item.image_url}
+    image_alt={item.name}
+    selectable
+    selected={item.id in @selected_ids}
+    on_select="toggle_item"
+  >
+    <:caption>
+      <strong>{item.name}</strong>
+      <span>{item.description}</span>
+    </:caption>
+  </.media_tile>
+</.media_tile_grid>
+```
+
+From `docs/recipes.md` (Metric cards with trends):
+
+```heex
+<.stat_grid>
+  <:stat
+    :for={metric <- @metrics}
+    id={metric.id}
+    label={metric.label}
+    value={metric.value}
+    subtitle={metric.context}
+    tone={metric.tone}
+    sparkline_series={metric.history}
+    sparkline_label={metric.trend_label}
+  />
+</.stat_grid>
+```
+
+From `docs/recipes.md` (Date range filter):
+
+```heex
+<.date_range_popover
+  id="activity-range"
+  preset={@range["preset"]}
+  start_date={@range["start_date"]}
+  end_date={@range["end_date"]}
+  today={@today}
+  time_zone="Etc/UTC"
+  phx-change="range_changed"
+/>
+```
+
+From `docs/recipes.md` (Keyboard shortcut hint):
+
+```heex
+<.button variant="outline">
+  Save
+  <.kbd keys={[:command, "S"]} />
+</.button>
+```
 
 From `docs/recipes.md` (Linear-style list row):
 

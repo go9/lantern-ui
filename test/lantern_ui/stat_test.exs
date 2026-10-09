@@ -117,4 +117,130 @@ defmodule LanternUI.StatTest do
     refute html =~ "empty-stats"
     refute html =~ "lui-stat-grid"
   end
+
+  test "stat_card renders a sparkline slot" do
+    html =
+      render(fn assigns ->
+        ~H"""
+        <Stat.stat_card id="stat-spark" label="Revenue" value="$42,500" tone="success">
+          <:sparkline>
+            <LanternUI.Charts.sparkline id="spark-rev" series={[10, 15, 20, 25, 30]} />
+          </:sparkline>
+        </Stat.stat_card>
+        """
+      end)
+
+    assert html =~ ~s(data-tone="success")
+    assert html =~ ~s(class="lui-dt-stat-sparkline")
+    assert html =~ ~s(id="spark-rev")
+    assert html =~ "<svg"
+  end
+
+  test "stat_card renders a sparkline from sparkline_series attribute with currentColor tone" do
+    html =
+      render(fn assigns ->
+        ~H"""
+        <Stat.stat_card
+          id="stat-series"
+          label="Conversion"
+          value="4.2%"
+          tone="promo"
+          sparkline_series={[1, 3, 2, 5, 4]}
+        />
+        """
+      end)
+
+    assert html =~ ~s(data-tone="promo")
+    assert html =~ ~s(class="lui-dt-stat-sparkline")
+    assert html =~ ~s(id="stat-series-spark")
+    assert html =~ ~s(color:currentColor)
+    assert html =~ ~s(aria-hidden="true")
+  end
+
+  test "sparkline is decorative by default and can be named when informative" do
+    decorative =
+      render(fn assigns ->
+        ~H"""
+        <Stat.stat_card label="Revenue" value="42" sparkline_series={[1, 2, 3]} />
+        """
+      end)
+
+    assert decorative =~ ~s(class="lui-dt-stat-sparkline" aria-hidden="true")
+
+    informative =
+      render(fn assigns ->
+        ~H"""
+        <Stat.stat_card
+          label="Revenue"
+          value="42"
+          sparkline_series={[1, 2, 3]}
+          sparkline_label="Revenue trend over three months"
+        />
+        """
+      end)
+
+    assert informative =~ ~s(role="img" aria-label="Revenue trend over three months")
+    refute informative =~ ~s(aria-hidden="true")
+  end
+
+  test "stat_card supports all semantic tones and normalizes atoms" do
+    for tone <- [:neutral, :info, :success, :warning, :danger, :promo] do
+      html =
+        render(
+          fn assigns ->
+            ~H"""
+            <Stat.stat_card label="Metric" value="100" tone={@tone} />
+            """
+          end,
+          %{tone: tone}
+        )
+
+      assert html =~ ~s(data-tone="#{tone}")
+    end
+
+    untoned =
+      render(fn assigns ->
+        ~H"""
+        <Stat.stat_card label="Metric" value="100" />
+        """
+      end)
+
+    refute untoned =~ "data-tone"
+  end
+
+  test "tone accents use theme tokens while text keeps contrast-safe foreground tokens" do
+    css = File.read!("priv/static/lantern_ui.css")
+    assert css =~ ~r/\.lui-dt-stat-value[^}]*color: var\(--lantern-fg\)/
+    assert css =~ ~r/\.lui-dt-stat-sub[^}]*color: var\(--lantern-fg-muted\)/
+    refute css =~ ~r/\.lui-dt-stat\[data-tone\] \.lui-dt-stat-sub/
+
+    tone_rules =
+      Regex.scan(~r/\.lui-dt-stat\[data-tone="[^"]+"\]\s*\{([^}]+)\}/, css,
+        capture: :all_but_first
+      )
+      |> List.flatten()
+      |> Enum.join(" ")
+
+    refute tone_rules =~ ~r/#[0-9a-f]{3,8}/i
+    assert tone_rules =~ "--lantern-info"
+    assert tone_rules =~ "--lantern-success"
+    assert tone_rules =~ "--lantern-warning"
+    assert tone_rules =~ "--lantern-danger"
+    assert tone_rules =~ "--lantern-accent"
+  end
+
+  test "stat_grid slot forwards tone and sparkline_series" do
+    html =
+      render(fn assigns ->
+        ~H"""
+        <Stat.stat_grid id="slotted-grid">
+          <:stat label="Slotted" value="99" tone="warning" sparkline_series={[1, 2, 3]} />
+        </Stat.stat_grid>
+        """
+      end)
+
+    assert html =~ ~s(data-tone="warning")
+    assert html =~ ~s(class="lui-dt-stat-sparkline")
+    assert html =~ "<svg"
+  end
 end

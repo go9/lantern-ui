@@ -18,9 +18,11 @@ defmodule LanternUI.Components.Popover do
   `data-part` anatomy, and Zag owns open state, focus return, and
   Escape/outside-click dismissal. Styling stays `lui-*` tokens. Two modes:
 
-    * client (default) — Zag owns open state.
-    * server-driven (`controlled`) — the server value (`open`) is truth;
+  * client (default) — Zag owns open state.
+  * server-driven (`controlled`) — the server value (`open`) is truth;
       opens flow out through `on_change`, patches flow in.
+
+  Set `modal` when the panel must contain keyboard focus while open.
 
   ## Popover vs dropdown
 
@@ -65,6 +67,11 @@ defmodule LanternUI.Components.Popover do
   attr(:open_on_hover, :boolean, default: false, doc: "accepted for Fluxon compat; click only")
   attr(:open_on_focus, :boolean, default: false, doc: "accepted for Fluxon compat; click only")
 
+  attr(:modal, :boolean,
+    default: false,
+    doc: "Trap focus inside the open popover and make it modal."
+  )
+
   attr(:controlled, :boolean,
     default: false,
     doc: "Server-driven open state: `open` is truth, patches flow into the machine."
@@ -104,6 +111,7 @@ defmodule LanternUI.Components.Popover do
       phx-mounted={JS.ignore_attributes(zag_ignored_attrs(), to: "[data-scope=\"popover\"]")}
       data-zag
       data-placement={@placement}
+      data-modal={@modal || nil}
       data-controlled={@controlled || nil}
       data-value={if @controlled, do: @open_json}
       data-default-value={unless @controlled, do: @open_json}
@@ -139,6 +147,7 @@ defmodule LanternUI.Components.Popover do
       data-invalid data-required data-open data-focus data-focus-visible
       data-active data-hover data-placement data-highlighted data-value
       aria-expanded aria-controls aria-haspopup aria-labelledby aria-label
+      aria-modal
       aria-selected aria-checked aria-disabled aria-multiselectable
       disabled hidden role tabindex style
     )

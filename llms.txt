@@ -120,6 +120,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `date_time_picker/1` — Date + time picker (`YYYY-MM-DDTHH:MM:SS.mmm`).
 - `time_picker/1` — Time-only picker (`HH:MM:SS.mmm`, segments only — no popover).
 
+### LanternUI.Components.DateRangePopover
+
+- `date_range_popover/1` — Renders a date range popover with presets and comparison toggling.
+
 ### LanternUI.Components.DatetimeField
 
 - `datetime_field/1` — A segmented, directly-editable date/time field — the trigger primitive the date pickers compose (HeroUI-style: `2 / 3 / 2026, 8:45 AM`).
@@ -161,6 +165,11 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `inspector_section/1` — Sticky right-rail inspector: optional section headings and a dense `description_list`.
 - `property_row/1` — Sticky right-rail inspector: optional section headings and a dense `description_list`.
 
+### LanternUI.Components.Kbd
+
+- `kbd/1` — Standalone keyboard shortcut hint `<kbd>` component.
+- `kbd_group/1` — Standalone keyboard shortcut hint `<kbd>` component.
+
 ### LanternUI.Components.Layout
 
 - `app_shell/1` — App shell — a full-width top bar (brand + inline context + actions) over a fixed, collapsible left sidebar and a main content column.
@@ -184,6 +193,11 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `log_line/1` — Log view: monospace lines with a timestamp gutter and per-line severity.
 - `log_view/1` — Log view: monospace lines with a timestamp gutter and per-line severity.
+
+### LanternUI.Components.MediaTile
+
+- `media_tile/1` — Renders a generic media tile cell.
+- `media_tile_grid/1` — Responsive grid container for `media_tile/1` components.
 
 ### LanternUI.Components.Menu
 
@@ -335,6 +349,67 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 From docs/recipes.md and README.md (same sources the recipe tests render).
 Copy these blocks instead of inventing markup.
+
+From `docs/recipes.md` (Media grid):
+
+```heex
+<.media_tile_grid min="180px">
+  <.media_tile
+    :for={item <- @items}
+    id={item.id}
+    image_src={item.image_url}
+    image_alt={item.name}
+    selectable
+    selected={item.id in @selected_ids}
+    on_select="toggle_item"
+  >
+    <:caption>
+      <strong>{item.name}</strong>
+      <span>{item.description}</span>
+    </:caption>
+  </.media_tile>
+</.media_tile_grid>
+```
+
+From `docs/recipes.md` (Metric cards with trends):
+
+```heex
+<.stat_grid>
+  <:stat
+    :for={metric <- @metrics}
+    id={metric.id}
+    label={metric.label}
+    value={metric.value}
+    subtitle={metric.context}
+    tone={metric.tone}
+    sparkline_series={metric.history}
+    sparkline_label={metric.trend_label}
+  />
+</.stat_grid>
+```
+
+From `docs/recipes.md` (Date range filter):
+
+```heex
+<.date_range_popover
+  id="activity-range"
+  preset={@range["preset"]}
+  start_date={@range["start_date"]}
+  end_date={@range["end_date"]}
+  today={@today}
+  time_zone="Etc/UTC"
+  phx-change="range_changed"
+/>
+```
+
+From `docs/recipes.md` (Keyboard shortcut hint):
+
+```heex
+<.button variant="outline">
+  Save
+  <.kbd keys={[:command, "S"]} />
+</.button>
+```
 
 From `docs/recipes.md` (Linear-style list row):
 

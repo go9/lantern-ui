@@ -42,6 +42,7 @@ defmodule LanternUI do
     calendar: LanternUI.Components.Calendar,
     datetime_field: LanternUI.Components.DatetimeField,
     date_picker: LanternUI.Components.DatePicker,
+    date_range_popover: LanternUI.Components.DateRangePopover,
     checkbox: LanternUI.Components.Checkbox,
     modal: LanternUI.Components.Modal,
     command: LanternUI.Components.Command,
@@ -51,6 +52,7 @@ defmodule LanternUI do
     breadcrumb: LanternUI.Components.Breadcrumb,
     empty_state: LanternUI.Components.EmptyState,
     card: LanternUI.Components.Card,
+    media_tile: LanternUI.Components.MediaTile,
     description_list: LanternUI.Components.DescriptionList,
     layout: LanternUI.Components.Layout,
     action_bar: LanternUI.Components.ActionBar,
@@ -94,7 +96,8 @@ defmodule LanternUI do
     avatar: LanternUI.Components.Avatar,
     message: LanternUI.Components.Message,
     message_scroller: LanternUI.Components.MessageScroller,
-    message_scroller_item: LanternUI.Components.MessageScroller
+    message_scroller_item: LanternUI.Components.MessageScroller,
+    kbd: LanternUI.Components.Kbd
   }
 
   @doc false
