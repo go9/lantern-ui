@@ -1816,6 +1816,7 @@ Renders one compact summary metric.
 - `icon` (:string) — Optional host heroicon class shown by the label.
 - `id` (:string) — Stable DOM id for the card.
 - `label` (:string, required) — Short caption identifying the metric.
+- `sparkline_label` (:string) — Accessible name for an informative sparkline; without one, the sparkline is decorative.
 - `sparkline_series` (:list) — Optional numeric list rendered as a trend sparkline when no :sparkline slot is passed.
 - `subtitle` (:string) — Optional muted context below the value.
 - `tone` (:string, values: neutral, info, success, warning, danger, promo, ) — Optional semantic tone for subtle card tinting and sparkline accent.
@@ -1838,6 +1839,7 @@ Slots:
   - `subtitle` — Optional muted context below the value.
   - `tone` — Optional semantic tone for tinting and sparkline accent.
   - `sparkline_series` — Optional numeric list rendered as a trend sparkline.
+  - `sparkline_label` — Accessible name for an informative sparkline.
   - `href` — Optional LiveView navigation target.
   - `class` — Extra classes merged onto this card.
 
@@ -2196,6 +2198,23 @@ From `docs/recipes.md` (Media grid):
     </:caption>
   </.media_tile>
 </.media_tile_grid>
+```
+
+From `docs/recipes.md` (Metric cards with trends):
+
+```heex
+<.stat_grid>
+  <:stat
+    :for={metric <- @metrics}
+    id={metric.id}
+    label={metric.label}
+    value={metric.value}
+    subtitle={metric.context}
+    tone={metric.tone}
+    sparkline_series={metric.history}
+    sparkline_label={metric.trend_label}
+  />
+</.stat_grid>
 ```
 
 From `docs/recipes.md` (Linear-style list row):

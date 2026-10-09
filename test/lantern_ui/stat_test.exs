@@ -154,6 +154,33 @@ defmodule LanternUI.StatTest do
     assert html =~ ~s(class="lui-dt-stat-sparkline")
     assert html =~ ~s(id="stat-series-spark")
     assert html =~ ~s(color:currentColor)
+    assert html =~ ~s(aria-hidden="true")
+  end
+
+  test "sparkline is decorative by default and can be named when informative" do
+    decorative =
+      render(fn assigns ->
+        ~H"""
+        <Stat.stat_card label="Revenue" value="42" sparkline_series={[1, 2, 3]} />
+        """
+      end)
+
+    assert decorative =~ ~s(class="lui-dt-stat-sparkline" aria-hidden="true")
+
+    informative =
+      render(fn assigns ->
+        ~H"""
+        <Stat.stat_card
+          label="Revenue"
+          value="42"
+          sparkline_series={[1, 2, 3]}
+          sparkline_label="Revenue trend over three months"
+        />
+        """
+      end)
+
+    assert informative =~ ~s(role="img" aria-label="Revenue trend over three months")
+    refute informative =~ ~s(aria-hidden="true")
   end
 
   test "stat_card supports all semantic tones and normalizes atoms" do
@@ -179,6 +206,27 @@ defmodule LanternUI.StatTest do
       end)
 
     refute untoned =~ "data-tone"
+  end
+
+  test "tone accents use theme tokens while text keeps contrast-safe foreground tokens" do
+    css = File.read!("priv/static/lantern_ui.css")
+    assert css =~ ~r/\.lui-dt-stat-value[^}]*color: var\(--lantern-fg\)/
+    assert css =~ ~r/\.lui-dt-stat-sub[^}]*color: var\(--lantern-fg-muted\)/
+    refute css =~ ~r/\.lui-dt-stat\[data-tone\] \.lui-dt-stat-sub/
+
+    tone_rules =
+      Regex.scan(~r/\.lui-dt-stat\[data-tone="[^"]+"\]\s*\{([^}]+)\}/, css,
+        capture: :all_but_first
+      )
+      |> List.flatten()
+      |> Enum.join(" ")
+
+    refute tone_rules =~ ~r/#[0-9a-f]{3,8}/i
+    assert tone_rules =~ "--lantern-info"
+    assert tone_rules =~ "--lantern-success"
+    assert tone_rules =~ "--lantern-warning"
+    assert tone_rules =~ "--lantern-danger"
+    assert tone_rules =~ "--lantern-accent"
   end
 
   test "stat_grid slot forwards tone and sparkline_series" do

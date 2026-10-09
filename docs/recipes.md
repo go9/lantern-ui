@@ -60,6 +60,25 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 </.media_tile_grid>
 ```
 
+## Metric cards with trends
+
+**When to use:** A compact dashboard summary with a small trend line. Sparklines are decorative unless `sparkline_label` gives an informative trend an accessible name. Tone accents use the theme's semantic tokens; metric and subtitle text keep foreground tokens for light and dark contrast.
+
+```heex
+<.stat_grid>
+  <:stat
+    :for={metric <- @metrics}
+    id={metric.id}
+    label={metric.label}
+    value={metric.value}
+    subtitle={metric.context}
+    tone={metric.tone}
+    sparkline_series={metric.history}
+    sparkline_label={metric.trend_label}
+  />
+</.stat_grid>
+```
+
 ## Linear-style list row
 
 **When to use:** A dense issue row — priority glyph, id, status glyph, title, tags, progress ring, date — in a flat list.

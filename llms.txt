@@ -362,6 +362,23 @@ From `docs/recipes.md` (Media grid):
 </.media_tile_grid>
 ```
 
+From `docs/recipes.md` (Metric cards with trends):
+
+```heex
+<.stat_grid>
+  <:stat
+    :for={metric <- @metrics}
+    id={metric.id}
+    label={metric.label}
+    value={metric.value}
+    subtitle={metric.context}
+    tone={metric.tone}
+    sparkline_series={metric.history}
+    sparkline_label={metric.trend_label}
+  />
+</.stat_grid>
+```
+
 From `docs/recipes.md` (Linear-style list row):
 
 ```heex

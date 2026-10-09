@@ -1515,6 +1515,16 @@
   font-size: 1.2rem; font-weight: 650; letter-spacing: -0.02em;
   color: var(--lantern-fg); font-variant-numeric: tabular-nums; }
 .lui-dt-stat-sub { font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); margin-top: 0.1rem; }
+.lui-dt-stat-sparkline { margin-top: 0.35rem; width: 100%; height: 1.75rem; color: var(--lui-stat-tone-c, var(--lantern-chart-1)); }
+.lui-dt-stat-sparkline svg { display: block; width: 100%; height: 100%; }
+.lui-dt-stat[data-tone="neutral"] { --lui-stat-tone-c: var(--lantern-fg-muted); --lui-stat-tone-bg: var(--lantern-tone-neutral-bg, transparent); }
+.lui-dt-stat[data-tone="info"] { --lui-stat-tone-c: var(--lantern-info, var(--lantern-fg-muted)); --lui-stat-tone-bg: var(--lantern-tone-info-bg, transparent); }
+.lui-dt-stat[data-tone="success"] { --lui-stat-tone-c: var(--lantern-success, var(--lantern-fg-muted)); --lui-stat-tone-bg: var(--lantern-tone-success-bg, transparent); }
+.lui-dt-stat[data-tone="warning"] { --lui-stat-tone-c: var(--lantern-warning, var(--lantern-fg-muted)); --lui-stat-tone-bg: var(--lantern-tone-warning-bg, transparent); }
+.lui-dt-stat[data-tone="danger"] { --lui-stat-tone-c: var(--lantern-danger, var(--lantern-fg-muted)); --lui-stat-tone-bg: var(--lantern-tone-danger-bg, transparent); }
+.lui-dt-stat[data-tone="promo"] { --lui-stat-tone-c: var(--lantern-accent-text, var(--lantern-accent, var(--lantern-fg-muted))); --lui-stat-tone-bg: var(--lantern-tone-promo-bg, transparent); }
+.lui-dt-stat[data-tone] { background: var(--lui-stat-tone-bg, var(--lantern-surface-raised)); }
+.lui-dt-stat[data-tone] .lui-dt-stat-icon { color: var(--lui-stat-tone-c); }
 .lui-dt-tabsrow { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem; }
 .lui-dt-viewtoggle { margin-left: auto; display: inline-flex; border: 1px solid var(--lantern-border);
   border-radius: var(--lantern-radius-sm); overflow: hidden; }
@@ -5422,7 +5432,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-1894" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-515" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5439,7 +5449,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1926" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-547" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5456,7 +5466,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1958" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-579" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5473,7 +5483,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1990" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-611" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

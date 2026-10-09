@@ -40,6 +40,11 @@ defmodule LanternUI.Components.Stat do
     doc: "Optional numeric list rendered as a trend sparkline when no :sparkline slot is passed."
   )
 
+  attr(:sparkline_label, :string,
+    default: nil,
+    doc: "Accessible name for an informative sparkline; without one, the sparkline is decorative."
+  )
+
   attr(:href, :string, default: nil, doc: "Optional LiveView navigation target.")
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the card.")
 
@@ -68,6 +73,7 @@ defmodule LanternUI.Components.Stat do
         tone={@tone}
         sparkline={@sparkline}
         sparkline_series={@sparkline_series}
+        sparkline_label={@sparkline_label}
       />
     </.link>
     <div :if={!@href} id={@id} class={@card_class} data-tone={@tone}>
@@ -80,6 +86,7 @@ defmodule LanternUI.Components.Stat do
         tone={@tone}
         sparkline={@sparkline}
         sparkline_series={@sparkline_series}
+        sparkline_label={@sparkline_label}
       />
     </div>
     """
@@ -93,6 +100,7 @@ defmodule LanternUI.Components.Stat do
   attr(:tone, :string, default: nil)
   attr(:sparkline, :list, default: [])
   attr(:sparkline_series, :list, default: nil)
+  attr(:sparkline_label, :string, default: nil)
 
   defp stat_card_content(assigns) do
     spark_id =
@@ -114,7 +122,13 @@ defmodule LanternUI.Components.Stat do
       ></span>
     </div>
     <span class="lui-dt-stat-value">{@value}</span>
-    <div :if={@sparkline != [] or @sparkline_series} class="lui-dt-stat-sparkline">
+    <div
+      :if={@sparkline != [] or @sparkline_series}
+      class="lui-dt-stat-sparkline"
+      role={if @sparkline_label, do: "img"}
+      aria-label={@sparkline_label}
+      aria-hidden={if is_nil(@sparkline_label), do: "true"}
+    >
       <%= if @sparkline != [] do %>
         {render_slot(@sparkline)}
       <% else %>
@@ -145,6 +159,7 @@ defmodule LanternUI.Components.Stat do
     attr(:subtitle, :string, doc: "Optional muted context below the value.")
     attr(:tone, :string, doc: "Optional semantic tone for tinting and sparkline accent.")
     attr(:sparkline_series, :list, doc: "Optional numeric list rendered as a trend sparkline.")
+    attr(:sparkline_label, :string, doc: "Accessible name for an informative sparkline.")
     attr(:href, :string, doc: "Optional LiveView navigation target.")
     attr(:class, :any, doc: "Extra classes merged onto this card.")
   end
@@ -166,6 +181,7 @@ defmodule LanternUI.Components.Stat do
         subtitle={stat[:subtitle]}
         tone={stat[:tone]}
         sparkline_series={stat[:sparkline_series]}
+        sparkline_label={stat[:sparkline_label]}
         href={stat[:href]}
         class={stat[:class]}
       />
