@@ -263,3 +263,63 @@ def handle_params(params, _uri, socket) do
   {:noreply, assign(socket, :expanded?, params["expand"] == "1")}
 end
 ```
+
+## Data table selection
+
+Selection remains owned by the host LiveView. The default `selected_ids` set
+models explicit row selections. For a large matching result set, set
+`all_matching?` and pass an `excluded_ids` set; the component derives the
+selected count as `meta.total_count - excluded_ids` and marks rows selected
+without building a set of every matching ID. Selection events remain generic:
+`toggle_select`, `select_all_page`, `select_all_matching`, and
+`clear_selection`.
+
+`selection_label`, `select_all_label`, and `clear_label` provide caller-owned
+labels for translation. The first two accept `%{count}` as a placeholder,
+which works with Gettext's interpolation conventions.
+
+```heex
+<.data_table
+  id="records"
+  rows={@rows}
+  meta={@meta}
+  path={~p"/records"}
+  all_matching?={@all_matching?}
+  excluded_ids={@excluded_ids}
+  selection_label={gettext("%{count} selected")}
+  select_all_label={gettext("Select all %{count}")}
+  clear_label={gettext("Clear")}
+>
+  <:col :let={row} label="Name">{row.name}</:col>
+</.data_table>
+```
+
+Clear the all-matching state and its exclusions when the query changes. The
+example below keeps selection across page-only changes and resets it when any
+other query parameter changes:
+
+```elixir
+def mount(_params, _session, socket) do
+  {:ok,
+   assign(socket,
+     all_matching?: false,
+     excluded_ids: MapSet.new(),
+     selection_query: nil
+   )}
+end
+
+def handle_params(params, _uri, socket) do
+  selection_query = Map.drop(params, ["page"])
+
+  if selection_query == socket.assigns.selection_query do
+    {:noreply, socket}
+  else
+    {:noreply,
+     assign(socket,
+       selection_query: selection_query,
+       all_matching?: false,
+       excluded_ids: MapSet.new()
+     )}
+  end
+end
+```

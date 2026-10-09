@@ -473,6 +473,77 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ "Select all 30"
   end
 
+  test "all-matching selection stays compact across pages and excludes unchecked ids" do
+    html =
+      render(
+        fn assigns ->
+          ~H"""
+          <DataTable.data_table
+            id="t"
+            rows={@rows}
+            meta={@meta}
+            path="/orders"
+            all_matching?
+            excluded_ids={MapSet.new([2])}
+            selection_label="%{count} chosen"
+            select_all_label="Choose all %{count} results"
+            clear_label="Deselect"
+          >
+            <:col :let={row} label="Name">{row.name}</:col>
+          </DataTable.data_table>
+          """
+        end,
+        %{rows: [%{id: 1, name: "Ada"}, %{id: 2, name: "Alan"}], meta: @meta}
+      )
+
+    assert html =~ "29 chosen"
+    assert html =~ "Deselect"
+    refute html =~ "Choose all 30 results"
+    assert html =~ ~s(aria-label="Select all on page")
+
+    assert html =~ ~r/<input[^>]+phx-value-id="1"[^>]+checked/ or
+             html =~ ~r/<input[^>]+checked[^>]+phx-value-id="1"/
+
+    refute html =~ ~r/<input[^>]+phx-value-id="2"[^>]+checked/ or
+             html =~ ~r/<input[^>]+checked[^>]+phx-value-id="2"/
+  end
+
+  test "empty all-matching selection does not render the bulk bar or its actions" do
+    for {total_count, excluded_ids} <- [{0, [1]}, {2, [1, 2]}] do
+      html =
+        render(
+          fn assigns ->
+            ~H"""
+            <DataTable.data_table
+              id="empty-selection"
+              rows={[]}
+              meta={%{total_count: @total_count, current_page: 1, total_pages: 1, params: %{}}}
+              path="/orders"
+              all_matching?
+              excluded_ids={MapSet.new(@excluded_ids)}
+            >
+              <:col :let={row} label="Name">{row.name}</:col>
+              <:bulk_action label="Archive" event="bulk-archive" />
+            </DataTable.data_table>
+            """
+          end,
+          %{total_count: total_count, excluded_ids: excluded_ids}
+        )
+
+      refute html =~ "lui-dt-bulkbar"
+      refute html =~ "bulk-archive"
+      refute html =~ "0 selected"
+    end
+  end
+
+  test "selection labels are caller-translatable and select-all emits its generic event" do
+    html = render_with_selection()
+    assert html =~ "1 selected"
+    assert html =~ "Select all 30"
+    assert html =~ ~s(phx-click="select_all_matching")
+    assert html =~ ~s(phx-click="clear_selection")
+  end
+
   defp render_with_selection do
     assigns = %{__changed__: nil, rows: [%{id: 1, name: "Ada"}], meta: @meta, view: "table"}
 

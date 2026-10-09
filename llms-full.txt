@@ -560,9 +560,12 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 The admin data table — one Flop-driven table to replace the per-app `admin_table` copies.
 
 - `active_filters_label` (:string, default "Active filters") — Accessible label for the active filter chips.
+- `all_matching?` (:boolean, default false) — Whether all results matching the current query are selected.
 - `apply_label` (:string, default "Apply") — Label for applying filter changes.
 - `class` (:any) — Extra classes merged onto the root element.
 - `clear_filters_label` (:string, default "Clear filters") — Label for clearing active filters.
+- `clear_label` (:string, default "Clear") — Bulk selection clear action label.
+- `excluded_ids` (:any, default MapSet.new([])) — MapSet of matching row ids explicitly excluded while `all_matching?` is true.
 - `expand_aria_label` (:string, default "Expand table") — Accessible label for the expand control.
 - `expand_label` (:string, default "Expand") — Text shown on the expand control.
 - `expandable` (:boolean, default false) — Render an Expand control and enable the Shift+E / Escape shortcuts.
@@ -592,7 +595,9 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 - `search_field` (:atom) — Flop filter field the built-in search box binds to
 - `search_op` (:string, default "ilike") — Flop op for the search filter
 - `search_placeholder` (:string, default "Search…") — Placeholder for the toolbar search input.
+- `select_all_label` (:string, default "Select all %{count}") — Action to select every result matching the current query; `%{count}` is replaced.
 - `selected_ids` (:any, default MapSet.new([])) — MapSet (or enumerable) of selected row ids.
+- `selection_label` (:string, default "%{count} selected") — Bulk selection summary; `%{count}` is replaced with the selected count.
 - `show_checkboxes` (:boolean, default true) — Show row selection checkboxes and bulk bar.
 - `subtitle` (:string) — Secondary line under the table title.
 - `target` (:any) — LiveView target for selection and bulk events.

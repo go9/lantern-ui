@@ -27,8 +27,9 @@ defmodule LanternUI.Components.DataTable do
     command on click/Enter instead, for rows that are not links.
   - Selection is server-owned: rows emit `toggle_select` (`phx-value-id`),
     the header checkbox emits `select_all_page`, the bulk bar emits
-    `clear_selection` and each `bulk_action`'s `event` — all to `target`
-    (defaults to the parent LiveView). Same contract as the baseline.
+    `select_all_matching`, `clear_selection`, and each `bulk_action`'s `event`
+    — all to `target` (defaults to the parent LiveView). Set `all_matching?`
+    with `excluded_ids` to represent every result without materializing IDs.
 
   The built-in search box keeps every other active filter (tab presets, filter
   panel values) in the URL it patches.
@@ -60,6 +61,28 @@ defmodule LanternUI.Components.DataTable do
     default: MapSet.new(),
     doc: "MapSet (or enumerable) of selected row ids."
   )
+
+  attr(:all_matching?, :boolean,
+    default: false,
+    doc: "Whether all results matching the current query are selected."
+  )
+
+  attr(:excluded_ids, :any,
+    default: MapSet.new(),
+    doc: "MapSet of matching row ids explicitly excluded while `all_matching?` is true."
+  )
+
+  attr(:selection_label, :string,
+    default: "%{count} selected",
+    doc: "Bulk selection summary; `%{count}` is replaced with the selected count."
+  )
+
+  attr(:select_all_label, :string,
+    default: "Select all %{count}",
+    doc: "Action to select every result matching the current query; `%{count}` is replaced."
+  )
+
+  attr(:clear_label, :string, default: "Clear", doc: "Bulk selection clear action label.")
 
   attr(:row_id, :any, default: nil, doc: "row -> id fn; defaults to & &1.id")
 
@@ -294,18 +317,22 @@ defmodule LanternUI.Components.DataTable do
       assigns
       |> assign(:row_id_fn, assigns.row_id || (& &1.id))
       |> assign(:row_click?, !assigns.row_navigate && !assigns.row_patch && !!assigns.row_click)
-      |> assign(:selection_count, MapSet.size(assigns.selected_ids))
+      |> assign(:selected_id_set, MapSet.new(assigns.selected_ids))
+      |> assign(:excluded_id_set, MapSet.new(assigns.excluded_ids))
       |> assign(:page_ids, Enum.map(assigns.rows, assigns.row_id || (& &1.id)))
       |> assign(
         :active_filters,
         active_filters(assigns.meta, assigns.search_field, assigns.filter)
       )
+      |> assign(:total_count, Map.get(assigns.meta, :total_count) || 0)
+      |> assign(:selection_count, selection_count(assigns))
 
     assigns =
       assign(
         assigns,
         :all_selected?,
-        assigns.page_ids != [] and Enum.all?(assigns.page_ids, &(&1 in assigns.selected_ids))
+        assigns.page_ids != [] and
+          Enum.all?(assigns.page_ids, &selected_id?(&1, assigns))
       )
 
     assigns = resolve_views(assigns)
@@ -603,15 +630,15 @@ defmodule LanternUI.Components.DataTable do
       </div>
 
       <div :if={@selection_count > 0} class="lui-dt-bulkbar">
-        <span class="lui-dt-bulkcount">{@selection_count} selected</span>
+        <span class="lui-dt-bulkcount">{label_with_count(@selection_label, @selection_count)}</span>
         <button
-          :if={Map.get(@meta, :total_count) && @selection_count < Map.get(@meta, :total_count)}
+          :if={!@all_matching? && @selection_count < @total_count}
           type="button"
           class="lui-dt-selectall"
           phx-click="select_all_matching"
           phx-target={@target}
         >
-          Select all {Map.get(@meta, :total_count)}
+          {label_with_count(@select_all_label, @total_count)}
         </button>
         <Button.button
           :for={action <- @bulk_action}
@@ -624,7 +651,7 @@ defmodule LanternUI.Components.DataTable do
           <Icon.icon :if={action[:icon]} name={action[:icon]} /> {action[:label]}
         </Button.button>
         <Button.button size="sm" variant="ghost" phx-click="clear_selection" phx-target={@target}>
-          Clear
+          {@clear_label}
         </Button.button>
       </div>
 
@@ -720,7 +747,7 @@ defmodule LanternUI.Components.DataTable do
               class={
                 Class.merge([
                   "lui-tr",
-                  @row_id_fn.(row) in @selected_ids && "lui-tr-selected",
+                  selected_id?(@row_id_fn.(row), assigns) && "lui-tr-selected",
                   row_linked?(assigns, row) && "lui-row-linked"
                 ])
               }
@@ -730,7 +757,7 @@ defmodule LanternUI.Components.DataTable do
                 <input
                   type="checkbox"
                   class="lui-checkbox"
-                  checked={@row_id_fn.(row) in @selected_ids}
+                  checked={selected_id?(@row_id_fn.(row), assigns)}
                   phx-click="toggle_select"
                   phx-value-id={@row_id_fn.(row)}
                   phx-target={@target}
@@ -774,6 +801,20 @@ defmodule LanternUI.Components.DataTable do
     </div>
     """
   end
+
+  defp selection_count(%{all_matching?: true, meta: meta, excluded_ids: excluded_ids}) do
+    max((Map.get(meta, :total_count) || 0) - MapSet.size(MapSet.new(excluded_ids)), 0)
+  end
+
+  defp selection_count(%{selected_ids: selected_ids}), do: MapSet.size(MapSet.new(selected_ids))
+
+  defp selected_id?(id, %{all_matching?: true, excluded_id_set: excluded_ids}),
+    do: not MapSet.member?(excluded_ids, id)
+
+  defp selected_id?(id, %{selected_id_set: selected_ids}), do: MapSet.member?(selected_ids, id)
+
+  defp label_with_count(label, count),
+    do: String.replace(label, "%{count}", Integer.to_string(count))
 
   # The row's destination: `{:navigate | :patch, path}` or nil. Link wins over
   # `row_click`, which is a hook-driven fallback for rows that run a JS command.
