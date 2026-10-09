@@ -785,7 +785,11 @@ defmodule LanternUI.Charts do
     plot_right = @vb_w - @margin.right
     plot_top = 18
     plot_bottom = assigns.height - @margin.bottom
-    axis_keys = all_points |> Enum.map(& &1.key) |> Enum.uniq() |> sort_x_keys(kind)
+    primary_points = Enum.flat_map(series, & &1.points)
+    axis_points = if primary_points == [], do: all_points, else: primary_points
+    axis_keys = axis_points |> Enum.map(& &1.key) |> Enum.uniq() |> sort_x_keys(kind)
+    axis_key_set = MapSet.new(axis_keys)
+    aligned_points = Enum.filter(all_points, &MapSet.member?(axis_key_set, &1.key))
     x_positions = axis_keys |> Enum.with_index() |> Map.new(fn {key, index} -> {key, index} end)
     count = length(axis_keys)
 
@@ -802,7 +806,7 @@ defmodule LanternUI.Charts do
       end
     end
 
-    values = chart_domain_values(series, axis_keys, assigns.type, all_points)
+    values = chart_domain_values(series, axis_keys, assigns.type, aligned_points)
     ticks = Geometry.signed_nice_ticks(Enum.min(values), Enum.max(values), 5)
     ymin = hd(ticks)
     ymax = List.last(ticks)

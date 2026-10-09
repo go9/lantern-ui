@@ -534,6 +534,27 @@ defmodule LanternUI.ChartsTest do
       assert html =~ "Launch"
       assert html =~ "tone-warning"
     end
+
+    test "comparison-only x keys do not extend the primary axis" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "comparison-extra-key",
+          series: [
+            %{id: "current", label: "Current", points: [%{x: "Apr", y: 2}, %{x: "May", y: 5}]}
+          ],
+          comparison: [
+            %{
+              id: "previous",
+              label: "Previous",
+              points: [%{x: "Apr", y: 1}, %{x: "May", y: 3}, %{x: "Jun", y: 4}]
+            }
+          ]
+        )
+
+      assert html =~ "Apr"
+      assert html =~ "May"
+      refute html =~ "Jun"
+    end
   end
 
   describe "area_chart smoothing and axis labels" do
