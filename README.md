@@ -55,6 +55,9 @@ the complete function and attribute surface.
 
 See the [published HexDocs](https://hexdocs.pm/lantern_ui) for the released API.
 
+See the [upgrade guide](docs/UPGRADING.md) before moving an existing app from
+0.9.x to 0.10.x or newer.
+
 ## For AI assistants
 
 Models work best with the generated reference, not raw HexDocs alone:

@@ -3170,3 +3170,7 @@ Data-attribute behaviours (list keyboard nav, persist, collapse) install
 on JS import; see docs/behaviours.md. Hooks bundle:
 priv/static/lantern_ui_hooks.js.
 
+
+## Upgrade guide
+
+See `docs/UPGRADING.md` before upgrading an existing app from 0.9.x.
