@@ -63,10 +63,8 @@ jobs:
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
           BASE: http://127.0.0.1:4013
-          QA_BASELINE_CSS: /tmp/lantern-ui-pre-scale.css
           QA_REPORT_DIR: /tmp/lantern-ui-consistency
         run: |
-          git show origin/main:priv/static/lantern_ui.css > "$QA_BASELINE_CSS"
           PORT=4013 mix run --no-halt test/qa/server.exs > /tmp/lantern-ui-qa-server.log 2>&1 &
           for attempt in $(seq 1 30); do
             if curl --fail --silent "$BASE/consistency" >/dev/null; then break; fi

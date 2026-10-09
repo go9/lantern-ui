@@ -156,6 +156,7 @@ defmodule LanternUI.Components.Layout do
               type="button"
               class="lui-collapse-btn"
               data-part="sidebar-collapse"
+              data-tooltip="Collapse sidebar"
               aria-label="Collapse sidebar"
             >
               <Icon.icon name="chevron-left" class="lui-collapse-icon" />
@@ -477,6 +478,7 @@ defmodule LanternUI.Components.Layout do
         type="button"
         class={Class.merge(["lui-nav-item", @active && "lui-nav-item-active", @class])}
         title={@label}
+        data-tooltip={@label}
         aria-expanded={to_string(@expanded)}
         data-expanded={@expanded || nil}
         data-part="nav-disclosure"
@@ -502,6 +504,7 @@ defmodule LanternUI.Components.Layout do
       patch={@patch}
       href={@href}
       title={@label}
+      data-tooltip={@label}
       aria-current={@active && "page"}
       {@rest}
     >
@@ -514,6 +517,7 @@ defmodule LanternUI.Components.Layout do
       type="button"
       class={Class.merge(["lui-nav-item", @active && "lui-nav-item-active", @class])}
       title={@label}
+      data-tooltip={@label}
       aria-current={@active && "page"}
       {@rest}
     >

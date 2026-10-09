@@ -1187,6 +1187,7 @@ const LanternSidebar = {
     this.navOpen = false
     this.transientTables = new Set()
     this.transientCollapse = null
+    this.sessionCollapseChoice = null
     this.syncCollapsed()
 
     this.onClick = (e) => {
@@ -1219,6 +1220,44 @@ const LanternSidebar = {
     }
     this.el.addEventListener("click", this.onClick)
 
+    this.showSidebarTooltip = (target) => {
+      if (!this.el.hasAttribute("data-collapsed") || !target || !this.el.contains(target)) return
+      this.hideFocusTooltip()
+      const tooltip = document.createElement("div")
+      tooltip.className = "lui-sidebar-tooltip"
+      tooltip.setAttribute("role", "tooltip")
+      tooltip.textContent = target.dataset.tooltip
+      document.body.append(tooltip)
+      const rect = target.getBoundingClientRect()
+      tooltip.style.left = `${Math.round(rect.right + 8)}px`
+      tooltip.style.top = `${Math.round(rect.top + rect.height / 2)}px`
+      target.setAttribute("aria-describedby", "lui-sidebar-focus-tooltip")
+      tooltip.id = "lui-sidebar-focus-tooltip"
+      this.focusTooltipTarget = target
+      this.focusTooltip = tooltip
+    }
+    this.onPointerOver = (e) => {
+      const target = e.target.closest("[data-tooltip]")
+      if (!target || target === this.focusTooltipTarget) return
+      this.showSidebarTooltip(target)
+    }
+    this.onPointerOut = (e) => {
+      const target = e.target.closest("[data-tooltip]")
+      if (target && target === this.focusTooltipTarget && !target.contains(e.relatedTarget)) this.hideFocusTooltip()
+    }
+    this.onFocusIn = (e) => {
+      const target = e.target.closest("[data-tooltip]")
+      if (!target || !target.matches(":focus-visible")) return
+      this.showSidebarTooltip(target)
+    }
+    this.onFocusOut = (e) => {
+      if (e.target === this.focusTooltipTarget || this.focusTooltipTarget?.contains(e.target)) this.hideFocusTooltip()
+    }
+    this.el.addEventListener("pointerover", this.onPointerOver)
+    this.el.addEventListener("pointerout", this.onPointerOut)
+    this.el.addEventListener("focusin", this.onFocusIn)
+    this.el.addEventListener("focusout", this.onFocusOut)
+
     this.onTableExpand = (e) => {
       const { tableId, expanded } = e.detail || {}
       if (!tableId) return
@@ -1239,8 +1278,16 @@ const LanternSidebar = {
 
   setCollapsed(collapsed, manual = true) {
     this.el.toggleAttribute("data-collapsed", collapsed)
-    if (manual && this.transientCollapse) this.transientCollapse.manual = true
-    if (manual) this.persistCollapsed(collapsed)
+    if (manual && this.transientCollapse) {
+      this.transientCollapse.userChoice = collapsed
+      this.sessionCollapseChoice = collapsed
+      this.el.toggleAttribute("data-table-expand-sidebar-open", !collapsed)
+      return
+    }
+    if (manual) {
+      this.sessionCollapseChoice = null
+      this.persistCollapsed(collapsed)
+    }
   },
 
   persistCollapsed(collapsed) {
@@ -1252,17 +1299,24 @@ const LanternSidebar = {
   syncTransientCollapse() {
     if (this.transientTables.size > 0) {
       if (!this.transientCollapse) {
-        this.transientCollapse = { wasCollapsed: this.el.hasAttribute("data-collapsed"), manual: false }
+        this.transientCollapse = {
+          wasCollapsed: this.el.hasAttribute("data-collapsed"),
+          userChoice: null,
+        }
       }
       this.el.setAttribute("data-table-expand", "")
-      if (!this.transientCollapse.manual) this.el.setAttribute("data-collapsed", "")
+      const userChoice = this.transientCollapse.userChoice
+      this.el.toggleAttribute("data-table-expand-sidebar-open", userChoice === false)
+      this.el.toggleAttribute("data-collapsed", userChoice ?? true)
       return
     }
     if (!this.transientCollapse) return
     this.el.removeAttribute("data-table-expand")
-    if (!this.transientCollapse.manual) {
-      this.el.toggleAttribute("data-collapsed", this.transientCollapse.wasCollapsed)
-    }
+    this.el.removeAttribute("data-table-expand-sidebar-open")
+    this.el.toggleAttribute(
+      "data-collapsed",
+      this.transientCollapse.userChoice ?? this.transientCollapse.wasCollapsed,
+    )
     this.transientCollapse = null
   },
 
@@ -1293,10 +1347,21 @@ const LanternSidebar = {
     if (stored === "false") this.el.removeAttribute("data-collapsed")
   },
 
+  hideFocusTooltip() {
+    this.focusTooltip?.remove()
+    this.focusTooltip = null
+    this.focusTooltipTarget?.removeAttribute("aria-describedby")
+    this.focusTooltipTarget = null
+  },
+
   updated() {
     this.syncTablesFromDOM()
     if (this.transientCollapse) {
-      if (!this.transientCollapse.manual) this.el.setAttribute("data-collapsed", "")
+      const userChoice = this.transientCollapse.userChoice
+      this.el.toggleAttribute("data-table-expand-sidebar-open", userChoice === false)
+      this.el.toggleAttribute("data-collapsed", userChoice ?? true)
+    } else if (this.sessionCollapseChoice !== null) {
+      this.el.toggleAttribute("data-collapsed", this.sessionCollapseChoice)
     } else {
       this.syncCollapsed()
     }
@@ -1305,6 +1370,11 @@ const LanternSidebar = {
 
   destroyed() {
     this.el.removeEventListener("click", this.onClick)
+    this.el.removeEventListener("pointerover", this.onPointerOver)
+    this.el.removeEventListener("pointerout", this.onPointerOut)
+    this.el.removeEventListener("focusin", this.onFocusIn)
+    this.el.removeEventListener("focusout", this.onFocusOut)
+    this.hideFocusTooltip()
     this.el.removeEventListener("lantern:table-expand", this.onTableExpand)
     this.transientTables.clear()
     this.syncTransientCollapse()

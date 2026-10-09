@@ -49,6 +49,7 @@ defmodule LanternUI.QA.MatrixLive do
       >
         patch {@n}
       </button>
+      <button id="qa-shell-patch" type="button" phx-click="bump" hidden>patch {@n}</button>
       <.ctx
         name={@ctx}
         cmp={@cmp}
@@ -404,12 +405,18 @@ defmodule LanternUI.QA.MatrixLive do
     >
       <:brand>Lantern QA</:brand>
       <:sidebar_header>
-        <button id="qa-strip-switcher" type="button" class="qa-switcher">
+        <button
+          id="qa-strip-switcher"
+          type="button"
+          class="qa-switcher"
+          title="Acme workspace"
+          data-tooltip="Acme workspace"
+        >
           <span class="qa-avatar">AW</span>
           <span class="qa-switcher-name">Acme workspace</span>
         </button>
       </:sidebar_header>
-      <:sidebar><.nav_item label="Inventory" navigate="/qa" active /></:sidebar>
+      <:sidebar><.nav_item label="Inventory" icon="chart-bar" navigate="/qa" active /></:sidebar>
       <.page_shell
         id="qa-strip-page"
         layout="strip"
@@ -431,8 +438,17 @@ defmodule LanternUI.QA.MatrixLive do
             rows={@rows}
             meta={@meta}
             path="/qa"
-            show_checkboxes={false}
+            show_checkboxes
+            flush
+            expandable
+            expanded={@expand?}
           >
+            <:toolbar>
+              <input type="checkbox" aria-label="QA checkbox" />
+              <input type="radio" aria-label="QA radio" />
+              <input type="range" aria-label="QA range" />
+              <input type="file" aria-label="QA file" />
+            </:toolbar>
             <:col :let={row} label="Record">{row.name}</:col>
             <:col :let={row} label="Status">Ready {row.id}</:col>
             <:col :let={row} label="Owner">Team {rem(row.id, 4)}</:col>
@@ -461,7 +477,13 @@ defmodule LanternUI.QA.MatrixLive do
     >
       <:brand>Lantern QA</:brand>
       <:sidebar_header>
-        <button id="qa-sidebar-switcher" type="button" class="qa-switcher">
+        <button
+          id="qa-sidebar-switcher"
+          type="button"
+          class="qa-switcher"
+          title="Acme workspace"
+          data-tooltip="Acme workspace"
+        >
           <span class="qa-avatar">AW</span>
           <span class="qa-switcher-name">Acme workspace</span>
         </button>

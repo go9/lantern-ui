@@ -135,7 +135,6 @@ if (CONSISTENCY_ONLY) {
     { vw: 390, theme: "dark" },
   ]
   if (CONSISTENCY_LEGACY) combos.push({ vw: 1440, theme: "light", legacy: true })
-  if (CONSISTENCY_LEGACY && process.env.QA_BASELINE_CSS) combos.push({ vw: 1440, theme: "light", baseline: true })
 
   for (const { vw, theme, legacy = false, baseline = false } of combos) {
     const page = await browser.newPage()
@@ -193,7 +192,8 @@ if (CONSISTENCY_ONLY) {
           if (!isVisible(target)) return
           const r = target.getBoundingClientRect(), s = getComputedStyle(target)
           const isMoreTrigger = target.classList.contains("lui-action-bar-more-trigger")
-          const sized = el.dataset.qaSize || el.closest("[data-qa-size]")?.dataset.qaSize || (isMoreTrigger ? "sm" : null) || el.dataset.size || el.closest("[data-size]")?.dataset.size ||
+          const sharedRowControl = target.closest(".lui-dt-chromerow, .lui-page-strip-actions, .lui-action-bar-inline")
+          const sized = sharedRowControl ? "md" : el.dataset.qaSize || el.closest("[data-qa-size]")?.dataset.qaSize || (isMoreTrigger ? "sm" : null) || el.dataset.size || el.closest("[data-size]")?.dataset.size ||
             (target.matches(".lui-dt-search, .lui-dt-chip, .lui-dt-expand, .lui-dt-resetfilters, .lui-dt-applyfilters, .lui-dt-filtertext, .lui-chart-settings__trigger") ? "sm" : "md")
           const size = normalized(sized)
           const tokenName = `--lui-control-h-${size}`
@@ -272,35 +272,6 @@ if (CONSISTENCY_ONLY) {
     rows.push(row)
     console.log(`${row.status} ${vw} ${theme}${baseline ? " baseline" : legacy ? " legacy" : ""}: ${row.controls.length} controls, ${row.problems.length} findings`)
     await page.close()
-  }
-  if (CONSISTENCY_LEGACY && process.env.QA_BASELINE_CSS) {
-    const baseline = rows.find((row) => row.baseline)
-    const legacy = rows.find((row) => row.legacy)
-    if (baseline && legacy) {
-      const sample = (controls) => {
-        const selected = new Map()
-        for (const control of controls) {
-          if (control.kind === "wrap-button" || control.kind === "menu-trigger" || control.kind === "popover-trigger") continue
-          const key = `${control.kind}:${control.size}`
-          if (!selected.has(key)) selected.set(key, control)
-        }
-        return selected
-      }
-      const oldSamples = sample(baseline.controls)
-      const currentSamples = sample(legacy.controls)
-      const compared = []
-      for (const [key, control] of currentSamples) {
-        const prior = oldSamples.get(key)
-        if (!prior) continue
-        const fields = ["height", "fontSize", "lineHeight", "borderRadius", "padding"]
-        const differences = fields.filter((field) => JSON.stringify(control[field]) !== JSON.stringify(prior[field]))
-        compared.push({ key, id: control.id, fields: differences })
-        if (differences.length) legacy.problems.push(`${control.id}: legacy differs from pre-scale stylesheet in ${differences.join(", ")}`)
-      }
-      legacy.legacyComparison = { compared: compared.length, differences: compared.filter((item) => item.fields.length) }
-      legacy.status = legacy.problems.length ? "FAIL" : "ok"
-      console.log(`${legacy.status} 1440 light legacy comparison: ${compared.length} sampled controls, ${legacy.problems.length} findings ${JSON.stringify(legacy.legacyComparison.differences)}`)
-    }
   }
   fs.writeFileSync(`${reportDir}/consistency-measurements.json`, JSON.stringify(rows, null, 2))
   const summaries = rows.map((row) => `${row.vw}px ${row.theme}: ${row.controls.length} measurements, ${row.problems.length} findings`).join("\n")
@@ -802,6 +773,74 @@ if (!WIDE_TABLE_ONLY) {
       await page.close()
     }
   }
+
+  // Expand mode is a transient sidebar collapse. A user toggle must win for
+  // the session, survive LiveView morphdom patches, and restore on exit/reload.
+  {
+    const page = await browser.newPage()
+    await page.setViewport({ width: 1440, height: 900 })
+    const row = { cmp: "expanded-sidebar-toggle-lifecycle", problems: [] }
+    try {
+      await page.goto(`${BASE}/qa?ctx=page_shell_strip`, { waitUntil: "networkidle2" })
+      await page.evaluate(() => localStorage.setItem("lui-sidebar:qa-strip-app-default", "true"))
+      await page.goto(`${BASE}/qa?ctx=page_shell_strip&expand=1`, { waitUntil: "networkidle2" })
+      await page.waitForSelector(".phx-connected", { timeout: 8000 })
+      await page.waitForSelector("#qa-strip-table.lui-datatable-expanded", { timeout: 4000 })
+      await page.waitForSelector(".lui-app[data-table-expand]", { timeout: 3000 })
+      const isCollapsed = () => page.$eval(".lui-app", (el) => el.hasAttribute("data-collapsed"))
+      const sidebarWidth = () => page.$eval(".lui-app-sidebar", (el) => el.getBoundingClientRect().width)
+      if (!(await isCollapsed())) row.problems.push("Expand did not start with the sidebar collapsed")
+
+      await page.click('#qa-strip-app-default [data-part="sidebar-collapse"]')
+      await page.waitForFunction(() => document.querySelector(".lui-app-sidebar")?.getBoundingClientRect().width > 200, { timeout: 4000 })
+      if (await isCollapsed() || (await sidebarWidth()) < 200) row.problems.push("sidebar toggle could not open the rail during Expand")
+      const savedPreference = await page.evaluate(() => localStorage.getItem("lui-sidebar:qa-strip-app-default"))
+      if (savedPreference !== "true") {
+        const debug = await page.evaluate(() => ({
+          collapsed: document.querySelector(".lui-app").hasAttribute("data-collapsed"),
+          expanded: document.querySelector("#qa-strip-table").dataset.expanded,
+          pref: localStorage.getItem("lui-sidebar:qa-strip-app-default"),
+          id: document.querySelector(".lui-app").id,
+        }))
+        row.problems.push(`transient sidebar toggle changed the persisted collapse preference (${JSON.stringify(debug)})`)
+      }
+
+      await page.$eval("#qa-shell-patch", (el) => el.click())
+      await page.waitForFunction(() => document.querySelector("#qa-root")?.textContent.includes("patch 1"), { timeout: 4000 })
+      await page.waitForFunction(() => document.querySelector(".lui-app-sidebar")?.getBoundingClientRect().width > 200, { timeout: 4000 })
+      if (await isCollapsed() || (await sidebarWidth()) < 200) row.problems.push("LiveView patch re-collapsed the explicitly opened sidebar")
+
+      await page.click('#qa-strip-table [data-part="expand"]')
+      await page.waitForFunction(() => !document.querySelector("#qa-strip-table")?.classList.contains("lui-datatable-expanded"), { timeout: 4000 })
+      await page.waitForFunction(() => document.querySelector(".lui-app-sidebar")?.getBoundingClientRect().width > 200, { timeout: 4000 })
+      if (await isCollapsed() || (await sidebarWidth()) < 200) row.problems.push("leaving Expand did not restore the explicit open choice")
+
+      await page.evaluate(() => localStorage.removeItem("lui-sidebar:qa-strip-app-default"))
+      await page.goto(`${BASE}/qa?ctx=page_shell_strip&expand=1`, { waitUntil: "networkidle2" })
+      await page.waitForSelector(".phx-connected", { timeout: 8000 })
+      await page.waitForFunction(() => document.querySelector(".lui-app")?.hasAttribute("data-collapsed"), { timeout: 3000 })
+      await page.waitForSelector(".lui-app[data-table-expand]", { timeout: 3000 })
+      await page.click('#qa-strip-app-default [data-part="sidebar-collapse"]')
+      await page.waitForFunction(() => document.querySelector(".lui-app-sidebar")?.getBoundingClientRect().width > 200, { timeout: 4000 })
+      if (await isCollapsed() || (await sidebarWidth()) < 200) row.problems.push("reload with ?expand=1 left the sidebar toggle inoperative")
+
+      await page.goto(`${BASE}/qa?ctx=page_shell_strip`, { waitUntil: "networkidle2" })
+      await page.evaluate(() => localStorage.setItem("lui-sidebar:qa-strip-app-default", "false"))
+      await page.goto(`${BASE}/qa?ctx=page_shell_strip&expand=1`, { waitUntil: "networkidle2" })
+      await page.waitForSelector("#qa-strip-table.lui-datatable-expanded", { timeout: 4000 })
+      await page.click('#qa-strip-table [data-part="expand"]')
+      await page.waitForFunction(() => !document.querySelector("#qa-strip-table")?.classList.contains("lui-datatable-expanded"), { timeout: 4000 })
+      await page.waitForFunction(() => document.querySelector(".lui-app-sidebar")?.getBoundingClientRect().width > 200, { timeout: 4000 })
+      if (await isCollapsed() || (await sidebarWidth()) < 200) row.problems.push("leaving Expand without a toggle did not restore the pre-expand open state")
+      row.status = row.problems.length ? "FAIL" : "ok"
+    } catch (e) {
+      row.problems.push(`error: ${e.message.split("\n")[0]}`)
+      row.status = "FAIL"
+    }
+    rows.push(row)
+    if (row.problems.length) console.log(`FAIL expanded-sidebar-toggle-lifecycle: ${row.problems.join("; ")}`)
+    await page.close()
+  }
 }
 
 // The app shell's appbar is fixed. Verify nested page-shell sticky chrome at
@@ -836,6 +875,7 @@ for (const vw of [1440, 768, 390]) {
         const appbar = rect(".lui-appbar")
         const topline = rect("[data-page-breadcrumb]")
         const actions = rect("[data-page-actions]")
+        const toolbar = rect("#qa-app-shell-table .lui-dt-chromerow")
         const wrapper = rect("#qa-app-shell-table .lui-table-wrap")
         const header = rect("#qa-app-shell-table .lui-table-wrap .lui-th")
         const main = document.querySelector(".lui-app-main")
@@ -844,7 +884,8 @@ for (const vw of [1440, 768, 390]) {
         return {
           appbar,
           topline,
-          actions,
+            actions,
+            toolbar,
           wrapper,
           header,
           compact: document.querySelector(".lui-app").hasAttribute("data-compact"),
@@ -858,7 +899,7 @@ for (const vw of [1440, 768, 390]) {
       const separated = (upper, lower) => lower.top >= upper.bottom - 1
       if (!separated(measurements.appbar, measurements.topline)) row.problems.push("topline overlaps the fixed appbar")
       if (!separated(measurements.topline, measurements.actions)) row.problems.push("action row overlaps the topline")
-      if (!separated(measurements.actions, measurements.header)) row.problems.push("table header overlaps the action row")
+        if (!separated(measurements.actions, measurements.header)) row.problems.push("table header overlaps the action row")
       if (measurements.pageScrollTop <= 0) row.problems.push("app shell page did not scroll")
       if (measurements.tableScrollTop <= 0) row.problems.push("fill table scroll region did not scroll")
       if (Math.abs(measurements.header.top - measurements.wrapper.top - 1) > 2) {
@@ -866,7 +907,7 @@ for (const vw of [1440, 768, 390]) {
       }
       if (measurements.compact !== (ctx === "app_page_shell_compact")) row.problems.push("app_shell compact mode does not match the context")
       if (!measurements.noticeLabel) row.problems.push("nested notice is missing its accessible full-message label")
-      if (measurements.documentOverflows) row.problems.push("nested page shell document overflows horizontally")
+        if (measurements.documentOverflows) row.problems.push("nested page shell document overflows horizontally")
       row.measurements = measurements
       await page.screenshot({ path: `${SHOTS}/${vw}-${ctx}.png` })
 
@@ -1066,6 +1107,55 @@ if (!WIDE_TABLE_ONLY) {
         if (m.stripWidth <= 640 && !m.foldMenuVisible) row.problems.push("narrow strip did not fold breadcrumbs")
         if (m.stripWidth <= 640 && m.visibleCrumbs > 2) row.problems.push(`narrow strip shows ${m.visibleCrumbs} crumbs`)
         if (m.documentOverflows || m.mainOverflows) row.problems.push("page overflows horizontally")
+        const toolbarControls = await page.evaluate(() => {
+          const root = document.querySelector("#qa-strip-table")
+          const rect = (el) => {
+            const r = el.getBoundingClientRect()
+            return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, height: r.height }
+          }
+          const wrap = root.querySelector(".lui-table-wrap")
+          const chrome = root.querySelector(".lui-dt-chromerow")
+          const pagination = root.querySelector(".lui-dt-pagination")
+          const native = [...root.querySelectorAll('.lui-dt-chromerow input[type="checkbox"], .lui-dt-chromerow input[type="radio"], .lui-dt-chromerow input[type="range"], .lui-dt-chromerow input[type="file"], .lui-table-wrap input[type="checkbox"]')]
+          const themed = [...root.querySelectorAll(".lui-dt-chromerow button, .lui-dt-chromerow select, .lui-dt-search input, .lui-dt-expand")]
+          return {
+            wrap: rect(wrap), chrome: rect(chrome), pagination: rect(pagination),
+            native: native.map((el) => ({ type: el.type, ...rect(el) })),
+            themed: themed.map((el) => ({ tag: el.tagName, ...rect(el) })),
+            controlHeight: parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--lui-control-md-h")) * parseFloat(getComputedStyle(document.documentElement).fontSize),
+          }
+        })
+        const aligned = (a, b) => Math.abs(a - b) <= 1
+        if (!aligned(toolbarControls.wrap.left, toolbarControls.chrome.left) || !aligned(toolbarControls.wrap.right, toolbarControls.chrome.right) ||
+            !aligned(toolbarControls.wrap.left, toolbarControls.pagination.left) || !aligned(toolbarControls.wrap.right, toolbarControls.pagination.right)) {
+          row.problems.push("flush table, toolbar, and pagination edges do not align")
+        }
+        for (const control of toolbarControls.native) {
+          if (control.height >= toolbarControls.controlHeight) row.problems.push(`${control.type} input inherited the toolbar control height`)
+        }
+        for (const control of toolbarControls.themed) {
+          if (Math.abs(control.height - toolbarControls.controlHeight) > 1) row.problems.push(`${control.tag} control is not on the medium control scale`)
+        }
+        const legacy = await page.evaluate(() => {
+          const root = document.documentElement
+          root.style.setProperty("--lui-control-h-md", "2.25rem")
+          root.setAttribute("data-lui-control-scale", "legacy")
+          const px = (name) => parseFloat(getComputedStyle(root).getPropertyValue(name)) * parseFloat(getComputedStyle(root).fontSize)
+          const control = document.querySelector("#qa-strip-table .lui-dt-expand")
+          return {
+            control: control.getBoundingClientRect().height,
+            expected: px("--lui-control-h-md"),
+            strip: document.querySelector(".lui-page-strip").getBoundingClientRect().height,
+            header: document.querySelector(".lui-app-sidebar-header").getBoundingClientRect().height,
+          }
+        })
+        if (Math.abs(legacy.control - legacy.expected) > 1) row.problems.push("legacy control-scale opt-out did not restore the consumer medium control token")
+        if (Math.abs(legacy.strip - legacy.header) > 1) row.problems.push("legacy control-scale opt-out broke strip/sidebar row alignment")
+        await page.evaluate(() => {
+          document.documentElement.removeAttribute("data-lui-control-scale")
+          document.documentElement.style.removeProperty("--lui-control-h-md")
+        })
+        row.toolbarControls = toolbarControls
         // Print: the trail and actions are hidden, but the h1 stays in the print stream.
         await page.emulateMediaType("print")
         const printed = await page.evaluate(() => {
@@ -1130,12 +1220,140 @@ if (!WIDE_TABLE_ONLY) {
         if (!m.collapsed && !m.nameVisible) row.problems.push("switcher name hidden when expanded")
         row.sidebar = m
       } catch (e) {
-        row.problems.push(`error: ${e.message.split("\n")[0]}`)
+        row.problems.push(`error: ${e.stack?.split("\n").slice(0, 3).join(" ") || e.message}`)
       }
 
       row.status = row.problems.length ? "FAIL" : "ok"
       rows.push(row)
       if (row.problems.length) console.log(`FAIL ${vw} ${ctx}/sidebar-header: ${row.problems.join("; ")}`)
+      await page.close()
+    }
+  }
+
+  // Expanded-table shell stack: the fixed table stays below the sticky strip,
+  // its toolbar and header remain ordered, and the rails/gutters hold at desktop
+  // and mobile widths with either sidebar state. Print restores natural flow.
+  for (const vw of [1440, 390]) {
+    for (const collapsed of [false, true]) {
+      const page = await browser.newPage()
+      const h = vw < 600 ? 844 : 900
+      await page.setViewport({ width: vw, height: h })
+      const row = { vw, collapsed, cmp: "expanded-shell-stack", problems: [] }
+      try {
+        await page.goto(`${BASE}/qa?ctx=page_shell_strip&expand=1`, { waitUntil: "networkidle2" })
+        await page.waitForSelector(".phx-connected", { timeout: 8000 })
+        await page.waitForSelector("#qa-strip-table.lui-datatable-expanded .lui-th", { timeout: 4000 })
+        await page.evaluate((collapsed) => {
+          document.querySelector(".lui-app")?.toggleAttribute("data-collapsed", collapsed)
+        }, collapsed)
+        await page.evaluate(async () => {
+          const main = document.querySelector(".lui-app-main")
+          if (getComputedStyle(main).overflowY === "auto") main.scrollTop = 160
+          else window.scrollTo(0, 160)
+          await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+        })
+        const m = await page.evaluate(() => {
+          const style = (el) => el instanceof Element ? getComputedStyle(el) : null
+          const rect = (el) => {
+            const r = el.getBoundingClientRect()
+            return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, height: r.height }
+          }
+          const appbar = rect(document.querySelector(".lui-appbar"))
+          const stripEl = document.querySelector(".lui-page-strip")
+          const strip = rect(stripEl)
+          const table = document.querySelector("#qa-strip-table")
+          const toolbar = rect(table.querySelector(".lui-dt-chromerow"))
+          const wrap = rect(table.querySelector(".lui-table-wrap"))
+          const header = rect(table.querySelector(".lui-th"))
+          const controls = [...table.querySelectorAll(".lui-dt-chromerow button, .lui-dt-search input, .lui-dt-expand")]
+            .map((el) => rect(el))
+          const active = document.querySelector(".lui-nav-item-active")
+          const icon = active?.querySelector(".lui-nav-item-icon")
+          const iconRect = icon && rect(icon)
+          const navLabels = [...document.querySelectorAll(".lui-app-sidebar .lui-nav-item")]
+            .filter((item) => item.querySelector(".lui-nav-item-icon"))
+            .map((item) => Boolean(item.title && item.dataset.tooltip))
+          const switcher = document.querySelector("#qa-strip-switcher")
+          const sr = style(stripEl)
+          const stripContentLeft = strip.left + Number.parseFloat(sr.paddingLeft || "0")
+          const stripContentRight = strip.right - Number.parseFloat(sr.paddingRight || "0")
+          const toolbarStyle = style(table.querySelector(".lui-dt-chromerow"))
+          const headerStyle = style(table.querySelector(".lui-th"))
+          const iconStyle = style(icon)
+          return {
+            appbar, strip, table: rect(table), toolbar, wrap, header,
+            stripContentLeft, stripContentRight,
+            controls,
+            collapsed: document.querySelector(".lui-app").hasAttribute("data-collapsed"),
+            activeTitle: active?.title,
+            iconRect,
+            navLabels,
+            switcherTooltip: Boolean(switcher?.title && switcher?.dataset.tooltip),
+            iconMask: iconStyle && (iconStyle.maskImage || iconStyle.webkitMaskImage),
+            stripZ: Number(sr?.zIndex) || 0, tableZ: Number(style(table)?.zIndex) || 0,
+            toolbarZ: Number(toolbarStyle?.zIndex) || 0,
+            headerZ: Number(headerStyle?.zIndex) || 0,
+            overflow: document.documentElement.scrollWidth > innerWidth + 1,
+          }
+        })
+        const close = (a, b) => Math.abs(a - b) <= 1
+        if (m.collapsed !== collapsed) row.problems.push("sidebar collapsed state does not match the test")
+        if (!close(m.strip.top, m.appbar.bottom)) row.problems.push("strip is not pinned directly below the appbar")
+        if (m.table.top < m.strip.bottom - 1) row.problems.push("expanded table overlaps the strip")
+        if (m.toolbar.top < m.table.top - 1 || m.wrap.top < m.toolbar.bottom - 1 || m.header.top < m.wrap.top - 1) {
+          row.problems.push("expanded table toolbar/header stack is out of order")
+        }
+        if (!close(m.table.left, m.toolbar.left) || !close(m.table.right, m.toolbar.right) ||
+            !close(m.table.left, m.wrap.left) || !close(m.table.right, m.wrap.right)) {
+          row.problems.push("expanded table, toolbar, and table-wrap edges do not align")
+        }
+        if (!close(m.table.left, m.stripContentLeft) || !close(m.table.right, m.stripContentRight)) {
+          row.problems.push("expanded table edges do not match the shared page gutter")
+        }
+        if (m.tableZ <= m.stripZ || m.headerZ <= m.toolbarZ) row.problems.push("expanded table layers are out of order")
+        if (!m.activeTitle || !m.iconRect || m.iconRect.width <= 0 || m.iconRect.height <= 0) {
+          row.problems.push("active collapsed-rail navigation item is missing its icon or tooltip")
+        }
+        if (collapsed && (m.navLabels.some((hasTooltip) => !hasTooltip) || !m.switcherTooltip)) {
+          row.problems.push("collapsed rail nav items or org tile are missing hover/focus tooltip labels")
+        }
+        if (collapsed && vw >= 769) {
+          for (const selector of ['.lui-app-sidebar .lui-nav-item[data-tooltip]', "#qa-strip-switcher"]) {
+            await page.hover(selector)
+            const expected = await page.$eval(selector, (el) => el.dataset.tooltip)
+            await page.waitForFunction((text) => document.querySelector(".lui-sidebar-tooltip")?.textContent === text, { timeout: 1000 }, expected).catch(() => {})
+            const tooltip = await page.$eval(".lui-sidebar-tooltip", (el) => el.textContent).catch(() => null)
+            if (tooltip !== expected) row.problems.push(`${selector} did not show its hover tooltip`)
+            await page.mouse.move(700, 20)
+          }
+        }
+        if (collapsed && vw >= 769) {
+          await page.keyboard.press("Tab")
+          for (const selector of ['.lui-app-sidebar .lui-nav-item[data-tooltip]', "#qa-strip-switcher"]) {
+            await page.$eval(selector, (el) => el.focus())
+            const tooltip = await page.$eval("#lui-sidebar-focus-tooltip", (el) => el.textContent).catch(() => null)
+            if (!tooltip) row.problems.push(`${selector} did not show its keyboard-focus tooltip`)
+          }
+        }
+        if (m.controls.some((c) => Math.abs(c.height - 32) > 1)) row.problems.push("expanded toolbar controls do not share the 32px height")
+        if (m.overflow) row.problems.push("expanded shell overflows horizontally")
+        row.stack = m
+        await page.screenshot({ path: `${SHOTS}/${vw}-page_shell_strip-expanded-${collapsed ? "collapsed" : "expanded"}.png` })
+        await page.emulateMediaType("print")
+        const printed = await page.evaluate(() => ({
+          tablePosition: getComputedStyle(document.querySelector("#qa-strip-table") || document.documentElement).position,
+          sidebarDisplay: getComputedStyle(document.querySelector(".lui-app-sidebar") || document.documentElement).display,
+          appbarDisplay: getComputedStyle(document.querySelector(".lui-appbar") || document.documentElement).display,
+        }))
+        if (printed.tablePosition !== "static" || printed.sidebarDisplay !== "none" || printed.appbarDisplay !== "none") {
+          row.problems.push("print did not restore the expanded table to flow and hide shell navigation")
+        }
+      } catch (e) {
+        row.problems.push(`error: ${e.stack?.split("\n").slice(0, 3).join(" ") || e.message}`)
+      }
+      row.status = row.problems.length ? "FAIL" : "ok"
+      rows.push(row)
+      if (row.problems.length) console.log(`FAIL ${vw} expanded-shell-stack/${collapsed ? "collapsed" : "expanded"}: ${row.problems.join("; ")}`)
       await page.close()
     }
   }
