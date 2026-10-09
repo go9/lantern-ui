@@ -275,6 +275,7 @@ defmodule LanternUI.Llms do
     - `mix lantern.lint` — fails on every rule above, with did-you-mean hints.
     - `skills/` — lantern-recipes, phoenix-page-design, lantern-migration,
       lantern-ui-components. Install with `mix lantern_ui.install_skills`.
+    - `docs/UPGRADING.md` — compatibility notes and migration steps from 0.9.x.
     - `docs/` — recipes, dense-app, scale (type + grey roles), behaviours.
     """
   end
@@ -301,6 +302,10 @@ defmodule LanternUI.Llms do
     #{deprecations_section()}
 
     #{tokens_section()}
+
+    ## Upgrade guide
+
+    See `docs/UPGRADING.md` before upgrading an existing app from 0.9.x.
     """
   end
 
