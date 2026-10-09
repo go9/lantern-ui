@@ -1311,6 +1311,16 @@ if (!WIDE_TABLE_ONLY) {
           row.problems.push("collapsed rail nav items or org tile are missing hover/focus tooltip labels")
         }
         if (collapsed && vw >= 769) {
+          for (const selector of ['.lui-app-sidebar .lui-nav-item[data-tooltip]', "#qa-strip-switcher"]) {
+            await page.hover(selector)
+            const expected = await page.$eval(selector, (el) => el.dataset.tooltip)
+            await page.waitForFunction((text) => document.querySelector(".lui-sidebar-tooltip")?.textContent === text, { timeout: 1000 }, expected).catch(() => {})
+            const tooltip = await page.$eval(".lui-sidebar-tooltip", (el) => el.textContent).catch(() => null)
+            if (tooltip !== expected) row.problems.push(`${selector} did not show its hover tooltip`)
+            await page.mouse.move(700, 20)
+          }
+        }
+        if (collapsed && vw >= 769) {
           await page.keyboard.press("Tab")
           for (const selector of ['.lui-app-sidebar .lui-nav-item[data-tooltip]', "#qa-strip-switcher"]) {
             await page.$eval(selector, (el) => el.focus())

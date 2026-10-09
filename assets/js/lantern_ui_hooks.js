@@ -1220,9 +1220,8 @@ const LanternSidebar = {
     }
     this.el.addEventListener("click", this.onClick)
 
-    this.onFocusIn = (e) => {
-      const target = e.target.closest("[data-tooltip]")
-      if (!this.el.hasAttribute("data-collapsed") || !target || !this.el.contains(target) || !target.matches(":focus-visible")) return
+    this.showSidebarTooltip = (target) => {
+      if (!this.el.hasAttribute("data-collapsed") || !target || !this.el.contains(target)) return
       this.hideFocusTooltip()
       const tooltip = document.createElement("div")
       tooltip.className = "lui-sidebar-tooltip"
@@ -1237,9 +1236,25 @@ const LanternSidebar = {
       this.focusTooltipTarget = target
       this.focusTooltip = tooltip
     }
+    this.onPointerOver = (e) => {
+      const target = e.target.closest("[data-tooltip]")
+      if (!target || target === this.focusTooltipTarget) return
+      this.showSidebarTooltip(target)
+    }
+    this.onPointerOut = (e) => {
+      const target = e.target.closest("[data-tooltip]")
+      if (target && target === this.focusTooltipTarget && !target.contains(e.relatedTarget)) this.hideFocusTooltip()
+    }
+    this.onFocusIn = (e) => {
+      const target = e.target.closest("[data-tooltip]")
+      if (!target || !target.matches(":focus-visible")) return
+      this.showSidebarTooltip(target)
+    }
     this.onFocusOut = (e) => {
       if (e.target === this.focusTooltipTarget || this.focusTooltipTarget?.contains(e.target)) this.hideFocusTooltip()
     }
+    this.el.addEventListener("pointerover", this.onPointerOver)
+    this.el.addEventListener("pointerout", this.onPointerOut)
     this.el.addEventListener("focusin", this.onFocusIn)
     this.el.addEventListener("focusout", this.onFocusOut)
 
@@ -1355,6 +1370,8 @@ const LanternSidebar = {
 
   destroyed() {
     this.el.removeEventListener("click", this.onClick)
+    this.el.removeEventListener("pointerover", this.onPointerOver)
+    this.el.removeEventListener("pointerout", this.onPointerOut)
     this.el.removeEventListener("focusin", this.onFocusIn)
     this.el.removeEventListener("focusout", this.onFocusOut)
     this.hideFocusTooltip()
