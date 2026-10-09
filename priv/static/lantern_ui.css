@@ -4188,6 +4188,23 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-time-series-chart__legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; padding: 0 4px; }
 .lui-time-series-chart__legend-item { display: inline-flex; align-items: center; gap: 6px; color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
 .lui-time-series-chart__legend-item i { width: 10px; height: 3px; border-radius: 2px; background: var(--lui-series-color); }
+.lui-time-series-chart__interaction { pointer-events: none; }
+.lui-time-series-chart__interaction [data-part="crosshair"] { stroke: var(--lantern-fg-muted); stroke-width: 1; stroke-dasharray: 4 3; }
+.lui-time-series-chart__interaction [data-part="series-point"] { fill: var(--lui-series-color); stroke: var(--lantern-surface); stroke-width: 2; r: 4px; }
+.lui-time-series-chart__interaction [data-part="tooltip"] rect { fill: var(--lantern-surface); stroke: var(--lantern-border-strong); stroke-width: 1; }
+.lui-time-series-chart__interaction [data-part="tooltip"] text { fill: var(--lantern-fg); font-size: 10px; }
+.lui-time-series-chart__focus-point { fill: transparent; stroke: transparent; cursor: crosshair; }
+.lui-time-series-chart__focus-point:focus-visible { fill: var(--lantern-surface); stroke: var(--lantern-ring); stroke-width: 2; outline: none; }
+.lui-time-series-chart__table-details { margin-top: 8px; color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
+.lui-time-series-chart__table-details summary { width: fit-content; cursor: pointer; }
+.lui-time-series-chart__table-details table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.lui-time-series-chart__table-details th, .lui-time-series-chart__table-details td { padding: 5px 8px; border-bottom: 1px solid var(--lantern-border); text-align: right; }
+.lui-time-series-chart__table-details th:first-child { text-align: left; }
+.lui-time-series-chart__live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .lui-time-series-chart, .lui-time-series-chart * { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 @media print {
   .lui-time-series-chart__legend { break-inside: avoid; }
+  .lui-time-series-chart__interaction, .lui-time-series-chart__focus-point, .lui-time-series-chart__live { display: none !important; }
+  .lui-time-series-chart__table-details > summary { display: none; }
+  .lui-time-series-chart__table-details > table { display: table; }
 }

@@ -251,6 +251,9 @@ defmodule LanternUI.ChartsTest do
 
       assert html =~ ~s(id="generic")
       assert html =~ ~s(aria-label="Portfolio value")
+      assert html =~ ~s(phx-hook="ChartInteraction")
+      assert html =~ "View chart data"
+      assert html =~ ~s(aria-live="polite")
       assert html =~ "Collection"
       assert html =~ "Inventory"
       assert html =~ ~s(class="lui-time-series-chart__zero")
@@ -533,6 +536,8 @@ defmodule LanternUI.ChartsTest do
       assert html =~ "lui-time-series-chart__annotation"
       assert html =~ "Launch"
       assert html =~ "tone-warning"
+      assert html =~ "Current: 2"
+      assert html =~ "Previous: 1"
     end
 
     test "comparison-only x keys do not extend the primary axis" do

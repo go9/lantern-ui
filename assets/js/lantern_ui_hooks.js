@@ -229,6 +229,130 @@ const LineHover = {
   },
 }
 
+// Shared-x interaction for the generic series-first chart. The server renders
+// every overlay and focus target; this hook only updates their attributes and
+// text, so LiveView owns the tree and can patch/destroy it at any time.
+const ChartInteraction = {
+  mounted() {
+    this.setup()
+  },
+
+  updated() {
+    this.cleanup()
+    this.setup()
+  },
+
+  setup() {
+    this.points = JSON.parse(this.el.dataset.interaction || "[]")
+    this.seriesLabels = JSON.parse(this.el.dataset.seriesLabel || "[]")
+    this.svg = this.el.querySelector("svg")
+    this.overlay = this.el.querySelector('[data-part="crosshair"]')?.closest(".lui-time-series-chart__interaction")
+    this.live = this.el.querySelector('[data-part="live"]')
+    this.focusPoints = [...this.el.querySelectorAll("[data-chart-point]")]
+    if (!this.svg || !this.overlay || !this.points.length) return
+
+    this.onPointerMove = (event) => {
+      this.pendingClientX = event.clientX
+      if (this.frame) return
+      this.frame = this.el.ownerDocument.defaultView.requestAnimationFrame(() => {
+        this.frame = null
+        this.showAtClientX(this.pendingClientX)
+      })
+    }
+    this.onPointerDown = (event) => {
+      this.onPointerMove(event)
+      this.touchActive = event.pointerType === "touch"
+    }
+    this.onPointerLeave = (event) => {
+      if (!this.touchActive && !this.el.contains(event.relatedTarget)) this.hide()
+    }
+    this.onPointerUp = (event) => {
+      if (event.pointerType === "touch") {
+        this.touchActive = false
+        this.touchTimer = setTimeout(() => this.hide(), 2200)
+      }
+    }
+    this.onFocusIn = (event) => {
+      const target = event.target.closest?.("[data-chart-point]")
+      if (target && this.el.contains(target)) this.show(this.points[Number(target.dataset.chartPoint)], target)
+    }
+    this.onKeyDown = (event) => {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return
+      const target = event.target.closest?.("[data-chart-point]")
+      if (!target || !this.el.contains(target)) return
+      event.preventDefault()
+      const index = Number(target.dataset.chartPoint)
+      const next = Math.max(0, Math.min(this.focusPoints.length - 1, index + (event.key === "ArrowRight" ? 1 : -1)))
+      this.focusPoints[next]?.focus()
+    }
+    this.svg.addEventListener("pointermove", this.onPointerMove, { passive: true })
+    this.svg.addEventListener("pointerdown", this.onPointerDown, { passive: true })
+    this.svg.addEventListener("pointerleave", this.onPointerLeave)
+    this.svg.addEventListener("pointerup", this.onPointerUp)
+    this.el.addEventListener("focusin", this.onFocusIn)
+    this.el.addEventListener("keydown", this.onKeyDown)
+  },
+
+  showAtClientX(clientX) {
+    const rect = this.svg.getBoundingClientRect()
+    if (!rect.width) return
+    const width = this.svg.viewBox.baseVal.width
+    const x = ((clientX - rect.left) / rect.width) * width
+    let nearest = this.points[0]
+    for (const point of this.points) if (Math.abs(point.x - x) < Math.abs(nearest.x - x)) nearest = point
+    this.show(nearest)
+  },
+
+  show(point, focusTarget = null) {
+    if (!point) return
+    const crosshair = this.overlay.querySelector('[data-part="crosshair"]')
+    crosshair.setAttribute("x1", point.x)
+    crosshair.setAttribute("x2", point.x)
+    this.overlay.querySelectorAll('[data-part="series-point"]').forEach((circle) => {
+      const index = Number(circle.dataset.seriesIndex)
+      const y = point.coords[index]
+      if (y == null) {
+        circle.setAttribute("hidden", "")
+      } else {
+        circle.removeAttribute("hidden")
+        circle.setAttribute("cx", point.x)
+        circle.setAttribute("cy", y)
+      }
+    })
+    this.overlay.querySelector('[data-part="tooltip-date"]').textContent = point.label
+    this.overlay.querySelectorAll('[data-part="tooltip-row"]').forEach((row) => {
+      const index = Number(row.dataset.seriesIndex)
+      row.textContent = `${this.seriesLabels[index] || `Series ${index + 1}`}: ${point.values[index] ?? "—"}`
+    })
+    this.overlay.removeAttribute("hidden")
+    this.live.textContent = `${point.label}. ${this.seriesLabels.map((label, index) => `${label}: ${point.values[index] ?? "no data"}`).join(". ") || point.values.join(". ")}`
+    if (focusTarget) {
+      this.focusPoints.forEach((target) => target.setAttribute("tabindex", target === focusTarget ? "0" : "-1"))
+      if (point.coords[0] != null) focusTarget.setAttribute("cy", point.coords[0])
+    }
+  },
+
+  hide() {
+    this.overlay?.setAttribute("hidden", "")
+  },
+
+  cleanup() {
+    if (this.frame) this.el.ownerDocument.defaultView.cancelAnimationFrame(this.frame)
+    if (this.touchTimer) clearTimeout(this.touchTimer)
+    this.frame = null
+    this.svg?.removeEventListener("pointermove", this.onPointerMove)
+    this.svg?.removeEventListener("pointerdown", this.onPointerDown)
+    this.svg?.removeEventListener("pointerleave", this.onPointerLeave)
+    this.svg?.removeEventListener("pointerup", this.onPointerUp)
+    this.el.removeEventListener("focusin", this.onFocusIn)
+    this.el.removeEventListener("keydown", this.onKeyDown)
+  },
+
+  destroyed() {
+    this.cleanup()
+  },
+}
+
 // ── Runtime core ──────────────────────────────────────────────────────────
 //
 // Shared substrate for LanternUI's interactive components (popover, dropdown,
@@ -3002,6 +3126,7 @@ const LanternActionBar = {
 export const Hooks = {
   ChartHover,
   LineHover,
+  ChartInteraction,
   LanternOverlay,
   LanternCalendar,
   LanternDatetimeField,
@@ -3030,6 +3155,7 @@ export const Hooks = {
 export {
   ChartHover,
   LineHover,
+  ChartInteraction,
   LanternOverlay,
   LanternCalendar,
   LanternDatetimeField,

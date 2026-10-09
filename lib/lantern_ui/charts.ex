@@ -668,11 +668,18 @@ defmodule LanternUI.Charts do
     assigns = assign(assigns, time_series_geometry(assigns))
 
     ~H"""
-    <div id={@id} class={Class.merge(["lui-time-series-chart", @class])} data-chart-type={@chart_type}>
+    <div
+      id={@id}
+      class={Class.merge(["lui-time-series-chart", @class])}
+      data-chart-type={@chart_type}
+      data-interaction={Jason.encode!(@interaction_points)}
+      data-series-label={Jason.encode!(@interaction_labels)}
+      phx-hook="ChartInteraction"
+    >
       <svg
         :if={@has_data}
         viewBox={"0 0 #{@vb_w} #{@height}"}
-        role="img"
+        role="group"
         aria-label={@aria_label}
         class="lui-time-series-chart__svg"
       >
@@ -745,6 +752,50 @@ defmodule LanternUI.Charts do
             {marker.label}
           </text>
         </g>
+        <g class="lui-time-series-chart__interaction" aria-hidden="true" hidden>
+          <line
+            data-part="crosshair"
+            x1={@plot_left}
+            x2={@plot_left}
+            y1={@plot_top}
+            y2={@plot_bottom}
+          />
+          <circle
+            :for={{_label, index} <- Enum.with_index(@interaction_labels)}
+            data-part="series-point"
+            data-series-index={index}
+            style={"--lui-series-color:#{Enum.at(@interaction_colors, index)}"}
+          />
+          <g data-part="tooltip">
+            <rect
+              x={@plot_left + 8}
+              y={@plot_top + 8}
+              width="196"
+              height={28 + 17 * @interaction_series_count}
+              rx="6"
+            />
+            <text data-part="tooltip-date" x={@plot_left + 18} y={@plot_top + 26}></text>
+            <text
+              :for={{_label, index} <- Enum.with_index(@interaction_labels)}
+              data-part="tooltip-row"
+              data-series-index={index}
+              x={@plot_left + 18}
+              y={@plot_top + 44 + 17 * index}
+            >
+            </text>
+          </g>
+        </g>
+        <circle
+          :for={{point, index} <- Enum.with_index(@interaction_points)}
+          class="lui-time-series-chart__focus-point"
+          data-chart-point={index}
+          cx={point.x}
+          cy={@plot_bottom}
+          r="8"
+          tabindex={if(index == 0, do: "0", else: "-1")}
+          aria-label={interaction_aria_label(point, @interaction_labels)}
+          role="button"
+        />
       </svg>
       <div :if={!@has_data} class="lui-time-series-chart__empty">{@empty_message}</div>
       <div :if={@legend != []} class="lui-time-series-chart__legend" aria-label="Series">
@@ -752,6 +803,25 @@ defmodule LanternUI.Charts do
           <i style={"--lui-series-color:#{item.color}"} aria-hidden="true"></i>{item.label}
         </span>
       </div>
+      <details :if={@has_data} class="lui-time-series-chart__table-details">
+        <summary>View chart data</summary>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Date / category</th><th :for={label <- @interaction_labels} scope="col">
+                {label}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr :for={point <- @interaction_points}>
+              <th scope="row">{point.label}</th>
+              <td :for={value <- point.values}>{value || "—"}</td>
+            </tr>
+          </tbody>
+        </table>
+      </details>
+      <span class="lui-time-series-chart__live" data-part="live" aria-live="polite" aria-atomic="true"></span>
     </div>
     """
   end
@@ -766,7 +836,15 @@ defmodule LanternUI.Charts do
 
     case {all_points, x_domain_kind(all_points)} do
       {[], _} ->
-        %{has_data: false, chart_type: assigns.type, legend: []}
+        %{
+          has_data: false,
+          chart_type: assigns.type,
+          legend: [],
+          interaction_labels: [],
+          interaction_colors: [],
+          interaction_points: [],
+          interaction_series_count: 0
+        }
 
       {_, nil} ->
         kinds = all_points |> Enum.map(fn point -> point.key |> elem(0) end) |> Enum.uniq()
@@ -786,6 +864,7 @@ defmodule LanternUI.Charts do
     plot_top = 18
     plot_bottom = assigns.height - @margin.bottom
     primary_points = Enum.flat_map(series, & &1.points)
+    interaction_series = series ++ comparison
     axis_points = if primary_points == [], do: all_points, else: primary_points
     axis_keys = axis_points |> Enum.map(& &1.key) |> Enum.uniq() |> sort_x_keys(kind)
     axis_key_set = MapSet.new(axis_keys)
@@ -932,8 +1011,46 @@ defmodule LanternUI.Charts do
             label: s.label,
             color: s.color || Enum.at(@time_series_palette, rem(i, length(@time_series_palette)))
           }
+        end),
+      interaction_labels: Enum.map(interaction_series, & &1.label),
+      interaction_colors:
+        interaction_series
+        |> Enum.with_index()
+        |> Enum.map(fn {item, index} ->
+          item.color || Enum.at(@time_series_palette, rem(index, length(@time_series_palette)))
+        end),
+      interaction_series_count: length(interaction_series),
+      interaction_points:
+        Enum.map(axis_keys, fn key ->
+          %{
+            x: Geometry.round1(xf.(key)),
+            label: x_key_label(key, kind),
+            values:
+              Enum.map(interaction_series, fn item ->
+                case Enum.find(item.points, &(&1.key == key)) do
+                  nil -> nil
+                  point -> format_value(point.y, assigns.value_format)
+                end
+              end),
+            coords:
+              Enum.map(interaction_series, fn item ->
+                case Enum.find(item.points, &(&1.key == key)) do
+                  nil -> nil
+                  point -> Geometry.round1(yf.(point.y))
+                end
+              end)
+          }
         end)
     }
+  end
+
+  defp interaction_aria_label(point, labels) do
+    values =
+      point.values
+      |> Enum.zip(labels)
+      |> Enum.map_join(", ", fn {value, label} -> "#{label}: #{value || "no data"}" end)
+
+    "#{point.label}. #{values}"
   end
 
   defp chart_domain_values(series, axis_keys, type, points)

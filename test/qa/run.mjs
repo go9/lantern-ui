@@ -127,7 +127,7 @@ if (CHARTS_ONLY) {
     for (const theme of ["light", "dark"]) {
       for (const type of types) {
         const page = await browser.newPage()
-        await page.setViewport({ width: vw, height: vw < 600 ? 844 : 900 })
+        await page.setViewport({ width: vw, height: vw < 600 ? 844 : 900, isMobile: vw < 600, hasTouch: vw < 600 })
         const errors = []
         page.on("pageerror", (error) => errors.push(error.message))
         const row = { vw, theme, type, problems: [] }
@@ -142,10 +142,31 @@ if (CHARTS_ONLY) {
             return { width: rect.width, height: rect.height }
           })
           if (!box.width || !box.height) row.problems.push("chart SVG has no visible dimensions")
+          if (type === "line") {
+            await page.evaluate(() => document.querySelector('[data-chart-point="0"]')?.focus())
+            await page.keyboard.press("ArrowRight")
+            const keyboard = await page.$eval('#qa-time-series [data-part="live"]', (el) => el.textContent)
+            if (!keyboard || !keyboard.includes(": ")) row.problems.push("keyboard point focus did not announce series values")
+            const svgRect = await page.$eval("#qa-time-series svg", (svg) => {
+              const rect = svg.getBoundingClientRect()
+              return { x: rect.left + rect.width * 0.55, y: rect.top + rect.height * 0.5 }
+            })
+            await page.mouse.move(svgRect.x, svgRect.y)
+            await sleep(50)
+            const mouseVisible = await page.$eval('#qa-time-series [data-part="crosshair"]', (el) => !el.closest("g[hidden]"))
+            if (!mouseVisible) row.problems.push("mouse movement did not show the shared crosshair")
+            await page.$eval("#qa-time-series svg", (svg, point) => {
+              svg.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerType: "touch", clientX: point.x, clientY: point.y }))
+            }, svgRect)
+            await sleep(50)
+            const touchVisible = await page.$eval('#qa-time-series [data-part="crosshair"]', (el) => !el.closest("g[hidden]"))
+            if (!touchVisible) row.problems.push("touch pointer did not show the shared crosshair")
+          }
           if (errors.length) row.problems.push(`pageerror: ${errors[0]}`)
           const dir = `${SHOTS}/charts`
           fs.mkdirSync(dir, { recursive: true })
           await page.screenshot({ path: `${dir}/${vw}-${theme}-${type}.png`, fullPage: true })
+          if (type === "line") await page.screenshot({ path: `${dir}/${vw}-${theme}-interaction.png`, fullPage: true })
         } catch (error) {
           row.problems.push(`error: ${error.message.split("\n")[0]}`)
         }
