@@ -259,7 +259,11 @@ const ChartInteraction = {
     this.baseRight = Number(this.el.dataset.plotRight) || this.baseWidth - 14
     this.layoutX = (x) => x
     this.layoutNodes = [...this.svg.querySelectorAll('.lui-time-series-chart__grid line, .lui-time-series-chart__zero, .lui-time-series-chart__labels text, .lui-time-series-chart__series path, .lui-time-series-chart__series rect, .lui-time-series-chart__series circle, .lui-time-series-chart__comparison path, .lui-time-series-chart__annotation line, .lui-time-series-chart__annotation text, .lui-time-series-chart__reference line, .lui-time-series-chart__reference text, [data-chart-point]')]
-      .map((node) => ({ node, x: Object.fromEntries(["x", "x1", "x2", "cx", "width"].filter((attr) => node.hasAttribute(attr)).map((attr) => [attr, Number(node.getAttribute(attr))])) }))
+      .map((node) => ({
+        node,
+        d: node.getAttribute('d'),
+        x: Object.fromEntries(["x", "x1", "x2", "cx", "width"].filter((attr) => node.hasAttribute(attr)).map((attr) => [attr, Number(node.getAttribute(attr))]))
+      }))
     this.scheduleLayout = () => {
       if (this.layoutFrame) return
       this.layoutFrame = this.el.ownerDocument.defaultView.requestAnimationFrame(() => {
@@ -361,11 +365,23 @@ const ChartInteraction = {
     this.svg.setAttribute("viewBox", `0 0 ${width} ${this.svg.viewBox.baseVal.height}`)
     this.svg.setAttribute("preserveAspectRatio", "xMinYMin meet")
     this.svg.style.removeProperty("--chart-text-scale-x")
-    for (const { node, x } of this.layoutNodes) {
+    for (const { node, d, x } of this.layoutNodes) {
       if (node.classList.contains('lui-time-series-chart__y-tick')) {
         node.setAttribute('x', left - 8)
-      } else if (node.tagName.toLowerCase() === 'path') {
-        node.setAttribute('transform', `matrix(${ratio} 0 0 1 ${left - this.baseLeft * ratio} 0)`)
+      } else if (d !== null) {
+        let command = ''
+        let coordinate = 0
+        const path = d.match(/[A-Za-z]|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?/g)
+        node.setAttribute('d', path.map((token) => {
+          if (/^[A-Za-z]$/.test(token)) {
+            command = token
+            coordinate = 0
+            return token
+          }
+          const xCoordinate = command === 'H' || (['M', 'L', 'C'].includes(command) && coordinate % 2 === 0)
+          coordinate++
+          return xCoordinate ? String(Math.round(this.layoutX(Number(token)) * 10) / 10) : token
+        }).join(' '))
       } else {
         for (const [attr, value] of Object.entries(x)) node.setAttribute(attr, attr === 'width' ? value * ratio : this.layoutX(value))
       }
