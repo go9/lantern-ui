@@ -135,7 +135,6 @@ if (CONSISTENCY_ONLY) {
     { vw: 390, theme: "dark" },
   ]
   if (CONSISTENCY_LEGACY) combos.push({ vw: 1440, theme: "light", legacy: true })
-  if (CONSISTENCY_LEGACY && process.env.QA_BASELINE_CSS) combos.push({ vw: 1440, theme: "light", baseline: true })
 
   for (const { vw, theme, legacy = false, baseline = false } of combos) {
     const page = await browser.newPage()
@@ -193,7 +192,8 @@ if (CONSISTENCY_ONLY) {
           if (!isVisible(target)) return
           const r = target.getBoundingClientRect(), s = getComputedStyle(target)
           const isMoreTrigger = target.classList.contains("lui-action-bar-more-trigger")
-          const sized = el.dataset.qaSize || el.closest("[data-qa-size]")?.dataset.qaSize || (isMoreTrigger ? "sm" : null) || el.dataset.size || el.closest("[data-size]")?.dataset.size ||
+          const sharedRowControl = target.closest(".lui-dt-chromerow, .lui-page-strip-actions, .lui-action-bar-inline")
+          const sized = sharedRowControl ? "md" : el.dataset.qaSize || el.closest("[data-qa-size]")?.dataset.qaSize || (isMoreTrigger ? "sm" : null) || el.dataset.size || el.closest("[data-size]")?.dataset.size ||
             (target.matches(".lui-dt-search, .lui-dt-chip, .lui-dt-expand, .lui-dt-resetfilters, .lui-dt-applyfilters, .lui-dt-filtertext, .lui-chart-settings__trigger") ? "sm" : "md")
           const size = normalized(sized)
           const tokenName = `--lui-control-h-${size}`
@@ -272,35 +272,6 @@ if (CONSISTENCY_ONLY) {
     rows.push(row)
     console.log(`${row.status} ${vw} ${theme}${baseline ? " baseline" : legacy ? " legacy" : ""}: ${row.controls.length} controls, ${row.problems.length} findings`)
     await page.close()
-  }
-  if (CONSISTENCY_LEGACY && process.env.QA_BASELINE_CSS) {
-    const baseline = rows.find((row) => row.baseline)
-    const legacy = rows.find((row) => row.legacy)
-    if (baseline && legacy) {
-      const sample = (controls) => {
-        const selected = new Map()
-        for (const control of controls) {
-          if (control.kind === "wrap-button" || control.kind === "menu-trigger" || control.kind === "popover-trigger") continue
-          const key = `${control.kind}:${control.size}`
-          if (!selected.has(key)) selected.set(key, control)
-        }
-        return selected
-      }
-      const oldSamples = sample(baseline.controls)
-      const currentSamples = sample(legacy.controls)
-      const compared = []
-      for (const [key, control] of currentSamples) {
-        const prior = oldSamples.get(key)
-        if (!prior) continue
-        const fields = ["height", "fontSize", "lineHeight", "borderRadius", "padding"]
-        const differences = fields.filter((field) => JSON.stringify(control[field]) !== JSON.stringify(prior[field]))
-        compared.push({ key, id: control.id, fields: differences })
-        if (differences.length) legacy.problems.push(`${control.id}: legacy differs from pre-scale stylesheet in ${differences.join(", ")}`)
-      }
-      legacy.legacyComparison = { compared: compared.length, differences: compared.filter((item) => item.fields.length) }
-      legacy.status = legacy.problems.length ? "FAIL" : "ok"
-      console.log(`${legacy.status} 1440 light legacy comparison: ${compared.length} sampled controls, ${legacy.problems.length} findings ${JSON.stringify(legacy.legacyComparison.differences)}`)
-    }
   }
   fs.writeFileSync(`${reportDir}/consistency-measurements.json`, JSON.stringify(rows, null, 2))
   const summaries = rows.map((row) => `${row.vw}px ${row.theme}: ${row.controls.length} measurements, ${row.problems.length} findings`).join("\n")

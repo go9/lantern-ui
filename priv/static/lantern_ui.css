@@ -4939,6 +4939,12 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-pg { box-sizing: border-box; height: var(--lui-control-h-md); min-width: var(--lui-control-h-md); font-size: var(--lui-control-font-sm); border-radius: var(--lui-control-radius); }
 .lui-pg-size { gap: var(--lui-gap-4); padding-inline: var(--lui-control-px-sm); }
 
+/* Page-strip and table action rows share the medium control baseline. */
+.lui-page-strip-actions .lui-btn,
+.lui-action-bar-inline .lui-btn { box-sizing: border-box; height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); font-size: var(--lui-control-font-md); }
+.lui-dt-chromerow .lui-dt-search { height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); }
+.lui-dt-chromerow .lui-dt-search input { font-size: var(--lui-control-font-md); }
+
 .lui-btn:focus-visible, .lui-input-wrap:focus-within, .lui-color-wrap:focus-within,
 .lui-dtf:focus-within, .lui-select-native:focus-visible, .lui-select-toggle:focus-visible,
 .lui-autocomplete-control:focus-within, .lui-tabs-list:focus-within .lui-tab:focus-visible,
