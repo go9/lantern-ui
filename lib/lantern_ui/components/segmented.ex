@@ -15,7 +15,7 @@ defmodule LanternUI.Components.Segmented do
 
   attr(:id, :string, required: true, doc: "Stable id for the `LanternSegmented` hook.")
   attr(:value, :any, default: nil, doc: "Value of the active segment (atom or string).")
-  attr(:size, :string, default: "sm", values: ~w(sm md), doc: "Control density.")
+  attr(:size, :string, default: "sm", values: ~w(sm md lg), doc: "Control density.")
 
   attr(:label, :string,
     default: nil,

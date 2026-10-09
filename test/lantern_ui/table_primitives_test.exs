@@ -139,6 +139,22 @@ defmodule LanternUI.TablePrimitivesTest do
       assert Floki.attribute(Enum.at(items, 1), "tabindex") == ["0"]
       assert Floki.attribute(Enum.at(items, 0), "tabindex") == ["-1"]
     end
+
+    test "segmented list accepts large control-token sizing" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Tabs.tabs_list id="scope-lg" variant="segmented" size="lg" active_tab="one" aria-label="Range">
+            <:tab name="one">One</:tab>
+            <:tab name="two">Two</:tab>
+          </Tabs.tabs_list>
+          """
+        end)
+
+      assert html =~ ~s(data-size="lg")
+      assert html =~ ~s(aria-label="Range")
+      assert html =~ ~s(aria-selected="true")
+    end
   end
 
   describe "select/1" do

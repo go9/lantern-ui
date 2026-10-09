@@ -1699,7 +1699,7 @@ Deprecated alias of `LanternUI.Components.Tabs.tabs_list/1` with `variant="segme
 - `id` (:string, required) — Stable id for the `LanternSegmented` hook.
 - `label` (:string) — Accessible name of the group (aria-label).
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
-- `size` (:string, values: sm, md, default "sm") — Control density.
+- `size` (:string, values: sm, md, lg, default "sm") — Control density.
 - `value` (:any) — Value of the active segment (atom or string).
 Slots:
 - `:segment` (required) — One segment; link via patch/navigate/href or button via phx-click.
@@ -2075,7 +2075,7 @@ Tabs — segmented tab list + panels.
 - `on_change` (:string) — Server event pushed on selection (`lantern:tabs:set-value` replies).
 - `on_change_client` (:string) — Bubbling DOM CustomEvent dispatched on selection.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
-- `size` (:string, values: sm, md, default "md") — Tab control density.
+- `size` (:string, values: sm, md, lg, default "md") — Tab control density.
 - `variant` (:string, values: segmented, underline, default "segmented") — segmented is pill-style; underline is text tabs.
 Slots:
 - `:inner_block` — Optional extra content inside the tab list.

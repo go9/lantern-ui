@@ -5,6 +5,7 @@ defmodule LanternUI.QA.ConsistencyLive do
 
   @button_sizes ~w(xs sm md lg xl icon-xs icon-sm icon-md icon icon-lg icon-xl)
   @button_variants ~w(solid soft surface outline dashed ghost)
+  @segment_cases for size <- ~w(sm md lg), position <- ~w(first middle last), do: {size, position}
 
   def mount(params, _session, socket) do
     theme = if params["theme"] == "dark", do: "dark", else: "light"
@@ -16,6 +17,7 @@ defmodule LanternUI.QA.ConsistencyLive do
      |> assign(:legacy?, legacy?)
      |> assign(:button_sizes, @button_sizes)
      |> assign(:button_variants, @button_variants)
+     |> assign(:segment_cases, @segment_cases)
      |> assign(:rows, for(i <- 1..3, do: %{id: i, name: "Item #{i}"}))
      |> assign(:meta, %{
        flop: %{},
@@ -227,6 +229,23 @@ defmodule LanternUI.QA.ConsistencyLive do
               <:tab name="closed">Closed</:tab>
             </.tabs_list>
           </div>
+          <section class="lui-consistency-section" aria-label="Segmented control inset geometry">
+            <h2>Segmented inset · first / middle / last</h2>
+            <div :for={{size, position} <- @segment_cases} class="lui-consistency-line">
+              <span class="lui-consistency-label">{size} · {position}</span>
+              <.tabs_list
+                id={"qa-segment-#{size}-#{position}"}
+                active_tab={position}
+                size={size}
+                data-segment-geometry={"#{size}-#{position}"}
+                aria-label={"#{size} segmented #{position}"}
+              >
+                <:tab name="first">One</:tab>
+                <:tab name="middle">Two</:tab>
+                <:tab name="last">Three</:tab>
+              </.tabs_list>
+            </div>
+          </section>
           <div
             :for={size <- ~w(sm md lg)}
             class="lui-consistency-line"

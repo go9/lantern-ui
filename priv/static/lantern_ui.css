@@ -4915,17 +4915,38 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-field[data-size="lg"] .lui-textarea,
 .lui-field[data-size="xl"] .lui-textarea { font-size: var(--lui-control-font-lg); padding: var(--lui-control-px-lg); }
 
-.lui-tabs-list[data-variant="segmented"] { border-radius: var(--lui-control-radius); gap: var(--lui-gap-4); }
+.lui-tabs-list[data-variant="segmented"] {
+  box-sizing: border-box;
+  border-radius: var(--lui-control-radius);
+  padding: var(--lui-gap-4);
+  gap: var(--lui-gap-4);
+  overflow: visible;
+}
 .lui-tab { gap: var(--lui-gap-4); }
-.lui-tabs-list[data-size="sm"], .lui-tabs-list[data-size="md"] { box-sizing: border-box; height: var(--lui-control-h-md); }
+.lui-tabs-list[data-size="sm"] { height: var(--lui-control-h-sm); }
+.lui-tabs-list[data-size="md"] { height: var(--lui-control-h-md); }
+.lui-tabs-list[data-size="lg"] { height: var(--lui-control-h-lg); }
 .lui-tabs-list[data-size="sm"] .lui-tab,
-.lui-tabs-list[data-size="md"] .lui-tab {
+.lui-tabs-list[data-size="md"] .lui-tab,
+.lui-tabs-list[data-size="lg"] .lui-tab {
   box-sizing: border-box; height: 100%; padding: 0 var(--lui-control-px-md);
-  border-radius: calc(var(--lui-control-radius) - 2px); font-size: var(--lui-control-font-md);
+  border-radius: calc(var(--lui-control-radius) - var(--lui-gap-4)); font-size: var(--lui-control-font-md);
   line-height: var(--lui-control-line-height);
 }
-.lui-tabs-list[data-size="sm"] { height: var(--lui-control-h-sm); }
 .lui-tabs-list[data-size="sm"] .lui-tab { padding-inline: var(--lui-control-px-sm); font-size: var(--lui-control-font-sm); }
+.lui-tabs-list[data-size="lg"] .lui-tab { padding-inline: var(--lui-control-px-lg); font-size: var(--lui-control-font-lg); }
+.lui-tabs-list[data-variant="segmented"] .lui-tab-active {
+  border: 1px solid var(--lantern-border);
+  box-shadow: var(--lantern-shadow);
+}
+.lui-tabs-list[data-variant="segmented"] .lui-tab:hover:not(.lui-tab-active):not(:disabled):not([aria-disabled="true"]) {
+  color: var(--lantern-fg);
+}
+.lui-tabs-list[data-variant="segmented"] .lui-tab:disabled,
+.lui-tabs-list[data-variant="segmented"] .lui-tab[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .lui-switch-row { align-items: center; gap: var(--lui-gap-8); }
 .lui-switch { box-sizing: border-box; align-items: center; }
 .lui-switch[data-size="sm"] { min-height: var(--lui-control-h-sm); }

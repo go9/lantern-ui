@@ -71,7 +71,7 @@ defmodule LanternUI.Components.Tabs do
     doc: "segmented is pill-style; underline is text tabs."
   )
 
-  attr(:size, :string, default: "md", values: ~w(sm md), doc: "Tab control density.")
+  attr(:size, :string, default: "md", values: ~w(sm md lg), doc: "Tab control density.")
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
