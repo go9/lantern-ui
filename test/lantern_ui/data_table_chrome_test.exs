@@ -23,6 +23,19 @@ defmodule LanternUI.DataTableChromeTest do
   end
 
   defp table(assigns) do
+    assigns =
+      Map.merge(
+        %{
+          quick_filters_label: "Quick filters",
+          active_filters_label: "Active filters",
+          view_label: "View",
+          save_view_label: "Save current view",
+          load_view_label: "Load saved view",
+          saved_view_event: nil
+        },
+        assigns
+      )
+
     ~H"""
     <DataTable.data_table
       id="t"
@@ -31,7 +44,13 @@ defmodule LanternUI.DataTableChromeTest do
       path="/orders"
       search_field={:search}
       search_placeholder="Search orders…"
+      quick_filters_label={@quick_filters_label}
+      active_filters_label={@active_filters_label}
+      view_label={@view_label}
+      save_view_label={@save_view_label}
+      load_view_label={@load_view_label}
       view={@view}
+      saved_view_event={@saved_view_event}
     >
       <:stat label="Revenue" value="$12k" href="/rev" />
       <:stat label="Open" value="18" />
@@ -72,7 +91,50 @@ defmodule LanternUI.DataTableChromeTest do
     """
   end
 
-  defp base, do: %{rows: [%{id: 1, name: "Ada"}], meta: @meta, view: "table"}
+  defp table_with_saved_view_event(assigns) do
+    ~H"""
+    <DataTable.data_table
+      id="saved"
+      rows={@rows}
+      meta={@meta}
+      path="/orders"
+      saved_view_event="saved-view"
+    >
+      <:col :let={row} label="Name">{row.name}</:col>
+    </DataTable.data_table>
+    """
+  end
+
+  defp base do
+    %{
+      rows: [%{id: 1, name: "Ada"}],
+      meta: @meta,
+      view: "table",
+      quick_filters_label: "Quick filters",
+      active_filters_label: "Active filters",
+      view_label: "View",
+      save_view_label: "Save current view",
+      load_view_label: "Load saved view",
+      saved_view_event: nil
+    }
+  end
+
+  test "search-only tables do not render an empty filters and view popover" do
+    assigns = %{__changed__: nil, meta: @meta}
+
+    html =
+      (fn a ->
+         ~H"""
+         <DataTable.data_table id="search-only" rows={[]} meta={@meta} path="/orders" search_field={:name}>
+           <:col :let={row} label="Name">{row.name}</:col>
+         </DataTable.data_table>
+         """
+       end).(assigns)
+      |> rendered_to_string()
+
+    assert html =~ ~s(id="search-only-chrome")
+    refute html =~ ~s(id="search-only-filters")
+  end
 
   test "stat overview renders with collapse hook and linked/static stats" do
     html = render(&table/1, base())
@@ -167,12 +229,15 @@ defmodule LanternUI.DataTableChromeTest do
 
   defp count(h, n), do: length(String.split(h, n)) - 1
 
-  test "filters live in the settings popover with active-count badge and clear button" do
+  test "filters live in the Zag filters and view popover with active-count badge and clear button" do
     html = render(&table/1, base())
 
     # settings popover wraps the filter controls
     assert html =~ ~s(id="t-filters")
-    assert html =~ ~s(aria-label="Table settings")
+    assert html =~ ~s(aria-label="Filters &amp; view")
+    assert html =~ ~s(data-zag)
+    assert html =~ ~s(data-part="apply-filters")
+    assert html =~ ~s(data-part="reset-filters")
     assert html =~ "lui-dt-filterpanel"
     # status filter is active in @meta but channel (the declared filter) is not,
     # so no badge and no clear button
@@ -229,6 +294,65 @@ defmodule LanternUI.DataTableChromeTest do
     {settings, _} = :binary.match(html, ~s(id="t-filters"))
     assert tabs < search
     assert search < settings
+  end
+
+  test "active filters render removable chips that preserve unrelated query state" do
+    meta =
+      put_in(@meta.params["filters"], %{
+        "0" => %{"field" => "status", "value" => "pending"},
+        "1" => %{"field" => "search", "value" => "ada"}
+      })
+
+    html = render(&table/1, %{base() | meta: meta})
+
+    assert html =~ "lui-dt-chip"
+    assert html =~ "status: pending"
+    assert html =~ "Search: ada"
+    assert html =~ ~s(href="/orders?filters[0][field]=search)
+    assert html =~ "order_by"
+    assert html =~ "view=table"
+  end
+
+  test "filter indexes sort numerically when there are ten or more filters" do
+    filters =
+      Map.new(0..11, fn index ->
+        {Integer.to_string(index), %{"field" => "field_#{index}", "value" => "value_#{index}"}}
+      end)
+
+    html = render(&table/1, %{base() | meta: put_in(@meta.params["filters"], filters)})
+    positions = Enum.map(0..11, &(:binary.match(html, "field_#{&1}: value_#{&1}") |> elem(0)))
+
+    assert positions == Enum.sort(positions)
+  end
+
+  test "chrome labels can be translated by the caller" do
+    html =
+      render(&table/1, %{
+        base()
+        | quick_filters_label: "Fast filters",
+          active_filters_label: "Current filters",
+          view_label: "Display",
+          save_view_label: "Store this view",
+          load_view_label: "Open stored views",
+          saved_view_event: "saved-view"
+      })
+
+    assert html =~ ~s(aria-label="Fast filters")
+    assert html =~ ~s(aria-label="Current filters")
+    assert html =~ ">Display</span>"
+    assert html =~ ">Store this view</button>"
+    assert html =~ ">Open stored views</button>"
+  end
+
+  test "saved view hooks emit generic consumer events with current URL configuration" do
+    html = render(&table_with_saved_view_event/1, base())
+
+    assert html =~ ~s(aria-label="Filters &amp; view")
+    assert html =~ ~s(phx-click="saved-view")
+    assert html =~ ~s(phx-value-action="save")
+    assert html =~ ~s(phx-value-action="list")
+    assert html =~ "order_by"
+    assert html =~ "view"
   end
 
   test "card shell wraps everything; typed filters render text and range controls" do

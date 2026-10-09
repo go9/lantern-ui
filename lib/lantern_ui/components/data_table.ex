@@ -33,18 +33,20 @@ defmodule LanternUI.Components.DataTable do
   The built-in search box keeps every other active filter (tab presets, filter
   panel values) in the URL it patches.
 
-  Search, filter bar, tabs, and the stat overview arrive as chrome slots in a
-  follow-up; this is the core.
+  Filter chips, quick filters, and the Filters & view popover share one chrome
+  row. Filter changes are staged in the popover until Apply; search and quick
+  filter navigation remain immediate. Saved-view controls emit a generic
+  consumer event and do not prescribe persistence.
   """
   use Phoenix.Component
 
   alias LanternUI.Class
   alias LanternUI.Components.Button
-  alias LanternUI.Components.Dropdown
   alias LanternUI.Components.EmptyState
   alias LanternUI.Components.Icon
   alias LanternUI.Components.Badge
   alias LanternUI.Components.Pagination
+  alias LanternUI.Components.Popover
   alias LanternUI.Components.Select
   alias LanternUI.Components.Stat
   alias LanternUI.Components.Tabs
@@ -112,6 +114,51 @@ defmodule LanternUI.Components.DataTable do
   attr(:search_placeholder, :string,
     default: "Search…",
     doc: "Placeholder for the toolbar search input."
+  )
+
+  attr(:filters_label, :string,
+    default: "Filters & view",
+    doc: "Accessible label for the filters and view popover."
+  )
+
+  attr(:quick_filters_label, :string,
+    default: "Quick filters",
+    doc: "Accessible label for the quick filter tabs."
+  )
+
+  attr(:active_filters_label, :string,
+    default: "Active filters",
+    doc: "Accessible label for the active filter chips."
+  )
+
+  attr(:view_label, :string, default: "View", doc: "Label for the view switcher.")
+
+  attr(:save_view_label, :string,
+    default: "Save current view",
+    doc: "Label for saving the current view."
+  )
+
+  attr(:load_view_label, :string,
+    default: "Load saved view",
+    doc: "Label for opening saved views."
+  )
+
+  attr(:apply_label, :string, default: "Apply", doc: "Label for applying filter changes.")
+  attr(:reset_label, :string, default: "Reset", doc: "Label for resetting filter controls.")
+
+  attr(:clear_filters_label, :string,
+    default: "Clear filters",
+    doc: "Label for clearing active filters."
+  )
+
+  attr(:saved_view_event, :string,
+    default: nil,
+    doc: "Optional LiveView event for generic saved-view actions."
+  )
+
+  attr(:saved_views_label, :string,
+    default: "Saved views",
+    doc: "Heading for saved-view event hooks."
   )
 
   attr(:view, :string,
@@ -222,6 +269,10 @@ defmodule LanternUI.Components.DataTable do
       |> assign(:row_click?, !assigns.row_navigate && !assigns.row_patch && !!assigns.row_click)
       |> assign(:selection_count, MapSet.size(assigns.selected_ids))
       |> assign(:page_ids, Enum.map(assigns.rows, assigns.row_id || (& &1.id)))
+      |> assign(
+        :active_filters,
+        active_filters(assigns.meta, assigns.search_field, assigns.filter)
+      )
 
     assigns =
       assign(
@@ -291,8 +342,8 @@ defmodule LanternUI.Components.DataTable do
 
       <div
         :if={
-          @tab != [] || @toolbar != [] || @search_field || @filter != [] || @card != [] ||
-            @list_item != []
+          @tab != [] || @toolbar != [] || @search_field || @filter != [] || @saved_view_event ||
+            @card != [] || @list_item != []
         }
         id={"#{@id}-chrome"}
         class="lui-dt-chromerow"
@@ -301,16 +352,32 @@ defmodule LanternUI.Components.DataTable do
         data-params={Jason.encode!(chrome_base_params(@meta, @view, @card != [] || @list_item != []))}
         data-keep-filters={Jason.encode!(unowned_filters(@meta, @search_field, @filter))}
       >
-        <Tabs.tabs_list :if={@tab != []} active_tab={active_tab(@tab, @meta, @search_field)} size="sm">
-          <:tab
-            :for={{tab, i} <- Enum.with_index(@tab)}
-            name={"tab-#{i}"}
-            patch={tab_path(@path, @meta, tab[:filters] || [], @search_field)}
+        <div :if={@tab != []} class="lui-dt-quickfilters" aria-label={@quick_filters_label}>
+          <Tabs.tabs_list active_tab={active_tab(@tab, @meta, @search_field)} size="sm">
+            <:tab
+              :for={{tab, i} <- Enum.with_index(@tab)}
+              name={"tab-#{i}"}
+              patch={tab_path(@path, @meta, tab[:filters] || [], @search_field)}
+            >
+              {tab[:label]}
+              <Badge.badge :if={tab[:count]} size="sm" color="neutral">{tab[:count]}</Badge.badge>
+            </:tab>
+          </Tabs.tabs_list>
+        </div>
+
+        <div :if={@active_filters != []} class="lui-dt-chips" aria-label={@active_filters_label}>
+          <.link
+            :for={filter <- @active_filters}
+            patch={
+              remove_filter_path(@path, @meta, filter.index, @view, @card != [] || @list_item != [])
+            }
+            class="lui-dt-chip"
+            aria-label={"Remove #{filter.label} filter: #{filter.value}"}
           >
-            {tab[:label]}
-            <Badge.badge :if={tab[:count]} size="sm" color="neutral">{tab[:count]}</Badge.badge>
-          </:tab>
-        </Tabs.tabs_list>
+            <span>{filter.label}: {filter.value}</span>
+            <Icon.icon name="x-mark" />
+          </.link>
+        </div>
 
         <div class="lui-dt-spacer"></div>
 
@@ -329,44 +396,21 @@ defmodule LanternUI.Components.DataTable do
           />
         </div>
 
-        <div :if={length(@available_views) > 1} class="lui-dt-viewtoggle">
-          <.link
-            :if={"list" in @available_views}
-            patch={view_path(@path, @meta, "list")}
-            class={["lui-vt", @view == "list" && "lui-vt-active"]}
-            aria-label="List view"
-          >
-            <Icon.icon name="bars-3" class="lui-vt-icon" />
-          </.link>
-          <.link
-            :if={"table" in @available_views}
-            patch={view_path(@path, @meta, "table")}
-            class={["lui-vt", @view == "table" && "lui-vt-active"]}
-            aria-label="Table view"
-          >
-            <Icon.icon name="view-columns" class="lui-vt-icon" />
-          </.link>
-          <.link
-            :if={"cards" in @available_views}
-            patch={view_path(@path, @meta, "cards")}
-            class={["lui-vt", @view == "cards" && "lui-vt-active"]}
-            aria-label="Grid view"
-          >
-            <Icon.icon name="squares-2x2" class="lui-vt-icon" />
-          </.link>
-        </div>
-
-        <Dropdown.dropdown :if={@filter != []} id={"#{@id}-filters"} placement="bottom-end">
-          <:toggle>
-            <Button.button size="sm" variant="outline" type="button" aria-label="Table settings">
-              <Icon.icon name="adjustments-horizontal" />
-              <Badge.badge :if={active_filter_count(@meta, @filter) > 0} size="sm" color="accent">
-                {active_filter_count(@meta, @filter)}
-              </Badge.badge>
-            </Button.button>
-          </:toggle>
-          <Dropdown.dropdown_custom>
-            <div class="lui-dt-filterpanel">
+        <Popover.popover
+          :if={@filter != [] || length(@available_views) > 1 || @saved_view_event}
+          id={"#{@id}-filters"}
+          class="lui-dt-filterpanel"
+          placement="bottom-end"
+        >
+          <Button.button size="sm" variant="outline" type="button" aria-label={@filters_label}>
+            <Icon.icon name="adjustments-horizontal" />
+            {@filters_label}
+            <Badge.badge :if={active_filter_count(@meta, @filter) > 0} size="sm" color="accent">
+              {active_filter_count(@meta, @filter)}
+            </Badge.badge>
+          </Button.button>
+          <:content>
+            <div class="lui-dt-filterpanel-inner">
               <div :for={filter <- @filter} class="lui-dt-filterrow">
                 <label class="lui-dt-filterlabel">{filter[:label] || to_string(filter[:field])}</label>
                 <%= case filter[:type] || :select do %>
@@ -458,11 +502,59 @@ defmodule LanternUI.Components.DataTable do
                 class="lui-dt-clearfilters"
                 data-part="clear-filters"
               >
-                <Icon.icon name="x-mark" /> Clear filters
+                <Icon.icon name="x-mark" /> {@clear_filters_label}
               </button>
+              <div :if={length(@available_views) > 1} class="lui-dt-viewrow">
+                <span class="lui-dt-filterlabel">{@view_label}</span>
+                <div class="lui-dt-viewtoggle">
+                  <.link
+                    :if={"list" in @available_views}
+                    patch={view_path(@path, @meta, "list")}
+                    class={["lui-vt", @view == "list" && "lui-vt-active"]}
+                    aria-label="List view"
+                  ><Icon.icon name="bars-3" class="lui-vt-icon" /></.link>
+                  <.link
+                    :if={"table" in @available_views}
+                    patch={view_path(@path, @meta, "table")}
+                    class={["lui-vt", @view == "table" && "lui-vt-active"]}
+                    aria-label="Table view"
+                  ><Icon.icon name="view-columns" class="lui-vt-icon" /></.link>
+                  <.link
+                    :if={"cards" in @available_views}
+                    patch={view_path(@path, @meta, "cards")}
+                    class={["lui-vt", @view == "cards" && "lui-vt-active"]}
+                    aria-label="Grid view"
+                  ><Icon.icon name="squares-2x2" class="lui-vt-icon" /></.link>
+                </div>
+              </div>
+              <section
+                :if={@saved_view_event}
+                class="lui-dt-savedviews"
+                aria-label={@saved_views_label}
+              >
+                <h3 class="lui-dt-filterlabel">{@saved_views_label}</h3>
+                <button
+                  type="button"
+                  phx-click={@saved_view_event}
+                  phx-value-action="save"
+                  phx-value-params={Jason.encode!(saved_view_params(@meta, @view))}
+                  class="lui-dt-savedview"
+                >{@save_view_label}</button>
+                <button
+                  type="button"
+                  phx-click={@saved_view_event}
+                  phx-value-action="list"
+                  phx-value-params={Jason.encode!(saved_view_params(@meta, @view))}
+                  class="lui-dt-savedview"
+                >{@load_view_label}</button>
+              </section>
+              <footer class="lui-dt-filterfooter">
+                <button type="button" class="lui-dt-resetfilters" data-part="reset-filters">{@reset_label}</button>
+                <button type="button" class="lui-dt-applyfilters" data-part="apply-filters">{@apply_label}</button>
+              </footer>
             </div>
-          </Dropdown.dropdown_custom>
-        </Dropdown.dropdown>
+          </:content>
+        </Popover.popover>
       </div>
 
       <div :if={@selection_count > 0} class="lui-dt-bulkbar">
@@ -832,9 +924,81 @@ defmodule LanternUI.Components.DataTable do
     end
   end
 
-  defp normalize_filters(filters) when is_map(filters), do: Map.values(filters)
+  defp normalize_filters(filters) when is_map(filters) do
+    filters
+    |> Enum.sort_by(fn {key, _value} ->
+      case Integer.parse(to_string(key)) do
+        {index, ""} -> {0, index}
+        _ -> {1, to_string(key)}
+      end
+    end)
+    |> Enum.map(&elem(&1, 1))
+  end
+
   defp normalize_filters(filters) when is_list(filters), do: filters
   defp normalize_filters(_), do: []
+
+  defp active_filters(meta, search_field, filter_slots) do
+    search = search_field && to_string(search_field)
+
+    meta
+    |> base_params()
+    |> Map.get("filters", %{})
+    |> normalize_filters()
+    |> Enum.with_index()
+    |> Enum.flat_map(fn {filter, index} ->
+      field = to_string(filter["field"] || "")
+      value = filter["value"]
+
+      if is_nil(value) or value == "" do
+        []
+      else
+        slot = Enum.find(filter_slots, &(to_string(&1[:field]) == field))
+        label = if field == search, do: "Search", else: (slot && slot[:label]) || field
+        values = List.wrap(value) |> Enum.map(&option_name(slot, &1)) |> Enum.join(", ")
+        [%{index: index, label: label, value: values}]
+      end
+    end)
+  end
+
+  defp option_name(nil, value), do: to_string(value)
+
+  defp option_name(slot, value) do
+    case Enum.find(slot[:options] || [], &(to_string(opt_value(&1)) == to_string(value))) do
+      nil -> to_string(value)
+      option -> opt_label(option)
+    end
+  end
+
+  defp remove_filter_path(path, meta, index, view, toggleable?) do
+    params =
+      base_params(meta)
+      |> Map.delete("page")
+      |> then(fn params -> if toggleable?, do: Map.put(params, "view", view), else: params end)
+
+    filters =
+      params
+      |> Map.get("filters", %{})
+      |> normalize_filters()
+      |> Enum.with_index()
+      |> Enum.reject(fn {_filter, filter_index} -> filter_index == index end)
+      |> Enum.map(&elem(&1, 0))
+      |> Enum.with_index()
+      |> Map.new(fn {filter, filter_index} -> {to_string(filter_index), filter} end)
+
+    params =
+      if filters == %{},
+        do: Map.delete(params, "filters"),
+        else: Map.put(params, "filters", filters)
+
+    path <> "?" <> Plug.Conn.Query.encode(params)
+  end
+
+  defp saved_view_params(meta, view) do
+    base_params(meta)
+    |> Map.delete("page")
+    |> Map.put("view", view)
+  end
 
   # A tab is active when its filter preset matches the current filters exactly
   # (both normalized to field=>value); the presetless tab is active otherwise

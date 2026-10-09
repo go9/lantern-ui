@@ -1611,6 +1611,49 @@
 .lui-dt-chromerow { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
   padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--lantern-border); }
 .lui-dt-spacer { flex: 1; }
+.lui-dt-quickfilters { min-width: 0; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.lui-dt-quickfilters::-webkit-scrollbar { display: none; }
+.lui-dt-quickfilters .lui-tabs-list { flex-wrap: nowrap; width: max-content; }
+.lui-dt-chips { display: flex; align-items: center; gap: 0.35rem; min-width: 0;
+  max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.lui-dt-chips::-webkit-scrollbar { display: none; }
+.lui-dt-chip { display: inline-flex; align-items: center; gap: 0.3rem; flex: none;
+  max-width: 18rem; padding: 0.2rem 0.5rem; border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-full); background: var(--lantern-surface-sunken);
+  color: var(--lantern-fg); font-size: var(--lantern-text-sm); text-decoration: none; }
+.lui-dt-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lui-dt-chip svg { width: 0.8rem; height: 0.8rem; flex: none; color: var(--lantern-fg-muted); }
+.lui-dt-chip:hover { border-color: var(--lantern-ring); background: var(--lantern-surface-hover); }
+.lui-dt-chip:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: 2px; }
+.lui-dt-filterpanel { width: min(26rem, calc(100vw - 2rem)); max-height: min(38rem, calc(100dvh - 2rem));
+  box-sizing: border-box; overflow: auto; }
+.lui-dt-filterpanel-inner { display: flex; flex-direction: column; gap: 0.65rem; padding: 0.75rem; }
+.lui-dt-viewrow { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  padding-top: 0.55rem; border-top: 1px solid var(--lantern-border); }
+.lui-dt-savedviews { display: flex; flex-direction: column; gap: 0.25rem;
+  padding-top: 0.55rem; border-top: 1px solid var(--lantern-border); }
+.lui-dt-savedview { align-self: flex-start; border: 0; background: none; padding: 0.25rem 0;
+  color: var(--lantern-fg); font: inherit; cursor: pointer; }
+.lui-dt-savedview:hover { color: var(--lantern-accent); }
+.lui-dt-filterfooter { display: flex; justify-content: flex-end; gap: 0.5rem;
+  padding-top: 0.6rem; border-top: 1px solid var(--lantern-border); }
+.lui-dt-resetfilters, .lui-dt-applyfilters { min-height: var(--lantern-control-h); padding: 0.25rem 0.75rem;
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius);
+  background: var(--lantern-surface); color: var(--lantern-fg); font: inherit; cursor: pointer; }
+.lui-dt-applyfilters { border-color: var(--lantern-accent); background: var(--lantern-accent); color: var(--lantern-on-accent); }
+.lui-dt-resetfilters:focus-visible, .lui-dt-applyfilters:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: 2px; }
+@media (max-width: 40rem) {
+  .lui-dt-chromerow { flex-wrap: wrap; }
+  .lui-dt-quickfilters { order: 0; flex: 1 0 100%; }
+  .lui-dt-chips { order: 1; flex: 1 0 100%; }
+  .lui-dt-search { order: 2; flex: 1 1 0; min-width: 0; }
+  .lui-dt-chromerow > .lui-popover { order: 3; flex: none; }
+  .lui-dt-spacer { display: none; }
+  .lui-dt-chromerow [data-part="positioner"] { position: fixed !important; inset: auto 0 0 !important;
+    width: 100vw; max-width: 100vw; }
+  .lui-dt-filterpanel { position: static; inset: auto; width: 100vw; max-width: 100vw;
+    height: 90dvh; max-height: 90dvh; border-radius: var(--lantern-radius-lg) var(--lantern-radius-lg) 0 0; }
+}
 /* Standing alone the bulk bar is a rounded accent callout floating above the
    table. Inside a datatable it is a chrome row like the toolbar and the
    pagination — flush, full width, square — and an accent wash on a strip that

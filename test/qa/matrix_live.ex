@@ -143,7 +143,10 @@ defmodule LanternUI.QA.MatrixLive do
         rows: for(i <- 1..3, do: %{id: i, name: "row #{i}"}),
         meta: %{
           flop: %{},
-          params: %{},
+          params: %{
+            "filters" => %{"0" => %{"field" => "status", "value" => "open"}},
+            "order_by" => ["name"]
+          },
           current_page: 1,
           total_pages: 1,
           page_size: 10,
@@ -152,8 +155,24 @@ defmodule LanternUI.QA.MatrixLive do
       )
 
     ~H"""
-    <div style="height:240px;display:flex;flex-direction:column;width:560px">
-      <.data_table id="qa-dt" rows={@rows} meta={@meta} path="/qa" fill>
+    <div style="height:360px;display:flex;flex-direction:column;width:100%">
+      <.data_table
+        id="qa-dt"
+        rows={@rows}
+        meta={@meta}
+        path="/qa"
+        fill
+        search_field={:name}
+        saved_view_event="saved-view"
+      >
+        <:tab label="All items" count={3} />
+        <:tab label="Open" count={2} filters={[%{field: "status", value: "open"}]} />
+        <:filter
+          field={:status}
+          label="Status"
+          options={[{"Open", "open"}, {"Closed", "closed"}]}
+          searchable
+        />
         <:col :let={r} label="Name">{r.name}</:col>
         <:col :let={r} label="Action">
           <.sub :if={r.id == 3} cmp={@cmp} n={@n} />

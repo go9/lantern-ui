@@ -1922,10 +1922,24 @@ const LanternTableChrome = {
     }
     this.onChange = (e) => {
       const rich = e.target.closest('[data-part="filter-rich"]')
-      if (e.target.matches('[data-part="filter"]') || rich) this.apply((rich || e.target).dataset.field)
+      // Filter controls are drafts until Apply. Search and quick-filter links
+      // remain immediate so the toolbar stays useful without opening the panel.
+      if (
+        (e.target.matches('[data-part="filter"]') || rich) &&
+        !e.target.closest(".lui-dt-filterpanel-inner")
+      ) {
+        this.apply((rich || e.target).dataset.field)
+      }
     }
     this.onClick = (e) => {
-      if (!e.target.closest('[data-part="clear-filters"]')) return
+      const apply = e.target.closest('[data-part="apply-filters"]')
+      if (apply) {
+        this.apply("*")
+        return
+      }
+
+      const reset = e.target.closest('[data-part="reset-filters"], [data-part="clear-filters"]')
+      if (!reset) return
       // Each rich filter clears through its own control, so it can reset its
       // label and aria state; that fires a change we do not want to act on
       // once per filter, hence the suspend.
@@ -2030,6 +2044,7 @@ const LanternTableChrome = {
     clearTimeout(this.debounce)
     this.el.removeEventListener("input", this.onInput)
     this.el.removeEventListener("change", this.onChange)
+    this.el.removeEventListener("click", this.onClick)
   },
 }
 

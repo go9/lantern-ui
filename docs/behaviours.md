@@ -215,3 +215,19 @@ When printing, LanternUI hides app navigation, page actions, table filters,
 selection controls, pagination, and expand controls. Table rows return to
 natural document flow with visible overflow, a repeating table header, and rows
 kept together across page breaks where possible. No consumer setup is required.
+
+## Data table filters and saved-view hooks
+
+`data_table/1` renders quick filters, active removable filter chips, search, and
+the `Filters & view` control in one chrome row. Filters configured with
+`:filter` render in the Zag popover and are staged until `Apply`; `Reset` clears
+the panel controls, while `Clear filters` clears configured filters. Their
+labels can be supplied with `filters_label`, `apply_label`, `reset_label`, and
+`clear_filters_label`. Search and quick-filter links continue to update the URL
+immediately.
+
+The popover reuses LanternUI's searchable Zag select when `searchable` is set;
+there is no separate table combobox implementation. When `saved_view_event` is
+provided, the popover emits that LiveView event with `phx-value-action` set to
+`save` or `list` and `phx-value-params` containing the current non-page URL
+configuration. Persistence and saved-view schemas belong to the consuming app.

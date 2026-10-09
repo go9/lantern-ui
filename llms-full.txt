@@ -559,20 +559,30 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 
 The admin data table — one Flop-driven table to replace the per-app `admin_table` copies.
 
+- `active_filters_label` (:string, default "Active filters") — Accessible label for the active filter chips.
+- `apply_label` (:string, default "Apply") — Label for applying filter changes.
 - `class` (:any) — Extra classes merged onto the root element.
+- `clear_filters_label` (:string, default "Clear filters") — Label for clearing active filters.
 - `fill` (:boolean, default false) — Stretch to the parent's height (the parent must be a flex column with a definite height).
+- `filters_label` (:string, default "Filters & view") — Accessible label for the filters and view popover.
 - `flush` (:boolean, default false) — Drop the panel chrome — border, radius, shadow, raised surface — and pull the header, toolbar, cells and pagination out to the page gutter, so the table reads as the page rather than as a card sitting on it.
 - `id` (:string, required) — Stable DOM id for the table root and chrome.
 - `info_modal_id` (:string) — modal id the title's info button opens (LanternUI.open_dialog)
+- `load_view_label` (:string, default "Load saved view") — Label for opening saved views.
 - `meta` (:map, required) — Flop.Meta (or same-shaped map)
 - `page_size_options` (:list, default [10, 25, 50, 100]) — Choices for the page-size control.
 - `path` (:string, required) — base path for sort/pagination patches
+- `quick_filters_label` (:string, default "Quick filters") — Accessible label for the quick filter tabs.
+- `reset_label` (:string, default "Reset") — Label for resetting filter controls.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `row_click` (:any) — row -> `Phoenix.LiveView.JS` fn; the whole row runs the command on click or Enter (clicks on interactive children are ignored).
 - `row_id` (:any) — row -> id fn; defaults to & &1.id
 - `row_navigate` (:any) — row -> path fn; makes the whole row a `navigate` link (list and table views).
 - `row_patch` (:any) — row -> path fn; like `row_navigate` but a `patch` link.
 - `rows` (:list, required) — Current page of row structs/maps to render.
+- `save_view_label` (:string, default "Save current view") — Label for saving the current view.
+- `saved_view_event` (:string) — Optional LiveView event for generic saved-view actions.
+- `saved_views_label` (:string, default "Saved views") — Heading for saved-view event hooks.
 - `search_field` (:atom) — Flop filter field the built-in search box binds to
 - `search_op` (:string, default "ilike") — Flop op for the search filter
 - `search_placeholder` (:string, default "Search…") — Placeholder for the toolbar search input.
@@ -582,6 +592,7 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 - `target` (:any) — LiveView target for selection and bulk events.
 - `title` (:string) — Optional table heading above the toolbar.
 - `view` (:string, values: table, cards, list, default "table") — active view.
+- `view_label` (:string, default "View") — Label for the view switcher.
 - `views` (:list) — Allowed views, as strings.
 Slots:
 - `:bulk_action` — Action shown in the bulk bar when rows are selected.
