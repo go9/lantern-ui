@@ -574,15 +574,16 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 - `active_filters_label` (:string, default "Active filters") — Accessible label for the active filter chips.
 - `all_matching?` (:boolean, default false) — Whether all results matching the current query are selected.
 - `apply_label` (:string, default "Apply") — Label for applying filter changes.
+- `bordered` (:boolean, default true) — Render the table chrome inside one bordered card.
 - `class` (:any) — Extra classes merged onto the root element.
 - `clear_filters_label` (:string, default "Clear filters") — Label for clearing active filters.
 - `clear_label` (:string, default "Clear") — Bulk selection clear action label.
 - `excluded_ids` (:any, default MapSet.new([])) — MapSet of matching row ids explicitly excluded while `all_matching?` is true.
 - `expand_aria_label` (:string, default "Expand table") — Accessible label for the expand control.
-- `expand_label` (:string, default "Expand") — Text shown on the expand control.
+- `expand_label` (:string, default "Expand table") — Tooltip shown on the expand control.
 - `expandable` (:boolean, default false) — Render an Expand control and enable the Shift+E / Escape shortcuts.
 - `expanded` (:boolean, default false) — URL-owned expanded state; set from handle_params when `expand=1`.
-- `expanded_aria_label` (:string, default "Exit expanded view") — Accessible label for the control while the table is expanded.
+- `expanded_aria_label` (:string, default "Exit expand") — Accessible label for the control while the table is expanded.
 - `expanded_label` (:string, default "Exit expand") — Text shown on the control while the table is expanded.
 - `fill` (:boolean, default false) — Stretch to the parent's height (the parent must be a flex column with a definite height).
 - `filters_label` (:string, default "Filters & view") — Accessible label for the filters and view popover.
@@ -643,6 +644,7 @@ Slots:
   - `searchable` — search box in the filter's listbox
 - `:header_action` — Actions rendered in the title row (right side).
 - `:list_item` — per-row simple list rendering; enables the list view
+- `:overview` — Arbitrary collapsible overview content above the table.
 - `:row_action` — Per-row trailing actions cell; receives the row via :let.
 - `:stat` — Overview metric card above the table.
   - `label` — Stat caption under or beside the value.
@@ -984,7 +986,7 @@ A small, curated inline-SVG icon set (Heroicons outline paths, MIT).
 Renders an icon by name.
 
 - `class` (:any) — Extra classes merged onto the root element.
-- `name` (:string, required, values: adjustments-horizontal, arrow-down-tray, arrow-path, arrow-right, arrow-trending-up, arrow-up-tray, bars-3, calendar, calendar-days, chart-bar, check, check-circle, chevron-down, chevron-left, chevron-right, chevron-up, chevron-up-down, circle-stack, clock, cloud, cursor-arrow-rays, document, ellipsis-horizontal, exclamation-circle, folder, folder-open, funnel, globe-alt, inbox, information-circle, magnifying-glass, map-pin, minus, pencil-square, plus, presentation-chart-line, printer, sparkles, squares-2x2, trash, view-columns, window, x-mark) — Icon key from the curated outline set.
+- `name` (:string, required, values: adjustments-horizontal, arrow-down-tray, arrow-path, arrow-right, arrow-trending-up, arrow-up-tray, arrows-pointing-in, arrows-pointing-out, bars-3, calendar, calendar-days, chart-bar, check, check-circle, chevron-down, chevron-left, chevron-right, chevron-up, chevron-up-down, circle-stack, clock, cloud, cursor-arrow-rays, document, ellipsis-horizontal, exclamation-circle, folder, folder-open, funnel, globe-alt, inbox, information-circle, magnifying-glass, map-pin, minus, pencil-square, plus, presentation-chart-line, printer, sparkles, squares-2x2, trash, view-columns, window, x-mark) — Icon key from the curated outline set.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 
 ### LanternUI.Components.IconButton

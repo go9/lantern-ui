@@ -53,6 +53,10 @@ defmodule LanternUI.QA.ConsistencyLive do
         .lui-consistency-formrow { display:flex; align-items:flex-end; gap:12px; overflow-x:auto; padding:4px 2px; }
         .lui-consistency-formrow > .lui-field { flex:1 0 190px; min-width:170px; }
         .lui-consistency-popover-content { min-width:180px; padding:12px; }
+        .lui-consistency-overview { display:grid; grid-template-columns:minmax(0, 1fr) auto; align-items:center; gap:16px; min-height:80px; }
+        .lui-consistency-overview-chart { height:64px; position:relative; border-bottom:1px solid var(--lantern-border); background:linear-gradient(160deg, transparent 55%, var(--lantern-accent-soft) 56%); }
+        .lui-consistency-overview-stats { display:flex; gap:16px; color:var(--lantern-fg-muted); font-size:12px; }
+        @media (max-width:600px) { .lui-consistency-overview { grid-template-columns:1fr; gap:8px; } .lui-consistency-overview-stats { gap:12px; } }
         .lui-consistency-wrap-button { width:150px; height:auto; min-height:var(--lui-control-h-md); white-space:normal; line-height:1.15; }
         .lui-consistency-density { display:flex; align-items:flex-start; gap:12px; overflow-x:auto; padding:4px 2px; }
         .lui-consistency-qa .lui-dt-chromerow { flex-wrap:nowrap; }
@@ -322,6 +326,14 @@ defmodule LanternUI.QA.ConsistencyLive do
             search_placeholder="Search items"
             expandable
           >
+            <:overview>
+              <div class="lui-consistency-overview" aria-label="Overview chart and statistics">
+                <div class="lui-consistency-overview-chart" aria-hidden="true"><span></span></div>
+                <div class="lui-consistency-overview-stats">
+                  <span>24 results</span><span>Updated today</span>
+                </div>
+              </div>
+            </:overview>
             <:tab label="All" count={24} />
             <:tab label="Open" count={12} filters={[%{field: "status", value: "open"}]} />
             <:filter

@@ -216,6 +216,9 @@ if (CONSISTENCY_ONLY) {
             height,
             delta: Math.round((height - expected) * 100) / 100,
             width: Math.round(r.width * 100) / 100,
+            iconOnly: target.classList.contains("lui-dt-expand") && target.textContent.trim() === "",
+            title: target.title,
+            ariaLabel: target.getAttribute("aria-label"),
             padding: { top: css("paddingTop"), right: css("paddingRight"), bottom: css("paddingBottom"), left: css("paddingLeft") },
             fontSize: css("fontSize"),
             lineHeight: css("lineHeight"),
@@ -293,6 +296,11 @@ if (CONSISTENCY_ONLY) {
             if (Math.abs(control.expectedHeight - control.proposedHeight) > 1) row.problems.push(`${control.size} token is ${control.expectedHeight}px, expected proposed ${control.proposedHeight}px`)
           }
           if (control.clipping.clipped.length) row.problems.push(`${control.id}: clipped content/icon ${JSON.stringify(control.clipping.clipped)}`)
+          if (control.kind === "lui-dt-expand") {
+            if (Math.abs(control.width - control.height) > 1) row.problems.push(`${control.id}: expand control is not square (${control.width}×${control.height}px)`)
+            if (!control.iconOnly) row.problems.push(`${control.id}: expand control contains visible text`)
+            if (!control.title || !control.ariaLabel) row.problems.push(`${control.id}: expand control lacks tooltip or accessible name`)
+          }
         }
         for (const toolbar of row.toolbarRows) {
           if (toolbar.mixed) row.problems.push(`${toolbar.selector}: mixed control heights ${[...new Set(toolbar.heights)].join("/ ")}px`)

@@ -112,7 +112,7 @@ defmodule LanternUI.DataTableChromeTest do
           expand_label: "Expand",
           expanded_label: "Exit expand",
           expand_aria_label: "Expand table",
-          expanded_aria_label: "Exit expanded view"
+          expanded_aria_label: "Exit expand"
         },
         assigns
       )
@@ -166,6 +166,44 @@ defmodule LanternUI.DataTableChromeTest do
     refute html =~ ~s(id="search-only-filters")
   end
 
+  test "overview slot accepts arbitrary content inside the default bordered card" do
+    html =
+      render(
+        fn assigns ->
+          ~H"""
+          <DataTable.data_table id="overview" rows={[]} meta={@meta} path="/orders">
+            <:overview>
+              <section id="overview-chart">Chart and summary</section>
+            </:overview>
+            <:col :let={row} label="Name">{row.name}</:col>
+          </DataTable.data_table>
+          """
+        end,
+        %{meta: @meta}
+      )
+
+    assert html =~ ~s(class="lui-datatable")
+    refute html =~ "lui-datatable-borderless"
+    assert html =~ ~s(id="overview-chart")
+    assert html =~ ~s(aria-controls="overview-overview-body")
+    assert html =~ ~s(id="overview-overview-body")
+    assert html =~ ~s(phx-hook="LanternCollapse")
+
+    borderless =
+      render(
+        fn assigns ->
+          ~H"""
+          <DataTable.data_table id="embedded" rows={[]} meta={@meta} path="/orders" bordered={false}>
+            <:col :let={row} label="Name">{row.name}</:col>
+          </DataTable.data_table>
+          """
+        end,
+        %{meta: @meta}
+      )
+
+    assert borderless =~ "lui-datatable-borderless"
+  end
+
   test "stat overview renders with collapse hook and linked/static stats" do
     html = render(&table/1, base())
 
@@ -185,6 +223,9 @@ defmodule LanternUI.DataTableChromeTest do
 
     assert html =~ ~s(class="lui-dt-expand")
     assert html =~ ~s(aria-label="Expand table")
+    assert html =~ ~s(title="Expand")
+    [_, expand_content] = Regex.run(~r/<a[^>]*class="lui-dt-expand"[^>]*>(.*?)<\/a>/s, html)
+    refute expand_content =~ "<span"
     assert html =~ ~s(data-expandable="true")
     assert html =~ ~s(href="/orders?expand=1&amp;order_by[]=name&amp;view=cards")
 
@@ -196,7 +237,7 @@ defmodule LanternUI.DataTableChromeTest do
       })
 
     assert expanded_html =~ "lui-datatable-expanded"
-    assert expanded_html =~ ~s(aria-label="Exit expanded view")
+    assert expanded_html =~ ~s(aria-label="Exit expand")
     assert expanded_html =~ ~s(&quot;expand&quot;:&quot;1&quot;)
     [_, exit_href] = Regex.run(~r/<a href="([^"]+)"[^>]*class="lui-dt-expand"/, expanded_html)
 

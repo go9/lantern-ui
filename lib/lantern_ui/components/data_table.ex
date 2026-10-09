@@ -36,8 +36,9 @@ defmodule LanternUI.Components.DataTable do
 
   Filter chips, quick filters, and the Filters & view popover share one chrome
   row. Filter changes are staged in the popover until Apply; search and quick
-  filter navigation remain immediate. Saved-view controls emit a generic
-  consumer event and do not prescribe persistence.
+  filter navigation remain immediate. A collapsible `:overview` slot accepts
+  arbitrary content; `:stat` remains available for simple metric cards. Saved-view
+  controls emit a generic consumer event and do not prescribe persistence.
   """
   use Phoenix.Component
 
@@ -215,6 +216,12 @@ defmodule LanternUI.Components.DataTable do
         "view asks for it. Use it when the table IS the page."
   )
 
+  attr(:bordered, :boolean,
+    default: true,
+    doc:
+      "Render the table chrome inside one bordered card. Set false when embedding without a card."
+  )
+
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
 
   attr(:fill, :boolean,
@@ -235,7 +242,10 @@ defmodule LanternUI.Components.DataTable do
     doc: "URL-owned expanded state; set from handle_params when `expand=1`."
   )
 
-  attr(:expand_label, :string, default: "Expand", doc: "Text shown on the expand control.")
+  attr(:expand_label, :string,
+    default: "Expand table",
+    doc: "Tooltip shown on the expand control."
+  )
 
   attr(:expanded_label, :string,
     default: "Exit expand",
@@ -248,7 +258,7 @@ defmodule LanternUI.Components.DataTable do
   )
 
   attr(:expanded_aria_label, :string,
-    default: "Exit expanded view",
+    default: "Exit expand",
     doc: "Accessible label for the control while the table is expanded."
   )
 
@@ -276,6 +286,8 @@ defmodule LanternUI.Components.DataTable do
 
   slot(:row_action, doc: "Per-row trailing actions cell; receives the row via :let.")
   slot(:empty, doc: "Empty-state content when there are no rows.")
+
+  slot(:overview, doc: "Arbitrary collapsible overview content above the table.")
 
   slot :stat, doc: "Overview metric card above the table." do
     attr(:label, :string, doc: "Stat caption under or beside the value.")
@@ -343,6 +355,7 @@ defmodule LanternUI.Components.DataTable do
       class={
         Class.merge([
           "lui-datatable",
+          (!@bordered || @flush) && "lui-datatable-borderless",
           @fill && "lui-datatable-fill",
           @flush && "lui-datatable-flush",
           @expandable && @expanded && "lui-datatable-expanded",
@@ -355,25 +368,33 @@ defmodule LanternUI.Components.DataTable do
       {@rest}
     >
       <section
-        :if={@stat != []}
+        :if={@overview != [] || @stat != []}
         id={"#{@id}-overview"}
         class="lui-dt-overview"
         phx-hook="LanternCollapse"
       >
-        <button type="button" class="lui-dt-overview-head" data-part="collapse-toggle">
+        <button
+          type="button"
+          class="lui-dt-overview-head"
+          data-part="collapse-toggle"
+          aria-controls={"#{@id}-overview-body"}
+        >
           <span>Overview</span>
           <Icon.icon name="chevron-down" class="lui-dt-overview-chev" />
         </button>
-        <div class="lui-dt-stats" data-part="collapse-body">
-          <Stat.stat_card
-            :for={stat <- @stat}
-            label={stat[:label]}
-            value={if stat[:inner_block], do: render_slot(stat), else: stat[:value]}
-            icon={stat[:icon]}
-            subtitle={stat[:subtitle]}
-            href={stat[:href]}
-            class={stat[:class]}
-          />
+        <div id={"#{@id}-overview-body"} class="lui-dt-overview-body" data-part="collapse-body">
+          {render_slot(@overview)}
+          <div :if={@stat != []} class="lui-dt-stats">
+            <Stat.stat_card
+              :for={stat <- @stat}
+              label={stat[:label]}
+              value={if stat[:inner_block], do: render_slot(stat), else: stat[:value]}
+              icon={stat[:icon]}
+              subtitle={stat[:subtitle]}
+              href={stat[:href]}
+              class={stat[:class]}
+            />
+          </div>
         </div>
       </section>
 
@@ -443,17 +464,6 @@ defmodule LanternUI.Components.DataTable do
         <div class="lui-dt-spacer"></div>
 
         {render_slot(@toolbar)}
-
-        <.link
-          :if={@expandable}
-          patch={expand_path(@path, @meta, @expanded)}
-          class="lui-dt-expand"
-          aria-label={if @expanded, do: @expanded_aria_label, else: @expand_aria_label}
-          data-part="expand"
-        >
-          <Icon.icon name="window" />
-          <span>{if @expanded, do: @expanded_label, else: @expand_label}</span>
-        </.link>
 
         <div :if={@search_field} class="lui-dt-search">
           <Icon.icon name="magnifying-glass" />
@@ -627,6 +637,17 @@ defmodule LanternUI.Components.DataTable do
             </div>
           </:content>
         </Popover.popover>
+
+        <.link
+          :if={@expandable}
+          patch={expand_path(@path, @meta, @expanded)}
+          class="lui-dt-expand"
+          aria-label={if @expanded, do: @expanded_aria_label, else: @expand_aria_label}
+          title={if @expanded, do: @expanded_label, else: @expand_label}
+          data-part="expand"
+        >
+          <Icon.icon name={if @expanded, do: "arrows-pointing-in", else: "arrows-pointing-out"} />
+        </.link>
       </div>
 
       <div :if={@selection_count > 0} class="lui-dt-bulkbar">

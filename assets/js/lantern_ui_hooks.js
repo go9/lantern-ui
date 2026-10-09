@@ -2136,6 +2136,12 @@ const LanternCollapse = {
     const stored = localStorage.getItem(this.key())
     if (stored === "true") this.el.setAttribute("data-collapsed", "")
     if (stored === "false") this.el.removeAttribute("data-collapsed")
+    this.syncExpanded()
+  },
+
+  syncExpanded() {
+    const toggle = this.el.querySelector('[data-part="collapse-toggle"]')
+    if (toggle) toggle.setAttribute("aria-expanded", String(!this.el.hasAttribute("data-collapsed")))
   },
 
   mounted() {
@@ -2143,6 +2149,7 @@ const LanternCollapse = {
     this.onClick = (e) => {
       if (!e.target.closest('[data-part="collapse-toggle"]')) return
       const collapsed = this.el.toggleAttribute("data-collapsed")
+      this.syncExpanded()
       try {
         localStorage.setItem(this.key(), String(collapsed))
       } catch (_) {}

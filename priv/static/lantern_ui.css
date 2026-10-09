@@ -1650,17 +1650,17 @@
   background: var(--lantern-surface-raised); margin-bottom: 0.75rem; overflow: hidden; }
 .lui-dt-overview-head { display: flex; align-items: center; justify-content: space-between;
   width: 100%; padding: 0.45rem 0.8rem; background: none; border: none; cursor: pointer;
-  font-family: inherit; font-size: var(--lantern-text-sm); font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.05em; color: var(--lantern-fg-muted); }
+  font-family: inherit; font-size: var(--lantern-text-sm); font-weight: 550;
+  color: var(--lantern-fg-muted); }
 .lui-dt-overview-head:hover { background: var(--lantern-surface-sunken); }
 .lui-dt-overview-chev { transition: transform var(--lantern-duration) var(--lantern-ease); }
 .lui-dt-overview[data-collapsed] .lui-dt-overview-chev { transform: rotate(-90deg); }
-.lui-dt-overview[data-collapsed] .lui-dt-stats { display: none; }
+.lui-dt-overview[data-collapsed] .lui-dt-overview-body { display: none; }
 /* flex-wrap rather than `grid auto-fit`: with auto-fit, a row that can hold N
    columns leaves N-1 dead cells beside the final orphan (e.g. 4 stats in a
    3-column row). Flexing from the same basis keeps equal widths when they fit
    on one row, and lets the last row stretch to fill instead of gapping. */
-.lui-dt-stats { display: flex; flex-wrap: wrap;
+.lui-dt-stats { display: flex; flex-wrap: wrap; margin: -0.75rem -0.9rem;
   gap: 1px; background: var(--lantern-border); border-top: 1px solid var(--lantern-border); }
 .lui-stat-grid { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
   overflow: hidden; }
@@ -1724,18 +1724,6 @@
 .lui-dt-card:hover { background: var(--lantern-surface-hover); }
 
 /* List view: headerless index rows (name left, meta/actions right) */
-/* Neither simple index view is a panel. A bordered, shadowed card around a plain
-   list of names is the table chrome this view exists to remove, so the root sheds
-   it and the rows sit directly on the page separated by hairlines. The grid gets
-   the same treatment: its tiles carry their own borders, so a panel around them
-   is a box drawn around boxes. */
-.lui-datatable[data-view="list"],
-.lui-datatable[data-view="cards"] { border: none; border-radius: 0;
-  background: transparent; box-shadow: none; overflow: visible; }
-.lui-datatable[data-view="list"] .lui-dt-header,
-.lui-datatable[data-view="list"] .lui-dt-chromerow,
-.lui-datatable[data-view="cards"] .lui-dt-header,
-.lui-datatable[data-view="cards"] .lui-dt-chromerow { padding-inline: 0; }
 /* Breathing room under the chrome row's hairline. At padding 0 the first row of
    tiles butts its border straight into that divider, which reads as a rendering
    fault rather than a boundary. */
@@ -1782,14 +1770,16 @@
 /* ── Data table card shell ── */
 .lui-datatable { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
   background: var(--lantern-surface-raised); overflow: hidden; box-shadow: var(--lantern-shadow); }
+.lui-datatable.lui-datatable-borderless { border: 0; border-radius: 0;
+  background: transparent; box-shadow: none; overflow: visible; }
 .lui-datatable .lui-dt-header { margin-bottom: 0; padding: 0.7rem 0.9rem;
   border-bottom: 1px solid var(--lantern-border); }
 .lui-datatable .lui-dt-overview { border: none; border-radius: 0; margin-bottom: 0;
-  border-bottom: 1px solid var(--lantern-border); }
+  background: transparent; border-bottom: 1px solid var(--lantern-border); }
 .lui-dt-chromerow { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
   padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--lantern-border); }
 .lui-dt-chromerow { row-gap: 0.5rem; }
-.lui-dt-chromerow :is(button, input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select, [role="tab"], .lui-dt-chip, .lui-dt-expand) {
+.lui-dt-chromerow :is(button, input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select, [role="tab"], .lui-dt-chip) {
   box-sizing: border-box; min-height: var(--lui-control-md-h); }
 .lui-dt-chromerow :is(input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select) {
   height: var(--lui-control-md-h);
@@ -1964,7 +1954,6 @@
 .lui-datatable-expanded .lui-table-wrap,
 .lui-datatable-expanded .lui-dt-list,
 .lui-datatable-expanded .lui-dt-cards { flex: 1 1 auto; min-height: 0; overflow: auto; }
-.lui-datatable-expanded .lui-dt-expand { color: var(--lantern-accent); }
 .lui-app[data-table-expand]:not([data-table-expand-sidebar-open]) { --lui-sidebar-w: 4.75rem; }
 .lui-app[data-table-expand][data-table-expand-sidebar-open] { --lui-sidebar-w: var(--lui-sidebar-expanded-w); }
 .lui-app .lui-datatable-expanded { --lui-table-expand-top: var(--lui-appbar-h);
@@ -1974,12 +1963,14 @@
   --lui-table-expand-top: calc(var(--lui-appbar-h) + var(--lui-strip-h) + var(--lui-page-gap));
 }
 .lui-dt-expand {
-  display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;
-  min-height: 2rem; padding: 0.25rem 0.55rem; border: 1px solid var(--lantern-border);
-  border-radius: var(--lantern-radius-sm); color: var(--lantern-fg-muted);
-  text-decoration: none; white-space: nowrap; font-size: 0.75rem;
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: var(--lui-control-h-md); min-height: var(--lui-control-h-md); padding: 0;
+  border: 1px solid transparent; border-radius: var(--lui-control-radius);
+  background: transparent; color: var(--lantern-fg); text-decoration: none;
 }
-.lui-dt-expand:hover { color: var(--lantern-fg); background: var(--lantern-surface-hover); }
+.lui-dt-expand .lui-icon { width: var(--lui-control-icon-md); height: var(--lui-control-icon-md); }
+.lui-dt-expand:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
+.lui-dt-expand:focus-visible { outline: var(--lui-focus-ring-width) solid var(--lui-focus-ring-color); outline-offset: var(--lui-focus-ring-offset); }
 @media (max-width: 48rem) {
   .lui-app .lui-datatable-expanded { --lui-table-expand-top: var(--lui-appbar-h);
     --lui-table-expand-left: var(--lui-page-gutter); --lui-table-expand-right: var(--lui-page-gutter); }
@@ -1987,8 +1978,7 @@
     --lui-table-expand-top: calc(var(--lui-appbar-h) + var(--lui-strip-h) + var(--lui-page-gap));
   }
 }
-/* List/cards drop the panel and set overflow:visible so rows sit on the page.
-   In fill mode the root is a bounded flex column; clip so a tall grouped list
+/* In fill mode the root is a bounded flex column; clip list/card content so it
    cannot paint past the pinned pagination. */
 .lui-datatable-fill[data-view="list"],
 .lui-datatable-fill[data-view="cards"] {
@@ -4970,7 +4960,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-dt-chromerow .lui-dt-search { box-sizing: border-box; height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); gap: var(--lui-gap-4); }
 .lui-dt-chromerow .lui-dt-search input { font-size: var(--lui-control-font-sm); line-height: var(--lui-control-line-height); }
 .lui-dt-chromerow .lui-dt-chip { height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); }
-.lui-dt-chromerow .lui-dt-expand { box-sizing: border-box; height: var(--lui-control-h-sm); min-height: var(--lui-control-h-sm); padding: 0 var(--lui-control-px-sm); line-height: var(--lui-control-line-height); }
+.lui-dt-chromerow .lui-dt-expand { box-sizing: border-box; width: var(--lui-control-h-md); height: var(--lui-control-h-md); min-height: var(--lui-control-h-md); padding: 0; line-height: var(--lui-control-line-height); }
 .lui-dt-resetfilters, .lui-dt-applyfilters { box-sizing: border-box; min-height: var(--lui-control-h-sm); padding: 0 var(--lui-control-px-sm); border-radius: var(--lui-control-radius); font-size: var(--lui-control-font-sm); line-height: var(--lui-control-line-height); }
 .lui-dt-filtertext { box-sizing: border-box; height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); border-radius: var(--lui-control-radius); font-size: var(--lui-control-font-sm); line-height: var(--lui-control-line-height); }
 .lui-pg { box-sizing: border-box; height: var(--lui-control-h-md); min-width: var(--lui-control-h-md); font-size: var(--lui-control-font-sm); border-radius: var(--lui-control-radius); }
@@ -5052,7 +5042,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 [data-lui-control-scale="legacy"] .lui-action-bar-more-trigger { height: var(--lantern-control-h); min-width: 2rem; }
 [data-lui-control-scale="legacy"] .lui-dt-chromerow .lui-dt-search { height: var(--lantern-control-h); }
 [data-lui-control-scale="legacy"] .lui-dt-chromerow .lui-dt-chip { height: auto; padding: 0.2rem 0.5rem; }
-[data-lui-control-scale="legacy"] .lui-dt-chromerow .lui-dt-expand { height: auto; min-height: 2rem; padding: 0.25rem 0.55rem; line-height: normal; }
+[data-lui-control-scale="legacy"] .lui-dt-chromerow .lui-dt-expand { box-sizing: border-box; width: var(--lantern-control-h); height: var(--lantern-control-h); min-height: var(--lantern-control-h); padding: 0; line-height: 1; }
 [data-lui-control-scale="legacy"] .lui-pg { height: auto; min-height: 1.75rem; }
 [data-lui-control-scale="legacy"] .lui-select-native { box-sizing: border-box; height: var(--lantern-control-h); }
 [data-lui-control-scale="legacy"] .lui-autocomplete-control { box-sizing: border-box; height: var(--lantern-control-h); min-height: var(--lantern-control-h); }
@@ -5063,7 +5053,6 @@ a.lui-waterfall-lane-inner:focus-visible {
 [data-lui-control-scale="legacy"] .lui-switch[data-size="md"] .lui-switch-track { height: 1.35rem; }
 [data-lui-control-scale="legacy"] .lui-switch[data-size="lg"] .lui-switch-track { height: 1.6rem; }
 [data-lui-control-scale="legacy"] .lui-action-bar-menu .lui-menu-trigger .lui-action-bar-more-trigger { height: var(--lantern-control-h); }
-[data-lui-control-scale="legacy"] .lui-dt-chromerow .lui-dt-expand { box-sizing: content-box; }
 [data-lui-control-scale="legacy"] .lui-pg:not(.lui-pg-size) { box-sizing: content-box; }
 [data-lui-control-scale="legacy"] .lui-kbd[data-size="xs"] { height: auto; min-height: 1.15rem; padding: 0 0.25rem; font-size: 0.65rem; }
 [data-lui-control-scale="legacy"] .lui-kbd[data-size="sm"] { height: auto; min-height: 1.35rem; padding: 0 0.35rem; font-size: 0.75rem; }
