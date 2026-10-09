@@ -4,9 +4,9 @@ defmodule LanternUI.Charts do
 
   Geometry (scales, ticks, paths) is computed in Elixir by
   `LanternUI.Charts.Geometry` and rendered as SVG, so charts re-render through
-  normal LiveView assigns. The only client JS is the optional `ChartHover` hook
-  (`priv/static/lantern_ui_hooks.js`), used by `area_chart/1` for the
-  crosshair/tooltip.
+  normal LiveView assigns. Client JavaScript is limited to the optional
+  `ChartHover` hook for `area_chart/1` and `ChartInteraction` for the generic
+  time-series chart; both update only server-rendered overlay elements.
 
   ## Theming
 
@@ -642,6 +642,21 @@ defmodule LanternUI.Charts do
   attr(:comparison, :list, default: [], doc: "Optional previous-period series set.")
   attr(:annotations, :list, default: [], doc: "Optional markers keyed by x.")
 
+  attr(:select_event, :string,
+    default: nil,
+    doc: "Optional LiveView event pushed when an x value is selected."
+  )
+
+  attr(:hover_event, :string,
+    default: nil,
+    doc: "Optional debounced LiveView event pushed while hovering."
+  )
+
+  attr(:reference_lines, :list,
+    default: [],
+    doc: "Optional horizontal reference lines: %{label, value}."
+  )
+
   attr(:orientation, :atom,
     default: :vertical,
     values: [:vertical, :horizontal],
@@ -674,6 +689,9 @@ defmodule LanternUI.Charts do
       data-chart-type={@chart_type}
       data-interaction={Jason.encode!(@interaction_points)}
       data-series-label={Jason.encode!(@interaction_labels)}
+      data-series-id={if @interaction_enabled, do: Jason.encode!(@interaction_series_ids)}
+      data-select-event={@select_event}
+      data-hover-event={@hover_event}
       phx-hook="ChartInteraction"
     >
       <svg
@@ -741,6 +759,28 @@ defmodule LanternUI.Charts do
             height={bar.height}
             rx="2"
           />
+        </g>
+        <g :for={reference <- @reference_lines} class="lui-time-series-chart__reference">
+          <line
+            :if={!reference.vertical}
+            x1={@plot_left}
+            x2={@plot_right}
+            y1={reference.position}
+            y2={reference.position}
+          />
+          <line
+            :if={reference.vertical}
+            x1={reference.position}
+            x2={reference.position}
+            y1={@plot_top}
+            y2={@plot_bottom}
+          />
+          <text
+            x={if(reference.vertical, do: reference.position + 4, else: @plot_left + 4)}
+            y={if(reference.vertical, do: @plot_top + 12, else: reference.position - 4)}
+          >
+            {reference.label}: {reference.value_label}
+          </text>
         </g>
         <g :for={marker <- @markers} class={"lui-time-series-chart__annotation tone-#{marker.tone}"}>
           <line :if={!marker.horizontal} x1={marker.x} x2={marker.x} y1={@plot_top} y2={@plot_bottom} />
@@ -831,6 +871,12 @@ defmodule LanternUI.Charts do
               <td :for={value <- point.values}>{value || "—"}</td>
             </tr>
           </tbody>
+          <tfoot :if={@reference_lines != []}>
+            <tr :for={reference <- @reference_lines}>
+              <th scope="row">{reference.label}</th>
+              <td colspan={max(length(@interaction_labels), 1)}>{reference.value_label}</td>
+            </tr>
+          </tfoot>
         </table>
       </details>
       <span class="lui-time-series-chart__live" data-part="live" aria-live="polite" aria-atomic="true"></span>
@@ -1048,6 +1094,10 @@ defmodule LanternUI.Charts do
           interaction_labels: [],
           interaction_colors: [],
           interaction_points: [],
+          interaction_series_ids: [],
+          interaction_enabled:
+            not is_nil(assigns.select_event) or not is_nil(assigns.hover_event),
+          reference_lines: [],
           interaction_series_count: 0
         }
 
@@ -1070,6 +1120,7 @@ defmodule LanternUI.Charts do
     plot_bottom = assigns.height - @margin.bottom
     primary_points = Enum.flat_map(series, & &1.points)
     interaction_series = series ++ comparison
+    reference_specs = normalize_reference_lines(assigns.reference_lines, assigns.value_format)
     axis_points = if primary_points == [], do: all_points, else: primary_points
     axis_keys = axis_points |> Enum.map(& &1.key) |> Enum.uniq() |> sort_x_keys(kind)
     axis_key_set = MapSet.new(axis_keys)
@@ -1090,7 +1141,13 @@ defmodule LanternUI.Charts do
       end
     end
 
-    values = chart_domain_values(series, axis_keys, assigns.type, aligned_points)
+    values =
+      chart_domain_values(series, axis_keys, assigns.type, aligned_points) ++
+        if(assigns.type in [:bar, :stacked_bar, :grouped_bar],
+          do: Enum.map(reference_specs, & &1.value),
+          else: []
+        )
+
     ticks = Geometry.signed_nice_ticks(Enum.min(values), Enum.max(values), 5)
     ymin = hd(ticks)
     ymax = List.last(ticks)
@@ -1232,6 +1289,8 @@ defmodule LanternUI.Charts do
           }
         end),
       interaction_labels: Enum.map(interaction_series, & &1.label),
+      interaction_series_ids: interaction_value_ids(interaction_series),
+      interaction_enabled: not is_nil(assigns.select_event) or not is_nil(assigns.hover_event),
       interaction_colors:
         interaction_series
         |> Enum.with_index()
@@ -1239,6 +1298,22 @@ defmodule LanternUI.Charts do
           item.color || Enum.at(@time_series_palette, rem(index, length(@time_series_palette)))
         end),
       interaction_series_count: length(interaction_series),
+      reference_lines:
+        if(assigns.type in [:bar, :stacked_bar, :grouped_bar],
+          do:
+            Enum.map(reference_specs, fn reference ->
+              value_position =
+                if assigns.orientation == :horizontal,
+                  do: numeric_x.(reference.value),
+                  else: yf.(reference.value)
+
+              Map.merge(reference, %{
+                position: Geometry.round1(value_position),
+                vertical: assigns.orientation == :horizontal
+              })
+            end),
+          else: []
+        ),
       interaction_points:
         Enum.map(axis_keys, fn key ->
           %{
@@ -1254,9 +1329,84 @@ defmodule LanternUI.Charts do
             positions: Enum.map(interaction_positions, &Map.get(&1, key)),
             coords: Enum.map(interaction_positions, &get_in(&1, [key, :y]))
           }
+          |> maybe_add_interaction_payload(key, interaction_series, assigns)
         end)
     }
   end
+
+  defp interaction_value_ids(interaction_series) do
+    interaction_series
+    |> Enum.with_index()
+    |> Enum.reduce({[], MapSet.new()}, fn {item, index}, {ids, seen} ->
+      id = to_string(item.id)
+      candidate = if MapSet.member?(seen, id), do: "comparison:#{id}:#{index}", else: id
+      value_id = unique_interaction_id(candidate, seen, 2)
+      {ids ++ [value_id], MapSet.put(seen, value_id)}
+    end)
+    |> elem(0)
+  end
+
+  defp unique_interaction_id(candidate, seen, suffix) do
+    if MapSet.member?(seen, candidate) do
+      unique_interaction_id("#{candidate}:#{suffix}", seen, suffix + 1)
+    else
+      candidate
+    end
+  end
+
+  defp maybe_add_interaction_payload(point, key, interaction_series, assigns) do
+    if is_nil(assigns.select_event) and is_nil(assigns.hover_event) do
+      point
+    else
+      x_value =
+        Enum.find_value(interaction_series, fn item ->
+          case Enum.find(item.points, &(&1.key == key)) do
+            nil -> nil
+            item_point -> item_point.x_payload
+          end
+        end) || x_key_payload(key)
+
+      raw_values =
+        Enum.map(interaction_series, fn item ->
+          case Enum.find(item.points, &(&1.key == key)) do
+            nil -> nil
+            item_point -> item_point.y
+          end
+        end)
+
+      Map.merge(point, %{x_value: x_value, raw_values: raw_values})
+    end
+  end
+
+  defp normalize_reference_lines(lines, value_format) when is_list(lines) do
+    Enum.flat_map(lines, fn line ->
+      value = fetch_key(line, :value)
+
+      if finite_number?(value) do
+        [
+          %{
+            label: to_string(fetch_key(line, :label) || "Reference"),
+            value: value,
+            value_label: format_value(value, value_format)
+          }
+        ]
+      else
+        []
+      end
+    end)
+  end
+
+  defp normalize_reference_lines(_, _), do: []
+
+  defp x_key_payload({:time, value}) do
+    case DateTime.from_unix(value, :microsecond) do
+      {:ok, datetime} -> DateTime.to_iso8601(datetime)
+      _ -> value
+    end
+  end
+
+  defp x_key_payload({:number, value}), do: value
+  defp x_key_payload({:category, label}), do: label
 
   defp time_series_interaction_positions(
          interaction_series,
@@ -1786,6 +1936,7 @@ defmodule LanternUI.Charts do
                key: normalized_x.key,
                value: normalized_x.value,
                label: normalized_x.label,
+               x_payload: normalized_x.x_payload,
                y: y
              }
              | acc
@@ -1802,12 +1953,24 @@ defmodule LanternUI.Charts do
 
   defp normalize_x(%Date{} = date) do
     value = (Date.to_gregorian_days(date) - 719_528) * 86_400_000_000
-    %{key: {:time, value}, value: value, label: Date.to_iso8601(date)}
+
+    %{
+      key: {:time, value},
+      value: value,
+      label: Date.to_iso8601(date),
+      x_payload: Date.to_iso8601(date)
+    }
   end
 
   defp normalize_x(%DateTime{} = datetime) do
     value = DateTime.to_unix(datetime, :microsecond)
-    %{key: {:time, value}, value: value, label: Calendar.strftime(datetime, "%b %-d")}
+
+    %{
+      key: {:time, value},
+      value: value,
+      label: Calendar.strftime(datetime, "%b %-d"),
+      x_payload: DateTime.to_iso8601(datetime)
+    }
   end
 
   defp normalize_x(%NaiveDateTime{} = datetime) do
@@ -1817,18 +1980,23 @@ defmodule LanternUI.Charts do
   end
 
   defp normalize_x(value) when is_number(value) and abs(value) <= 1.0e15 do
-    %{key: {:number, value}, value: value, label: number_label(value)}
+    %{key: {:number, value}, value: value, label: number_label(value), x_payload: value}
   end
 
   defp normalize_x(value) when is_binary(value) do
     case Date.from_iso8601(value) do
       {:ok, date} ->
-        normalize_x(date)
+        normalized = normalize_x(date)
+        %{normalized | x_payload: value}
 
       _ ->
         case DateTime.from_iso8601(value) do
-          {:ok, datetime, _} -> normalize_x(datetime)
-          _ -> %{key: {:category, value}, value: value, label: value}
+          {:ok, datetime, _} ->
+            normalized = normalize_x(datetime)
+            %{normalized | x_payload: value}
+
+          _ ->
+            %{key: {:category, value}, value: value, label: value, x_payload: value}
         end
     end
   end

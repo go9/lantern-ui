@@ -41,6 +41,7 @@ defmodule LanternUI.QA.ChartsLive do
        type: type,
        theme: theme,
        series: series,
+       selected_point: nil,
        settings_payload: %{},
        page_title: "Time series QA"
      ), layout: false}
@@ -48,6 +49,10 @@ defmodule LanternUI.QA.ChartsLive do
 
   def handle_event("chart_settings", %{"chart_settings" => payload}, socket) do
     {:noreply, assign(socket, settings_payload: payload)}
+  end
+
+  def handle_event("chart_select", payload, socket) do
+    {:noreply, assign(socket, selected_point: payload)}
   end
 
   def render(assigns) do
@@ -105,10 +110,19 @@ defmodule LanternUI.QA.ChartsLive do
             }
           ]}
           annotations={[%{id: :midpoint, x: "Jun", label: "Mid period", tone: :warning}]}
+          reference_lines={
+            if @type in [:bar, :stacked_bar, :grouped_bar],
+              do: [%{label: "Average", value: 22}],
+              else: []
+          }
+          select_event="chart_select"
           glyphs
         />
         <:footer_note>Illustrative data · updated daily</:footer_note>
       </.chart_card>
+      <p :if={@selected_point} id="qa-chart-selection">
+        Selected {@selected_point["x"]}: {Jason.encode!(@selected_point["values"])}
+      </p>
       <output id="qa-chart-settings-payload" data-payload={Jason.encode!(@settings_payload)} hidden></output>
     </main>
     """

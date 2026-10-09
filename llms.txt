@@ -657,6 +657,19 @@ From `docs/recipes.md` (Generic time-series chart):
 From `docs/recipes.md` (Generic time-series chart):
 
 ```heex
+<.time_series_chart
+  id="monthly-sales"
+  type={:bar}
+  select_event="select_sales_month"
+  hover_event="hover_sales_month"
+  reference_lines={[%{label: "Average", value: @average_sales}]}
+  series={@sales_series}
+/>
+```
+
+From `docs/recipes.md` (Generic time-series chart):
+
+```heex
 <.chart_card id="portfolio-card" title="Portfolio value" value={@total_value}>
   <:tabs><.button size="sm" variant="ghost">Value</.button></:tabs>
   <:range_controls>
