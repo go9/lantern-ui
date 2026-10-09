@@ -4202,10 +4202,40 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-time-series-chart__table-details th, .lui-time-series-chart__table-details td { padding: 5px 8px; border-bottom: 1px solid var(--lantern-border); text-align: right; }
 .lui-time-series-chart__table-details th:first-child { text-align: left; }
 .lui-time-series-chart__live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.lui-time-series-chart__gain-positive .lui-time-series-chart__area { fill: var(--lantern-success); }
+.lui-time-series-chart__gain-negative .lui-time-series-chart__area { fill: var(--lantern-danger); }
 @media (prefers-reduced-motion: reduce) { .lui-time-series-chart, .lui-time-series-chart * { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 @media print {
   .lui-time-series-chart__legend { break-inside: avoid; }
   .lui-time-series-chart__interaction, .lui-time-series-chart__focus-point, .lui-time-series-chart__live { display: none !important; }
   .lui-time-series-chart__table-details > summary { display: none; }
   .lui-time-series-chart__table-details > table { display: table; }
+}
+
+/* ── Time-series card and native settings ─────────────────────────────────── */
+.lui-chart-card { min-width: 0; overflow: visible; padding: var(--lantern-space-lg); background: var(--lantern-surface); color: var(--lantern-fg); border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius); box-shadow: var(--lantern-shadow); }
+.lui-chart-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--lantern-space-md); }
+.lui-chart-card__heading { min-width: 0; }
+.lui-chart-card__title { margin: 0; color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); font-weight: 500; }
+.lui-chart-card__value { margin-top: var(--lantern-space-xs); color: var(--lantern-fg); font-size: 1.5rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.lui-chart-card__actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--lantern-space-sm); flex-wrap: wrap; }
+.lui-chart-card__tabs, .lui-chart-card__ranges, .lui-chart-card__settings { display: flex; align-items: center; gap: var(--lantern-space-xs); }
+.lui-chart-card__content { min-width: 0; margin-top: var(--lantern-space-md); }
+.lui-chart-card__footer { margin-top: var(--lantern-space-sm); color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
+.lui-chart-settings__trigger { display: inline-flex; min-height: 2rem; align-items: center; justify-content: center; padding: 0 var(--lantern-space-sm); border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm); background: var(--lantern-surface); color: var(--lantern-fg); font: inherit; cursor: pointer; }
+.lui-chart-settings__trigger:hover { background: var(--lantern-surface-hover); }
+.lui-chart-settings__trigger:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: 2px; }
+.lui-chart-settings__panel { width: min(23rem, calc(100vw - 2 * var(--lantern-space-lg))); max-height: min(80vh, 36rem); overflow: auto; padding: var(--lantern-space-lg); }
+.lui-chart-settings { display: grid; gap: var(--lantern-space-md); color: var(--lantern-fg); }
+.lui-chart-settings__field { display: grid; gap: var(--lantern-space-xs); color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
+.lui-chart-settings__field select { width: 100%; min-height: 2.25rem; padding: 0 var(--lantern-space-sm); border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm); background: var(--lantern-surface); color: var(--lantern-fg); font: inherit; }
+.lui-chart-settings__series, .lui-chart-settings__toggles { display: grid; gap: var(--lantern-space-sm); margin: 0; padding: var(--lantern-space-md); border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm); }
+.lui-chart-settings__series legend, .lui-chart-settings__toggles legend { padding: 0 var(--lantern-space-xs); color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
+.lui-chart-settings__check { display: flex; align-items: center; gap: var(--lantern-space-sm); min-height: 1.5rem; color: var(--lantern-fg); font-size: var(--lantern-text-sm); cursor: pointer; }
+.lui-chart-settings__check input { accent-color: var(--lantern-primary); }
+@media (max-width: 40rem) {
+  .lui-chart-card { padding: var(--lantern-space-md); }
+  .lui-chart-card__header { display: grid; }
+  .lui-chart-card__actions { justify-content: flex-start; }
+  .lui-chart-card__value { font-size: 1.25rem; }
 }

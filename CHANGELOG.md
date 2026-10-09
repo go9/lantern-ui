@@ -8,6 +8,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 - Additive `time_series_chart/1` with signed line, area, points, stacked area, vertical/horizontal bar, grouped bar, comparison, and annotation geometry.
+- `chart_card/1` composition slots and `chart_settings/1` native LiveView controls over the existing Popover.
+- Shared-x chart interaction with a clamped tooltip, keyboard Home/End/Escape, an accessible data-table caption, and keyboard-only live announcements.
 
 ## [0.10.1] - 2026-10-08
 

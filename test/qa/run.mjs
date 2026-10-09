@@ -219,6 +219,10 @@ if (CHARTS_ONLY) {
             }
             row.touchTooltipEdges = touchMeasurements.map(({ left, right, crosshairX, label }) => ({ left, right, crosshairX, label }))
             if (Math.abs(touchMeasurements[0].left - touchMeasurements[1].left) < 20) row.problems.push(`touch tooltip did not follow the selected point between chart edges (${touchMeasurements[0].left} -> ${touchMeasurements[1].left})`)
+            await page.$eval("#qa-time-series svg", (svg) => {
+              svg.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerType: "touch" }))
+              svg.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true, relatedTarget: document.body }))
+            })
 
             await page.evaluate(() => document.querySelector('[data-chart-point="0"]')?.focus())
             await page.keyboard.press("Home")
@@ -233,6 +237,34 @@ if (CHARTS_ONLY) {
             await page.keyboard.press("Escape")
             const keyboardDismissed = await page.$eval('#qa-time-series [data-part="crosshair"]', (el) => !!el.closest("g[hidden]"))
             if (!keyboardDismissed) row.problems.push("Escape did not dismiss the keyboard tooltip")
+
+            await page.click("#qa-chart-settings button")
+            await page.waitForSelector('#qa-chart-settings [data-part="content"]:not([hidden])', { timeout: 4000 })
+            await page.$eval("#qa-chart-settings form select", (select) => {
+              select.value = "area"
+              select.dispatchEvent(new Event("input", { bubbles: true }))
+            })
+            await page.waitForFunction(() => {
+              const node = document.querySelector("#qa-chart-settings-payload")
+              return JSON.parse(node?.dataset.payload || "{}").type === "area"
+            }, { timeout: 4000 })
+            await page.click('#qa-chart-settings input[type="checkbox"][name="chart_settings[compare_previous]"]')
+            await page.waitForFunction(() => {
+              const payload = JSON.parse(document.querySelector("#qa-chart-settings-payload")?.dataset.payload || "{}")
+              const value = payload.compare_previous
+              return Array.isArray(value) ? value.at(-1) === "true" : value === "true"
+            }, { timeout: 4000 })
+            const formPayload = await page.$eval("#qa-chart-settings-payload", (el) => JSON.parse(el.dataset.payload))
+            if (!formPayload.visible_series?.length) row.problems.push("settings event omitted the selected visible series")
+            if (!formPayload.curve) row.problems.push("settings event omitted the selected curve")
+            const cardDir = `${SHOTS}/charts`
+            await page.screenshot({ path: `${cardDir}/${vw}-${theme}-card-settings.png`, fullPage: true })
+            await page.keyboard.press("Escape")
+            await page.waitForFunction(() => document.querySelector('#qa-chart-settings [data-part="content"]')?.hidden, { timeout: 2000 })
+            await page.evaluate(() => document.querySelector('#qa-time-series [data-chart-point="0"]')?.focus())
+            await page.keyboard.press("Escape")
+            await page.waitForFunction(() => document.querySelector('#qa-time-series [data-part="crosshair"]')?.closest("g[hidden]"), { timeout: 2000 })
+            await page.mouse.move(0, 0)
           }
           if (errors.length) row.problems.push(`pageerror: ${errors[0]}`)
           const dir = `${SHOTS}/charts`

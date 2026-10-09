@@ -36,8 +36,18 @@ defmodule LanternUI.QA.ChartsLive do
       }
     ]
 
-    {:ok, assign(socket, type: type, theme: theme, series: series, page_title: "Time series QA"),
-     layout: false}
+    {:ok,
+     assign(socket,
+       type: type,
+       theme: theme,
+       series: series,
+       settings_payload: %{},
+       page_title: "Time series QA"
+     ), layout: false}
+  end
+
+  def handle_event("chart_settings", %{"chart_settings" => payload}, socket) do
+    {:noreply, assign(socket, settings_payload: payload)}
   end
 
   def render(assigns) do
@@ -59,7 +69,22 @@ defmodule LanternUI.QA.ChartsLive do
         <h1>Generic chart · {@type}</h1>
         <span>Positive and negative values · April–August</span>
       </header>
-      <section>
+      <.chart_card id="qa-chart-card" title="Portfolio value" value="$8,420">
+        <:tabs><.button size="sm" variant="ghost">Value</.button></:tabs>
+        <:range_controls>
+          <.button size="sm" variant="outline">1M</.button>
+          <.button size="sm" variant="outline">1Y</.button>
+        </:range_controls>
+        <:settings_trigger>
+          <.chart_settings
+            id="qa-chart-settings"
+            series={@series}
+            type={Atom.to_string(@type)}
+            curve="monotone"
+            glyphs
+            phx-change="chart_settings"
+          />
+        </:settings_trigger>
         <.time_series_chart
           id="qa-time-series"
           aria_label={"Portfolio performance, #{@type} chart"}
@@ -82,7 +107,9 @@ defmodule LanternUI.QA.ChartsLive do
           annotations={[%{id: :midpoint, x: "Jun", label: "Mid period", tone: :warning}]}
           glyphs
         />
-      </section>
+        <:footer_note>Illustrative data · updated daily</:footer_note>
+      </.chart_card>
+      <output id="qa-chart-settings-payload" data-payload={Jason.encode!(@settings_payload)} hidden></output>
     </main>
     """
   end

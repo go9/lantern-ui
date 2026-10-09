@@ -838,6 +838,195 @@ defmodule LanternUI.Charts do
     """
   end
 
+  @doc """
+  A token-styled chart card for a title, value, caller controls, and chart content.
+
+  Supply `:settings_trigger` with a `chart_settings/1` component when settings are
+  needed. Tabs, ranges, settings, and footer content remain caller-owned.
+  """
+  attr(:id, :string, required: true, doc: "Stable chart card id.")
+  attr(:title, :string, required: true, doc: "Card heading.")
+  attr(:value, :any, default: nil, doc: "Optional headline value displayed beside the title.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the card.")
+  slot(:tabs, doc: "Optional chart tabs or other header controls.")
+  slot(:range_controls, doc: "Consumer-owned date-range controls.")
+  slot(:settings_trigger, doc: "A chart_settings/1 control, usually a popover trigger and panel.")
+  slot(:footer_note, doc: "Optional explanatory note below the chart.")
+  slot(:inner_block, required: true, doc: "Chart content.")
+
+  def chart_card(assigns) do
+    ~H"""
+    <section
+      id={@id}
+      class={Class.merge(["lui-chart-card", @class])}
+      aria-labelledby={"#{@id}-title"}
+    >
+      <header class="lui-chart-card__header">
+        <div class="lui-chart-card__heading">
+          <h2 id={"#{@id}-title"} class="lui-chart-card__title">{@title}</h2>
+          <div :if={@value != nil} class="lui-chart-card__value">{@value}</div>
+        </div>
+        <div class="lui-chart-card__actions">
+          <div :if={@tabs != []} class="lui-chart-card__tabs">{render_slot(@tabs)}</div>
+          <div :if={@range_controls != []} class="lui-chart-card__ranges">
+            {render_slot(@range_controls)}
+          </div>
+          <div :if={@settings_trigger != []} class="lui-chart-card__settings">
+            {render_slot(@settings_trigger)}
+          </div>
+        </div>
+      </header>
+      <div class="lui-chart-card__content">{render_slot(@inner_block)}</div>
+      <footer :if={@footer_note != []} class="lui-chart-card__footer">
+        {render_slot(@footer_note)}
+      </footer>
+    </section>
+    """
+  end
+
+  @doc """
+  Native server-owned chart controls inside LanternUI's existing Popover.
+
+  Every control emits one `phx-change` event with a nested `chart_settings`
+  params map. The parent owns parsing, validation, and the resulting chart assigns.
+  """
+  attr(:id, :string, required: true, doc: "Stable settings popover id.")
+  attr(:rest, :global, include: ~w(phx-change phx-target), doc: "Native form event attributes.")
+  attr(:series, :list, default: [], doc: "Series to expose as visibility checkboxes.")
+
+  attr(:allowed_types, :list,
+    default: ~w(line area stacked_area bar stacked_bar grouped_bar points),
+    doc: "Chart type values offered by the native select."
+  )
+
+  attr(:type, :string, default: "line", doc: "Current chart type.")
+  attr(:curve, :string, default: "linear", doc: "Current line or area curve.")
+  attr(:visible_series, :list, default: nil, doc: "Visible ids; nil checks every series.")
+  attr(:grid, :boolean, default: true, doc: "Whether horizontal grid lines are enabled.")
+  attr(:axes, :boolean, default: true, doc: "Whether chart axes are enabled.")
+  attr(:glyphs, :boolean, default: false, doc: "Whether point glyphs are enabled.")
+  attr(:cumulative, :boolean, default: false, doc: "Whether the consumer uses cumulative values.")
+
+  attr(:compare_previous, :boolean,
+    default: false,
+    doc: "Whether the consumer includes previous-period comparison data."
+  )
+
+  slot(:trigger, doc: "Optional custom popover trigger; defaults to a labeled Settings button.")
+
+  def chart_settings(assigns) do
+    types =
+      Enum.filter(
+        assigns.allowed_types,
+        &(&1 in ~w(line area stacked_area bar stacked_bar grouped_bar points))
+      )
+
+    visible_ids = assigns.visible_series || Enum.map(assigns.series, &to_string(&1.id))
+
+    assigns =
+      assigns
+      |> assign(:allowed_types, if(types == [], do: ["line"], else: types))
+      |> assign(:visible_ids, MapSet.new(Enum.map(visible_ids, &to_string/1)))
+
+    ~H"""
+    <LanternUI.Components.Popover.popover id={@id} class="lui-chart-settings__panel">
+      <LanternUI.Components.Button.button
+        :if={@trigger == []}
+        variant="outline"
+        size="sm"
+        class="lui-chart-settings__trigger"
+        label="Chart settings"
+      >
+        Settings
+      </LanternUI.Components.Button.button>
+      {render_slot(@trigger)}
+      <:content>
+        <form
+          id={"#{@id}-form"}
+          class="lui-chart-settings"
+          {@rest}
+        >
+          <label class="lui-chart-settings__field">
+            <span>Chart type</span>
+            <select name="chart_settings[type]" value={@type}>
+              <option :for={type <- @allowed_types} value={type} selected={@type == type}>
+                {chart_type_label(type)}
+              </option>
+            </select>
+          </label>
+          <label class="lui-chart-settings__field">
+            <span>Curve</span>
+            <select name="chart_settings[curve]" value={@curve}>
+              <option
+                :for={curve <- ~w(linear monotone step cardinal)}
+                value={curve}
+                selected={@curve == curve}
+              >
+                {String.capitalize(curve)}
+              </option>
+            </select>
+          </label>
+          <fieldset class="lui-chart-settings__series">
+            <legend>Visible series</legend>
+            <label :for={series <- @series} class="lui-chart-settings__check">
+              <input
+                type="checkbox"
+                name="chart_settings[visible_series][]"
+                value={to_string(series.id)}
+                checked={MapSet.member?(@visible_ids, to_string(series.id))}
+              />
+              <span>{series.label}</span>
+            </label>
+          </fieldset>
+          <fieldset class="lui-chart-settings__toggles">
+            <legend>Display</legend>
+            <label class="lui-chart-settings__check">
+              <input type="hidden" name="chart_settings[grid]" value="false" />
+              <input type="checkbox" name="chart_settings[grid]" value="true" checked={@grid} />
+              <span>Grid lines</span>
+            </label>
+            <label class="lui-chart-settings__check">
+              <input type="hidden" name="chart_settings[axes]" value="false" />
+              <input type="checkbox" name="chart_settings[axes]" value="true" checked={@axes} />
+              <span>Axes and labels</span>
+            </label>
+            <label class="lui-chart-settings__check">
+              <input type="hidden" name="chart_settings[glyphs]" value="false" />
+              <input type="checkbox" name="chart_settings[glyphs]" value="true" checked={@glyphs} />
+              <span>Point glyphs</span>
+            </label>
+            <label class="lui-chart-settings__check">
+              <input type="hidden" name="chart_settings[cumulative]" value="false" />
+              <input
+                type="checkbox"
+                name="chart_settings[cumulative]"
+                value="true"
+                checked={@cumulative}
+              />
+              <span>Cumulative values</span>
+            </label>
+            <label class="lui-chart-settings__check">
+              <input type="hidden" name="chart_settings[compare_previous]" value="false" />
+              <input
+                type="checkbox"
+                name="chart_settings[compare_previous]"
+                value="true"
+                checked={@compare_previous}
+              />
+              <span>Compare previous period</span>
+            </label>
+          </fieldset>
+        </form>
+      </:content>
+    </LanternUI.Components.Popover.popover>
+    """
+  end
+
+  defp chart_type_label("stacked_area"), do: "Stacked area"
+  defp chart_type_label("stacked_bar"), do: "Stacked bar"
+  defp chart_type_label("grouped_bar"), do: "Grouped bar"
+  defp chart_type_label(type), do: String.capitalize(type)
+
   defp time_series_geometry(assigns) do
     series = normalize_time_series(assigns.series)
     visible = assigns.visible_series && MapSet.new(assigns.visible_series)

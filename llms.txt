@@ -39,6 +39,8 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `area_chart/1` — A time-series area + line chart.
 - `bar_chart/1` — A categorical bar chart.
+- `chart_card/1` — A token-styled chart card for a title, value, caller controls, and chart content.
+- `chart_settings/1` — Native server-owned chart controls inside LanternUI's existing Popover.
 - `line_chart/1` — A multi-series time-series line chart with a legend and a shared crosshair tooltip.
 - `sparkline/1` — A compact trend sparkline (no axes).
 - `time_series_chart/1` — Render a generic series-first chart using server-computed SVG geometry.
@@ -650,6 +652,45 @@ From `docs/recipes.md` (Generic time-series chart):
   curve={@curve}
   visible_series={@visible_series}
 />
+```
+
+From `docs/recipes.md` (Generic time-series chart):
+
+```heex
+<.chart_card id="portfolio-card" title="Portfolio value" value={@total_value}>
+  <:tabs><.button size="sm" variant="ghost">Value</.button></:tabs>
+  <:range_controls>
+    <.button size="sm" variant="outline" phx-click="range" phx-value-range="6M">6M</.button>
+    <.button size="sm" variant="outline" phx-click="range" phx-value-range="1Y">1Y</.button>
+  </:range_controls>
+  <:settings_trigger>
+    <.chart_settings
+      id="portfolio-settings"
+      series={@series}
+      type={Atom.to_string(@chart_type)}
+      curve={Atom.to_string(@curve)}
+      visible_series={@visible_series}
+      grid={@grid}
+      axes={@axes}
+      glyphs={@glyphs}
+      cumulative={@cumulative}
+      compare_previous={@compare_previous}
+      phx-change="chart_settings"
+    />
+  </:settings_trigger>
+  <.time_series_chart
+    id="portfolio-chart"
+    aria_label="Portfolio value over time"
+    series={@series}
+    type={@chart_type}
+    curve={@curve}
+    visible_series={@visible_series}
+    grid={@grid}
+    axes={@axes}
+    glyphs={@glyphs}
+  />
+  <:footer_note>Values update daily.</:footer_note>
+</.chart_card>
 ```
 
 From `docs/recipes.md` (Block 3: flat index table with filter chips):
