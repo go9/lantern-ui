@@ -202,6 +202,33 @@ defmodule LanternUI.Components.DataTable do
         "pagination stay pinned. Without it the table is its natural content height."
   )
 
+  attr(:expandable, :boolean,
+    default: false,
+    doc: "Render an Expand control and enable the Shift+E / Escape shortcuts."
+  )
+
+  attr(:expanded, :boolean,
+    default: false,
+    doc: "URL-owned expanded state; set from handle_params when `expand=1`."
+  )
+
+  attr(:expand_label, :string, default: "Expand", doc: "Text shown on the expand control.")
+
+  attr(:expanded_label, :string,
+    default: "Exit expand",
+    doc: "Text shown on the control while the table is expanded."
+  )
+
+  attr(:expand_aria_label, :string,
+    default: "Expand table",
+    doc: "Accessible label for the expand control."
+  )
+
+  attr(:expanded_aria_label, :string,
+    default: "Exit expanded view",
+    doc: "Accessible label for the control while the table is expanded."
+  )
+
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
 
   slot(:header_action, doc: "Actions rendered in the title row (right side).")
@@ -291,10 +318,12 @@ defmodule LanternUI.Components.DataTable do
           "lui-datatable",
           @fill && "lui-datatable-fill",
           @flush && "lui-datatable-flush",
+          @expandable && @expanded && "lui-datatable-expanded",
           @class
         ])
       }
       data-view={@view}
+      data-expanded={if @expandable && @expanded, do: "true"}
       phx-hook={@row_click? && "LanternRowClick"}
       {@rest}
     >
@@ -343,13 +372,18 @@ defmodule LanternUI.Components.DataTable do
       <div
         :if={
           @tab != [] || @toolbar != [] || @search_field || @filter != [] || @saved_view_event ||
-            @card != [] || @list_item != []
+            @card != [] || @list_item != [] || @expandable
         }
         id={"#{@id}-chrome"}
         class="lui-dt-chromerow"
         phx-hook="LanternTableChrome"
         data-path={@path}
-        data-params={Jason.encode!(chrome_base_params(@meta, @view, @card != [] || @list_item != []))}
+        data-table-id={@id}
+        data-expandable={if @expandable, do: "true"}
+        data-expanded={if @expandable && @expanded, do: "true"}
+        data-params={
+          Jason.encode!(chrome_base_params(@meta, @view, @card != [] || @list_item != [], @expanded))
+        }
         data-keep-filters={Jason.encode!(unowned_filters(@meta, @search_field, @filter))}
       >
         <div :if={@tab != []} class="lui-dt-quickfilters" aria-label={@quick_filters_label}>
@@ -382,6 +416,17 @@ defmodule LanternUI.Components.DataTable do
         <div class="lui-dt-spacer"></div>
 
         {render_slot(@toolbar)}
+
+        <.link
+          :if={@expandable}
+          patch={expand_path(@path, @meta, @expanded)}
+          class="lui-dt-expand"
+          aria-label={if @expanded, do: @expanded_aria_label, else: @expand_aria_label}
+          data-part="expand"
+        >
+          <Icon.icon name="window" />
+          <span>{if @expanded, do: @expanded_label, else: @expand_label}</span>
+        </.link>
 
         <div :if={@search_field} class="lui-dt-search">
           <Icon.icon name="magnifying-glass" />
@@ -866,9 +911,11 @@ defmodule LanternUI.Components.DataTable do
   # The chrome hook rebuilds the URL from these on every search/filter/clear, so
   # anything omitted here is silently dropped. `view` lives outside Flop's params,
   # which is why searching used to bounce you back to the default view.
-  defp chrome_base_params(meta, view, toggleable?) do
+  defp chrome_base_params(meta, view, toggleable?, expanded?) do
     base = base_params(meta) |> Map.drop(["filters", "page"])
-    if toggleable?, do: Map.put(base, "view", view), else: base
+
+    base = if toggleable?, do: Map.put(base, "view", view), else: base
+    if expanded?, do: Map.put(base, "expand", "1"), else: base
   end
 
   # The chrome row rebuilds `filters` from the controls it can see, so anything
@@ -1061,6 +1108,12 @@ defmodule LanternUI.Components.DataTable do
   defp view_path(path, meta, view) do
     params = base_params(meta) |> Map.put("view", view)
     path <> "?" <> Plug.Conn.Query.encode(params)
+  end
+
+  defp expand_path(path, meta, expanded?) do
+    params = base_params(meta)
+    params = if expanded?, do: Map.delete(params, "expand"), else: Map.put(params, "expand", "1")
+    if map_size(params) == 0, do: path, else: path <> "?" <> Plug.Conn.Query.encode(params)
   end
 
   defp filter_values(meta, field) do

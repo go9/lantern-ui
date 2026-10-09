@@ -231,3 +231,35 @@ there is no separate table combobox implementation. When `saved_view_event` is
 provided, the popover emits that LiveView event with `phx-value-action` set to
 `save` or `list` and `phx-value-params` containing the current non-page URL
 configuration. Persistence and saved-view schemas belong to the consuming app.
+
+## Expandable data tables
+
+`data_table/1` can opt into a URL-owned expanded mode with `expandable`. The
+host derives `expanded` from `handle_params/3` and accepts the `expand=1` query
+parameter. The Expand control and Shift+E / Escape shortcuts patch that query
+while preserving the current route parameters. Shift+E is ignored while focus
+is in an input, select, textarea, textbox, or contenteditable region.
+
+Inside `app_shell/1`, expanded tables temporarily collapse the sidebar to a
+76px rail. This transient collapse does not read or write the saved sidebar
+preference; leaving expanded mode restores the prior state. A manual sidebar
+toggle remains an explicit preference change.
+
+```heex
+<.data_table
+  id="records"
+  rows={@rows}
+  meta={@meta}
+  path={~p"/records"}
+  expandable
+  expanded={@expanded?}
+>
+  <:col :let={row} label="Name">{row.name}</:col>
+</.data_table>
+```
+
+```elixir
+def handle_params(params, _uri, socket) do
+  {:noreply, assign(socket, :expanded?, params["expand"] == "1")}
+end
+```

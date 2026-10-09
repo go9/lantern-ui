@@ -20,6 +20,7 @@ defmodule LanternUI.QA.MatrixLive do
        n: 0,
        shell_empty?: params["shell_empty"] == "1",
        shell_dismissed_notice?: params["shell_dismissed_notice"] == "1",
+       expand?: params["expand"] == "1",
        dismissed: false
      )
      |> assign(:page_title, "QA matrix"), layout: false}
@@ -30,6 +31,9 @@ defmodule LanternUI.QA.MatrixLive do
 
   def handle_event("bump", _, socket), do: {:noreply, update(socket, :n, &(&1 + 1))}
   def handle_event(_, _, socket), do: {:noreply, socket}
+
+  def handle_params(params, _uri, socket),
+    do: {:noreply, assign(socket, :expand?, params["expand"] == "1")}
 
   def render(assigns) do
     ~H"""
@@ -52,6 +56,7 @@ defmodule LanternUI.QA.MatrixLive do
         dismissed={@dismissed}
         shell_empty?={@shell_empty?}
         shell_dismissed_notice?={@shell_dismissed_notice?}
+        expand?={@expand?}
       />
     </div>
     """
@@ -69,6 +74,7 @@ defmodule LanternUI.QA.MatrixLive do
   attr(:dismissed, :boolean, default: false)
   attr(:shell_empty?, :boolean, default: false)
   attr(:shell_dismissed_notice?, :boolean, default: false)
+  attr(:expand?, :boolean, default: false)
 
   defp ctx(%{name: "plain"} = assigns) do
     ~H"""
@@ -325,6 +331,8 @@ defmodule LanternUI.QA.MatrixLive do
             path="/qa"
             show_checkboxes={false}
             search_field={:name}
+            expandable
+            expanded={@expand?}
           >
             <:col :let={row} label="Record">{row.name}</:col>
             <:col :let={row} label="Status">Ready {row.id}</:col>

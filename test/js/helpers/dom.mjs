@@ -62,13 +62,23 @@ export function mountHook(hook, html, { rootId } = {}) {
   })
   const { window } = dom
   patchLayoutGaps(window)
+  if (!window.matchMedia) {
+    window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} })
+  }
 
   // The hooks reference bare `document` / `window`, which resolve against
   // globalThis at call time. Node's test runner gives each file its own
   // process, so installing them globally is safe within a file.
-  const previous = { document: globalThis.document, window: globalThis.window }
+  const previous = {
+    document: globalThis.document,
+    window: globalThis.window,
+    localStorage: globalThis.localStorage,
+    CustomEvent: globalThis.CustomEvent,
+  }
   globalThis.document = window.document
   globalThis.window = window
+  if (typeof globalThis.localStorage === "undefined") globalThis.localStorage = window.localStorage
+  globalThis.CustomEvent = window.CustomEvent
 
   const el = rootId ? window.document.getElementById(rootId) : window.document.body.firstElementChild
   if (!el) throw new Error("mountHook: fixture has no root element")
@@ -101,6 +111,8 @@ export function mountHook(hook, html, { rootId } = {}) {
       context.destroyed?.()
       globalThis.document = previous.document
       globalThis.window = previous.window
+      globalThis.localStorage = previous.localStorage
+      globalThis.CustomEvent = previous.CustomEvent
       window.close()
     },
   }

@@ -1745,6 +1745,44 @@
   min-height: 0;
   overflow-y: auto;
 }
+
+/* Opt-in table focus mode: the URL owns this state, so patching away from
+   `expand=1` restores the table to its normal place without client storage. */
+.lui-datatable-expanded {
+  position: fixed;
+  z-index: calc(var(--lantern-z-sticky, 10) + 1);
+  inset: var(--lui-table-expand-top, 0px) 0 0 var(--lui-table-expand-left, 0px);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--lantern-surface);
+  border-radius: 0;
+}
+.lui-datatable-expanded .lui-table-wrap,
+.lui-datatable-expanded .lui-dt-list,
+.lui-datatable-expanded .lui-dt-cards { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.lui-datatable-expanded .lui-dt-expand { color: var(--lantern-accent); }
+.lui-app[data-table-expand] { --lui-sidebar-w: 4.75rem; }
+.lui-app .lui-datatable-expanded { --lui-table-expand-top: var(--lui-appbar-h); --lui-table-expand-left: var(--lui-sidebar-w); }
+.lui-app .lui-page-shell-strip .lui-datatable-expanded {
+  --lui-table-expand-top: calc(var(--lui-appbar-h) + 2.375rem);
+}
+.lui-dt-expand {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;
+  min-height: 2rem; padding: 0.25rem 0.55rem; border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-sm); color: var(--lantern-fg-muted);
+  text-decoration: none; white-space: nowrap; font-size: 0.75rem;
+}
+.lui-dt-expand:hover { color: var(--lantern-fg); background: var(--lantern-surface-hover); }
+@media (max-width: 48rem) {
+  .lui-app .lui-datatable-expanded { --lui-table-expand-top: var(--lui-appbar-h); --lui-table-expand-left: 0px; }
+  .lui-app .lui-page-shell-strip .lui-datatable-expanded {
+    --lui-table-expand-top: calc(var(--lui-appbar-h) + 2.375rem);
+  }
+}
 /* List/cards drop the panel and set overflow:visible so rows sit on the page.
    In fill mode the root is a bounded flex column; clip so a tall grouped list
    cannot paint past the pinned pagination. */
@@ -5191,7 +5229,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-101030" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-2023" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5208,7 +5246,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-101062" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-2055" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5225,7 +5263,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-101094" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-2087" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5242,7 +5280,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-101126" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-2119" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

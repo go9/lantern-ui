@@ -563,6 +563,12 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 - `apply_label` (:string, default "Apply") — Label for applying filter changes.
 - `class` (:any) — Extra classes merged onto the root element.
 - `clear_filters_label` (:string, default "Clear filters") — Label for clearing active filters.
+- `expand_aria_label` (:string, default "Expand table") — Accessible label for the expand control.
+- `expand_label` (:string, default "Expand") — Text shown on the expand control.
+- `expandable` (:boolean, default false) — Render an Expand control and enable the Shift+E / Escape shortcuts.
+- `expanded` (:boolean, default false) — URL-owned expanded state; set from handle_params when `expand=1`.
+- `expanded_aria_label` (:string, default "Exit expanded view") — Accessible label for the control while the table is expanded.
+- `expanded_label` (:string, default "Exit expand") — Text shown on the control while the table is expanded.
 - `fill` (:boolean, default false) — Stretch to the parent's height (the parent must be a flex column with a definite height).
 - `filters_label` (:string, default "Filters & view") — Accessible label for the filters and view popover.
 - `flush` (:boolean, default false) — Drop the panel chrome — border, radius, shadow, raised surface — and pull the header, toolbar, cells and pagination out to the page gutter, so the table reads as the page rather than as a card sitting on it.

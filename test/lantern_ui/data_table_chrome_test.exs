@@ -105,6 +105,36 @@ defmodule LanternUI.DataTableChromeTest do
     """
   end
 
+  defp expandable_table(assigns) do
+    assigns =
+      Map.merge(
+        %{
+          expand_label: "Expand",
+          expanded_label: "Exit expand",
+          expand_aria_label: "Expand table",
+          expanded_aria_label: "Exit expanded view"
+        },
+        assigns
+      )
+
+    ~H"""
+    <DataTable.data_table
+      id="t"
+      rows={@rows}
+      meta={@meta}
+      path="/orders"
+      expandable
+      expanded={@expanded}
+      expand_label={@expand_label}
+      expanded_label={@expanded_label}
+      expand_aria_label={@expand_aria_label}
+      expanded_aria_label={@expanded_aria_label}
+    >
+      <:col :let={r} label="Name">{r.name}</:col>
+    </DataTable.data_table>
+    """
+  end
+
   defp base do
     %{
       rows: [%{id: 1, name: "Ada"}],
@@ -145,6 +175,56 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ "$12k"
     assert html =~ ~s(href="/rev")
     assert html =~ "lui-dt-stat-static"
+  end
+
+  test "expand control preserves current query params and reflects URL-owned state" do
+    meta = %{params: %{"order_by" => ["name"], "view" => "cards"}}
+
+    html =
+      render(&expandable_table/1, %{rows: [%{id: 1, name: "Ada"}], meta: meta, expanded: false})
+
+    assert html =~ ~s(class="lui-dt-expand")
+    assert html =~ ~s(aria-label="Expand table")
+    assert html =~ ~s(data-expandable="true")
+    assert html =~ ~s(href="/orders?expand=1&amp;order_by[]=name&amp;view=cards")
+
+    expanded_html =
+      render(&expandable_table/1, %{
+        rows: [%{id: 1, name: "Ada"}],
+        meta: Map.put(meta, :params, Map.put(meta.params, "expand", "1")),
+        expanded: true
+      })
+
+    assert expanded_html =~ "lui-datatable-expanded"
+    assert expanded_html =~ ~s(aria-label="Exit expanded view")
+    assert expanded_html =~ ~s(&quot;expand&quot;:&quot;1&quot;)
+    [_, exit_href] = Regex.run(~r/<a href="([^"]+)"[^>]*class="lui-dt-expand"/, expanded_html)
+
+    exit_query =
+      exit_href
+      |> String.replace("&amp;", "&")
+      |> URI.parse()
+      |> Map.fetch!(:query)
+      |> URI.decode_query()
+
+    refute Map.has_key?(exit_query, "expand")
+    assert exit_query["view"] == "cards"
+  end
+
+  test "expand control text and accessible labels can be translated" do
+    html =
+      render(&expandable_table/1, %{
+        rows: [],
+        meta: @meta,
+        expanded: true,
+        expand_label: "Agrandir",
+        expanded_label: "Quitter le plein écran",
+        expand_aria_label: "Agrandir le tableau",
+        expanded_aria_label: "Quitter le tableau agrandi"
+      })
+
+    assert html =~ ~s(aria-label="Quitter le tableau agrandi")
+    assert html =~ "Quitter le plein écran"
   end
 
   test "tabs render with counts; preset matching current filters is active" do
