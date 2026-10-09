@@ -251,6 +251,10 @@ defmodule LanternUI.ChartsTest do
 
       assert html =~ ~s(id="generic")
       assert html =~ ~s(aria-label="Portfolio value")
+      assert html =~ ~s(phx-hook="ChartInteraction")
+      assert html =~ "View chart data"
+      assert html =~ "<caption>Portfolio value data table</caption>"
+      assert html =~ ~s(aria-live="polite")
       assert html =~ "Collection"
       assert html =~ "Inventory"
       assert html =~ ~s(class="lui-time-series-chart__zero")
@@ -462,6 +466,34 @@ defmodule LanternUI.ChartsTest do
       assert html =~ " >\n        5\n" or html =~ ">\n        5\n"
     end
 
+    test "stacked area and bar interaction markers use their visible stack coordinates" do
+      series = [
+        %{id: "a", label: "A", points: [%{x: "Apr", y: 10}]},
+        %{id: "b", label: "B", points: [%{x: "Apr", y: 20}]}
+      ]
+
+      for type <- [:stacked_area, :stacked_bar] do
+        html =
+          render_component(&LanternUI.Charts.time_series_chart/1,
+            id: "stacked-hover-#{type}",
+            type: type,
+            series: series
+          )
+
+        [encoded] =
+          html
+          |> Floki.parse_fragment!()
+          |> Floki.attribute("#stacked-hover-#{type}", "data-interaction")
+
+        [point] = Jason.decode!(encoded)
+        [first, second] = point["positions"]
+
+        assert first["x"] == second["x"]
+        assert first["y"] != second["y"]
+        assert second["y"] < first["y"]
+      end
+    end
+
     test "single-series area splits its fill at interpolated and explicit zero crossings" do
       for {id, values} <- [{"interpolated", [-3, 3]}, {"explicit", [-3, 0, 3]}] do
         points =
@@ -533,6 +565,8 @@ defmodule LanternUI.ChartsTest do
       assert html =~ "lui-time-series-chart__annotation"
       assert html =~ "Launch"
       assert html =~ "tone-warning"
+      assert html =~ "Current: 2"
+      assert html =~ "Previous: 1"
     end
 
     test "comparison-only x keys do not extend the primary axis" do

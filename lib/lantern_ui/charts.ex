@@ -668,11 +668,18 @@ defmodule LanternUI.Charts do
     assigns = assign(assigns, time_series_geometry(assigns))
 
     ~H"""
-    <div id={@id} class={Class.merge(["lui-time-series-chart", @class])} data-chart-type={@chart_type}>
+    <div
+      id={@id}
+      class={Class.merge(["lui-time-series-chart", @class])}
+      data-chart-type={@chart_type}
+      data-interaction={Jason.encode!(@interaction_points)}
+      data-series-label={Jason.encode!(@interaction_labels)}
+      phx-hook="ChartInteraction"
+    >
       <svg
         :if={@has_data}
         viewBox={"0 0 #{@vb_w} #{@height}"}
-        role="img"
+        role="group"
         aria-label={@aria_label}
         class="lui-time-series-chart__svg"
       >
@@ -745,6 +752,61 @@ defmodule LanternUI.Charts do
             {marker.label}
           </text>
         </g>
+        <g class="lui-time-series-chart__interaction" aria-hidden="true" hidden>
+          <line
+            data-part="crosshair"
+            x1={@plot_left}
+            x2={@plot_left}
+            y1={@plot_top}
+            y2={@plot_bottom}
+          />
+          <circle
+            :for={{_label, index} <- Enum.with_index(@interaction_labels)}
+            data-part="series-point"
+            data-series-index={index}
+            style={"--lui-series-color:#{Enum.at(@interaction_colors, index)}"}
+          />
+          <g
+            data-part="tooltip"
+            data-base-x={@plot_left + 8}
+            data-base-y={@plot_top + 8}
+            data-plot-left={@plot_left + 4}
+            data-plot-right={@plot_right - 4}
+            data-plot-top={@plot_top + 4}
+            data-plot-bottom={@plot_bottom - 4}
+            data-tooltip-width="196"
+            data-tooltip-height={28 + 17 * @interaction_series_count}
+          >
+            <rect
+              x={@plot_left + 8}
+              y={@plot_top + 8}
+              width="196"
+              height={28 + 17 * @interaction_series_count}
+              rx="6"
+            />
+            <text data-part="tooltip-date" x={@plot_left + 18} y={@plot_top + 26}></text>
+            <text
+              :for={{_label, index} <- Enum.with_index(@interaction_labels)}
+              data-part="tooltip-row"
+              data-series-index={index}
+              x={@plot_left + 18}
+              y={@plot_top + 44 + 17 * index}
+            >
+            </text>
+          </g>
+        </g>
+        <circle
+          :for={{point, index} <- Enum.with_index(@interaction_points)}
+          class="lui-time-series-chart__focus-point"
+          data-chart-point={index}
+          id={"#{@id}-point-#{index}"}
+          cx={point.x}
+          cy={Enum.find(point.coords, &(!is_nil(&1))) || @plot_bottom}
+          r="8"
+          tabindex={if(index == 0, do: "0", else: "-1")}
+          aria-label={interaction_aria_label(point, @interaction_labels)}
+          role="button"
+        />
       </svg>
       <div :if={!@has_data} class="lui-time-series-chart__empty">{@empty_message}</div>
       <div :if={@legend != []} class="lui-time-series-chart__legend" aria-label="Series">
@@ -752,6 +814,26 @@ defmodule LanternUI.Charts do
           <i style={"--lui-series-color:#{item.color}"} aria-hidden="true"></i>{item.label}
         </span>
       </div>
+      <details :if={@has_data} class="lui-time-series-chart__table-details">
+        <summary>View chart data</summary>
+        <table>
+          <caption>{@aria_label} data table</caption>
+          <thead>
+            <tr>
+              <th scope="col">Date / category</th><th :for={label <- @interaction_labels} scope="col">
+                {label}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr :for={point <- @interaction_points}>
+              <th scope="row">{point.label}</th>
+              <td :for={value <- point.values}>{value || "—"}</td>
+            </tr>
+          </tbody>
+        </table>
+      </details>
+      <span class="lui-time-series-chart__live" data-part="live" aria-live="polite" aria-atomic="true"></span>
     </div>
     """
   end
@@ -766,7 +848,15 @@ defmodule LanternUI.Charts do
 
     case {all_points, x_domain_kind(all_points)} do
       {[], _} ->
-        %{has_data: false, chart_type: assigns.type, legend: []}
+        %{
+          has_data: false,
+          chart_type: assigns.type,
+          legend: [],
+          interaction_labels: [],
+          interaction_colors: [],
+          interaction_points: [],
+          interaction_series_count: 0
+        }
 
       {_, nil} ->
         kinds = all_points |> Enum.map(fn point -> point.key |> elem(0) end) |> Enum.uniq()
@@ -786,6 +876,7 @@ defmodule LanternUI.Charts do
     plot_top = 18
     plot_bottom = assigns.height - @margin.bottom
     primary_points = Enum.flat_map(series, & &1.points)
+    interaction_series = series ++ comparison
     axis_points = if primary_points == [], do: all_points, else: primary_points
     axis_keys = axis_points |> Enum.map(& &1.key) |> Enum.uniq() |> sort_x_keys(kind)
     axis_key_set = MapSet.new(axis_keys)
@@ -818,6 +909,20 @@ defmodule LanternUI.Charts do
       if assigns.curve in [:linear, :monotone, :step, :cardinal], do: assigns.curve, else: :linear
 
     x_ticks = time_series_x_ticks(axis_keys, kind, xf)
+
+    interaction_positions =
+      time_series_interaction_positions(
+        interaction_series,
+        length(series),
+        axis_keys,
+        x_positions,
+        assigns,
+        {plot_left, plot_right},
+        {plot_top, plot_bottom},
+        xf,
+        yf,
+        numeric_x
+      )
 
     {paths, grid_x, zero_x, x_ticks, y_ticks, grid_y, zero_y} =
       if assigns.orientation == :horizontal and assigns.type in [:bar, :stacked_bar, :grouped_bar] do
@@ -932,8 +1037,138 @@ defmodule LanternUI.Charts do
             label: s.label,
             color: s.color || Enum.at(@time_series_palette, rem(i, length(@time_series_palette)))
           }
+        end),
+      interaction_labels: Enum.map(interaction_series, & &1.label),
+      interaction_colors:
+        interaction_series
+        |> Enum.with_index()
+        |> Enum.map(fn {item, index} ->
+          item.color || Enum.at(@time_series_palette, rem(index, length(@time_series_palette)))
+        end),
+      interaction_series_count: length(interaction_series),
+      interaction_points:
+        Enum.map(axis_keys, fn key ->
+          %{
+            x: Geometry.round1(xf.(key)),
+            label: x_key_label(key, kind),
+            values:
+              Enum.map(interaction_series, fn item ->
+                case Enum.find(item.points, &(&1.key == key)) do
+                  nil -> nil
+                  point -> format_value(point.y, assigns.value_format)
+                end
+              end),
+            positions: Enum.map(interaction_positions, &Map.get(&1, key)),
+            coords: Enum.map(interaction_positions, &get_in(&1, [key, :y]))
+          }
         end)
     }
+  end
+
+  defp time_series_interaction_positions(
+         interaction_series,
+         primary_count,
+         axis_keys,
+         x_positions,
+         assigns,
+         {plot_left, plot_right},
+         {plot_top, plot_bottom},
+         xf,
+         yf,
+         numeric_x
+       ) do
+    count = max(length(axis_keys), 1)
+    vertical_band = (plot_right - plot_left) / count
+    horizontal_band = (plot_bottom - plot_top) / count
+    stacked? = assigns.type in [:stacked_area, :stacked_bar]
+    initial = {Map.new(axis_keys, &{&1, 0}), Map.new(axis_keys, &{&1, 0})}
+
+    {positions, _stack} =
+      Enum.with_index(interaction_series)
+      |> Enum.map_reduce(initial, fn {item, series_index}, {positive, negative} ->
+        values = Map.new(item.points, &{&1.key, &1.y})
+
+        {item_positions, positive, negative} =
+          Enum.reduce(axis_keys, {%{}, positive, negative}, fn key, {result, pos, neg} ->
+            case Map.fetch(values, key) do
+              :error ->
+                {Map.put(result, key, nil), pos, neg}
+
+              {:ok, value} ->
+                primary_stack? = stacked? and series_index < primary_count
+
+                {point_x, point_y, pos, neg} =
+                  cond do
+                    primary_stack? and assigns.type == :stacked_area ->
+                      if value >= 0 do
+                        base = Map.fetch!(pos, key)
+                        next = base + value
+                        {xf.(key), yf.(next), Map.put(pos, key, next), neg}
+                      else
+                        base = Map.fetch!(neg, key)
+                        next = base + value
+                        {xf.(key), yf.(next), pos, Map.put(neg, key, next)}
+                      end
+
+                    primary_stack? and assigns.orientation == :horizontal ->
+                      {base, next, pos, neg} =
+                        if value >= 0 do
+                          base = Map.fetch!(pos, key)
+                          next = base + value
+                          {base, next, Map.put(pos, key, next), neg}
+                        else
+                          base = Map.fetch!(neg, key)
+                          next = base + value
+                          {base, next, pos, Map.put(neg, key, next)}
+                        end
+
+                      {numeric_x.((base + next) / 2),
+                       plot_top + (Map.fetch!(x_positions, key) + 0.5) * horizontal_band, pos,
+                       neg}
+
+                    primary_stack? ->
+                      {base, next, pos, neg} =
+                        if value >= 0 do
+                          base = Map.fetch!(pos, key)
+                          next = base + value
+                          {base, next, Map.put(pos, key, next), neg}
+                        else
+                          base = Map.fetch!(neg, key)
+                          next = base + value
+                          {base, next, pos, Map.put(neg, key, next)}
+                        end
+
+                      {plot_left + (Map.fetch!(x_positions, key) + 0.5) * vertical_band,
+                       yf.((base + next) / 2), pos, neg}
+
+                    assigns.type in [:bar, :grouped_bar] and
+                        assigns.orientation == :horizontal ->
+                      {numeric_x.(value),
+                       plot_top + (Map.fetch!(x_positions, key) + 0.5) * horizontal_band, pos,
+                       neg}
+
+                    true ->
+                      {xf.(key), yf.(value), pos, neg}
+                  end
+
+                position = %{x: Geometry.round1(point_x), y: Geometry.round1(point_y)}
+                {Map.put(result, key, position), pos, neg}
+            end
+          end)
+
+        {item_positions, {positive, negative}}
+      end)
+
+    positions
+  end
+
+  defp interaction_aria_label(point, labels) do
+    values =
+      point.values
+      |> Enum.zip(labels)
+      |> Enum.map_join(", ", fn {value, label} -> "#{label}: #{value || "no data"}" end)
+
+    "#{point.label}. #{values}"
   end
 
   defp chart_domain_values(series, axis_keys, type, points)

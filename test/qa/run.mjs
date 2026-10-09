@@ -127,7 +127,7 @@ if (CHARTS_ONLY) {
     for (const theme of ["light", "dark"]) {
       for (const type of types) {
         const page = await browser.newPage()
-        await page.setViewport({ width: vw, height: vw < 600 ? 844 : 900 })
+        await page.setViewport({ width: vw, height: vw < 600 ? 844 : 900, isMobile: vw < 600, hasTouch: vw < 600 })
         const errors = []
         page.on("pageerror", (error) => errors.push(error.message))
         const row = { vw, theme, type, problems: [] }
@@ -142,10 +142,102 @@ if (CHARTS_ONLY) {
             return { width: rect.width, height: rect.height }
           })
           if (!box.width || !box.height) row.problems.push("chart SVG has no visible dimensions")
+          if (type === "line") {
+            const initialHidden = await page.$eval('#qa-time-series .lui-time-series-chart__interaction', (overlay) => overlay.hasAttribute("hidden") && getComputedStyle(overlay).display === "none")
+            if (!initialHidden) row.problems.push("chart hover overlay is visible before the first interaction")
+            const chartShots = `${SHOTS}/charts`
+            await page.screenshot({ path: `${chartShots}/${vw}-${theme}-line.png`, fullPage: true })
+            await page.evaluate(() => document.querySelector('[data-chart-point="0"]')?.focus())
+            await page.keyboard.press("ArrowRight")
+            const keyboard = await page.$eval('#qa-time-series [data-part="live"]', (el) => el.textContent)
+            if (!keyboard || !keyboard.includes(": ")) row.problems.push("keyboard point focus did not announce series values")
+            const chartInfo = await page.$eval("#qa-time-series svg", (svg) => {
+              const rect = svg.getBoundingClientRect()
+              return {
+                rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
+                viewBox: { width: svg.viewBox.baseVal.width, height: svg.viewBox.baseVal.height },
+                points: JSON.parse(svg.parentElement.dataset.interaction),
+                tooltip: (() => {
+                  const node = svg.querySelector('[data-part="tooltip"]')
+                  return Object.fromEntries(["plotLeft", "plotRight", "plotTop", "plotBottom"].map((key) => [key, Number(node.dataset[key])]))
+                })(),
+              }
+            })
+            const shotDir = `${SHOTS}/charts`
+            const pointClient = (point) => ({
+              x: chartInfo.rect.left + point.x / chartInfo.viewBox.width * chartInfo.rect.width,
+              y: chartInfo.rect.top + (point.positions.find((position) => position)?.y || 80) / chartInfo.viewBox.height * chartInfo.rect.height,
+            })
+            const verifyTooltip = async (label) => {
+              await page.waitForFunction((expected) => {
+                const crosshair = document.querySelector('#qa-time-series [data-part="crosshair"]')
+                const tooltip = document.querySelector('#qa-time-series [data-part="tooltip-date"]')
+                return crosshair && !crosshair.closest("g[hidden]") && tooltip?.textContent === expected
+              }, { timeout: 2000 }, label)
+              const measured = await page.$eval("#qa-time-series svg", (svg) => {
+                const rect = svg.getBoundingClientRect()
+                const scale = rect.width / svg.viewBox.baseVal.width
+                const tooltip = svg.querySelector('[data-part="tooltip"]')
+                const tip = tooltip.querySelector("rect").getBoundingClientRect()
+                const crosshair = svg.querySelector('[data-part="crosshair"]').getBoundingClientRect()
+                return {
+                  left: tip.left, right: tip.right,
+                  plotLeft: rect.left + Number(tooltip.dataset.plotLeft) * scale,
+                  plotRight: rect.left + Number(tooltip.dataset.plotRight) * scale,
+                  crosshairX: crosshair.left,
+                  visible: !svg.querySelector('[data-part="crosshair"]').closest("g[hidden]") && getComputedStyle(svg.querySelector('[data-part="crosshair"]').closest("g")).display !== "none",
+                  label: tooltip.querySelector('[data-part="tooltip-date"]').textContent,
+                }
+              })
+              if (!measured.visible || measured.label !== label) row.problems.push(`${label}: interaction overlay did not select its point (visible=${measured.visible}, label=${JSON.stringify(measured.label)})`)
+              if (measured.left < measured.plotLeft - 1 || measured.right > measured.plotRight + 1) row.problems.push(`${label}: tooltip escapes the plot edges`)
+              return measured
+            }
+            const firstPoint = chartInfo.points[0]
+            const lastPoint = chartInfo.points.at(-1)
+            const firstClient = pointClient(firstPoint)
+            const lastClient = pointClient(lastPoint)
+            await page.mouse.move(firstClient.x, firstClient.y)
+            await sleep(80)
+            const mouseFirst = await verifyTooltip(firstPoint.label)
+            await page.screenshot({ path: `${shotDir}/${vw}-${theme}-mouse-first.png`, fullPage: true })
+            await page.screenshot({ path: `${shotDir}/${vw}-${theme}-interaction.png`, fullPage: true })
+            await page.mouse.move(lastClient.x, lastClient.y)
+            await sleep(80)
+            const mouseLast = await verifyTooltip(lastPoint.label)
+            if (Math.abs(mouseFirst.crosshairX - mouseLast.crosshairX) < 20 || Math.abs(mouseFirst.left - mouseLast.left) < 20) row.problems.push("mouse tooltip did not follow the crosshair between chart edges")
+            await page.screenshot({ path: `${shotDir}/${vw}-${theme}-mouse-last.png`, fullPage: true })
+
+            const touchMeasurements = []
+            for (const [name, point, client] of [["touch-first", firstPoint, firstClient], ["touch-last", lastPoint, lastClient]]) {
+              await page.$eval("#qa-time-series svg", (svg, at) => {
+                svg.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerType: "touch", clientX: at.x, clientY: at.y }))
+              }, client)
+              await sleep(80)
+              touchMeasurements.push(await verifyTooltip(point.label))
+              await page.screenshot({ path: `${shotDir}/${vw}-${theme}-${name}.png`, fullPage: true })
+            }
+            row.touchTooltipEdges = touchMeasurements.map(({ left, right, crosshairX, label }) => ({ left, right, crosshairX, label }))
+            if (Math.abs(touchMeasurements[0].left - touchMeasurements[1].left) < 20) row.problems.push(`touch tooltip did not follow the selected point between chart edges (${touchMeasurements[0].left} -> ${touchMeasurements[1].left})`)
+
+            await page.evaluate(() => document.querySelector('[data-chart-point="0"]')?.focus())
+            await page.keyboard.press("Home")
+            await sleep(30)
+            const keyboardFirst = await verifyTooltip(firstPoint.label)
+            await page.screenshot({ path: `${shotDir}/${vw}-${theme}-keyboard-first.png`, fullPage: true })
+            await page.keyboard.press("End")
+            await sleep(30)
+            const keyboardLast = await verifyTooltip(lastPoint.label)
+            if (Math.abs(keyboardFirst.left - keyboardLast.left) < 20) row.problems.push("keyboard tooltip did not follow the selected point between chart edges")
+            await page.screenshot({ path: `${shotDir}/${vw}-${theme}-keyboard-last.png`, fullPage: true })
+            await page.keyboard.press("Escape")
+            const keyboardDismissed = await page.$eval('#qa-time-series [data-part="crosshair"]', (el) => !!el.closest("g[hidden]"))
+            if (!keyboardDismissed) row.problems.push("Escape did not dismiss the keyboard tooltip")
+          }
           if (errors.length) row.problems.push(`pageerror: ${errors[0]}`)
           const dir = `${SHOTS}/charts`
           fs.mkdirSync(dir, { recursive: true })
-          await page.screenshot({ path: `${dir}/${vw}-${theme}-${type}.png`, fullPage: true })
+          if (type !== "line") await page.screenshot({ path: `${dir}/${vw}-${theme}-${type}.png`, fullPage: true })
         } catch (error) {
           row.problems.push(`error: ${error.message.split("\n")[0]}`)
         }

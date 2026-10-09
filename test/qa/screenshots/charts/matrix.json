@@ -4,6 +4,20 @@
   "theme": "light",
   "type": "line",
   "problems": [],
+  "touchTooltipEdges": [
+   {
+    "left": 355.20001220703125,
+    "right": 668.7999877929688,
+    "crosshairX": 336,
+    "label": "Apr"
+   },
+   {
+    "left": 822.4000244140625,
+    "right": 1136,
+    "crosshairX": 1155.199951171875,
+    "label": "Aug"
+   }
+  ],
   "status": "ok"
  },
  {
@@ -53,6 +67,20 @@
   "theme": "dark",
   "type": "line",
   "problems": [],
+  "touchTooltipEdges": [
+   {
+    "left": 355.20001220703125,
+    "right": 668.7999877929688,
+    "crosshairX": 336,
+    "label": "Apr"
+   },
+   {
+    "left": 822.4000244140625,
+    "right": 1136,
+    "crosshairX": 1155.199951171875,
+    "label": "Aug"
+   }
+  ],
   "status": "ok"
  },
  {
@@ -102,6 +130,20 @@
   "theme": "light",
   "type": "line",
   "problems": [],
+  "touchTooltipEdges": [
+   {
+    "left": 81.66160583496094,
+    "right": 179.0928497314453,
+    "crosshairX": 75.69642639160156,
+    "label": "Apr"
+   },
+   {
+    "left": 226.8142852783203,
+    "right": 324.24554443359375,
+    "crosshairX": 330.2107238769531,
+    "label": "Aug"
+   }
+  ],
   "status": "ok"
  },
  {
@@ -151,6 +193,20 @@
   "theme": "dark",
   "type": "line",
   "problems": [],
+  "touchTooltipEdges": [
+   {
+    "left": 81.66160583496094,
+    "right": 179.0928497314453,
+    "crosshairX": 75.69642639160156,
+    "label": "Apr"
+   },
+   {
+    "left": 226.8142852783203,
+    "right": 324.24554443359375,
+    "crosshairX": 330.2107238769531,
+    "label": "Aug"
+   }
+  ],
   "status": "ok"
  },
  {
