@@ -4170,7 +4170,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   position: relative; z-index: 1; }
 .lui-row-linked:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: -2px; }
 .lui-time-series-chart { min-width: 0; color: var(--lantern-fg); }
-.lui-time-series-chart__svg { display: block; width: 100%; height: auto; overflow: visible; font-family: inherit; }
+.lui-time-series-chart__svg { display: block; width: 100%; height: auto; overflow: visible; font-family: inherit; touch-action: pan-y; }
 .lui-time-series-chart__grid line { stroke: var(--lantern-border); stroke-width: 1; }
 .lui-time-series-chart__zero { stroke: var(--lantern-border-strong); stroke-width: 1.4; }
 .lui-time-series-chart__labels { fill: var(--lantern-fg-muted); font-size: 11px; }

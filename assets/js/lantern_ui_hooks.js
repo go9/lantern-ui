@@ -274,22 +274,32 @@ const ChartInteraction = {
     }
     this.onFocusIn = (event) => {
       const target = event.target.closest?.("[data-chart-point]")
-      if (target && this.el.contains(target)) this.show(this.points[Number(target.dataset.chartPoint)], target)
+      if (target && this.el.contains(target)) this.show(this.points[Number(target.dataset.chartPoint)], target, true)
+    }
+    this.onFocusOut = (event) => {
+      if (!this.el.contains(event.relatedTarget)) this.hide()
     }
     this.onKeyDown = (event) => {
-      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return
       const target = event.target.closest?.("[data-chart-point]")
       if (!target || !this.el.contains(target)) return
-      event.preventDefault()
       const index = Number(target.dataset.chartPoint)
-      const next = Math.max(0, Math.min(this.focusPoints.length - 1, index + (event.key === "ArrowRight" ? 1 : -1)))
-      this.focusPoints[next]?.focus()
+      if (event.key === "Escape") {
+        event.preventDefault()
+        this.hide()
+        target.blur()
+      } else if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+        event.preventDefault()
+        const next = event.key === "Home" ? 0 : event.key === "End" ? this.focusPoints.length - 1 :
+          Math.max(0, Math.min(this.focusPoints.length - 1, index + (event.key === "ArrowRight" ? 1 : -1)))
+        this.focusPoints[next]?.focus()
+      }
     }
     this.svg.addEventListener("pointermove", this.onPointerMove, { passive: true })
     this.svg.addEventListener("pointerdown", this.onPointerDown, { passive: true })
     this.svg.addEventListener("pointerleave", this.onPointerLeave)
     this.svg.addEventListener("pointerup", this.onPointerUp)
     this.el.addEventListener("focusin", this.onFocusIn)
+    this.el.addEventListener("focusout", this.onFocusOut)
     this.el.addEventListener("keydown", this.onKeyDown)
   },
 
@@ -303,19 +313,20 @@ const ChartInteraction = {
     this.show(nearest)
   },
 
-  show(point, focusTarget = null) {
+  show(point, focusTarget = null, announce = false) {
     if (!point) return
     const crosshair = this.overlay.querySelector('[data-part="crosshair"]')
     crosshair.setAttribute("x1", point.x)
     crosshair.setAttribute("x2", point.x)
     this.overlay.querySelectorAll('[data-part="series-point"]').forEach((circle) => {
       const index = Number(circle.dataset.seriesIndex)
-      const y = point.coords[index]
-      if (y == null) {
+      const position = point.positions?.[index]
+      const y = position?.y ?? point.coords?.[index]
+      if (y == null || (position && position.x == null)) {
         circle.setAttribute("hidden", "")
       } else {
         circle.removeAttribute("hidden")
-        circle.setAttribute("cx", point.x)
+        circle.setAttribute("cx", position?.x ?? point.x)
         circle.setAttribute("cy", y)
       }
     })
@@ -324,11 +335,31 @@ const ChartInteraction = {
       const index = Number(row.dataset.seriesIndex)
       row.textContent = `${this.seriesLabels[index] || `Series ${index + 1}`}: ${point.values[index] ?? "—"}`
     })
+    const tooltip = this.overlay.querySelector('[data-part="tooltip"]')
+    const read = (name, fallback) => Number(tooltip.dataset[name]) || fallback
+    const tooltipWidth = read("tooltipWidth", 196)
+    const tooltipHeight = read("tooltipHeight", 45)
+    const left = read("plotLeft", 0)
+    const right = read("plotRight", Number(this.svg.viewBox?.baseVal?.width) || 600)
+    const top = read("plotTop", 0)
+    const bottom = read("plotBottom", Number(this.svg.viewBox?.baseVal?.height) || 300)
+    const baseX = read("baseX", 0)
+    const baseY = read("baseY", 0)
+    let tooltipX = point.x + 12
+    if (tooltipX + tooltipWidth > right) tooltipX = point.x - tooltipWidth - 12
+    tooltipX = Math.max(left, Math.min(tooltipX, right - tooltipWidth))
+    const anchorY = point.positions?.find((position) => position)?.y ?? point.coords?.find((y) => y != null) ?? top
+    const tooltipY = Math.max(top, Math.min(anchorY - tooltipHeight - 8, bottom - tooltipHeight))
+    tooltip.setAttribute("transform", `translate(${tooltipX - baseX} ${tooltipY - baseY})`)
     this.overlay.removeAttribute("hidden")
-    this.live.textContent = `${point.label}. ${this.seriesLabels.map((label, index) => `${label}: ${point.values[index] ?? "no data"}`).join(". ") || point.values.join(". ")}`
+    if (announce) {
+      this.live.textContent = `${point.label}. ${this.seriesLabels.map((label, index) => `${label}: ${point.values[index] ?? "no data"}`).join(". ") || point.values.join(". ")}`
+    }
     if (focusTarget) {
       this.focusPoints.forEach((target) => target.setAttribute("tabindex", target === focusTarget ? "0" : "-1"))
-      if (point.coords[0] != null) focusTarget.setAttribute("cy", point.coords[0])
+      const position = point.positions?.[0]
+      if (position?.x != null) focusTarget.setAttribute("cx", position.x)
+      if (position?.y != null) focusTarget.setAttribute("cy", position.y)
     }
   },
 
@@ -345,6 +376,7 @@ const ChartInteraction = {
     this.svg?.removeEventListener("pointerleave", this.onPointerLeave)
     this.svg?.removeEventListener("pointerup", this.onPointerUp)
     this.el.removeEventListener("focusin", this.onFocusIn)
+    this.el.removeEventListener("focusout", this.onFocusOut)
     this.el.removeEventListener("keydown", this.onKeyDown)
   },
 
