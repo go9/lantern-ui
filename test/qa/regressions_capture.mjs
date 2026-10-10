@@ -65,6 +65,17 @@ for (const width of [1440, 1100, 390]) {
       document.querySelector("#qa-regression-chart svg")?.scrollIntoView({ block: "center" })
     })
     await new Promise((resolve) => setTimeout(resolve, 150))
+    if (!baseline) {
+      const emptyDay = await page.evaluate(() => {
+        const chart = document.querySelector("#qa-regression-chart")
+        const svg = chart.querySelector("svg")
+        const frame = svg.getBoundingClientRect()
+        const point = chart.querySelector('[data-chart-point="20"]')
+        return { x: frame.left + Number(point.getAttribute("cx")) * frame.width / svg.viewBox.baseVal.width, y: frame.top + frame.height / 2 }
+      })
+      await page.mouse.move(emptyDay.x, emptyDay.y)
+      await page.waitForFunction(() => document.querySelector('#qa-regression-chart [data-part="html-tooltip-date"]')?.textContent === "Sep 21", { timeout: 3000 })
+    }
     const position = await page.evaluate(() => {
       const chart = document.querySelector("#qa-regression-chart")
       const bar = [...chart.querySelectorAll(".lui-time-series-chart__bar")].at(-1)
