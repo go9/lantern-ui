@@ -227,7 +227,7 @@ defmodule LanternUI.DataTableChromeTest do
 
     assert html =~ ~s(class="lui-dt-expand")
     assert html =~ ~s(aria-label="Expand table")
-    assert html =~ ~s(title="Expand")
+    assert html =~ ~s(title="Expand table")
     [_, expand_content] = Regex.run(~r/<a[^>]*class="lui-dt-expand"[^>]*>(.*?)<\/a>/s, html)
     refute expand_content =~ "<span"
     assert html =~ ~s(data-expandable="true")

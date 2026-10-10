@@ -266,7 +266,6 @@ defmodule LanternUI.Components.DataTable do
   attr(:expand_label, :string,
     default: "Expand table",
     doc: "Tooltip shown on the expand control."
-    doc: "Tooltip text for the expand control."
   )
 
   attr(:expanded_label, :string,

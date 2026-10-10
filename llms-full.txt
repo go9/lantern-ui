@@ -572,22 +572,27 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 The admin data table — one Flop-driven table to replace the per-app `admin_table` copies.
 
 - `active_filters_label` (:string, default "Active filters") — Accessible label for the active filter chips.
+- `active_saved_view` (:string) — Id or name of the currently active saved view.
 - `all_matching?` (:boolean, default false) — Whether all results matching the current query are selected.
 - `apply_label` (:string, default "Apply") — Label for applying filter changes.
+- `available_views` (:list) — Available layout views, equivalent to `views`; intersected with layouts supplied by slots.
 - `bordered` (:boolean, default true) — Render the table chrome inside one bordered card.
 - `class` (:any) — Extra classes merged onto the root element.
 - `clear_filters_label` (:string, default "Clear filters") — Label for clearing active filters.
 - `clear_label` (:string, default "Clear") — Bulk selection clear action label.
+- `density` (:string, values: compact, comfortable, default "comfortable") — Initial table row density.
+- `display_event` (:string) — Optional event receiving hidden_columns and density changes.
 - `excluded_ids` (:any, default MapSet.new([])) — MapSet of matching row ids explicitly excluded while `all_matching?` is true.
 - `expand_aria_label` (:string, default "Expand table") — Accessible label for the expand control.
 - `expand_label` (:string, default "Expand table") — Tooltip shown on the expand control.
 - `expandable` (:boolean, default false) — Render an Expand control and enable the Shift+E / Escape shortcuts.
 - `expanded` (:boolean, default false) — URL-owned expanded state; set from handle_params when `expand=1`.
 - `expanded_aria_label` (:string, default "Exit expand") — Accessible label for the control while the table is expanded.
-- `expanded_label` (:string, default "Exit expand") — Text shown on the control while the table is expanded.
+- `expanded_label` (:string, default "Exit expand") — Tooltip text shown while the table is expanded.
 - `fill` (:boolean, default false) — Stretch to the parent's height (the parent must be a flex column with a definite height).
-- `filters_label` (:string, default "Filters & view") — Accessible label for the filters and view popover.
+- `filters_label` (:string, default "Filters") — Label for the filters popover.
 - `flush` (:boolean, default false) — Drop the panel chrome — border, radius, shadow, raised surface — and pull the header, toolbar, cells and pagination out to the page gutter, so the table reads as the page rather than as a card sitting on it.
+- `hidden_columns` (:list, default []) — Initially hidden table column keys (field names or column-N keys).
 - `id` (:string, required) — Stable DOM id for the table root and chrome.
 - `info_modal_id` (:string) — modal id the title's info button opens (LanternUI.open_dialog)
 - `load_view_label` (:string, default "Load saved view") — Label for opening saved views.
@@ -615,8 +620,7 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 - `subtitle` (:string) — Secondary line under the table title.
 - `target` (:any) — LiveView target for selection and bulk events.
 - `title` (:string) — Optional table heading above the toolbar.
-- `view` (:string, values: table, cards, list, default "table") — active view.
-- `view_label` (:string, default "View") — Label for the view switcher.
+- `view_label` (:string, default "Display") — Label for the view switcher.
 - `views` (:list) — Allowed views, as strings.
 Slots:
 - `:bulk_action` — Action shown in the bulk bar when rows are selected.
@@ -658,6 +662,10 @@ Slots:
   - `count` — Optional badge count beside the label.
   - `filters` — Flop filter preset, e.g.
 - `:toolbar` — Extra controls in the filter/search toolbar.
+- `:view` — A saved view with a name and optional id and params.
+  - `id` — Saved view identifier emitted with the apply event.
+  - `name` — Visible saved view name.
+  - `params` — Saved view parameters supplied to the consumer event.
 
 ### LanternUI.Components.DatePicker
 
