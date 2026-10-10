@@ -4577,7 +4577,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-chart-card__content { min-width: 0; margin-top: var(--lantern-space-md); }
 .lui-chart-card__empty { display: flex; min-height: 180px; flex-direction: column; align-items: center; justify-content: center; gap: var(--lantern-space-sm); color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); text-align: center; }
 .lui-chart-card__footer { margin-top: var(--lantern-space-sm); color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
-.lui-chart-settings__trigger { display: inline-flex; box-sizing: border-box; height: var(--lui-control-h-md); min-height: var(--lui-control-h-md); align-items: center; justify-content: center; gap: var(--lui-gap-4); padding: 0 var(--lui-control-px-md); border: 1px solid var(--lantern-border); border-radius: var(--lui-control-radius); background: var(--lantern-surface); color: var(--lantern-fg); font-size: var(--lui-control-font-md); line-height: var(--lui-control-line-height); cursor: pointer; }
+.lui-chart-settings__trigger { display: inline-flex; box-sizing: border-box; height: var(--lui-control-h-sm); min-height: var(--lui-control-h-sm); align-items: center; justify-content: center; gap: var(--lui-gap-4); padding: 0 var(--lui-control-px-sm); border: 1px solid var(--lantern-border); border-radius: var(--lui-control-radius); background: var(--lantern-surface); color: var(--lantern-fg); font-size: var(--lui-control-font-sm); line-height: var(--lui-control-line-height); cursor: pointer; }
 .lui-chart-settings__trigger:hover { background: var(--lantern-surface-hover); }
 .lui-chart-settings__field select:focus-visible { outline: var(--lui-focus-ring-width) solid var(--lui-focus-ring-color); outline-offset: var(--lui-focus-ring-offset); }
 .lui-chart-settings__trigger:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: 2px; }
@@ -4976,6 +4976,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-dt-chromerow > .lui-popover .lui-btn { box-sizing: border-box; height: var(--lui-control-h-md); min-height: var(--lui-control-h-md); gap: var(--lui-gap-4); font-size: var(--lui-control-font-md); }
 .lui-dt-chromerow :is(.lui-dt-search, .lui-popover .lui-btn, .lui-dt-expand) .lui-icon { width: var(--lui-control-icon-md); height: var(--lui-control-icon-md); flex: none; }
 .lui-datatable-expanded .lui-dt-overview, .lui-dt-overview[hidden] { display: none; }
+.lui-chart-card__settings .lui-chart-settings__trigger { height: var(--lui-control-h-md); min-height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); font-size: var(--lui-control-font-md); }
 
 .lui-btn:focus-visible, .lui-input-wrap:focus-within, .lui-color-wrap:focus-within,
 .lui-dtf:focus-within, .lui-select-native:focus-visible, .lui-select-toggle:focus-visible,

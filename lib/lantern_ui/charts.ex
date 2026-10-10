@@ -1065,7 +1065,7 @@ defmodule LanternUI.Charts do
       <LanternUI.Components.Button.button
         :if={@trigger == []}
         variant="outline"
-        size="md"
+        size="sm"
         class="lui-chart-settings__trigger"
         label="Chart settings"
       >
