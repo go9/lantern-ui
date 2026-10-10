@@ -631,7 +631,13 @@ defmodule LanternUI.Charts do
     doc: "Series maps with id, label, optional CSS token color and %{x, y} points."
   )
 
-  attr(:height, :integer, default: 280, doc: "SVG viewBox height.")
+  attr(:height, :integer, default: 240, doc: "Fixed chart height in CSS pixels.")
+
+  attr(:width, :integer,
+    default: 960,
+    doc: "SSR plot width; the hook fits it to the measured container width."
+  )
+
   attr(:class, :string, default: nil, doc: "Extra classes merged onto the root element.")
 
   attr(:type, :atom,
@@ -675,6 +681,23 @@ defmodule LanternUI.Charts do
   attr(:grid, :boolean, default: true, doc: "Show horizontal y-axis grid lines.")
   attr(:axes, :boolean, default: true, doc: "Show x and y labels.")
 
+  attr(:baseline, :atom,
+    default: :zero,
+    values: [:zero, :auto],
+    doc: "`:zero` includes zero; `:auto` fits the value range."
+  )
+
+  attr(:y_min, :any,
+    default: nil,
+    doc: "Optional numeric lower y-domain bound; overrides the baseline lower bound."
+  )
+
+  attr(:data_table, :atom,
+    default: :hidden,
+    values: [:hidden, :disclosure],
+    doc: "Accessible table is screen-reader only by default; `:disclosure` shows it."
+  )
+
   attr(:empty_message, :string,
     default: "No data",
     doc: "Copy shown when no valid series remains."
@@ -694,7 +717,11 @@ defmodule LanternUI.Charts do
     <div
       id={@id}
       class={Class.merge(["lui-time-series-chart", @class])}
+      style={"--lui-chart-height:#{@height}px"}
       data-chart-type={@chart_type}
+      data-orientation={@orientation}
+      data-plot-left={@plot_left}
+      data-plot-right={@plot_right}
       data-interaction={Jason.encode!(@interaction_points)}
       data-series-label={Jason.encode!(@interaction_labels)}
       data-series-id={if @interaction_enabled, do: Jason.encode!(@interaction_series_ids)}
@@ -704,7 +731,8 @@ defmodule LanternUI.Charts do
     >
       <svg
         :if={@has_data}
-        viewBox={"0 0 #{@vb_w} #{@height}"}
+        viewBox={"0 0 #{@width} #{@height}"}
+        preserveAspectRatio="xMinYMin meet"
         role="group"
         aria-label={@aria_label}
         class="lui-time-series-chart__svg"
@@ -730,10 +758,22 @@ defmodule LanternUI.Charts do
           y2={@plot_bottom}
         />
         <g :if={@show_axes} class="lui-time-series-chart__labels">
-          <text :for={{label, y} <- @y_ticks} x={@plot_left - 8} y={y + 3} text-anchor="end">
+          <text
+            :for={{label, y} <- @y_ticks}
+            class="lui-time-series-chart__y-tick"
+            x={@plot_left - 8}
+            y={y + 3}
+            text-anchor="end"
+          >
             {label}
           </text>
-          <text :for={{label, x, anchor} <- @x_ticks} x={x} y={@height - 8} text-anchor={anchor}>
+          <text
+            :for={{label, x, anchor} <- @x_ticks}
+            class="lui-time-series-chart__x-tick"
+            x={x}
+            y={@height - 8}
+            text-anchor={anchor}
+          >
             {label}
           </text>
         </g>
@@ -761,6 +801,8 @@ defmodule LanternUI.Charts do
           <rect
             :for={bar <- path.bars}
             class="lui-time-series-chart__bar"
+            data-band-index={bar.band_index}
+            data-series-index={bar.series_index}
             x={bar.x}
             y={bar.y}
             width={bar.width}
@@ -802,6 +844,7 @@ defmodule LanternUI.Charts do
         </g>
         <g class="lui-time-series-chart__interaction" aria-hidden="true" hidden>
           <line
+            :if={@type not in [:bar, :stacked_bar, :grouped_bar]}
             data-part="crosshair"
             x1={@plot_left}
             x2={@plot_left}
@@ -814,34 +857,6 @@ defmodule LanternUI.Charts do
             data-series-index={index}
             style={"--lui-series-color:#{Enum.at(@interaction_colors, index)}"}
           />
-          <g
-            data-part="tooltip"
-            data-base-x={@plot_left + 8}
-            data-base-y={@plot_top + 8}
-            data-plot-left={@plot_left + 4}
-            data-plot-right={@plot_right - 4}
-            data-plot-top={@plot_top + 4}
-            data-plot-bottom={@plot_bottom - 4}
-            data-tooltip-width="196"
-            data-tooltip-height={28 + 17 * @interaction_series_count}
-          >
-            <rect
-              x={@plot_left + 8}
-              y={@plot_top + 8}
-              width="196"
-              height={28 + 17 * @interaction_series_count}
-              rx="6"
-            />
-            <text data-part="tooltip-date" x={@plot_left + 18} y={@plot_top + 26}></text>
-            <text
-              :for={{_label, index} <- Enum.with_index(@interaction_labels)}
-              data-part="tooltip-row"
-              data-series-index={index}
-              x={@plot_left + 18}
-              y={@plot_top + 44 + 17 * index}
-            >
-            </text>
-          </g>
         </g>
         <circle
           :for={{point, index} <- Enum.with_index(@interaction_points)}
@@ -857,12 +872,15 @@ defmodule LanternUI.Charts do
         />
       </svg>
       <div :if={!@has_data} class="lui-time-series-chart__empty">{@empty_message}</div>
-      <div :if={@legend != []} class="lui-time-series-chart__legend" aria-label="Series">
+      <div :if={@has_data && @legend != []} class="lui-time-series-chart__legend" aria-label="Series">
         <span :for={item <- @legend} class="lui-time-series-chart__legend-item">
           <i style={"--lui-series-color:#{item.color}"} aria-hidden="true"></i>{item.label}
         </span>
       </div>
-      <details :if={@has_data} class="lui-time-series-chart__table-details">
+      <details
+        :if={@has_data && @data_table == :disclosure}
+        class="lui-time-series-chart__table-details"
+      >
         <summary>View chart data</summary>
         <table>
           <caption>{@aria_label} data table</caption>
@@ -887,6 +905,51 @@ defmodule LanternUI.Charts do
           </tfoot>
         </table>
       </details>
+      <table
+        :if={@has_data && @data_table == :hidden}
+        class="lui-sr-only lui-time-series-chart__data-table"
+      >
+        <caption>{@aria_label} data table</caption>
+        <thead>
+          <tr>
+            <th scope="col">Date / category</th><th :for={label <- @interaction_labels} scope="col">
+              {label}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr :for={point <- @interaction_points}>
+            <th scope="row">{point.label}</th><td :for={value <- point.values}>{value || "—"}</td>
+          </tr>
+        </tbody>
+        <tfoot :if={@reference_lines != []}>
+          <tr :for={reference <- @reference_lines}>
+            <th scope="row">{reference.label}</th><td colspan={max(length(@interaction_labels), 1)}>
+              {reference.value_label}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+      <div
+        :if={@has_data}
+        class="lui-time-series-chart__tooltip"
+        data-part="html-tooltip"
+        aria-hidden="true"
+        hidden
+      >
+        <div class="lui-time-series-chart__tooltip-date" data-part="html-tooltip-date"></div>
+        <div
+          :for={{label, index} <- Enum.with_index(@interaction_labels)}
+          class="lui-time-series-chart__tooltip-row"
+          data-series-index={index}
+        >
+          <span class="lui-time-series-chart__tooltip-label"><i
+            style={"--lui-series-color:#{Enum.at(@interaction_colors, index)}"}
+            aria-hidden="true"
+          ></i>{label}</span>
+          <strong data-part="html-tooltip-value"></strong>
+        </div>
+      </div>
       <span class="lui-time-series-chart__live" data-part="live" aria-live="polite" aria-atomic="true"></span>
     </div>
     """
@@ -901,11 +964,18 @@ defmodule LanternUI.Charts do
   attr(:id, :string, required: true, doc: "Stable chart card id.")
   attr(:title, :string, required: true, doc: "Card heading.")
   attr(:value, :any, default: nil, doc: "Optional headline value displayed beside the title.")
+
+  attr(:empty, :string,
+    default: nil,
+    doc: "When set, show this one empty message in place of the value and chart."
+  )
+
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the card.")
   slot(:tabs, doc: "Optional chart tabs or other header controls.")
   slot(:range_controls, doc: "Consumer-owned date-range controls.")
   slot(:settings_trigger, doc: "A chart_settings/1 control, usually a popover trigger and panel.")
   slot(:footer_note, doc: "Optional explanatory note below the chart.")
+  slot(:empty_action, doc: "Optional action shown with the empty message.")
   slot(:inner_block, required: true, doc: "Chart content.")
 
   def chart_card(assigns) do
@@ -918,7 +988,7 @@ defmodule LanternUI.Charts do
       <header class="lui-chart-card__header">
         <div class="lui-chart-card__heading">
           <h2 id={"#{@id}-title"} class="lui-chart-card__title">{@title}</h2>
-          <div :if={@value != nil} class="lui-chart-card__value">{@value}</div>
+          <div :if={@empty == nil && @value != nil} class="lui-chart-card__value">{@value}</div>
         </div>
         <div class="lui-chart-card__actions">
           <div :if={@tabs != []} class="lui-chart-card__tabs">{render_slot(@tabs)}</div>
@@ -930,8 +1000,11 @@ defmodule LanternUI.Charts do
           </div>
         </div>
       </header>
-      <div class="lui-chart-card__content">{render_slot(@inner_block)}</div>
-      <footer :if={@footer_note != []} class="lui-chart-card__footer">
+      <div :if={@empty == nil} class="lui-chart-card__content">{render_slot(@inner_block)}</div>
+      <div :if={@empty != nil} class="lui-chart-card__empty">
+        <span>{@empty}</span>{render_slot(@empty_action)}
+      </div>
+      <footer :if={@empty == nil && @footer_note != []} class="lui-chart-card__footer">
         {render_slot(@footer_note)}
       </footer>
     </section>
@@ -1097,6 +1170,8 @@ defmodule LanternUI.Charts do
       {[], _} ->
         %{
           has_data: false,
+          plot_left: @margin.left,
+          plot_right: assigns.width - @margin.right,
           chart_type: assigns.type,
           legend: [],
           interaction_labels: [],
@@ -1123,7 +1198,7 @@ defmodule LanternUI.Charts do
 
   defp build_time_series_geometry(assigns, series, comparison, all_points, kind) do
     plot_left = @margin.left
-    plot_right = @vb_w - @margin.right
+    plot_right = assigns.width - @margin.right
     plot_top = 18
     plot_bottom = assigns.height - @margin.bottom
     primary_points = Enum.flat_map(series, & &1.points)
@@ -1156,17 +1231,50 @@ defmodule LanternUI.Charts do
           else: []
         )
 
-    ticks = Geometry.signed_nice_ticks(Enum.min(values), Enum.max(values), 5)
+    raw_min = Enum.min(values)
+    raw_max = Enum.max(values)
+    pad = max(abs(raw_max) * 0.05, 1)
+
+    domain_min =
+      if finite_number?(assigns.y_min),
+        do: assigns.y_min,
+        else:
+          if(assigns.baseline == :auto and raw_min == raw_max, do: raw_min - pad, else: raw_min)
+
+    domain_max =
+      max(
+        if(assigns.baseline == :auto and raw_min == raw_max, do: raw_max + pad, else: raw_max),
+        domain_min + 1.0e-9
+      )
+
+    ticks =
+      if assigns.baseline == :auto and is_nil(assigns.y_min),
+        do: Geometry.nice_ticks(domain_min, domain_max, 5),
+        else:
+          Geometry.nice_ticks(
+            if(is_nil(assigns.y_min), do: min(domain_min, 0), else: domain_min),
+            max(domain_max, 0),
+            5
+          )
+
     ymin = hd(ticks)
     ymax = List.last(ticks)
     yf = fn y -> Geometry.scale(ymin, ymax, plot_bottom, plot_top, y) end
     numeric_x = fn value -> Geometry.scale(ymin, ymax, plot_left, plot_right, value) end
     zero_y = Geometry.round1(yf.(0))
+    zero_line_y = if ymin <= 0 and ymax >= 0, do: zero_y, else: nil
 
     curve =
       if assigns.curve in [:linear, :monotone, :step, :cardinal], do: assigns.curve, else: :linear
 
-    x_ticks = time_series_x_ticks(axis_keys, kind, xf)
+    band_xf = fn key ->
+      plot_left + (Map.fetch!(x_positions, key) + 0.5) * ((plot_right - plot_left) / count)
+    end
+
+    vertical_bars? =
+      assigns.type in [:bar, :stacked_bar, :grouped_bar] and assigns.orientation == :vertical
+
+    x_ticks = time_series_x_ticks(axis_keys, kind, if(vertical_bars?, do: band_xf, else: xf))
 
     interaction_positions =
       time_series_interaction_positions(
@@ -1177,7 +1285,7 @@ defmodule LanternUI.Charts do
         assigns,
         {plot_left, plot_right},
         {plot_top, plot_bottom},
-        xf,
+        if(vertical_bars?, do: band_xf, else: xf),
         yf,
         numeric_x
       )
@@ -1242,14 +1350,23 @@ defmodule LanternUI.Charts do
               )
 
             _ ->
-              build_line_paths(assigns, series, axis_keys, xf, yf, curve, zero_y)
+              build_line_paths(
+                assigns,
+                series,
+                axis_keys,
+                xf,
+                yf,
+                curve,
+                zero_y,
+                if(is_nil(zero_line_y), do: plot_bottom, else: zero_y)
+              )
           end
 
         compare_paths = build_comparison_paths(comparison, axis_keys, xf, yf, curve)
 
         {chart_paths ++ compare_paths, [], nil, x_ticks,
          Enum.map(ticks, &{format_value(&1, assigns.value_format), Geometry.round1(yf.(&1))}),
-         Enum.map(ticks, &Geometry.round1(yf.(&1))), zero_y}
+         Enum.map(ticks, &Geometry.round1(yf.(&1))), zero_line_y}
       end
 
     annotation_orientation =
@@ -1262,7 +1379,7 @@ defmodule LanternUI.Charts do
         assigns.annotations,
         kind,
         x_positions,
-        xf,
+        if(vertical_bars?, do: band_xf, else: xf),
         plot_top,
         plot_bottom,
         annotation_orientation
@@ -1272,7 +1389,7 @@ defmodule LanternUI.Charts do
       has_data: all_points != [],
       chart_type: assigns.type,
       height: assigns.height,
-      vb_w: @vb_w,
+      vb_w: assigns.width,
       plot_left: plot_left,
       plot_right: plot_right,
       plot_top: plot_top,
@@ -1325,7 +1442,17 @@ defmodule LanternUI.Charts do
       interaction_points:
         Enum.map(axis_keys, fn key ->
           %{
-            x: Geometry.round1(xf.(key)),
+            x:
+              Geometry.round1(
+                if(
+                  assigns.type in [:bar, :stacked_bar, :grouped_bar] and
+                    assigns.orientation == :vertical,
+                  do:
+                    plot_left +
+                      (Map.fetch!(x_positions, key) + 0.5) * ((plot_right - plot_left) / count),
+                  else: xf.(key)
+                )
+              ),
             label: x_key_label(key, kind),
             values:
               Enum.map(interaction_series, fn item ->
@@ -1541,7 +1668,7 @@ defmodule LanternUI.Charts do
 
   defp chart_domain_values(_series, _keys, _type, points), do: Enum.map(points, & &1.y)
 
-  defp build_line_paths(assigns, series, axis_keys, xf, yf, curve, zero_y) do
+  defp build_line_paths(assigns, series, axis_keys, xf, yf, curve, zero_y, area_baseline) do
     series
     |> Enum.with_index()
     |> Enum.flat_map(fn {item, series_index} ->
@@ -1578,7 +1705,11 @@ defmodule LanternUI.Charts do
             if sign == :positive, do: "var(--lantern-success)", else: "var(--lantern-danger)"
 
           line = if assigns.type == :points, do: "", else: Geometry.curve_path(coords, curve)
-          fill = if assigns.type == :area, do: baseline_area_path(coords, zero_y, curve), else: ""
+
+          fill =
+            if assigns.type == :area,
+              do: baseline_area_path(coords, area_baseline, curve),
+              else: ""
 
           %{
             class:
@@ -1587,7 +1718,11 @@ defmodule LanternUI.Charts do
             color: if(signed? and is_nil(item.color), do: segment_color, else: color),
             line: line,
             fill: fill,
-            points: if(assigns.glyphs or assigns.type == :points, do: coords, else: []),
+            points:
+              if(assigns.glyphs or assigns.type == :points or length(coords) == 1,
+                do: coords,
+                else: []
+              ),
             bars: []
           }
         end)
@@ -1764,6 +1899,8 @@ defmodule LanternUI.Charts do
                   y2 = yf.(next)
 
                   %{
+                    band_index: index,
+                    series_index: series_index,
                     x: Geometry.round1(center - width / 2),
                     y: Geometry.round1(min(y1, y2)),
                     width: Geometry.round1(width),
@@ -1776,6 +1913,8 @@ defmodule LanternUI.Charts do
                   x2 = numeric_x.(next)
 
                   %{
+                    band_index: index,
+                    series_index: series_index,
                     x: Geometry.round1(min(x1, x2)),
                     y: Geometry.round1(center - width / 2),
                     width: Geometry.round1(max(abs(x2 - x1), 0.5)),

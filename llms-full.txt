@@ -66,10 +66,12 @@ A categorical bar chart.
 A token-styled chart card for a title, value, caller controls, and chart content.
 
 - `class` (:any) — Extra classes merged onto the card.
+- `empty` (:string) — When set, show this one empty message in place of the value and chart.
 - `id` (:string, required) — Stable chart card id.
 - `title` (:string, required) — Card heading.
 - `value` (:any) — Optional headline value displayed beside the title.
 Slots:
+- `:empty_action` — Optional action shown with the empty message.
 - `:footer_note` — Optional explanatory note below the chart.
 - `:inner_block` (required) — Chart content.
 - `:range_controls` — Consumer-owned date-range controls.
@@ -126,13 +128,15 @@ Render a generic series-first chart using server-computed SVG geometry.
 - `annotations` (:list, default []) — Optional markers keyed by x.
 - `aria_label` (:string, default "Time series chart") — Accessible name for the SVG.
 - `axes` (:boolean, default true) — Show x and y labels.
+- `baseline` (:atom, values: zero, auto, default :zero) — `:zero` includes zero; `:auto` fits the value range.
 - `class` (:string) — Extra classes merged onto the root element.
 - `comparison` (:list, default []) — Optional previous-period series set.
 - `curve` (:atom, values: linear, monotone, step, cardinal, default :linear) — Line interpolation: :linear, :monotone, :step or :cardinal.
+- `data_table` (:atom, values: hidden, disclosure, default :hidden) — Accessible table is screen-reader only by default; `:disclosure` shows it.
 - `empty_message` (:string, default "No data") — Copy shown when no valid series remains.
 - `glyphs` (:boolean, default false) — Render a marker at each available point.
 - `grid` (:boolean, default true) — Show horizontal y-axis grid lines.
-- `height` (:integer, default 280) — SVG viewBox height.
+- `height` (:integer, default 240) — Fixed chart height in CSS pixels.
 - `hover_event` (:string) — Optional debounced LiveView event pushed while hovering.
 - `id` (:string, required) — Stable chart id.
 - `orientation` (:atom, values: vertical, horizontal, default :vertical) — Bar orientation; applies to bar chart types.
@@ -142,6 +146,8 @@ Render a generic series-first chart using server-computed SVG geometry.
 - `type` (:atom, values: line, area, points, stacked_area, bar, stacked_bar, grouped_bar, default :line) — Series renderer: line, area, points, stacked area, or bar grouping mode.
 - `value_format` (:any, default :number) — `:number`, `:currency`, or a 1-arity number formatter.
 - `visible_series` (:list) — Visible series ids; nil shows all.
+- `width` (:integer, default 960) — SSR plot width; the hook fits it to the measured container width.
+- `y_min` (:any) — Optional numeric lower y-domain bound; overrides the baseline lower bound.
 
 ### LanternUI.Components.Accordion
 

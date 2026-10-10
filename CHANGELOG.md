@@ -7,6 +7,9 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Fixed
+- Show one chart-card empty message/action in place of its value, chart, and footer; keep time-series data tables screen-reader accessible without a visible disclosure by default. Add caller-controlled `baseline`/`y_min` and single-point line markers.
+- Highlight the hovered bar without a vertical crosshair in bar, grouped bar, and stacked bar charts, including horizontal orientation; replace distorted SVG tooltip text with a clamped, token-styled HTML overlay.
+- Fit time-series plots to measured container width at a fixed requested height, preserve native text size during resize, and skip colliding axis ticks.
 - `use LanternUI` imports only documented function components. Public helpers remain available through their module names and no longer conflict with consumer-local functions such as `parse_date/1`.
 - Align the app sidebar workspace header with the sticky page strip, use a shared page gutter and 28/32/36px control scale, and position expanded data tables below the token-sized strip at every viewport width.
 - Exclude checkbox, radio, range, file, and hidden inputs from table-chrome control sizing so selection and native controls keep their expected dimensions.

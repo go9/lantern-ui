@@ -248,23 +248,56 @@ const ChartInteraction = {
     this.seriesIds = JSON.parse(this.el.dataset.seriesId || "[]")
     this.selectEvent = this.el.dataset.selectEvent
     this.hoverEvent = this.el.dataset.hoverEvent
+    this.isBar = ["bar", "stacked_bar", "grouped_bar"].includes(this.el.dataset.chartType)
+    this.horizontalBars = this.isBar && this.el.dataset.orientation === "horizontal"
     this.svg = this.el.querySelector("svg")
-    this.overlay = this.el.querySelector('[data-part="crosshair"]')?.closest(".lui-time-series-chart__interaction")
+    this.overlay = this.el.querySelector(".lui-time-series-chart__interaction")
+    this.tooltip = this.el.querySelector('[data-part="html-tooltip"]')
     this.live = this.el.querySelector('[data-part="live"]')
     this.focusPoints = [...this.el.querySelectorAll("[data-chart-point]")]
     if (!this.svg || !this.overlay || !this.points.length) return
+    this.baseWidth = this.svg.viewBox.baseVal.width
+    this.baseLeft = Number(this.el.dataset.plotLeft) || 46
+    this.baseRight = Number(this.el.dataset.plotRight) || this.baseWidth - 14
+    this.layoutX = (x) => x
+    this.layoutNodes = [...this.svg.querySelectorAll('.lui-time-series-chart__grid line, .lui-time-series-chart__zero, .lui-time-series-chart__labels text, .lui-time-series-chart__series path, .lui-time-series-chart__series rect, .lui-time-series-chart__series circle, .lui-time-series-chart__comparison path, .lui-time-series-chart__annotation line, .lui-time-series-chart__annotation text, .lui-time-series-chart__reference line, .lui-time-series-chart__reference text, [data-chart-point]')]
+      .map((node) => ({
+        node,
+        d: node.getAttribute('d'),
+        x: Object.fromEntries(["x", "x1", "x2", "cx", "width"].filter((attr) => node.hasAttribute(attr)).map((attr) => [attr, Number(node.getAttribute(attr))]))
+      }))
+    this.scheduleLayout = () => {
+      if (this.layoutFrame) return
+      this.layoutFrame = this.el.ownerDocument.defaultView.requestAnimationFrame(() => {
+        this.layoutFrame = null
+        this.fitWidth()
+      })
+    }
+    const win = this.el.ownerDocument.defaultView
+    if (win.ResizeObserver) {
+      this.resizeObserver = new win.ResizeObserver(this.scheduleLayout)
+      this.resizeObserver.observe(this.el)
+    } else {
+      win.addEventListener("resize", this.scheduleLayout)
+    }
+    this.scheduleLayout()
 
     this.onPointerMove = (event) => {
       this.pendingClientX = event.clientX
+      this.pendingClientY = event.clientY
       if (this.frame) return
       this.frame = this.el.ownerDocument.defaultView.requestAnimationFrame(() => {
         this.frame = null
-        const point = this.showAtClientX(this.pendingClientX)
+        const point = this.showAtPointer(this.pendingClientX, this.pendingClientY, this.pendingBar)
         if (point) this.scheduleHover(point)
       })
     }
+    this.onPointerMove = ((original) => (event) => {
+      this.pendingBar = event.target.closest?.('.lui-time-series-chart__bar') || null
+      original(event)
+    })(this.onPointerMove)
     this.onClick = (event) => {
-      const point = this.showAtClientX(event.clientX)
+      const point = this.showAtPointer(event.clientX, event.clientY, event.target.closest?.('.lui-time-series-chart__bar'))
       if (point) this.pushChartEvent(this.selectEvent, point)
     }
     this.onPointerDown = (event) => {
@@ -328,14 +361,73 @@ const ChartInteraction = {
     this.el.addEventListener("keydown", this.onKeyDown)
   },
 
-  showAtClientX(clientX) {
+  fitWidth() {
+    const width = Math.round(this.el.getBoundingClientRect().width || this.svg.getBoundingClientRect().width)
+    if (width <= 0) return
+    const yTicks = [...this.svg.querySelectorAll('.lui-time-series-chart__y-tick')]
+    const yLabelWidth = Math.max(0, ...yTicks.map((tick) => typeof tick.getBBox === "function" ? tick.getBBox().width : 0))
+    const left = Math.min(Math.max(this.baseLeft, yLabelWidth + 12), width * 0.38)
+    const right = Math.max(left + 24, width - 14)
+    const ratio = (right - left) / (this.baseRight - this.baseLeft)
+    this.layoutX = (x) => left + (x - this.baseLeft) * ratio
+    this.svg.setAttribute("viewBox", `0 0 ${width} ${this.svg.viewBox.baseVal.height}`)
+    this.svg.setAttribute("preserveAspectRatio", "xMinYMin meet")
+    this.svg.style.removeProperty("--chart-text-scale-x")
+    for (const { node, d, x } of this.layoutNodes) {
+      if (node.classList.contains('lui-time-series-chart__y-tick')) {
+        node.setAttribute('x', left - 8)
+      } else if (d !== null) {
+        let command = ''
+        let coordinate = 0
+        const path = d.match(/[A-Za-z]|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?/g)
+        node.setAttribute('d', path.map((token) => {
+          if (/^[A-Za-z]$/.test(token)) {
+            command = token
+            coordinate = 0
+            return token
+          }
+          const xCoordinate = command === 'H' || (['M', 'L', 'C'].includes(command) && coordinate % 2 === 0)
+          coordinate++
+          return xCoordinate ? String(Math.round(this.layoutX(Number(token)) * 10) / 10) : token
+        }).join(' '))
+      } else {
+        for (const [attr, value] of Object.entries(x)) node.setAttribute(attr, attr === 'width' ? value * ratio : this.layoutX(value))
+      }
+    }
+    let previousRight = -Infinity
+    for (const tick of this.svg.querySelectorAll('.lui-time-series-chart__x-tick')) {
+      tick.removeAttribute('hidden')
+      const box = typeof tick.getBBox === 'function' ? tick.getBBox() : null
+      if (!box) continue
+      const collides = box.x < previousRight + 8 || box.x < 0 || box.x + box.width > width
+      if (collides) tick.setAttribute('hidden', '')
+      else previousRight = box.x + box.width
+    }
+    if (this.activePoint) this.show(this.activePoint, null, false, this.activeBar)
+  },
+
+  showAtPointer(clientX, clientY, bar = null) {
     const rect = this.svg.getBoundingClientRect()
     if (!rect.width) return
     const width = this.svg.viewBox.baseVal.width
     const x = ((clientX - rect.left) / rect.width) * width
     let nearest = this.points[0]
-    for (const point of this.points) if (Math.abs(point.x - x) < Math.abs(nearest.x - x)) nearest = point
-    this.show(nearest)
+    if (this.isBar && bar) {
+      nearest = this.points[Number(bar.dataset.bandIndex)] || nearest
+    } else if (this.horizontalBars) {
+      const bars = [...this.svg.querySelectorAll('.lui-time-series-chart__bar')]
+      const closest = bars.reduce((best, candidate) => {
+        const y = candidate.getBoundingClientRect().top + candidate.getBoundingClientRect().height / 2
+        return !best || Math.abs(y - clientY) < Math.abs(best.y - clientY) ? { bar: candidate, y } : best
+      }, null)
+      if (closest) {
+        bar = closest.bar
+        nearest = this.points[Number(bar.dataset.bandIndex)] || nearest
+      }
+    } else {
+      for (const point of this.points) if (Math.abs(this.layoutX(point.x) - x) < Math.abs(this.layoutX(nearest.x) - x)) nearest = point
+    }
+    this.show(nearest, null, false, bar)
     return nearest
   },
 
@@ -361,12 +453,27 @@ const ChartInteraction = {
     }, 150)
   },
 
-  show(point, focusTarget = null, announce = false) {
+  show(point, focusTarget = null, announce = false, bar = null) {
     if (!point) return
+    this.activePoint = point
+    this.activeBar = bar
     const crosshair = this.overlay.querySelector('[data-part="crosshair"]')
-    crosshair.setAttribute("x1", point.x)
-    crosshair.setAttribute("x2", point.x)
+    const bandIndex = this.points.indexOf(point)
+    const bars = [...this.svg.querySelectorAll('.lui-time-series-chart__bar')]
+    const activeBar = bar || bars.find((candidate) => Number(candidate.dataset.bandIndex) === bandIndex)
+    bars.forEach((candidate) => candidate.toggleAttribute('data-active', candidate === activeBar))
+    const anchorX = activeBar
+      ? Number(activeBar.getAttribute('x')) + Number(activeBar.getAttribute('width')) * (this.horizontalBars ? 1 : 0.5)
+      : this.layoutX(point.x)
+    if (crosshair) {
+      crosshair.setAttribute("x1", anchorX)
+      crosshair.setAttribute("x2", anchorX)
+    }
     this.overlay.querySelectorAll('[data-part="series-point"]').forEach((circle) => {
+      if (this.isBar) {
+        circle.setAttribute('hidden', '')
+        return
+      }
       const index = Number(circle.dataset.seriesIndex)
       const position = point.positions?.[index]
       const y = position?.y ?? point.coords?.[index]
@@ -374,31 +481,29 @@ const ChartInteraction = {
         circle.setAttribute("hidden", "")
       } else {
         circle.removeAttribute("hidden")
-        circle.setAttribute("cx", position?.x ?? point.x)
+        circle.setAttribute("cx", this.layoutX(position?.x ?? point.x))
         circle.setAttribute("cy", y)
       }
     })
-    this.overlay.querySelector('[data-part="tooltip-date"]').textContent = point.label
-    this.overlay.querySelectorAll('[data-part="tooltip-row"]').forEach((row) => {
-      const index = Number(row.dataset.seriesIndex)
-      row.textContent = `${this.seriesLabels[index] || `Series ${index + 1}`}: ${point.values[index] ?? "—"}`
-    })
-    const tooltip = this.overlay.querySelector('[data-part="tooltip"]')
-    const read = (name, fallback) => Number(tooltip.dataset[name]) || fallback
-    const tooltipWidth = read("tooltipWidth", 196)
-    const tooltipHeight = read("tooltipHeight", 45)
-    const left = read("plotLeft", 0)
-    const right = read("plotRight", Number(this.svg.viewBox?.baseVal?.width) || 600)
-    const top = read("plotTop", 0)
-    const bottom = read("plotBottom", Number(this.svg.viewBox?.baseVal?.height) || 300)
-    const baseX = read("baseX", 0)
-    const baseY = read("baseY", 0)
-    let tooltipX = point.x + 12
-    if (tooltipX + tooltipWidth > right) tooltipX = point.x - tooltipWidth - 12
-    tooltipX = Math.max(left, Math.min(tooltipX, right - tooltipWidth))
-    const anchorY = point.positions?.find((position) => position)?.y ?? point.coords?.find((y) => y != null) ?? top
-    const tooltipY = Math.max(top, Math.min(anchorY - tooltipHeight - 8, bottom - tooltipHeight))
-    tooltip.setAttribute("transform", `translate(${tooltipX - baseX} ${tooltipY - baseY})`)
+    if (this.tooltip) {
+      this.tooltip.querySelector('[data-part="html-tooltip-date"]').textContent = point.label
+      this.tooltip.querySelectorAll('[data-part="html-tooltip-value"]').forEach((value, index) => {
+        value.textContent = point.values[index] ?? "—"
+      })
+      this.tooltip.removeAttribute('hidden')
+      const tooltipWidth = this.tooltip.offsetWidth || 196
+      const tooltipHeight = this.tooltip.offsetHeight || 55
+      const chartWidth = this.svg.viewBox.baseVal.width
+      const chartHeight = this.svg.viewBox.baseVal.height
+      const anchorY = activeBar
+        ? Number(activeBar.getAttribute('y')) + Number(activeBar.getAttribute('height')) * (this.horizontalBars ? 0.5 : 0)
+        : point.positions?.find((position) => position)?.y ?? point.coords?.find((y) => y != null) ?? 18
+      const preferredX = anchorX + 12 + tooltipWidth <= chartWidth ? anchorX + 12 : anchorX - tooltipWidth - 12
+      this.tooltip.style.left = `${Math.max(0, Math.min(Math.max(4, preferredX), chartWidth - tooltipWidth - 4))}px`
+      const above = anchorY - tooltipHeight - 8
+      const preferredY = above >= 4 ? above : anchorY + 16
+      this.tooltip.style.top = `${Math.max(4, Math.min(preferredY, chartHeight - tooltipHeight - 4))}px`
+    }
     this.overlay.removeAttribute("hidden")
     if (announce) {
       this.live.textContent = `${point.label}. ${this.seriesLabels.map((label, index) => `${label}: ${point.values[index] ?? "no data"}`).join(". ") || point.values.join(". ")}`
@@ -406,7 +511,7 @@ const ChartInteraction = {
     if (focusTarget) {
       this.focusPoints.forEach((target) => target.setAttribute("tabindex", target === focusTarget ? "0" : "-1"))
       const position = point.positions?.[0]
-      if (position?.x != null) focusTarget.setAttribute("cx", position.x)
+      if (position?.x != null) focusTarget.setAttribute("cx", this.layoutX(position.x))
       if (position?.y != null) focusTarget.setAttribute("cy", position.y)
     }
   },
@@ -414,6 +519,10 @@ const ChartInteraction = {
   hide() {
     this.cancelHover()
     this.overlay?.setAttribute("hidden", "")
+    this.tooltip?.setAttribute('hidden', '')
+    this.svg?.querySelectorAll('.lui-time-series-chart__bar[data-active]').forEach((bar) => bar.removeAttribute('data-active'))
+    this.activePoint = null
+    this.activeBar = null
   },
 
   cancelHover() {
@@ -423,6 +532,9 @@ const ChartInteraction = {
 
   cleanup() {
     if (this.frame) this.el.ownerDocument.defaultView.cancelAnimationFrame(this.frame)
+    if (this.layoutFrame) this.el.ownerDocument.defaultView.cancelAnimationFrame(this.layoutFrame)
+    this.resizeObserver?.disconnect()
+    this.el.ownerDocument.defaultView.removeEventListener("resize", this.scheduleLayout)
     if (this.touchTimer) clearTimeout(this.touchTimer)
     this.cancelHover()
     this.frame = null

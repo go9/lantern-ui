@@ -54,6 +54,25 @@ defmodule LanternUI.ChartCardTest do
     refute html =~ "lui-chart-card__footer"
   end
 
+  test "chart_card renders one empty message and action without stale value or footer" do
+    html =
+      render(fn assigns ->
+        ~H"""
+        <Charts.chart_card id="empty-sales" title="Sales" value="—" empty="No sales yet">
+          <:empty_action><a href="/sales">Add a sale</a></:empty_action>
+          <span>Duplicate chart empty</span>
+          <:footer_note>Duplicate explanation</:footer_note>
+        </Charts.chart_card>
+        """
+      end)
+
+    assert html =~ "No sales yet"
+    assert html =~ "Add a sale"
+    refute html =~ "Duplicate chart empty"
+    refute html =~ "Duplicate explanation"
+    refute html =~ ">—<"
+  end
+
   test "multiple chart cards keep their section and heading ids distinct" do
     html =
       render(fn assigns ->

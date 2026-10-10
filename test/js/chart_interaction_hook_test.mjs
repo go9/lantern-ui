@@ -8,22 +8,21 @@ const points = [
 ]
 
 function fixture() {
-  return `<div id="chart" data-interaction='${JSON.stringify(points)}' data-series-label='["Collection","Inventory"]' data-series-id='["collection","inventory"]'>
+  return `<div id="chart" data-plot-left="20" data-plot-right="80" data-interaction='${JSON.stringify(points)}' data-series-label='["Collection","Inventory"]' data-series-id='["collection","inventory"]'>
     <svg viewBox="0 0 100 150"><g class="lui-time-series-chart__interaction" hidden>
       <line data-part="crosshair" x1="0" x2="0"></line>
       <circle data-part="series-point" data-series-index="0"></circle>
       <circle data-part="series-point" data-series-index="1"></circle>
-      <g data-part="tooltip" data-base-x="8" data-base-y="8" data-plot-left="4" data-plot-right="96" data-plot-top="4" data-plot-bottom="146" data-tooltip-width="40" data-tooltip-height="30"><rect width="40" height="30"></rect><text data-part="tooltip-date"></text>
-        <text data-part="tooltip-row" data-series-index="0"></text>
-        <text data-part="tooltip-row" data-series-index="1"></text></g>
     </g><circle data-chart-point="0" tabindex="0"></circle>
     <circle data-chart-point="1" tabindex="-1"></circle></svg>
+    <div data-part="html-tooltip" hidden><span data-part="html-tooltip-date"></span>
+      <strong data-part="html-tooltip-value"></strong><strong data-part="html-tooltip-value"></strong></div>
     <span data-part="live" aria-live="polite"></span></div>`
 }
 
-function pointer(target, name, x, pointerType = "mouse") {
+function pointer(target, name, x, pointerType = "mouse", y = 0) {
   const event = new target.ownerDocument.defaultView.Event(name, { bubbles: true })
-  Object.defineProperties(event, { clientX: { value: x }, pointerType: { value: pointerType } })
+  Object.defineProperties(event, { clientX: { value: x }, clientY: { value: y }, pointerType: { value: pointerType } })
   target.dispatchEvent(event)
 }
 
@@ -35,13 +34,28 @@ test("ChartInteraction snaps all series to shared x and updates only the rendere
   pointer(svg, "pointermove", 76)
   await sleep(30)
 
-  assert.equal(mounted.el.querySelector('[data-part="crosshair"]').getAttribute("x1"), "80")
-  assert.equal(mounted.el.querySelector('[data-part="tooltip-date"]').textContent, "Feb 1")
-  assert.match(mounted.el.querySelector('[data-part="tooltip"]').getAttribute("transform"), /translate\(.*\)/)
-  assert.equal(mounted.el.querySelectorAll('[data-part="tooltip-row"]')[0].textContent, "Collection: $12")
-  assert.equal(mounted.el.querySelectorAll('[data-part="tooltip-row"]')[1].textContent, "Inventory: —")
+  assert.equal(Number(mounted.el.querySelector('[data-part="crosshair"]').getAttribute("x1")), 86)
+  assert.equal(mounted.el.querySelector('[data-part="html-tooltip-date"]').textContent, "Feb 1")
+  assert.equal(mounted.el.querySelector('[data-part="html-tooltip"]').hidden, false)
+  assert.equal(mounted.el.querySelectorAll('[data-part="html-tooltip-value"]')[0].textContent, "$12")
+  assert.equal(mounted.el.querySelectorAll('[data-part="html-tooltip-value"]')[1].textContent, "—")
   assert.equal(mounted.el.querySelector('[data-part="series-point"][data-series-index="1"]').hasAttribute("hidden"), true)
   assert.deepEqual([...svg.children], originalChildren)
+  mounted.unmount()
+})
+
+test("ChartInteraction places a top-edge tooltip below its point within a narrow chart", () => {
+  const html = fixture().replace('viewBox="0 0 100 150"', 'viewBox="0 0 320 150"')
+  const mounted = mountHook(hooks.ChartInteraction, html, { rootId: "chart" })
+  const tooltip = mounted.el.querySelector('[data-part="html-tooltip"]')
+  Object.defineProperties(tooltip, {
+    offsetWidth: { value: 180 },
+    offsetHeight: { value: 60 },
+  })
+  mounted.hook.show({ ...points[0], positions: [{ x: 20, y: 3 }] })
+  assert.ok(parseFloat(tooltip.style.top) > 3)
+  assert.ok(parseFloat(tooltip.style.left) >= 0)
+  assert.ok(parseFloat(tooltip.style.left) + tooltip.offsetWidth <= 320)
   mounted.unmount()
 })
 
@@ -51,7 +65,7 @@ test("touch, keyboard traversal, announcement, update and destroy are safe", asy
   svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 150 })
   pointer(svg, "pointerdown", 19, "touch")
   await sleep(30)
-  assert.equal(mounted.el.querySelector('[data-part="tooltip-date"]').textContent, "Jan 1")
+  assert.equal(mounted.el.querySelector('[data-part="html-tooltip-date"]').textContent, "Jan 1")
   assert.equal(mounted.el.querySelector('[data-part="live"]').textContent, "")
 
   const first = mounted.el.querySelector('[data-chart-point="0"]')
@@ -127,7 +141,7 @@ test("hover_event debounces pointer movement to the latest shared x", async () =
   pointer(svg, "pointermove", 20)
   await sleep(25)
   pointer(svg, "pointermove", 76)
-  await sleep(180)
+  await sleep(350)
   assert.deepEqual(events, [{
     name: "hover_date",
     payload: { chart_id: "chart", x: "2026-02-01", values: { collection: 12, inventory: null } },
@@ -146,7 +160,7 @@ test("hover_event cancels its pending push when the pointer leaves", async () =>
   pointer(svg, "pointermove", 76)
   await sleep(30)
   pointer(svg, "pointerleave", 76)
-  await sleep(180)
+  await sleep(350)
   assert.deepEqual(events, [])
   mounted.unmount()
 })
@@ -161,9 +175,76 @@ test("pointercancel clears touch state and cancels a pending hover", async () =>
 
   pointer(svg, "pointerdown", 20, "touch")
   pointer(svg, "pointercancel", 20, "touch")
-  await sleep(180)
+  await sleep(350)
   assert.equal(mounted.hook.touchActive, false)
   assert.deepEqual(events, [])
   assert.equal(mounted.el.querySelector(".lui-time-series-chart__interaction").hasAttribute("hidden"), true)
+  mounted.unmount()
+})
+
+
+test("ChartInteraction fits x geometry to the measured width without scaling glyphs", () => {
+  const sizingFixture = fixture().replace('<svg viewBox="0 0 100 150"><g class="lui-time-series-chart__interaction"', '<svg viewBox="0 0 100 150"><g class="lui-time-series-chart__labels"><text class="lui-time-series-chart__x-tick" x="20">Jan</text><text class="lui-time-series-chart__x-tick" x="80">Feb</text></g><g class="lui-time-series-chart__series"><path d="M20,80L80,60"></path></g><g class="lui-time-series-chart__interaction"')
+  const mounted = mountHook(hooks.ChartInteraction, sizingFixture, { rootId: "chart" })
+  let width = 320
+  mounted.el.getBoundingClientRect = () => ({ width })
+  mounted.hook.fitWidth()
+  const svg = mounted.el.querySelector("svg")
+  assert.equal(svg.viewBox.baseVal.width, 320)
+  assert.equal(svg.getAttribute("preserveAspectRatio"), "xMinYMin meet")
+  assert.equal(Number(svg.querySelector('.lui-time-series-chart__x-tick').getAttribute("x")), 20)
+  const path = svg.querySelector('.lui-time-series-chart__series path')
+  assert.equal(path.getAttribute("d"), "M 20 80 L 306 60")
+  assert.equal(path.hasAttribute("transform"), false)
+  width = 500
+  mounted.hook.fitWidth()
+  assert.equal(svg.viewBox.baseVal.width, 500)
+  assert.equal(Number(svg.querySelectorAll('.lui-time-series-chart__x-tick')[1].getAttribute("x")), 486)
+  assert.equal(path.getAttribute("d"), "M 20 80 L 486 60")
+  mounted.unmount()
+})
+
+test("ChartInteraction recalculates curved and stepped path coordinates without SVG transforms", () => {
+  const html = fixture().replace('<g class="lui-time-series-chart__interaction"', '<g class="lui-time-series-chart__series"><path d="M20,80 C30,70 70,60 80,60 H20 V90 Z"></path></g><g class="lui-time-series-chart__interaction"')
+  const mounted = mountHook(hooks.ChartInteraction, html, { rootId: "chart" })
+  mounted.el.getBoundingClientRect = () => ({ width: 320 })
+  mounted.hook.fitWidth()
+  const path = mounted.el.querySelector('.lui-time-series-chart__series path')
+  assert.equal(path.getAttribute("d"), "M 20 80 C 67.7 70 258.3 60 306 60 H 20 V 90 Z")
+  assert.equal(path.hasAttribute("transform"), false)
+  mounted.unmount()
+})
+
+test("bar hover highlights the rendered bar and shows no crosshair", async () => {
+  const html = fixture()
+    .replace('<div id="chart"', '<div id="chart" data-chart-type="grouped_bar"')
+    .replace('<line data-part="crosshair" x1="0" x2="0"></line>', '')
+    .replace('<g class="lui-time-series-chart__interaction"', '<g class="lui-time-series-chart__series"><rect class="lui-time-series-chart__bar" data-band-index="1" data-series-index="0" x="68" width="18" y="30" height="30"></rect></g><g class="lui-time-series-chart__interaction"')
+  const mounted = mountHook(hooks.ChartInteraction, html, { rootId: "chart" })
+  const svg = mounted.el.querySelector("svg")
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 150 })
+  const bar = mounted.el.querySelector('.lui-time-series-chart__bar')
+  pointer(bar, "pointermove", 80)
+  await sleep(40)
+  assert.equal(mounted.el.querySelector('[data-part="crosshair"]'), null)
+  assert.equal(bar.hasAttribute('data-active'), true)
+  assert.equal(mounted.el.querySelector('[data-part="html-tooltip"]').hidden, false)
+  mounted.unmount()
+})
+
+test("horizontal bar hover uses the bar's band even when its value x is elsewhere", async () => {
+  const html = fixture()
+    .replace('<div id="chart"', '<div id="chart" data-chart-type="stacked_bar" data-orientation="horizontal"')
+    .replace('<line data-part="crosshair" x1="0" x2="0"></line>', '')
+    .replace('<g class="lui-time-series-chart__interaction"', '<g class="lui-time-series-chart__series"><rect class="lui-time-series-chart__bar" data-band-index="1" data-series-index="0" x="12" width="25" y="90" height="18"></rect></g><g class="lui-time-series-chart__interaction"')
+  const mounted = mountHook(hooks.ChartInteraction, html, { rootId: "chart" })
+  const svg = mounted.el.querySelector("svg")
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 150 })
+  const bar = mounted.el.querySelector('.lui-time-series-chart__bar')
+  pointer(bar, "pointermove", 20, "mouse", 99)
+  await sleep(40)
+  assert.equal(bar.hasAttribute('data-active'), true)
+  assert.equal(mounted.el.querySelector('[data-part="html-tooltip-date"]').textContent, "Feb 1")
+  assert.equal(mounted.el.querySelector('[data-part="crosshair"]'), null)
   mounted.unmount()
 })

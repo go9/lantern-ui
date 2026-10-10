@@ -316,55 +316,57 @@ if (CONSISTENCY_ONLY) {
                 rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
                 viewBox: { width: svg.viewBox.baseVal.width, height: svg.viewBox.baseVal.height },
                 points: JSON.parse(svg.parentElement.dataset.interaction),
-                tooltip: (() => {
-                  const node = svg.querySelector('[data-part="tooltip"]')
-                  return Object.fromEntries(["plotLeft", "plotRight", "plotTop", "plotBottom"].map((key) => [key, Number(node.dataset[key])]))
-                })(),
+                focusPoints: [...svg.querySelectorAll('[data-chart-point]')].map((node) => ({ x: Number(node.getAttribute('cx')), y: Number(node.getAttribute('cy')) })),
               }
             })
             const shotDir = `${SHOTS}/charts`
-            const pointClient = (point) => ({
-              x: chartInfo.rect.left + point.x / chartInfo.viewBox.width * chartInfo.rect.width,
-              y: chartInfo.rect.top + (point.positions.find((position) => position)?.y || 80) / chartInfo.viewBox.height * chartInfo.rect.height,
-            })
+            const pointClient = (point) => {
+              const focusPoint = chartInfo.focusPoints[chartInfo.points.indexOf(point)]
+              return {
+                x: chartInfo.rect.left + focusPoint.x / chartInfo.viewBox.width * chartInfo.rect.width,
+                y: chartInfo.rect.top + focusPoint.y / chartInfo.viewBox.height * chartInfo.rect.height,
+              }
+            }
             const verifyTooltip = async (label) => {
               await page.waitForFunction((expected) => {
                 const crosshair = document.querySelector('#qa-time-series [data-part="crosshair"]')
-                const tooltip = document.querySelector('#qa-time-series [data-part="tooltip-date"]')
+                const tooltip = document.querySelector('#qa-time-series [data-part="html-tooltip-date"]')
                 return crosshair && !crosshair.closest("g[hidden]") && tooltip?.textContent === expected
               }, { timeout: 2000 }, label)
-              const measured = await page.$eval("#qa-time-series svg", (svg) => {
-                const rect = svg.getBoundingClientRect()
-                const scale = rect.width / svg.viewBox.baseVal.width
-                const tooltip = svg.querySelector('[data-part="tooltip"]')
-                const tip = tooltip.querySelector("rect").getBoundingClientRect()
+              const measured = await page.$eval("#qa-time-series", (chart) => {
+                const rect = chart.getBoundingClientRect()
+                const svg = chart.querySelector("svg")
+                const tooltip = chart.querySelector('[data-part="html-tooltip"]')
+                const tip = tooltip.getBoundingClientRect()
                 const crosshair = svg.querySelector('[data-part="crosshair"]').getBoundingClientRect()
                 return {
-                  left: tip.left, right: tip.right,
-                  plotLeft: rect.left + Number(tooltip.dataset.plotLeft) * scale,
-                  plotRight: rect.left + Number(tooltip.dataset.plotRight) * scale,
+                  left: tip.left, right: tip.right, top: tip.top, height: tip.height,
+                  chartLeft: rect.left, chartRight: rect.right,
                   crosshairX: crosshair.left,
                   visible: !svg.querySelector('[data-part="crosshair"]').closest("g[hidden]") && getComputedStyle(svg.querySelector('[data-part="crosshair"]').closest("g")).display !== "none",
-                  label: tooltip.querySelector('[data-part="tooltip-date"]').textContent,
+                  label: tooltip.querySelector('[data-part="html-tooltip-date"]').textContent,
                 }
               })
               if (!measured.visible || measured.label !== label) row.problems.push(`${label}: interaction overlay did not select its point (visible=${measured.visible}, label=${JSON.stringify(measured.label)})`)
-              if (measured.left < measured.plotLeft - 1 || measured.right > measured.plotRight + 1) row.problems.push(`${label}: tooltip escapes the plot edges`)
+              if (measured.left < measured.chartLeft - 1 || measured.right > measured.chartRight + 1) row.problems.push(`${label}: tooltip escapes the chart edges`)
               return measured
             }
             const firstPoint = chartInfo.points[0]
             const lastPoint = chartInfo.points.at(-1)
             const firstClient = pointClient(firstPoint)
             const lastClient = pointClient(lastPoint)
+            const nearAnchor = (tip, client) => client.x >= tip.left - 16 && client.x <= tip.right + 16
             await page.mouse.move(firstClient.x, firstClient.y)
             await sleep(80)
             const mouseFirst = await verifyTooltip(firstPoint.label)
+            if (!nearAnchor(mouseFirst, firstClient)) row.problems.push("first-point tooltip is detached from its marker")
             await page.screenshot({ path: `${shotDir}/${vw}-${theme}-mouse-first.png`, fullPage: true })
             await page.screenshot({ path: `${shotDir}/${vw}-${theme}-interaction.png`, fullPage: true })
             await page.mouse.move(lastClient.x, lastClient.y)
             await sleep(80)
             const mouseLast = await verifyTooltip(lastPoint.label)
-            if (Math.abs(mouseFirst.crosshairX - mouseLast.crosshairX) < 20 || Math.abs(mouseFirst.left - mouseLast.left) < 20) row.problems.push("mouse tooltip did not follow the crosshair between chart edges")
+            if (lastClient.y - chartInfo.rect.top < mouseLast.height + 12 && mouseLast.top < lastClient.y + 8) row.problems.push("top-edge tooltip did not flip below its point")
+            if (Math.abs(mouseFirst.crosshairX - mouseLast.crosshairX) < 20 || !nearAnchor(mouseLast, lastClient)) row.problems.push("mouse tooltip did not follow the crosshair between chart edges")
             await page.screenshot({ path: `${shotDir}/${vw}-${theme}-mouse-last.png`, fullPage: true })
 
             const touchMeasurements = []
@@ -377,7 +379,7 @@ if (CONSISTENCY_ONLY) {
               await page.screenshot({ path: `${shotDir}/${vw}-${theme}-${name}.png`, fullPage: true })
             }
             row.touchTooltipEdges = touchMeasurements.map(({ left, right, crosshairX, label }) => ({ left, right, crosshairX, label }))
-            if (Math.abs(touchMeasurements[0].left - touchMeasurements[1].left) < 20) row.problems.push(`touch tooltip did not follow the selected point between chart edges (${touchMeasurements[0].left} -> ${touchMeasurements[1].left})`)
+            if (!nearAnchor(touchMeasurements[0], firstClient) || !nearAnchor(touchMeasurements[1], lastClient)) row.problems.push("touch tooltip is detached from its selected point")
             await page.$eval("#qa-time-series svg", (svg) => {
               svg.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerType: "touch" }))
               svg.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true, relatedTarget: document.body }))
@@ -391,7 +393,7 @@ if (CONSISTENCY_ONLY) {
             await page.keyboard.press("End")
             await sleep(30)
             const keyboardLast = await verifyTooltip(lastPoint.label)
-            if (Math.abs(keyboardFirst.left - keyboardLast.left) < 20) row.problems.push("keyboard tooltip did not follow the selected point between chart edges")
+            if (!nearAnchor(keyboardFirst, firstClient) || !nearAnchor(keyboardLast, lastClient)) row.problems.push("keyboard tooltip is detached from its selected point")
             await page.screenshot({ path: `${shotDir}/${vw}-${theme}-keyboard-last.png`, fullPage: true })
             await page.keyboard.press("Escape")
             const keyboardDismissed = await page.$eval('#qa-time-series [data-part="crosshair"]', (el) => !!el.closest("g[hidden]"))
@@ -420,6 +422,9 @@ if (CONSISTENCY_ONLY) {
             await page.screenshot({ path: `${cardDir}/${vw}-${theme}-card-settings.png`, fullPage: true })
             await page.keyboard.press("Escape")
             await page.waitForFunction(() => document.querySelector('#qa-chart-settings [data-part="content"]')?.hidden, { timeout: 2000 })
+            await page.evaluate(() => document.querySelector('#qa-time-series [data-chart-point="0"]')?.focus())
+            const prePrintTooltipVisible = await page.$eval('#qa-time-series [data-part="html-tooltip"]', (tooltip) => getComputedStyle(tooltip).display !== "none")
+            if (!prePrintTooltipVisible) row.problems.push("print check did not activate the chart tooltip")
             await page.emulateMediaType("print")
             const printControlsHidden = await page.evaluate(() => {
               const hidden = (selector) => {
@@ -430,12 +435,14 @@ if (CONSISTENCY_ONLY) {
                 cardSettings: hidden(".lui-chart-card__settings"),
                 trigger: hidden("#qa-chart-settings .lui-chart-settings__trigger"),
                 form: hidden("#qa-chart-settings .lui-chart-settings"),
+                tooltip: hidden("#qa-time-series [data-part=html-tooltip]"),
                 chartVisible: getComputedStyle(document.querySelector("#qa-time-series")).display !== "none",
               }
             })
             if (!printControlsHidden.cardSettings || !printControlsHidden.trigger || !printControlsHidden.form) {
               row.problems.push("print still shows chart settings controls")
             }
+            if (!printControlsHidden.tooltip) row.problems.push("print still shows the active chart tooltip")
             if (!printControlsHidden.chartVisible) row.problems.push("print hides the static chart")
             await page.screenshot({ path: `${cardDir}/${vw}-${theme}-card-settings-print.png`, fullPage: true })
             await page.emulateMediaType("screen")
