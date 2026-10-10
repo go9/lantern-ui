@@ -7,6 +7,8 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Fixed
+- Keep a page-shell home crumb visible during narrow-strip folding and let hosts set its icon, accessible name, and tooltip.
+- Give sidebar icons a shared 32px hit area and 16px glyph size across expanded and collapsed navigation.
 - `use LanternUI` imports only documented function components. Public helpers remain available through their module names and no longer conflict with consumer-local functions such as `parse_date/1`.
 - Align the app sidebar workspace header with the sticky page strip, use a shared page gutter and 28/32/36px control scale, and position expanded data tables below the token-sized strip at every viewport width.
 - Exclude checkbox, radio, range, file, and hidden inputs from table-chrome control sizing so selection and native controls keep their expected dimensions.

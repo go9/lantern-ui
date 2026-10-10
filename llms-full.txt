@@ -337,10 +337,14 @@ Compact path breadcrumb — layout chrome + file/tree navigation.
 - `aria_label` (:string, default "Breadcrumb") — Accessible name for the nav landmark.
 - `class` (:any) — Extra classes merged onto the root element.
 - `home` (:string) — When set, renders a leading home-icon crumb linking here (product chrome).
+- `home_icon` (:string) — Optional host icon name for the home link, such as a heroicon class.
+- `home_label` (:string, default "Home") — Accessible name for the home link.
+- `home_title` (:string) — Optional native tooltip for the home link.
 - `items` (:list, default []) — Optional list of %{label:, path: | nil} maps (alternative to :item slots).
 - `rest` (:global) — Arbitrary HTML/phx-* attributes passed through.
 - `separator` (:string) — Optional text separator between items.
 Slots:
+- `:after_home` — Optional compact navigation control placed after the leading home crumb.
 - `:item` — One path segment; link, button, or current page.
   - `current` — Mark as the current page (plain text, aria-current).
   - `navigate` — LiveView navigate target for this segment.
@@ -1175,6 +1179,10 @@ Page shell with breadcrumb-owned page identity, a visually hidden semantic title
 - `content_class` (:any) — Extra classes merged onto the content region.
 - `dismiss_label` (:string, default "Dismiss notice") — Accessible label for the notice dismiss control.
 - `dismissed` (:boolean, default false) — Server-owned notice dismissal state.
+- `home` (:string) — Optional leading home link destination.
+- `home_icon` (:string) — Optional host icon name for the home link.
+- `home_label` (:string, default "Home") — Accessible name for the home link.
+- `home_title` (:string) — Optional native tooltip for the home link.
 - `id` (:string, required) — Stable id for the page shell and action hook.
 - `layout` (:string, values: stacked, strip, default "stacked") — `"stacked"` (default): a breadcrumb topline above a floating action row.
 - `more_actions_label` (:string, default "More actions") — Accessible label for the overflow action menu.

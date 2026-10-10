@@ -910,9 +910,11 @@
   min-width: 0; overflow-x: auto; }
 .lui-breadcrumb-item { display: inline-flex; align-items: center; gap: 0; min-width: 0;
   flex: none; }
+.lui-breadcrumb-after-home { display: none; }
 .lui-breadcrumb-sep { display: inline-flex; align-items: center; color: var(--lantern-fg-subtle);
   user-select: none; flex: none; margin: 0 0.05rem; }
 .lui-breadcrumb-icon { width: 0.75rem; height: 0.75rem; display: block; flex: none; }
+.lui-breadcrumb-icon.lui-breadcrumb-host-icon { width: 0.75rem; height: 0.75rem; }
 .lui-breadcrumb-chevron { width: 0.7rem; height: 0.7rem; opacity: 0.65; }
 .lui-breadcrumb-home { display: inline-flex; align-items: center; justify-content: center;
   color: var(--lantern-fg-muted); border-radius: var(--lantern-radius-sm);
@@ -949,6 +951,7 @@
 
 /* ── App shell (top bar + fixed sidebar + main) ── */
 .lui-app { --lui-sidebar-expanded-w: 15rem; --lui-sidebar-w: var(--lui-sidebar-expanded-w); --lui-appbar-h: 3.25rem;
+  --lui-sidebar-icon-hit-area: 2rem; --lui-sidebar-icon-size: 1rem;
   /* Page-shell sticky rows account for the fixed bar when the document scrolls. */
   --lui-shell-appbar-offset: var(--lui-appbar-h);
   min-height: 100vh; background: var(--lantern-surface); color: var(--lantern-fg);
@@ -1134,10 +1137,12 @@
 .lui-page-strip :is(button, input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select, [role="tab"]) {
   min-height: var(--lui-control-md-h);
 }
-/* Narrow strip: keep the back crumb and the current page; fold the rest into `…`. */
+/* Narrow strip: keep Home and the current page; fold the rest into `…`. */
 @container lui-page-strip (max-width: 40rem) {
   .lui-page-strip-trail .lui-breadcrumb-item:not(:nth-last-child(-n + 2)) { display: none; }
-  .lui-page-strip-trail .lui-page-strip-more { display: inline-flex; flex: none; }
+  .lui-page-strip-trail .lui-breadcrumb-item:not(:nth-last-child(-n + 2)).lui-breadcrumb-home-item { display: inline-flex; }
+  .lui-page-strip-trail .lui-breadcrumb-item:not(:nth-last-child(-n + 2)).lui-breadcrumb-after-home { display: inline-flex; }
+  .lui-page-strip-trail .lui-breadcrumb-after-home .lui-page-strip-more { display: inline-flex; flex: none; }
 }
 /* Print: the breadcrumb, the More menu and the actions go; the sr-only h1 stays
    in the DOM, as it does in the stacked layout. */
@@ -1330,7 +1335,10 @@
 .lui-nav-item-active { color: var(--lantern-accent); font-weight: 600;
   background: var(--lantern-accent-soft); }
 .lui-nav-item-active:hover { color: var(--lantern-accent); background: var(--lantern-accent-soft); }
-.lui-nav-item-icon { font-size: 1.05rem; flex-shrink: 0; }
+.lui-nav-item-icon-hitarea { width: var(--lui-sidebar-icon-hit-area); height: var(--lui-sidebar-icon-hit-area);
+  display: grid; flex: none; place-items: center; }
+.lui-nav-item-icon { width: var(--lui-sidebar-icon-size); height: var(--lui-sidebar-icon-size);
+  font-size: var(--lui-sidebar-icon-size); flex-shrink: 0; }
 .lui-sidebar-tooltip {
   position: fixed; z-index: var(--lantern-z-tooltip, 80); transform: translateY(-50%);
   max-width: min(20rem, calc(100vw - 1rem)); padding: 0.35rem 0.55rem;
@@ -1344,7 +1352,7 @@
    lantern's inline icons. Two classes on the element out-specify the single
    `.hero-*` class regardless of source order. Scoped to the mask marker so
    lantern's SVG icons (sized by font-size) are untouched. */
-.lui-nav-item-icon.lui-nav-item-icon-mask { width: 1.15rem; height: 1.15rem; }
+.lui-nav-item-icon.lui-nav-item-icon-mask { width: var(--lui-sidebar-icon-size); height: var(--lui-sidebar-icon-size); }
 .lui-nav-item-label { overflow: hidden; text-overflow: ellipsis; }
 
 /* A count on a nav item. `margin-left: auto` parks it at the end of the row so
