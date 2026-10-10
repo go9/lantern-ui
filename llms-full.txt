@@ -343,6 +343,8 @@ Compact path breadcrumb — layout chrome + file/tree navigation.
 - `aria_label` (:string, default "Breadcrumb") — Accessible name for the nav landmark.
 - `class` (:any) — Extra classes merged onto the root element.
 - `home` (:string) — When set, renders a leading home-icon crumb linking here (product chrome).
+- `home_label` (:string, default "Home") — Accessible name for the `home` crumb.
+- `home_title` (:string) — Tooltip (native `title`) for the `home` crumb.
 - `items` (:list, default []) — Optional list of %{label:, path: | nil} maps (alternative to :item slots).
 - `rest` (:global) — Arbitrary HTML/phx-* attributes passed through.
 - `separator` (:string) — Optional text separator between items.
@@ -1181,6 +1183,9 @@ Page shell with breadcrumb-owned page identity, a visually hidden semantic title
 - `content_class` (:any) — Extra classes merged onto the content region.
 - `dismiss_label` (:string, default "Dismiss notice") — Accessible label for the notice dismiss control.
 - `dismissed` (:boolean, default false) — Server-owned notice dismissal state.
+- `home` (:string) — When set, a leading home-icon crumb links here (`layout="strip"` keeps it when folding).
+- `home_label` (:string, default "Home") — Accessible name for the home crumb.
+- `home_title` (:string) — Tooltip for the home crumb.
 - `id` (:string, required) — Stable id for the page shell and action hook.
 - `layout` (:string, values: stacked, strip, default "stacked") — `"stacked"` (default): a breadcrumb topline above a floating action row.
 - `more_actions_label` (:string, default "More actions") — Accessible label for the overflow action menu.
