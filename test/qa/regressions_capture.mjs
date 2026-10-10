@@ -25,6 +25,7 @@ for (const width of [1440, 1100, 390]) {
     const url = `${base}/regressions?theme=${theme}`
     await page.goto(url, { waitUntil: "networkidle0" })
     await page.waitForSelector("#qa-regression-chart svg")
+    await page.evaluate(() => { document.body.style.background = getComputedStyle(document.querySelector("#qa-regressions")).backgroundColor })
 
     const shot = async (state) => {
       const file = `${width}-${theme}-${state}.png`
@@ -87,6 +88,7 @@ for (const width of [1440, 1100, 390]) {
     await new Promise((resolve) => setTimeout(resolve, 100))
     await shot("chart-hover")
     await page.goto(`${url}&expand=1`, { waitUntil: "networkidle0" })
+    await page.evaluate(() => { document.body.style.background = getComputedStyle(document.querySelector("#qa-regressions")).backgroundColor })
     if (!baseline) assert.equal(await page.$eval("#qa-regression-table-overview", (node) => getComputedStyle(node).display), "none")
     await shot("expanded")
     await page.close()
