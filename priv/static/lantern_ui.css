@@ -1654,6 +1654,7 @@
 .lui-dt-overview-chev { transition: transform var(--lantern-duration) var(--lantern-ease); }
 .lui-dt-overview[data-collapsed] .lui-dt-overview-chev { transform: rotate(-90deg); }
 .lui-dt-overview[data-collapsed] .lui-dt-overview-body { display: none; }
+.lui-dt-overview-body { padding: 1rem; }
 /* flex-wrap rather than `grid auto-fit`: with auto-fit, a row that can hold N
    columns leaves N-1 dead cells beside the final orphan (e.g. 4 stats in a
    3-column row). Flexing from the same basis keeps equal widths when they fit
@@ -1663,7 +1664,7 @@
 .lui-stat-grid { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
   overflow: hidden; }
 .lui-dt-stat { flex: 1 1 9.5rem; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem;
-  padding: 0.7rem 0.8rem;
+  padding: 1rem;
   background: var(--lantern-surface-raised); text-decoration: none; }
 .lui-dt-stat:hover { background: var(--lantern-surface-hover); }
 .lui-dt-stat:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: -2px; }

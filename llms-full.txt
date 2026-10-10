@@ -128,6 +128,7 @@ Render a generic series-first chart using server-computed SVG geometry.
 - `annotations` (:list, default []) — Optional markers keyed by x.
 - `aria_label` (:string, default "Time series chart") — Accessible name for the SVG.
 - `axes` (:boolean, default true) — Show x and y labels.
+- `axis_format` (:any) — Optional 1-arity formatter for numeric axis labels; tooltips keep `value_format`.
 - `baseline` (:atom, values: zero, auto, default :zero) — `:zero` includes zero; `:auto` fits the value range.
 - `class` (:string) — Extra classes merged onto the root element.
 - `comparison` (:list, default []) — Optional previous-period series set.
