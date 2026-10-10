@@ -710,6 +710,11 @@ defmodule LanternUI.Charts do
     doc: "`:number`, `:currency`, or a 1-arity number formatter."
   )
 
+  attr(:axis_format, :any,
+    default: nil,
+    doc: "Optional 1-arity formatter for numeric axis labels; tooltips keep `value_format`."
+  )
+
   def time_series_chart(assigns) do
     assigns = assign(assigns, time_series_geometry(assigns))
 
@@ -1203,7 +1208,8 @@ defmodule LanternUI.Charts do
     plot_bottom = assigns.height - @margin.bottom
     primary_points = Enum.flat_map(series, & &1.points)
     interaction_series = series ++ comparison
-    reference_specs = normalize_reference_lines(assigns.reference_lines, assigns.value_format)
+    axis_format = assigns.axis_format || assigns.value_format
+    reference_specs = normalize_reference_lines(assigns.reference_lines, axis_format)
     axis_points = if primary_points == [], do: all_points, else: primary_points
     axis_keys = axis_points |> Enum.map(& &1.key) |> Enum.uniq() |> sort_x_keys(kind)
     axis_key_set = MapSet.new(axis_keys)
@@ -1274,7 +1280,9 @@ defmodule LanternUI.Charts do
     vertical_bars? =
       assigns.type in [:bar, :stacked_bar, :grouped_bar] and assigns.orientation == :vertical
 
-    x_ticks = time_series_x_ticks(axis_keys, kind, if(vertical_bars?, do: band_xf, else: xf))
+    x_ticks =
+      time_series_x_ticks(axis_keys, kind, if(vertical_bars?, do: band_xf, else: xf))
+      |> non_overlapping_time_ticks()
 
     interaction_positions =
       time_series_interaction_positions(
@@ -1295,7 +1303,7 @@ defmodule LanternUI.Charts do
         horizontal_x_ticks =
           Enum.map(
             ticks,
-            &{format_value(&1, assigns.value_format), Geometry.round1(numeric_x.(&1)), "middle"}
+            &{format_value(&1, axis_format), Geometry.round1(numeric_x.(&1)), "middle"}
           )
 
         category_y_ticks =
@@ -1365,7 +1373,7 @@ defmodule LanternUI.Charts do
         compare_paths = build_comparison_paths(comparison, axis_keys, xf, yf, curve)
 
         {chart_paths ++ compare_paths, [], nil, x_ticks,
-         Enum.map(ticks, &{format_value(&1, assigns.value_format), Geometry.round1(yf.(&1))}),
+         Enum.map(ticks, &{format_value(&1, axis_format), Geometry.round1(yf.(&1))}),
          Enum.map(ticks, &Geometry.round1(yf.(&1))), zero_line_y}
       end
 
@@ -2179,6 +2187,65 @@ defmodule LanternUI.Charts do
       label = x_key_label(point, kind)
       {label, Geometry.round1(xf.(point)), tick_anchor(index, count)}
     end)
+  end
+
+  # Date snapshots are not always evenly spaced. Keep the first and last tick,
+  # then remove interior labels that would collide at the chart's SVG font size.
+  # If an endpoint conflicts with an interior tick, the endpoint wins.
+  defp non_overlapping_time_ticks([first, last]) do
+    if ticks_separated?(first, last), do: [first, last], else: [first]
+  end
+
+  defp non_overlapping_time_ticks([first | rest] = ticks) do
+    if length(ticks) < 2 do
+      ticks
+    else
+      last = List.last(rest)
+      interiors = Enum.drop(rest, -1)
+
+      kept =
+        Enum.reduce(interiors, [first], fn tick, acc ->
+          if ticks_separated?(List.last(acc), tick), do: acc ++ [tick], else: acc
+        end)
+
+      kept = fit_last_tick(kept, last)
+      kept
+    end
+  end
+
+  defp non_overlapping_time_ticks(ticks), do: ticks
+
+  defp fit_last_tick(kept, last) do
+    case kept do
+      [] ->
+        [last]
+
+      _ ->
+        if ticks_separated?(List.last(kept), last) do
+          kept ++ [last]
+        else
+          case Enum.drop(kept, -1) do
+            [] -> [hd(kept)]
+            without_interior -> fit_last_tick(without_interior, last)
+          end
+        end
+    end
+  end
+
+  defp ticks_separated?({left_label, left_x, left_anchor}, {right_label, right_x, right_anchor}) do
+    {_left_edge, left_right} = tick_edges(left_label, left_x, left_anchor)
+    {right_left, _right_edge} = tick_edges(right_label, right_x, right_anchor)
+    right_left - left_right >= 8
+  end
+
+  defp tick_edges(label, x, anchor) do
+    width = max(String.length(label) * 6.1, 6)
+
+    case anchor do
+      "start" -> {x, x + width}
+      "end" -> {x - width, x}
+      _ -> {x - width / 2, x + width / 2}
+    end
   end
 
   defp x_key_label({:category, label}, :category), do: label

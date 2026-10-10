@@ -10,6 +10,13 @@ defmodule LanternUI.ChartsTest do
     )
   end
 
+  defp tick_labels(html, selector) do
+    html
+    |> Floki.parse_fragment!()
+    |> Floki.find(selector)
+    |> Enum.map(&(Floki.text(&1) |> String.trim()))
+  end
+
   # The value axis labels: the right-anchored text that is a number (the last
   # date label is right-anchored too).
   defp y_labels(html) do
@@ -747,6 +754,71 @@ defmodule LanternUI.ChartsTest do
       assert html =~ "Apr"
       assert html =~ "May"
       refute html =~ "Jun"
+    end
+
+    test "axis formatter compacts ticks while interaction values keep the full formatter" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "axis-format",
+          series: [
+            %{id: "value", label: "Value", points: [%{x: "A", y: 1_200}, %{x: "B", y: 2_400}]}
+          ],
+          value_format: fn value -> "$#{:erlang.float_to_binary(value * 1.0, decimals: 2)}" end,
+          axis_format: fn value -> "$#{round(value / 1_000)}k" end
+        )
+
+      assert "$1k" in tick_labels(html, ".lui-time-series-chart__y-tick")
+      assert html =~ "$1200.00"
+    end
+
+    test "overlapping x-axis labels are skipped while endpoints remain when they fit" do
+      labels = for i <- 1..10, do: "#{i}-" <> String.duplicate("long category ", 4)
+
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "x-tick-collision",
+          series: [
+            %{id: "value", label: "Value", points: Enum.map(labels, &%{x: &1, y: 1})}
+          ]
+        )
+
+      ticks =
+        html
+        |> Floki.parse_fragment!()
+        |> Floki.find(".lui-time-series-chart__x-tick")
+        |> Enum.map(fn tick ->
+          {Floki.text(tick), tick |> Floki.attribute("x") |> hd() |> String.to_float(),
+           tick |> Floki.attribute("text-anchor") |> hd()}
+        end)
+
+      assert length(ticks) < 5
+      assert elem(hd(ticks), 2) == "start"
+      assert elem(List.last(ticks), 2) == "end"
+    end
+
+    test "dense end-of-range dates do not emit adjacent colliding day labels" do
+      days = [0, 29, 34, 35, 36]
+
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "dense-date-ticks",
+          series: [
+            %{
+              id: "value",
+              label: "Value",
+              points:
+                Enum.map(days, fn offset ->
+                  %{x: Date.add(~D[2026-01-01], offset), y: 1}
+                end)
+            }
+          ]
+        )
+
+      labels = tick_labels(html, ".lui-time-series-chart__x-tick")
+
+      assert length(labels) < 5
+      assert List.last(labels) == "Feb 6"
+      refute "Feb 5" in labels
     end
   end
 
