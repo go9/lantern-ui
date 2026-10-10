@@ -498,8 +498,12 @@ const ChartInteraction = {
       const anchorY = activeBar
         ? Number(activeBar.getAttribute('y')) + Number(activeBar.getAttribute('height')) * (this.horizontalBars ? 0.5 : 0)
         : point.positions?.find((position) => position)?.y ?? point.coords?.find((y) => y != null) ?? 18
-      const preferredX = anchorX + 12 + tooltipWidth <= chartWidth ? anchorX + 12 : anchorX - tooltipWidth - 12
-      this.tooltip.style.left = `${Math.max(0, Math.min(Math.max(4, preferredX), chartWidth - tooltipWidth - 4))}px`
+      const barLeft = activeBar ? Number(activeBar.getAttribute('x')) : anchorX
+      const barRight = activeBar ? barLeft + Number(activeBar.getAttribute('width')) : anchorX
+      const rightX = barRight + 12
+      const leftX = barLeft - tooltipWidth - 12
+      const preferredX = rightX + tooltipWidth <= chartWidth - 4 ? rightX : leftX >= 4 ? leftX : rightX
+      this.tooltip.style.left = `${Math.max(4, Math.min(preferredX, chartWidth - tooltipWidth - 4))}px`
       const above = anchorY - tooltipHeight - 8
       const preferredY = above >= 4 ? above : anchorY + 16
       this.tooltip.style.top = `${Math.max(4, Math.min(preferredY, chartHeight - tooltipHeight - 4))}px`
@@ -3732,6 +3736,63 @@ const LanternActionBar = {
   },
 }
 
+const LanternThumbnail = {
+  mounted() {
+    this.onShow = () => this.showPreview()
+    this.onHide = () => this.hidePreview()
+    this.onKey = (event) => { if (event.key === "Escape") this.hidePreview() }
+    this.onPosition = () => this.positionPreview()
+    this.el.addEventListener("mouseenter", this.onShow)
+    this.el.addEventListener("mouseleave", this.onHide)
+    this.el.addEventListener("focus", this.onShow)
+    this.el.addEventListener("blur", this.onHide)
+    this.el.addEventListener("keydown", this.onKey)
+    this.el.ownerDocument.defaultView.addEventListener("scroll", this.onPosition, true)
+    this.el.ownerDocument.defaultView.addEventListener("resize", this.onPosition)
+  },
+  updated() {
+    if (this.preview) this.preview.querySelector("img").src = this.el.dataset.previewSrc || ""
+    this.positionPreview()
+  },
+  showPreview() {
+    if (!this.el.dataset.previewSrc) return
+    if (!this.preview) {
+      this.preview = this.el.ownerDocument.createElement("div")
+      this.preview.className = "lui-thumbnail-preview"
+      this.preview.setAttribute("role", "img")
+      this.preview.setAttribute("aria-label", this.el.dataset.previewAlt || "Image preview")
+      const img = this.el.ownerDocument.createElement("img")
+      img.alt = ""
+      img.src = this.el.dataset.previewSrc
+      this.preview.append(img)
+      this.el.ownerDocument.body.append(this.preview)
+    }
+    this.positionPreview()
+  },
+  positionPreview() {
+    if (!this.preview) return
+    const win = this.el.ownerDocument.defaultView
+    const rect = this.el.getBoundingClientRect()
+    const size = this.preview.getBoundingClientRect().width
+    const gap = 8
+    const right = rect.right + gap
+    const left = rect.left - size - gap
+    this.preview.style.left = `${right + size <= win.innerWidth - gap ? right : Math.max(gap, left)}px`
+    this.preview.style.top = `${Math.max(gap, Math.min(rect.top, win.innerHeight - size - gap))}px`
+  },
+  hidePreview() { this.preview?.remove(); this.preview = null },
+  destroyed() {
+    this.hidePreview()
+    this.el.removeEventListener("mouseenter", this.onShow)
+    this.el.removeEventListener("mouseleave", this.onHide)
+    this.el.removeEventListener("focus", this.onShow)
+    this.el.removeEventListener("blur", this.onHide)
+    this.el.removeEventListener("keydown", this.onKey)
+    this.el.ownerDocument.defaultView.removeEventListener("scroll", this.onPosition, true)
+    this.el.ownerDocument.defaultView.removeEventListener("resize", this.onPosition)
+  },
+}
+
 export const Hooks = {
   ChartHover,
   LineHover,
@@ -3760,6 +3821,7 @@ export const Hooks = {
   LanternTableChrome,
   LanternRowClick,
   LanternMediaTile,
+  LanternThumbnail,
   LanternTheme,
 }
 export {
@@ -3790,6 +3852,7 @@ export {
   LanternTableChrome,
   LanternRowClick,
   LanternMediaTile,
+  LanternThumbnail,
   LanternTheme,
 }
 export default Hooks

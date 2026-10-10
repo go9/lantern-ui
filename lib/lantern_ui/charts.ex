@@ -827,7 +827,12 @@ defmodule LanternUI.Charts do
           />
           <text
             x={if(reference.vertical, do: reference.position + 4, else: @plot_left + 4)}
-            y={if(reference.vertical, do: @plot_top + 12, else: reference.position - 4)}
+            y={
+              if(reference.vertical,
+                do: @plot_top + 12,
+                else: max(@plot_top + 12, reference.position - 8)
+              )
+            }
           >
             {reference.label}: {reference.value_label}
           </text>
@@ -1060,7 +1065,7 @@ defmodule LanternUI.Charts do
       <LanternUI.Components.Button.button
         :if={@trigger == []}
         variant="outline"
-        size="sm"
+        size="md"
         class="lui-chart-settings__trigger"
         label="Chart settings"
       >
