@@ -44,6 +44,21 @@ test("ChartInteraction snaps all series to shared x and updates only the rendere
   mounted.unmount()
 })
 
+test("ChartInteraction places a top-edge tooltip below its point within a narrow chart", () => {
+  const html = fixture().replace('viewBox="0 0 100 150"', 'viewBox="0 0 320 150"')
+  const mounted = mountHook(hooks.ChartInteraction, html, { rootId: "chart" })
+  const tooltip = mounted.el.querySelector('[data-part="html-tooltip"]')
+  Object.defineProperties(tooltip, {
+    offsetWidth: { value: 180 },
+    offsetHeight: { value: 60 },
+  })
+  mounted.hook.show({ ...points[0], positions: [{ x: 20, y: 3 }] })
+  assert.ok(parseFloat(tooltip.style.top) > 3)
+  assert.ok(parseFloat(tooltip.style.left) >= 0)
+  assert.ok(parseFloat(tooltip.style.left) + tooltip.offsetWidth <= 320)
+  mounted.unmount()
+})
+
 test("touch, keyboard traversal, announcement, update and destroy are safe", async () => {
   const mounted = mountHook(hooks.ChartInteraction, fixture(), { rootId: "chart" })
   const svg = mounted.el.querySelector("svg")

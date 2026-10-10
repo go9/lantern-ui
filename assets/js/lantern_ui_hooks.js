@@ -494,12 +494,15 @@ const ChartInteraction = {
       const tooltipWidth = this.tooltip.offsetWidth || 196
       const tooltipHeight = this.tooltip.offsetHeight || 55
       const chartWidth = this.svg.viewBox.baseVal.width
+      const chartHeight = this.svg.viewBox.baseVal.height
       const anchorY = activeBar
         ? Number(activeBar.getAttribute('y')) + Number(activeBar.getAttribute('height')) * (this.horizontalBars ? 0.5 : 0)
         : point.positions?.find((position) => position)?.y ?? point.coords?.find((y) => y != null) ?? 18
       const preferredX = anchorX + 12 + tooltipWidth <= chartWidth ? anchorX + 12 : anchorX - tooltipWidth - 12
-      this.tooltip.style.left = `${Math.max(4, Math.min(preferredX, chartWidth - tooltipWidth - 4))}px`
-      this.tooltip.style.top = `${Math.max(4, Math.min(anchorY - tooltipHeight - 8, this.svg.viewBox.baseVal.height - tooltipHeight - 4))}px`
+      this.tooltip.style.left = `${Math.max(0, Math.min(Math.max(4, preferredX), chartWidth - tooltipWidth - 4))}px`
+      const above = anchorY - tooltipHeight - 8
+      const preferredY = above >= 4 ? above : anchorY + 16
+      this.tooltip.style.top = `${Math.max(4, Math.min(preferredY, chartHeight - tooltipHeight - 4))}px`
     }
     this.overlay.removeAttribute("hidden")
     if (announce) {

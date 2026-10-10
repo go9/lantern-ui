@@ -59,11 +59,12 @@ jobs:
       - run: npm test
       - uses: browser-actions/setup-chrome@v1
         id: chrome
-      - name: Control sizing browser gate
+      - name: Control sizing and chart browser gates
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
           BASE: http://127.0.0.1:4013
           QA_REPORT_DIR: /tmp/lantern-ui-consistency
+          QA_SHOTS: /tmp/lantern-ui-chart-qa
         run: |
           PORT=4013 mix run --no-halt test/qa/server.exs > /tmp/lantern-ui-qa-server.log 2>&1 &
           for attempt in $(seq 1 30); do
@@ -72,8 +73,11 @@ jobs:
           done
           curl --fail --silent "$BASE/consistency" >/dev/null
           node test/qa/run.mjs --consistency --consistency-legacy
+          node test/qa/run.mjs --charts
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: control-sizing-qa
-          path: /tmp/lantern-ui-consistency
+          name: browser-qa
+          path: |
+            /tmp/lantern-ui-consistency
+            /tmp/lantern-ui-chart-qa
