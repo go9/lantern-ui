@@ -917,6 +917,8 @@
 .lui-breadcrumb-home { display: inline-flex; align-items: center; justify-content: center;
   color: var(--lantern-fg-muted); border-radius: var(--lantern-radius-sm);
   padding: 0.05rem; line-height: 0; text-decoration: none; }
+/* Outline house, sized to match the sidebar nav icons (1.15rem). */
+.lui-breadcrumb-home .lui-breadcrumb-home-icon { width: 1.15rem; height: 1.15rem; }
 .lui-breadcrumb-home:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
 .lui-breadcrumb-link { border: none; background: none; padding: 0.05rem 0.15rem;
   font: inherit; font-size: 0.6875rem; font-weight: 500; color: var(--lantern-fg-muted);
