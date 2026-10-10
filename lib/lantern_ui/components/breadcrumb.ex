@@ -20,6 +20,7 @@ defmodule LanternUI.Components.Breadcrumb do
   use Phoenix.Component
 
   alias LanternUI.Class
+  alias LanternUI.Components.Icon
 
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
 
@@ -31,6 +32,21 @@ defmodule LanternUI.Components.Breadcrumb do
   attr(:home, :string,
     default: nil,
     doc: "When set, renders a leading home-icon crumb linking here (product chrome)."
+  )
+
+  attr(:home_label, :string,
+    default: "Home",
+    doc: "Accessible name for the home link."
+  )
+
+  attr(:home_title, :string,
+    default: nil,
+    doc: "Optional native tooltip for the home link."
+  )
+
+  attr(:home_icon, :string,
+    default: nil,
+    doc: "Optional host icon name for the home link, such as a heroicon class."
   )
 
   attr(:separator, :string,
@@ -51,14 +67,27 @@ defmodule LanternUI.Components.Breadcrumb do
     attr(:"phx-target", :any, doc: "LiveView target for the click event.")
   end
 
+  slot(:after_home,
+    doc: "Optional compact navigation control placed after the leading home crumb."
+  )
+
   def breadcrumb(assigns) do
     ~H"""
     <nav class={Class.merge(["lui-breadcrumb", @class])} aria-label={@aria_label} {@rest}>
       <ol class="lui-breadcrumb-list" role="list">
-        <li :if={@home} class="lui-breadcrumb-item">
-          <.link navigate={@home} class="lui-breadcrumb-home" aria-label="Home">
-            <.home_icon />
+        <li :if={@home} class="lui-breadcrumb-item lui-breadcrumb-home-item">
+          <.link
+            navigate={@home}
+            class="lui-breadcrumb-home"
+            aria-label={@home_label}
+            title={@home_title}
+          >
+            <.home_icon :if={is_nil(@home_icon)} />
+            <.host_home_icon :if={@home_icon} name={@home_icon} />
           </.link>
+        </li>
+        <li :if={@after_home != []} class="lui-breadcrumb-item lui-breadcrumb-after-home">
+          {render_slot(@after_home)}
         </li>
 
         <%= if @item != [] do %>
@@ -107,6 +136,20 @@ defmodule LanternUI.Components.Breadcrumb do
         <% end %>
       </ol>
     </nav>
+    """
+  end
+
+  attr(:name, :string, required: true)
+
+  defp host_home_icon(%{name: "hero-" <> _} = assigns) do
+    ~H"""
+    <span class={[@name, "lui-breadcrumb-icon", "lui-breadcrumb-host-icon"]} aria-hidden="true" />
+    """
+  end
+
+  defp host_home_icon(assigns) do
+    ~H"""
+    <Icon.icon name={@name} class="lui-breadcrumb-icon" />
     """
   end
 

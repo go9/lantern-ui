@@ -234,6 +234,11 @@ defmodule LanternUI.Components.Layout do
     doc: "Ancestor crumb maps with a label and optional navigation target."
   )
 
+  attr(:home, :string, default: nil, doc: "Optional leading home link destination.")
+  attr(:home_label, :string, default: "Home", doc: "Accessible name for the home link.")
+  attr(:home_title, :string, default: nil, doc: "Optional native tooltip for the home link.")
+  attr(:home_icon, :string, default: nil, doc: "Optional host icon name for the home link.")
+
   attr(:actions, :list, default: [], doc: "Action descriptor maps rendered by action_bar/1.")
   attr(:notice, :map, default: nil, doc: "Optional dismissible notice descriptor.")
   attr(:dismissed, :boolean, default: false, doc: "Server-owned notice dismissal state.")
@@ -290,7 +295,13 @@ defmodule LanternUI.Components.Layout do
       {@rest}
     >
       <div class="lui-page-topline" data-page-breadcrumb>
-        <Breadcrumb.breadcrumb aria_label={@breadcrumb_label}>
+        <Breadcrumb.breadcrumb
+          home={@home}
+          home_label={@home_label}
+          home_title={@home_title}
+          home_icon={@home_icon}
+          aria_label={@breadcrumb_label}
+        >
           <:item
             :for={crumb <- @ancestor_breadcrumbs}
             navigate={crumb.navigate}
@@ -335,27 +346,34 @@ defmodule LanternUI.Components.Layout do
     >
       <div class="lui-page-strip" data-page-strip>
         <div class="lui-page-strip-trail" data-page-breadcrumb>
-          <Menu.menu
-            :if={length(@ancestor_breadcrumbs) > 1}
-            id={"#{@id}-crumbs"}
-            placement="bottom-start"
-            container_class="lui-page-strip-more"
-            trigger_class="lui-page-strip-more-trigger"
+          <Breadcrumb.breadcrumb
+            home={@home}
+            home_label={@home_label}
+            home_title={@home_title}
+            home_icon={@home_icon}
+            aria_label={@breadcrumb_label}
           >
-            <:trigger>
-              <Icon.icon name="ellipsis-horizontal" />
-              <span class="lui-sr-only">{@more_breadcrumbs_label}</span>
-            </:trigger>
-            <Menu.menu_item
-              :for={crumb <- Enum.drop(@ancestor_breadcrumbs, -1)}
-              navigate={crumb.navigate}
-              patch={crumb.patch}
-              href={crumb.href}
-            >
-              {crumb.label}
-            </Menu.menu_item>
-          </Menu.menu>
-          <Breadcrumb.breadcrumb aria_label={@breadcrumb_label}>
+            <:after_home :if={length(@ancestor_breadcrumbs) > 1}>
+              <Menu.menu
+                id={"#{@id}-crumbs"}
+                placement="bottom-start"
+                container_class="lui-page-strip-more"
+                trigger_class="lui-page-strip-more-trigger"
+              >
+                <:trigger>
+                  <Icon.icon name="ellipsis-horizontal" />
+                  <span class="lui-sr-only">{@more_breadcrumbs_label}</span>
+                </:trigger>
+                <Menu.menu_item
+                  :for={crumb <- Enum.drop(@ancestor_breadcrumbs, -1)}
+                  navigate={crumb.navigate}
+                  patch={crumb.patch}
+                  href={crumb.href}
+                >
+                  {crumb.label}
+                </Menu.menu_item>
+              </Menu.menu>
+            </:after_home>
             <:item
               :for={crumb <- @ancestor_breadcrumbs}
               navigate={crumb.navigate}
@@ -583,13 +601,17 @@ defmodule LanternUI.Components.Layout do
 
   defp nav_item_icon(%{name: "hero-" <> _} = assigns) do
     ~H"""
-    <span class={["lui-nav-item-icon", "lui-nav-item-icon-mask", @name]} aria-hidden="true" />
+    <span class="lui-nav-item-icon-hitarea" aria-hidden="true">
+      <span class={["lui-nav-item-icon", "lui-nav-item-icon-mask", @name]} />
+    </span>
     """
   end
 
   defp nav_item_icon(assigns) do
     ~H"""
-    <Icon.icon name={@name} class="lui-nav-item-icon" />
+    <span class="lui-nav-item-icon-hitarea" aria-hidden="true">
+      <Icon.icon name={@name} class="lui-nav-item-icon" />
+    </span>
     """
   end
 

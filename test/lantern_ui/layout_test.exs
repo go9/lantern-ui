@@ -173,6 +173,82 @@ defmodule LanternUI.LayoutTest do
       assert Floki.find(doc, "[data-page-shell][data-page-has-actions]") == []
     end
 
+    test "renders a configurable home icon link and accessible name" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.page_shell
+            id="inventory"
+            title="Inventory"
+            layout="strip"
+            home="/o/acme"
+            home_label="Acme"
+            home_title="Dashboard"
+            home_icon="hero-home"
+          >
+            PAGE BODY
+          </Layout.page_shell>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      home = Floki.find(doc, ".lui-breadcrumb-home[href='/o/acme']")
+
+      assert length(home) == 1
+      assert Floki.attribute(home, "aria-label") == ["Acme"]
+      assert Floki.attribute(home, "title") == ["Dashboard"]
+      assert Floki.find(home, ".hero-home[aria-hidden='true']") != []
+      assert Floki.find(doc, ".lui-breadcrumb-home-item") != []
+      refute html =~ ">Home<"
+    end
+
+    test "puts the folded ancestor menu after the home crumb" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.page_shell
+            id="item"
+            title="Item"
+            layout="strip"
+            home="/o/acme"
+            breadcrumbs={[
+              %{label: "Inventory", navigate: "/o/acme/inventory"},
+              %{label: "Collection", navigate: "/o/acme/collection"}
+            ]}
+          >
+            PAGE BODY
+          </Layout.page_shell>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      items = Floki.find(doc, ".lui-breadcrumb-list > .lui-breadcrumb-item")
+      classes = Enum.map(items, &Floki.attribute(&1, "class"))
+      home_index = Enum.find_index(classes, &String.contains?(hd(&1), "lui-breadcrumb-home-item"))
+
+      more_index =
+        Enum.find_index(classes, &String.contains?(hd(&1), "lui-breadcrumb-after-home"))
+
+      assert is_integer(home_index)
+      assert is_integer(more_index)
+      assert home_index < more_index
+
+      assert Floki.find(doc, ".lui-breadcrumb-after-home .lui-page-strip-more") != []
+      assert Floki.find(doc, ".lui-breadcrumb-after-home [role='menuitem']") != []
+      assert Floki.find(doc, ".lui-breadcrumb-link[href='/o/acme/inventory']") != []
+      assert Floki.find(doc, ".lui-breadcrumb-link[href='/o/acme/collection']") != []
+    end
+
+    test "keeps a configured home crumb visible in the narrow strip" do
+      css = File.read!("priv/static/lantern_ui.css")
+
+      assert css =~
+               ~r/\.lui-page-strip-trail \.lui-breadcrumb-item:not\(:nth-last-child\(-n \+ 2\)\)\.lui-breadcrumb-home-item\s*\{\s*display: inline-flex/
+
+      assert css =~
+               ~r/\.lui-page-strip-trail \.lui-breadcrumb-item:not\(:nth-last-child\(-n \+ 2\)\)\.lui-breadcrumb-after-home\s*\{\s*display: inline-flex/
+    end
+
     test "omits the action row and action marker for a server-dismissed notice without actions" do
       html =
         render(fn assigns ->
@@ -255,6 +331,7 @@ defmodule LanternUI.LayoutTest do
       assert html =~ ~s(aria-current="page")
       assert html =~ ~s(title="Dashboard")
       assert html =~ ~s(class="lui-nav-item-label")
+      assert html =~ ~s(class="lui-nav-item-icon-hitarea")
       assert html =~ "Dashboard"
       assert html =~ "<svg"
     end
@@ -284,6 +361,7 @@ defmodule LanternUI.LayoutTest do
       assert html =~ "hero-home"
       assert html =~ "lui-nav-item-icon-mask"
       assert html =~ "lui-nav-item-icon"
+      assert html =~ "lui-nav-item-icon-hitarea"
       # not lantern's inline svg (which has no such glyph anyway)
       refute html =~ "<svg"
     end
