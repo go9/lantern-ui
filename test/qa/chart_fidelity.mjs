@@ -11,17 +11,19 @@ const base = process.env.BASE || 'http://127.0.0.1:4023'
 const shots = process.env.QA_SHOTS || '/tmp/lantern-chart-fidelity'
 const chrome = process.env.CHROME_PATH || '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser'
 const widths = process.env.QA_VW ? [Number(process.env.QA_VW)] : [1440, 1100, 390]
-const types = process.env.QA_TYPE ? [process.env.QA_TYPE] : ['line', 'area', 'stacked_area', 'bar', 'stacked_bar', 'grouped_bar', 'points']
+const types = process.env.QA_TYPE ? [process.env.QA_TYPE] : ['line', 'area', 'stacked_area', 'bar', 'stacked_bar', 'grouped_bar', 'bar_horizontal', 'stacked_bar_horizontal', 'grouped_bar_horizontal', 'points']
 fs.mkdirSync(shots, { recursive: true })
 const browser = await puppeteer.launch({ executablePath: chrome, headless: 'new', args: ['--no-sandbox'] })
 const results = []
 
 for (const width of widths) for (const theme of ['light', 'dark']) for (const type of types) {
+  const horizontal = type.endsWith('_horizontal')
+  const chartType = horizontal ? type.slice(0, -'_horizontal'.length) : type
   const page = await browser.newPage()
   const row = { width, theme, type, problems: [] }
   try {
     await page.setViewport({ width, height: 900 })
-    await page.goto(`${base}/charts?type=${type}&theme=${theme}`, { waitUntil: 'networkidle2' })
+    await page.goto(`${base}/charts?type=${chartType}&theme=${theme}&orientation=${horizontal ? 'horizontal' : 'vertical'}`, { waitUntil: 'networkidle2' })
     await page.waitForSelector('.phx-connected', { timeout: 8000 })
     await page.waitForFunction(() => {
       const svg = document.querySelector('#qa-time-series svg')
@@ -63,22 +65,27 @@ for (const width of widths) for (const theme of ['light', 'dark']) for (const ty
     }
 
     const barTypes = ['bar', 'stacked_bar', 'grouped_bar']
-    if (barTypes.includes(type)) {
+    if (barTypes.includes(chartType)) {
       const bars = await page.$$('#qa-time-series .lui-time-series-chart__bar')
       for (const bar of bars.slice(0, Math.min(bars.length, 3))) {
         const box = await bar.boundingBox()
+        const expected = await bar.evaluate((el) => `${el.dataset.bandIndex}:${el.dataset.seriesIndex}`)
         await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-        await new Promise((resolve) => setTimeout(resolve, 40))
-        const diff = await page.$eval('#qa-time-series', (root) => {
-          const bar = root.querySelector('.lui-time-series-chart__bar[data-active]')
-          const crosshair = root.querySelector('[data-part="crosshair"]')
-          if (!bar || crosshair.closest('[hidden]')) return null
-          const br = bar.getBoundingClientRect(), cr = crosshair.getBoundingClientRect()
-          return Math.abs(cr.x - (br.x + br.width / 2))
-        })
-        if (diff === null || diff > 1) row.problems.push(`bar center mismatch: ${diff}`)
+        await page.waitForFunction(() => [...document.querySelectorAll('#qa-time-series .lui-time-series-chart__bar:not([data-active])')].some((el) => Number(getComputedStyle(el).opacity) < .99), { timeout: 1000 })
+        const result = await page.$eval('#qa-time-series', (root, expected) => {
+          const active = [...root.querySelectorAll('.lui-time-series-chart__bar[data-active]')]
+          return {
+            crosshair: !!root.querySelector('[data-part="crosshair"]'),
+            active: active.length,
+            hovered: active.some((el) => `${el.dataset.bandIndex}:${el.dataset.seriesIndex}` === expected),
+            faded: [...root.querySelectorAll('.lui-time-series-chart__bar:not([data-active])')].some((el) => Number(getComputedStyle(el).opacity) < 1),
+            tooltip: !root.querySelector('[data-part="html-tooltip"]').hidden,
+          }
+        }, expected)
+        if (result.crosshair || result.active !== 1 || !result.hovered || !result.faded || !result.tooltip) row.problems.push(`bar hover state: ${JSON.stringify(result)}`)
       }
     } else {
+      if (!await page.$eval('#qa-time-series', (root) => !!root.querySelector('[data-part="crosshair"]'))) row.problems.push('line/area/points crosshair missing')
       await page.$eval('#qa-time-series [data-chart-point="0"]', (point) => point.focus())
       const shown = await page.$eval('#qa-time-series [data-part="html-tooltip"]', (el) => ({ hidden: el.hidden, font: getComputedStyle(el).fontSize, legend: getComputedStyle(document.querySelector('.lui-time-series-chart__legend-item')).fontSize }))
       if (shown.hidden || shown.font !== shown.legend) row.problems.push(`tooltip hidden or font differs from page UI: ${JSON.stringify(shown)}`)

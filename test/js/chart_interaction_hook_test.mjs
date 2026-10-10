@@ -20,9 +20,9 @@ function fixture() {
     <span data-part="live" aria-live="polite"></span></div>`
 }
 
-function pointer(target, name, x, pointerType = "mouse") {
+function pointer(target, name, x, pointerType = "mouse", y = 0) {
   const event = new target.ownerDocument.defaultView.Event(name, { bubbles: true })
-  Object.defineProperties(event, { clientX: { value: x }, pointerType: { value: pointerType } })
+  Object.defineProperties(event, { clientX: { value: x }, clientY: { value: y }, pointerType: { value: pointerType } })
   target.dispatchEvent(event)
 }
 
@@ -200,9 +200,10 @@ test("ChartInteraction recalculates curved and stepped path coordinates without 
   mounted.unmount()
 })
 
-test("bar hover snaps to the rendered active bar center", async () => {
+test("bar hover highlights the rendered bar and shows no crosshair", async () => {
   const html = fixture()
     .replace('<div id="chart"', '<div id="chart" data-chart-type="grouped_bar"')
+    .replace('<line data-part="crosshair" x1="0" x2="0"></line>', '')
     .replace('<g class="lui-time-series-chart__interaction"', '<g class="lui-time-series-chart__series"><rect class="lui-time-series-chart__bar" data-band-index="1" data-series-index="0" x="68" width="18" y="30" height="30"></rect></g><g class="lui-time-series-chart__interaction"')
   const mounted = mountHook(hooks.ChartInteraction, html, { rootId: "chart" })
   const svg = mounted.el.querySelector("svg")
@@ -210,9 +211,25 @@ test("bar hover snaps to the rendered active bar center", async () => {
   const bar = mounted.el.querySelector('.lui-time-series-chart__bar')
   pointer(bar, "pointermove", 80)
   await sleep(40)
-  const center = Number(bar.getAttribute("x")) + Number(bar.getAttribute("width")) / 2
-  assert.equal(Number(mounted.el.querySelector('[data-part="crosshair"]').getAttribute("x1")), center)
+  assert.equal(mounted.el.querySelector('[data-part="crosshair"]'), null)
   assert.equal(bar.hasAttribute('data-active'), true)
   assert.equal(mounted.el.querySelector('[data-part="html-tooltip"]').hidden, false)
+  mounted.unmount()
+})
+
+test("horizontal bar hover uses the bar's band even when its value x is elsewhere", async () => {
+  const html = fixture()
+    .replace('<div id="chart"', '<div id="chart" data-chart-type="stacked_bar" data-orientation="horizontal"')
+    .replace('<line data-part="crosshair" x1="0" x2="0"></line>', '')
+    .replace('<g class="lui-time-series-chart__interaction"', '<g class="lui-time-series-chart__series"><rect class="lui-time-series-chart__bar" data-band-index="1" data-series-index="0" x="12" width="25" y="90" height="18"></rect></g><g class="lui-time-series-chart__interaction"')
+  const mounted = mountHook(hooks.ChartInteraction, html, { rootId: "chart" })
+  const svg = mounted.el.querySelector("svg")
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 150 })
+  const bar = mounted.el.querySelector('.lui-time-series-chart__bar')
+  pointer(bar, "pointermove", 20, "mouse", 99)
+  await sleep(40)
+  assert.equal(bar.hasAttribute('data-active'), true)
+  assert.equal(mounted.el.querySelector('[data-part="html-tooltip-date"]').textContent, "Feb 1")
+  assert.equal(mounted.el.querySelector('[data-part="crosshair"]'), null)
   mounted.unmount()
 })

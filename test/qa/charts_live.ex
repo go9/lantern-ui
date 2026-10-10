@@ -8,6 +8,7 @@ defmodule LanternUI.QA.ChartsLive do
   def mount(params, _session, socket) do
     type = if params["type"] in @types, do: String.to_existing_atom(params["type"]), else: :line
     theme = if params["theme"] == "dark", do: "dark", else: "light"
+    orientation = if params["orientation"] == "horizontal", do: :horizontal, else: :vertical
 
     series = [
       %{
@@ -39,6 +40,7 @@ defmodule LanternUI.QA.ChartsLive do
     {:ok,
      assign(socket,
        type: type,
+       orientation: orientation,
        theme: theme,
        series: series,
        selected_point: nil,
@@ -95,6 +97,7 @@ defmodule LanternUI.QA.ChartsLive do
           aria_label={"Portfolio performance, #{@type} chart"}
           series={@series}
           type={@type}
+          orientation={@orientation}
           curve={:monotone}
           comparison={[
             %{
@@ -109,11 +112,10 @@ defmodule LanternUI.QA.ChartsLive do
               ]
             }
           ]}
-          annotations={[%{id: :midpoint, x: "Jun", label: "Mid period", tone: :warning}]}
-          reference_lines={
+          annotations={
             if @type in [:bar, :stacked_bar, :grouped_bar],
-              do: [%{label: "Average", value: 22}],
-              else: []
+              do: [],
+              else: [%{id: :midpoint, x: "Jun", label: "Mid period", tone: :warning}]
           }
           select_event="chart_select"
           glyphs

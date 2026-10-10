@@ -4467,7 +4467,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-time-series-chart__series path, .lui-time-series-chart__comparison path { vector-effect: non-scaling-stroke; }
 .lui-time-series-chart__area { fill: var(--lui-series-color); fill-opacity: .15; stroke: none; }
 .lui-time-series-chart__bar { fill: var(--lui-series-color); transition: opacity var(--lantern-duration) ease; }
-.lui-time-series-chart:has(.lui-time-series-chart__bar[data-active]) .lui-time-series-chart__bar:not([data-active]) { opacity: .45; }
+.lui-time-series-chart:has(.lui-time-series-chart__bar[data-active]) .lui-time-series-chart__bar:not([data-active]) { opacity: .7; }
 .lui-time-series-chart__comparison .lui-time-series-chart__line { stroke-dasharray: 4 4; opacity: .7; }
 .lui-time-series-chart__annotation line { stroke: var(--lantern-accent); stroke-dasharray: 3 4; stroke-width: 1; }
 .lui-time-series-chart__annotation text { fill: var(--lantern-fg-muted); font-size: 10px; }

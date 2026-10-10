@@ -484,7 +484,8 @@ throughout: dates/date-times, numbers, or category strings. Mixed domains raise
 `ArgumentError` with the conflicting domain kinds; malformed points are ignored,
 and a truly empty chart uses `empty_message`.
 
-Bar hover snaps to the rendered bar center and highlights the active bar. The
+Bar hover snaps to the rendered bar and highlights it without a crosshair. The
+other bars fade slightly; line, area, and point charts retain their crosshair. The
 clamped HTML tooltip uses the page font, theme tokens, and one aligned value
 per series; it does not scale with the SVG.
 

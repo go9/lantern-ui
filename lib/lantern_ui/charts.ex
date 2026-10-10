@@ -702,6 +702,7 @@ defmodule LanternUI.Charts do
       class={Class.merge(["lui-time-series-chart", @class])}
       style={"--lui-chart-height:#{@height}px"}
       data-chart-type={@chart_type}
+      data-orientation={@orientation}
       data-plot-left={@plot_left}
       data-plot-right={@plot_right}
       data-interaction={Jason.encode!(@interaction_points)}
@@ -826,6 +827,7 @@ defmodule LanternUI.Charts do
         </g>
         <g class="lui-time-series-chart__interaction" aria-hidden="true" hidden>
           <line
+            :if={@type not in [:bar, :stacked_bar, :grouped_bar]}
             data-part="crosshair"
             x1={@plot_left}
             x2={@plot_left}

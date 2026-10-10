@@ -622,6 +622,33 @@ defmodule LanternUI.ChartsTest do
       end
     end
 
+    test "bar variants omit the hover crosshair in either orientation" do
+      series = [%{id: "a", label: "A", points: [%{x: "Apr", y: 4}]}]
+
+      for type <- [:bar, :stacked_bar, :grouped_bar], orientation <- [:vertical, :horizontal] do
+        html =
+          render_component(&LanternUI.Charts.time_series_chart/1,
+            id: "#{type}-#{orientation}-no-crosshair",
+            type: type,
+            orientation: orientation,
+            series: series
+          )
+
+        assert Floki.find(Floki.parse_fragment!(html), ~s([data-part="crosshair"])) == []
+      end
+
+      for type <- [:line, :area, :points] do
+        html =
+          render_component(&LanternUI.Charts.time_series_chart/1,
+            id: "#{type}-with-crosshair",
+            type: type,
+            series: series
+          )
+
+        assert length(Floki.find(Floki.parse_fragment!(html), ~s([data-part="crosshair"]))) == 1
+      end
+    end
+
     test "comparison paths and annotations align to primary x keys" do
       html =
         render_component(&LanternUI.Charts.time_series_chart/1,

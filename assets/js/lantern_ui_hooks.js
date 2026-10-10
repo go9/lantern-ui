@@ -248,8 +248,10 @@ const ChartInteraction = {
     this.seriesIds = JSON.parse(this.el.dataset.seriesId || "[]")
     this.selectEvent = this.el.dataset.selectEvent
     this.hoverEvent = this.el.dataset.hoverEvent
+    this.isBar = ["bar", "stacked_bar", "grouped_bar"].includes(this.el.dataset.chartType)
+    this.horizontalBars = this.isBar && this.el.dataset.orientation === "horizontal"
     this.svg = this.el.querySelector("svg")
-    this.overlay = this.el.querySelector('[data-part="crosshair"]')?.closest(".lui-time-series-chart__interaction")
+    this.overlay = this.el.querySelector(".lui-time-series-chart__interaction")
     this.tooltip = this.el.querySelector('[data-part="html-tooltip"]')
     this.live = this.el.querySelector('[data-part="live"]')
     this.focusPoints = [...this.el.querySelectorAll("[data-chart-point]")]
@@ -282,10 +284,11 @@ const ChartInteraction = {
 
     this.onPointerMove = (event) => {
       this.pendingClientX = event.clientX
+      this.pendingClientY = event.clientY
       if (this.frame) return
       this.frame = this.el.ownerDocument.defaultView.requestAnimationFrame(() => {
         this.frame = null
-        const point = this.showAtClientX(this.pendingClientX, this.pendingBar)
+        const point = this.showAtPointer(this.pendingClientX, this.pendingClientY, this.pendingBar)
         if (point) this.scheduleHover(point)
       })
     }
@@ -294,7 +297,7 @@ const ChartInteraction = {
       original(event)
     })(this.onPointerMove)
     this.onClick = (event) => {
-      const point = this.showAtClientX(event.clientX, event.target.closest?.('.lui-time-series-chart__bar'))
+      const point = this.showAtPointer(event.clientX, event.clientY, event.target.closest?.('.lui-time-series-chart__bar'))
       if (point) this.pushChartEvent(this.selectEvent, point)
     }
     this.onPointerDown = (event) => {
@@ -403,14 +406,27 @@ const ChartInteraction = {
     if (this.activePoint) this.show(this.activePoint, null, false, this.activeBar)
   },
 
-  showAtClientX(clientX, bar = null) {
+  showAtPointer(clientX, clientY, bar = null) {
     const rect = this.svg.getBoundingClientRect()
     if (!rect.width) return
     const width = this.svg.viewBox.baseVal.width
     const x = ((clientX - rect.left) / rect.width) * width
     let nearest = this.points[0]
-    for (const point of this.points) if (Math.abs(this.layoutX(point.x) - x) < Math.abs(this.layoutX(nearest.x) - x)) nearest = point
-    if (bar && Number(bar.dataset.bandIndex) !== this.points.indexOf(nearest)) bar = null
+    if (this.isBar && bar) {
+      nearest = this.points[Number(bar.dataset.bandIndex)] || nearest
+    } else if (this.horizontalBars) {
+      const bars = [...this.svg.querySelectorAll('.lui-time-series-chart__bar')]
+      const closest = bars.reduce((best, candidate) => {
+        const y = candidate.getBoundingClientRect().top + candidate.getBoundingClientRect().height / 2
+        return !best || Math.abs(y - clientY) < Math.abs(best.y - clientY) ? { bar: candidate, y } : best
+      }, null)
+      if (closest) {
+        bar = closest.bar
+        nearest = this.points[Number(bar.dataset.bandIndex)] || nearest
+      }
+    } else {
+      for (const point of this.points) if (Math.abs(this.layoutX(point.x) - x) < Math.abs(this.layoutX(nearest.x) - x)) nearest = point
+    }
     this.show(nearest, null, false, bar)
     return nearest
   },
@@ -446,11 +462,15 @@ const ChartInteraction = {
     const bars = [...this.svg.querySelectorAll('.lui-time-series-chart__bar')]
     const activeBar = bar || bars.find((candidate) => Number(candidate.dataset.bandIndex) === bandIndex)
     bars.forEach((candidate) => candidate.toggleAttribute('data-active', candidate === activeBar))
-    const anchorX = activeBar ? Number(activeBar.getAttribute('x')) + Number(activeBar.getAttribute('width')) / 2 : this.layoutX(point.x)
-    crosshair.setAttribute("x1", anchorX)
-    crosshair.setAttribute("x2", anchorX)
+    const anchorX = activeBar
+      ? Number(activeBar.getAttribute('x')) + Number(activeBar.getAttribute('width')) * (this.horizontalBars ? 1 : 0.5)
+      : this.layoutX(point.x)
+    if (crosshair) {
+      crosshair.setAttribute("x1", anchorX)
+      crosshair.setAttribute("x2", anchorX)
+    }
     this.overlay.querySelectorAll('[data-part="series-point"]').forEach((circle) => {
-      if (this.el.dataset.chartType?.includes('bar')) {
+      if (this.isBar) {
         circle.setAttribute('hidden', '')
         return
       }
@@ -474,7 +494,9 @@ const ChartInteraction = {
       const tooltipWidth = this.tooltip.offsetWidth || 196
       const tooltipHeight = this.tooltip.offsetHeight || 55
       const chartWidth = this.svg.viewBox.baseVal.width
-      const anchorY = point.positions?.find((position) => position)?.y ?? point.coords?.find((y) => y != null) ?? 18
+      const anchorY = activeBar
+        ? Number(activeBar.getAttribute('y')) + Number(activeBar.getAttribute('height')) * (this.horizontalBars ? 0.5 : 0)
+        : point.positions?.find((position) => position)?.y ?? point.coords?.find((y) => y != null) ?? 18
       const preferredX = anchorX + 12 + tooltipWidth <= chartWidth ? anchorX + 12 : anchorX - tooltipWidth - 12
       this.tooltip.style.left = `${Math.max(4, Math.min(preferredX, chartWidth - tooltipWidth - 4))}px`
       this.tooltip.style.top = `${Math.max(4, Math.min(anchorY - tooltipHeight - 8, this.svg.viewBox.baseVal.height - tooltipHeight - 4))}px`
