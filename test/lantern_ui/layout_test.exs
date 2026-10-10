@@ -125,6 +125,30 @@ defmodule LanternUI.LayoutTest do
   end
 
   describe "page_shell/1" do
+    test "strip layout renders a labelled home-icon crumb that survives the narrow fold" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.page_shell
+            id="inventory"
+            layout="strip"
+            title="Inventory"
+            home="/o/acme"
+            home_label="Acme"
+            home_title="Dashboard"
+            breadcrumbs={[%{label: "Locations", navigate: "/o/acme/locations"}]}
+          >
+            PAGE BODY
+          </Layout.page_shell>
+          """
+        end)
+
+      assert html =~ ~s(class="lui-breadcrumb-item lui-breadcrumb-item-home")
+      assert html =~ ~s(aria-label="Acme")
+      assert html =~ ~s(title="Dashboard")
+      assert html =~ ~s(href="/o/acme")
+    end
+
     test "renders one breadcrumb row, one hidden h1, one actions region, and content hooks" do
       html =
         render(fn assigns ->

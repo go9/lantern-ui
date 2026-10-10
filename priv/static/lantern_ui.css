@@ -1134,9 +1134,9 @@
 .lui-page-strip :is(button, input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select, [role="tab"]) {
   min-height: var(--lui-control-md-h);
 }
-/* Narrow strip: keep the back crumb and the current page; fold the rest into `…`. */
+/* Narrow strip: keep the home icon and the last two crumbs; fold the rest into `…`. */
 @container lui-page-strip (max-width: 40rem) {
-  .lui-page-strip-trail .lui-breadcrumb-item:not(:nth-last-child(-n + 2)) { display: none; }
+  .lui-page-strip-trail .lui-breadcrumb-item:not(:nth-last-child(-n + 2)):not(.lui-breadcrumb-item-home) { display: none; }
   .lui-page-strip-trail .lui-page-strip-more { display: inline-flex; flex: none; }
 }
 /* Print: the breadcrumb, the More menu and the actions go; the sr-only h1 stays

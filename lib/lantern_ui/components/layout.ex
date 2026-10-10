@@ -244,6 +244,19 @@ defmodule LanternUI.Components.Layout do
     doc: "Accessible name for the breadcrumb navigation."
   )
 
+  attr(:home, :string,
+    default: nil,
+    doc:
+      "When set, a leading home-icon crumb links here (`layout=\"strip\"` keeps it when folding)."
+  )
+
+  attr(:home_label, :string,
+    default: "Home",
+    doc: "Accessible name for the home crumb."
+  )
+
+  attr(:home_title, :string, default: nil, doc: "Tooltip for the home crumb.")
+
   attr(:more_breadcrumbs_label, :string,
     default: "More breadcrumbs",
     doc: "Accessible label for the strip's folded breadcrumb menu (`layout=\"strip\"`)."
@@ -290,7 +303,12 @@ defmodule LanternUI.Components.Layout do
       {@rest}
     >
       <div class="lui-page-topline" data-page-breadcrumb>
-        <Breadcrumb.breadcrumb aria_label={@breadcrumb_label}>
+        <Breadcrumb.breadcrumb
+          aria_label={@breadcrumb_label}
+          home={@home}
+          home_label={@home_label}
+          home_title={@home_title}
+        >
           <:item
             :for={crumb <- @ancestor_breadcrumbs}
             navigate={crumb.navigate}
@@ -355,7 +373,12 @@ defmodule LanternUI.Components.Layout do
               {crumb.label}
             </Menu.menu_item>
           </Menu.menu>
-          <Breadcrumb.breadcrumb aria_label={@breadcrumb_label}>
+          <Breadcrumb.breadcrumb
+            aria_label={@breadcrumb_label}
+            home={@home}
+            home_label={@home_label}
+            home_title={@home_title}
+          >
             <:item
               :for={crumb <- @ancestor_breadcrumbs}
               navigate={crumb.navigate}
