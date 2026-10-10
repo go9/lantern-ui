@@ -65,6 +65,7 @@ jobs:
           BASE: http://127.0.0.1:4013
           QA_REPORT_DIR: /tmp/lantern-ui-consistency
           QA_SHOTS: /tmp/lantern-ui-chart-qa
+          QA_STABILITY_SHOTS: /tmp/lantern-ui-consistency/position-stability
         run: |
           PORT=4013 mix run --no-halt test/qa/server.exs > /tmp/lantern-ui-qa-server.log 2>&1 &
           for attempt in $(seq 1 30); do
@@ -74,6 +75,7 @@ jobs:
           curl --fail --silent "$BASE/consistency" >/dev/null
           node test/qa/run.mjs --consistency --consistency-legacy
           node test/qa/run.mjs --charts
+          node test/qa/position_stability.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
