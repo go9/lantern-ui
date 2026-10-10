@@ -299,7 +299,13 @@ defmodule LanternUI.DataTableTest do
     # Byte-identical freeze of the table markup (whitespace-normalized so HEEx
     # indentation noise does not mask real structure changes).
     [_, table_inner] = Regex.run(~r/<table class="lui-table">(.*?)<\/table>/s, html)
-    table = squash_html(~s(<table class="lui-table">#{table_inner}</table>))
+
+    table =
+      table_inner
+      |> String.replace(~r/ data-column-key="[^"]+"/, "")
+      |> String.replace(~r/ data-column-label="[^"]+"/, "")
+      |> then(&squash_html(~s(<table class="lui-table">#{&1}</table>)))
+
     assert table == squash_html(@baseline_table_html)
   end
 
@@ -438,11 +444,11 @@ defmodule LanternUI.DataTableTest do
         view: "table"
       })
 
-    assert html =~ "lui-dt-viewtoggle"
-    assert html =~ ~s(aria-label="List view")
+    assert html =~ ~s(id="list-views")
+    assert html =~ "List"
     assert html =~ "view=list"
-    # cards toggle stays absent without :card
-    refute html =~ ~s(aria-label="Card view")
+    # Grid is absent without :card.
+    refute html =~ "Grid"
   end
 
   test "list-only with no :col renders list and no viewtoggle" do

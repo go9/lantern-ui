@@ -325,6 +325,9 @@ defmodule LanternUI.QA.ConsistencyLive do
             search_field={:name}
             search_placeholder="Search items"
             expandable
+            saved_view_event="saved-view"
+            available_views={["table", "cards"]}
+            active_saved_view="mine"
           >
             <:overview>
               <div class="lui-consistency-overview" aria-label="Overview chart and statistics">
@@ -334,14 +337,20 @@ defmodule LanternUI.QA.ConsistencyLive do
                 </div>
               </div>
             </:overview>
+            <:view id="mine" name="My items" params={%{"order_by" => ["name"]}} />
             <:tab label="All" count={24} />
             <:tab label="Open" count={12} filters={[%{field: "status", value: "open"}]} />
+            <:filter field={:name} type={:text} label="Name" />
             <:filter
               field={:status}
               label="Status"
               options={[{"Open", "open"}, {"Closed", "closed"}]}
             />
-            <:col :let={row} label="Item">{row.name}</:col>
+            <:col :let={row} label="Item" field={:name}>{row.name}</:col>
+            <:col :let={row} label="Status" field={:status}>
+              {if rem(row.id, 2) == 0, do: "Open", else: "Closed"}
+            </:col>
+            <:card :let={row}>Item {row.name}</:card>
           </.data_table>
 
           <div class="lui-consistency-line" data-qa-toolbar-row="remaining-controls">

@@ -5173,3 +5173,45 @@ a.lui-waterfall-lane-inner:focus-visible {
   font-size: var(--lantern-text-xs, 0.75rem);
   color: var(--lantern-fg-subtle, var(--lantern-fg-muted));
 }
+
+/* Quiet, separate data-table controls. Keep one panel surface and reserve
+   boxes for the outer table card rather than nesting extra cards inside it. */
+.lui-dt-display-content { display:flex; flex-direction:column; gap:.75rem; min-width:15rem; padding:.75rem; }
+.lui-dt-panel-title { margin:0; font-size:var(--lantern-text-sm); font-weight:600; }
+.lui-dt-column-list { display:flex; flex-direction:column; gap:.15rem; max-height:16rem; overflow:auto; }
+.lui-dt-column-option { display:flex; align-items:center; gap:.55rem; padding:.3rem .35rem; border-radius:var(--lantern-radius-sm); color:var(--lantern-fg); font-size:var(--lantern-text-sm); cursor:pointer; }
+.lui-dt-column-option:hover { background:var(--lantern-surface-hover); }
+.lui-dt-column-search,.lui-dt-searchline input,.lui-dt-filtertext { min-width:0; border:1px solid var(--lantern-border); border-radius:var(--lantern-radius); background:var(--lantern-surface); color:var(--lantern-fg); padding:.4rem .55rem; font:inherit; }
+.lui-dt-density { display:flex; flex-direction:column; gap:.35rem; }
+.lui-dt-density-switch { align-self:flex-start; }
+.lui-dt-density-switch [role="radio"] { border:0; border-radius:var(--lantern-radius-sm); background:transparent; color:var(--lantern-fg-muted); padding:.3rem .55rem; font:inherit; font-size:var(--lantern-text-sm); cursor:pointer; }
+.lui-dt-density-switch [aria-checked="true"] { background:var(--lantern-surface-raised); color:var(--lantern-fg); box-shadow:var(--lantern-shadow-sm); }
+.lui-dt-reset-display { align-self:flex-start; border:0; padding:.2rem 0; background:none; color:var(--lantern-fg-muted); font:inherit; font-size:var(--lantern-text-sm); cursor:pointer; }
+.lui-dt-reset-display:hover { color:var(--lantern-fg); }
+.lui-dt-addfilter { display:flex; flex-direction:column; gap:.4rem; }
+.lui-dt-searchline { display:flex; align-items:center; gap:.45rem; }
+.lui-dt-searchline .lui-icon { width:1rem; height:1rem; color:var(--lantern-fg-muted); }
+.lui-command-listbox { display:flex; flex-direction:column; max-height:10rem; overflow:auto; }
+.lui-command-item { text-align:left; border:0; border-radius:var(--lantern-radius-sm); background:transparent; padding:.4rem .5rem; color:var(--lantern-fg); font:inherit; font-size:var(--lantern-text-sm); cursor:pointer; }
+.lui-command-item:hover,.lui-command-item[aria-selected="true"] { background:var(--lantern-surface-hover); }
+.lui-dt-filterhead { display:flex; align-items:center; justify-content:space-between; gap:.5rem; }
+.lui-dt-operator { max-width:11rem; border:0; background:transparent; color:var(--lantern-fg-muted); font:inherit; font-size:var(--lantern-text-sm); }
+.lui-dt-filterrow[hidden],.lui-command-item[hidden],.lui-dt-column-option[hidden] { display:none; }
+.lui-dt-filterfooter { border-top:0; padding-top:.25rem; }
+.lui-datatable[data-density="compact"] :is(.lui-th,.lui-td) { padding-block:.35rem; }
+.lui-dt-saved-view-row { display:flex; align-items:center; gap:.25rem; }
+.lui-dt-savedview { flex:1; display:flex; align-items:center; gap:.45rem; }
+.lui-dt-savedview-action { border:0; background:transparent; color:var(--lantern-fg-muted); font:inherit; font-size:var(--lantern-text-xs); cursor:pointer; }
+.lui-dt-savedview-action:hover { color:var(--lantern-fg); }
+.lui-dt-save-dialog { width:min(22rem,calc(100vw - 2rem)); border:1px solid var(--lantern-border); border-radius:var(--lantern-radius-lg); background:var(--lantern-surface-raised); color:var(--lantern-fg); padding:1rem; box-shadow:var(--lantern-shadow-lg); }
+.lui-dt-save-dialog::backdrop { background:rgb(0 0 0 / .28); }
+.lui-dt-save-dialog h3 { margin:0 0 .75rem; font-size:var(--lantern-text-sm); }
+.lui-dt-save-dialog .lui-dt-view-name { width:100%; box-sizing:border-box; }
+.lui-dt-save-actions { display:flex; justify-content:flex-end; gap:.5rem; margin-top:.75rem; }
+.lui-dt-save-actions button { border:1px solid var(--lantern-border); border-radius:var(--lantern-radius); background:var(--lantern-surface); color:var(--lantern-fg); padding:.35rem .7rem; font:inherit; cursor:pointer; }
+.lui-dt-save-actions .lui-dt-save-confirm { border-color:var(--lantern-accent); background:var(--lantern-accent); color:var(--lantern-on-accent); }
+:is(.lui-dt-display-content,.lui-dt-filterpanel-inner,.lui-dt-save-dialog) :is(button,input,select):focus-visible { outline:2px solid var(--lantern-ring); outline-offset:2px; }
+.lui-dt-saved-view-row { display:flex; align-items:center; gap:.125rem; min-width:0; padding:.05rem .25rem; }
+.lui-dt-savedview { min-width:0; border:0; background:none; padding:.375rem .375rem; font:inherit; font-size:var(--lantern-text); }
+.lui-dt-savedview-action { flex:none; border:0; background:transparent; border-radius:var(--lantern-radius-sm); padding:.3rem .35rem; color:var(--lantern-fg-muted); font:inherit; font-size:var(--lantern-text-xs); cursor:pointer; }
+.lui-dt-savedview-action:hover,.lui-dt-savedview-action:focus-visible { background:var(--lantern-surface-sunken); color:var(--lantern-fg); outline:none; }

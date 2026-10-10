@@ -39,6 +39,10 @@ defmodule LanternUI.Components.DataTable do
   filter navigation remain immediate. A collapsible `:overview` slot accepts
   arbitrary content; `:stat` remains available for simple metric cards. Saved-view
   controls emit a generic consumer event and do not prescribe persistence.
+  Filter chips and quick filters share the toolbar row with separate Filters,
+  Display, and Views controls. Filter changes are staged until Apply; search and
+  quick-filter navigation remain immediate. Saved-view entries use `:view`
+  slots and emit generic consumer events without prescribing persistence.
   """
   use Phoenix.Component
 
@@ -46,6 +50,7 @@ defmodule LanternUI.Components.DataTable do
   alias LanternUI.Components.Button
   alias LanternUI.Components.EmptyState
   alias LanternUI.Components.Icon
+  alias LanternUI.Components.Menu
   alias LanternUI.Components.Badge
   alias LanternUI.Components.Pagination
   alias LanternUI.Components.Popover
@@ -141,8 +146,8 @@ defmodule LanternUI.Components.DataTable do
   )
 
   attr(:filters_label, :string,
-    default: "Filters & view",
-    doc: "Accessible label for the filters and view popover."
+    default: "Filters",
+    doc: "Label for the filters popover."
   )
 
   attr(:quick_filters_label, :string,
@@ -155,7 +160,7 @@ defmodule LanternUI.Components.DataTable do
     doc: "Accessible label for the active filter chips."
   )
 
-  attr(:view_label, :string, default: "View", doc: "Label for the view switcher.")
+  attr(:view_label, :string, default: "Display", doc: "Label for the view switcher.")
 
   attr(:save_view_label, :string,
     default: "Save current view",
@@ -185,16 +190,31 @@ defmodule LanternUI.Components.DataTable do
     doc: "Heading for saved-view event hooks."
   )
 
-  attr(:view, :string,
-    default: "table",
-    values: ~w(table cards list),
+  attr(:available_views, :list,
+    default: nil,
     doc:
-      "active view. Coerced to an available view when the requested one has no " <>
-        "slot. The switcher renders only when two or more views are available; " <>
-        "a list-only or cards-only page (no `:col`) has no toggle. When both " <>
-        "`:list_item` and `:card` are given, table drops out so the switcher " <>
-        "stays two-way. `table` is the rendering when a page supplies neither " <>
-        "list nor card slot."
+      "Available layout views, equivalent to `views`; intersected with layouts supplied by slots."
+  )
+
+  attr(:active_saved_view, :string,
+    default: nil,
+    doc: "Id or name of the currently active saved view."
+  )
+
+  attr(:hidden_columns, :list,
+    default: [],
+    doc: "Initially hidden table column keys (field names or column-N keys)."
+  )
+
+  attr(:density, :string,
+    default: "comfortable",
+    values: ~w(compact comfortable),
+    doc: "Initial table row density."
+  )
+
+  attr(:display_event, :string,
+    default: nil,
+    doc: "Optional event receiving hidden_columns and density changes."
   )
 
   attr(:views, :list,
@@ -324,9 +344,22 @@ defmodule LanternUI.Components.DataTable do
 
   slot(:list_item, doc: "per-row simple list rendering; enables the list view")
 
+  slot :view, doc: "A saved view with a name and optional id and params." do
+    attr(:id, :string, doc: "Saved view identifier emitted with the apply event.")
+    attr(:name, :string, required: true, doc: "Visible saved view name.")
+    attr(:params, :map, doc: "Saved view parameters supplied to the consumer event.")
+  end
+
   def data_table(assigns) do
+    # Phoenix stores the new :view slot in assigns.view. Keep accepting the old
+    # string-valued view attr while the slot uses the same public name.
+    legacy_view = if is_binary(assigns.view), do: assigns.view, else: "table"
+    saved_view_slots = if is_list(assigns.view), do: assigns.view, else: []
+
     assigns =
       assigns
+      |> assign(:saved_view_slots, saved_view_slots)
+      |> assign(:view, legacy_view)
       |> assign(:row_id_fn, assigns.row_id || (& &1.id))
       |> assign(:row_click?, !assigns.row_navigate && !assigns.row_patch && !!assigns.row_click)
       |> assign(:selected_id_set, MapSet.new(assigns.selected_ids))
@@ -363,6 +396,8 @@ defmodule LanternUI.Components.DataTable do
         ])
       }
       data-view={@view}
+      data-density={@density}
+      data-hidden-columns={Jason.encode!(@hidden_columns)}
       data-expanded={if @expandable && @expanded, do: "true"}
       phx-hook={@row_click? && "LanternRowClick"}
       {@rest}
@@ -420,7 +455,7 @@ defmodule LanternUI.Components.DataTable do
       <div
         :if={
           @tab != [] || @toolbar != [] || @search_field || @filter != [] || @saved_view_event ||
-            @card != [] || @list_item != [] || @expandable
+            @card != [] || @list_item != [] || @expandable || @col != []
         }
         id={"#{@id}-chrome"}
         class="lui-dt-chromerow"
@@ -433,6 +468,7 @@ defmodule LanternUI.Components.DataTable do
           Jason.encode!(chrome_base_params(@meta, @view, @card != [] || @list_item != [], @expanded))
         }
         data-keep-filters={Jason.encode!(unowned_filters(@meta, @search_field, @filter))}
+        data-display-event={@display_event}
       >
         <div :if={@tab != []} class="lui-dt-quickfilters" aria-label={@quick_filters_label}>
           <Tabs.tabs_list active_tab={active_tab(@tab, @meta, @search_field)} size="sm">
@@ -442,7 +478,13 @@ defmodule LanternUI.Components.DataTable do
               patch={tab_path(@path, @meta, tab[:filters] || [], @search_field)}
             >
               {tab[:label]}
-              <Badge.badge :if={tab[:count]} size="sm" color="neutral">{tab[:count]}</Badge.badge>
+              <Badge.badge
+                :if={tab[:count] && to_string(tab[:count]) != to_string(@total_count)}
+                size="sm"
+                color="neutral"
+              >
+                {tab[:count]}
+              </Badge.badge>
             </:tab>
           </Tabs.tabs_list>
         </div>
@@ -479,25 +521,68 @@ defmodule LanternUI.Components.DataTable do
         </div>
 
         <Popover.popover
-          :if={@filter != [] || length(@available_views) > 1 || @saved_view_event}
+          :if={@filter != []}
           id={"#{@id}-filters"}
-          class="lui-dt-filterpanel"
+          class="lui-dt-filterpanel lui-dt-filterpanel-filters"
           placement="bottom-end"
         >
           <Button.button size="sm" variant="outline" type="button" aria-label={@filters_label}>
-            <Icon.icon name="adjustments-horizontal" />
-            {@filters_label}
-            <Badge.badge :if={active_filter_count(@meta, @filter) > 0} size="sm" color="accent">
-              {active_filter_count(@meta, @filter)}
-            </Badge.badge>
+            <Icon.icon name="funnel" /> {@filters_label}
           </Button.button>
           <:content>
             <div class="lui-dt-filterpanel-inner">
-              <div :for={filter <- @filter} class="lui-dt-filterrow">
-                <label class="lui-dt-filterlabel">{filter[:label] || to_string(filter[:field])}</label>
+              <div class="lui-dt-addfilter">
+                <label class="lui-sr-only" for={"#{@id}-filter-search"}>Add filter</label>
+                <div class="lui-dt-searchline">
+                  <Icon.icon name="magnifying-glass" />
+                  <input
+                    id={"#{@id}-filter-search"}
+                    type="search"
+                    placeholder="Add filter…"
+                    data-part="filter-search"
+                  />
+                </div>
+                <div class="lui-command-listbox" role="listbox" aria-label="Available filters">
+                  <button
+                    :for={filter <- @filter}
+                    type="button"
+                    class="lui-command-item"
+                    role="option"
+                    data-part="add-filter"
+                    data-field={filter[:field]}
+                    data-filter-option
+                  >{filter[:label] || to_string(filter[:field])}</button>
+                </div>
+              </div>
+              <div
+                :for={filter <- @filter}
+                class="lui-dt-filterrow"
+                data-filter-editor={filter[:field]}
+                hidden={!filter_active?(@meta, filter)}
+              >
+                <div class="lui-dt-filterhead">
+                  <label class="lui-dt-filterlabel" for={"#{@id}-filter-value-#{filter[:field]}"}>{filter[
+                    :label
+                  ] || to_string(filter[:field])}</label>
+                  <select
+                    :if={filter[:type] == :text || filter[:type] == :select}
+                    class="lui-dt-operator"
+                    data-part="filter-op"
+                    data-field={filter[:field]}
+                    aria-label={"#{filter[:label] || filter[:field]} operator"}
+                  >
+                    <option value={filter[:op] || if(filter[:type] == :text, do: "ilike", else: "==")}>
+                      Matches
+                    </option>
+                    <option :if={filter[:type] == :text} value="==">Is</option>
+                    <option :if={filter[:type] == :text} value="not_ilike">Does not contain</option>
+                    <option :if={filter[:type] == :select} value="!=">Is not</option>
+                  </select>
+                </div>
                 <%= case filter[:type] || :select do %>
                   <% :text -> %>
                     <input
+                      id={"#{@id}-filter-value-#{filter[:field]}"}
                       type="text"
                       class="lui-dt-filtertext"
                       data-part="filter"
@@ -505,7 +590,6 @@ defmodule LanternUI.Components.DataTable do
                       data-op={filter[:op] || "ilike"}
                       value={filter_value(@meta, filter[:field])}
                       placeholder={filter[:placeholder] || "Any"}
-                      aria-label={filter[:label] || to_string(filter[:field])}
                     />
                   <% :range -> %>
                     <div class="lui-dt-filterrange">
@@ -556,6 +640,7 @@ defmodule LanternUI.Components.DataTable do
                     <% else %>
                       <div class="lui-select-native-wrap">
                         <select
+                          id={"#{@id}-filter-value-#{filter[:field]}"}
                           class="lui-select-native"
                           data-part="filter"
                           data-field={filter[:field]}
@@ -586,50 +671,6 @@ defmodule LanternUI.Components.DataTable do
               >
                 <Icon.icon name="x-mark" /> {@clear_filters_label}
               </button>
-              <div :if={length(@available_views) > 1} class="lui-dt-viewrow">
-                <span class="lui-dt-filterlabel">{@view_label}</span>
-                <div class="lui-dt-viewtoggle">
-                  <.link
-                    :if={"list" in @available_views}
-                    patch={view_path(@path, @meta, "list")}
-                    class={["lui-vt", @view == "list" && "lui-vt-active"]}
-                    aria-label="List view"
-                  ><Icon.icon name="bars-3" class="lui-vt-icon" /></.link>
-                  <.link
-                    :if={"table" in @available_views}
-                    patch={view_path(@path, @meta, "table")}
-                    class={["lui-vt", @view == "table" && "lui-vt-active"]}
-                    aria-label="Table view"
-                  ><Icon.icon name="view-columns" class="lui-vt-icon" /></.link>
-                  <.link
-                    :if={"cards" in @available_views}
-                    patch={view_path(@path, @meta, "cards")}
-                    class={["lui-vt", @view == "cards" && "lui-vt-active"]}
-                    aria-label="Grid view"
-                  ><Icon.icon name="squares-2x2" class="lui-vt-icon" /></.link>
-                </div>
-              </div>
-              <section
-                :if={@saved_view_event}
-                class="lui-dt-savedviews"
-                aria-label={@saved_views_label}
-              >
-                <h3 class="lui-dt-filterlabel">{@saved_views_label}</h3>
-                <button
-                  type="button"
-                  phx-click={@saved_view_event}
-                  phx-value-action="save"
-                  phx-value-params={Jason.encode!(saved_view_params(@meta, @view))}
-                  class="lui-dt-savedview"
-                >{@save_view_label}</button>
-                <button
-                  type="button"
-                  phx-click={@saved_view_event}
-                  phx-value-action="list"
-                  phx-value-params={Jason.encode!(saved_view_params(@meta, @view))}
-                  class="lui-dt-savedview"
-                >{@load_view_label}</button>
-              </section>
               <footer class="lui-dt-filterfooter">
                 <button type="button" class="lui-dt-resetfilters" data-part="reset-filters">{@reset_label}</button>
                 <button type="button" class="lui-dt-applyfilters" data-part="apply-filters">{@apply_label}</button>
@@ -637,6 +678,176 @@ defmodule LanternUI.Components.DataTable do
             </div>
           </:content>
         </Popover.popover>
+
+        <Popover.popover
+          :if={@col != []}
+          id={"#{@id}-display"}
+          class="lui-dt-displaypanel"
+          placement="bottom-end"
+        >
+          <Button.button size="sm" variant="outline" type="button" aria-label={@view_label}><Icon.icon name="view-columns" />
+          {@view_label}</Button.button>
+          <:content>
+            <div class="lui-dt-display-content" data-part="display-settings">
+              <input
+                :if={length(@col) > 6}
+                type="search"
+                class="lui-dt-column-search"
+                placeholder="Search columns…"
+                aria-label="Search columns"
+                data-part="column-search"
+              />
+              <div class="lui-dt-column-list" role="group" aria-label="Column visibility">
+                <label :for={{col, index} <- Enum.with_index(@col)} class="lui-dt-column-option">
+                  <input
+                    type="checkbox"
+                    data-part="column-toggle"
+                    data-column-key={column_key(col, index)}
+                    checked={column_key(col, index) not in @hidden_columns}
+                  />
+                  <span>{col[:label] || column_key(col, index)}</span>
+                </label>
+              </div>
+              <div class="lui-dt-density">
+                <span class="lui-dt-filterlabel">Density</span>
+                <div
+                  class="lui-segmented lui-dt-density-switch"
+                  role="radiogroup"
+                  aria-label="Density"
+                >
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={to_string(@density == "compact")}
+                    data-part="density"
+                    data-density="compact"
+                  >Compact</button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={to_string(@density == "comfortable")}
+                    data-part="density"
+                    data-density="comfortable"
+                  >Comfortable</button>
+                </div>
+              </div>
+              <button type="button" class="lui-dt-reset-display" data-part="reset-display">Reset</button>
+            </div>
+          </:content>
+        </Popover.popover>
+
+        <Menu.menu
+          :if={length(@layout_views) > 1 || @saved_view_event || @saved_view_slots != []}
+          id={"#{@id}-views"}
+          label="Views"
+          trigger_class="lui-dt-views-trigger"
+        >
+          <:trigger><Icon.icon name="chevron-down" /> Views</:trigger>
+          <Menu.menu_item
+            :for={layout_view <- @layout_views}
+            :if={length(@layout_views) > 1}
+            patch={view_path(@path, @meta, layout_view)}
+          >
+            <Icon.icon :if={@view == layout_view} name="check" /> {layout_view_label(layout_view)}
+          </Menu.menu_item>
+          <Menu.menu_separator :if={@saved_view_slots != []} />
+          <div :for={saved_view <- @saved_view_slots} class="lui-dt-saved-view-row">
+            <% saved_id = saved_view[:id] || saved_view[:name] %>
+            <button
+              type="button"
+              class="lui-dt-savedview"
+              data-part="saved-view"
+              data-view-id={saved_id}
+              phx-click={@saved_view_event}
+              phx-value-action="apply"
+              phx-value-id={saved_id}
+              phx-value-params={Jason.encode!(saved_view[:params] || %{})}
+            >
+              <Icon.icon
+                :if={to_string(@active_saved_view) == to_string(saved_id)}
+                name="check"
+              /> {saved_view[:name]}
+            </button>
+            <button
+              :if={@saved_view_event}
+              type="button"
+              class="lui-dt-savedview-action lui-dt-rename-view"
+              data-view-id={saved_view[:id] || saved_view[:name]}
+              phx-click={@saved_view_event}
+              phx-value-action="rename"
+              phx-value-id={saved_view[:id] || saved_view[:name]}
+            >Rename</button>
+            <button
+              :if={@saved_view_event}
+              type="button"
+              class="lui-dt-savedview-action"
+              phx-click={@saved_view_event}
+              phx-value-action="delete"
+              phx-value-id={saved_view[:id] || saved_view[:name]}
+            >Delete</button>
+          </div>
+          <Menu.menu_separator :if={@saved_view_event} />
+          <Menu.menu_item :if={@saved_view_event} class="lui-dt-save-view-open">
+            {@save_view_label}…
+          </Menu.menu_item>
+          <Menu.menu_item
+            :if={@saved_view_event}
+            phx-click={@saved_view_event}
+            phx-value-action="list"
+            phx-value-params={Jason.encode!(saved_view_params(@meta, @view))}
+          >
+            {@load_view_label}
+          </Menu.menu_item>
+        </Menu.menu>
+        <dialog
+          :if={@saved_view_event}
+          class="lui-dt-save-dialog"
+          data-part="save-view-dialog"
+          aria-label={@saved_views_label}
+        >
+          <h3 data-part="save-view-title">Save current view</h3>
+          <input
+            type="text"
+            class="lui-dt-view-name"
+            placeholder="View name"
+            aria-label="View name"
+            data-part="view-name"
+          />
+          <div class="lui-dt-save-actions">
+            <button type="button" data-part="save-view-cancel">Cancel</button>
+            <button
+              type="button"
+              class="lui-dt-save-confirm"
+              data-part="save-view-confirm"
+              phx-click={@saved_view_event}
+              phx-value-action="save"
+              phx-value-params={Jason.encode!(saved_view_params(@meta, @view))}
+            >Save</button>
+          </div>
+        </dialog>
+        <dialog
+          :if={@saved_view_event}
+          class="lui-dt-save-dialog"
+          data-part="rename-view-dialog"
+          aria-label="Rename view"
+        >
+          <h3>Rename view</h3><input
+            type="text"
+            class="lui-dt-view-name"
+            placeholder="View name"
+            aria-label="New view name"
+            data-part="view-name"
+          />
+          <div class="lui-dt-save-actions">
+            <button type="button" data-part="rename-view-cancel">Cancel</button><button
+              type="button"
+              class="lui-dt-save-confirm"
+              data-part="rename-view-confirm"
+              phx-click={@saved_view_event}
+              phx-value-action="rename"
+            >Save</button>
+          </div>
+        </dialog>
 
         <.link
           :if={@expandable}
@@ -735,8 +946,10 @@ defmodule LanternUI.Components.DataTable do
                 />
               </th>
               <th
-                :for={col <- @col}
+                :for={{col, index} <- Enum.with_index(@col)}
                 class={Class.merge(["lui-th", col[:class]])}
+                data-column-key={column_key(col, index)}
+                data-column-label={col[:label] || column_key(col, index)}
                 scope="col"
                 aria-sort={col[:sortable] && col[:field] && sort_direction(@meta, col.field)}
               >
@@ -787,6 +1000,7 @@ defmodule LanternUI.Components.DataTable do
               </td>
               <td
                 :for={{col, i} <- Enum.with_index(@col)}
+                data-column-key={column_key(col, i)}
                 id={i == 0 && row_link(assigns, row) && "#{@id}-row-#{@row_id_fn.(row)}-main"}
                 class={Class.merge(["lui-td", col[:td_class]])}
               >
@@ -821,6 +1035,23 @@ defmodule LanternUI.Components.DataTable do
       />
     </div>
     """
+  end
+
+  defp column_key(col, index),
+    do: if(col[:field], do: to_string(col[:field]), else: "column-#{index}")
+
+  defp filter_active?(meta, %{type: :range, field: field}) do
+    filter_value(meta, field, ">=") not in [nil, ""] or
+      filter_value(meta, field, "<=") not in [nil, ""]
+  end
+
+  defp filter_active?(meta, filter) do
+    field = filter[:field]
+
+    case filter[:type] || :select do
+      :text -> filter_value(meta, field) not in [nil, ""]
+      _ -> filter_values(meta, field) != []
+    end
   end
 
   defp selection_count(%{all_matching?: true, meta: meta, excluded_ids: excluded_ids}) do
@@ -1196,11 +1427,14 @@ defmodule LanternUI.Components.DataTable do
     |> Enum.count(fn f -> to_string(f["field"]) in fields and f["value"] not in [nil, ""] end)
   end
 
+  defp layout_view_label("cards"), do: "Grid"
+  defp layout_view_label(view), do: String.capitalize(view)
+
   defp resolve_views(assigns) do
     available =
       assigns
       |> slotted_views()
-      |> restrict_views(assigns.views)
+      |> restrict_views(assigns.available_views || assigns.views)
 
     view =
       cond do
@@ -1209,7 +1443,7 @@ defmodule LanternUI.Components.DataTable do
         true -> assigns.view
       end
 
-    assign(assigns, available_views: available, view: view)
+    assign(assigns, layout_views: available, view: view)
   end
 
   defp slotted_views(assigns) do

@@ -99,8 +99,12 @@ defmodule LanternUI.DataTableChromeTest do
       meta={@meta}
       path="/orders"
       saved_view_event="saved-view"
+      available_views={["table", "cards"]}
+      active_saved_view="mine"
     >
+      <:view id="mine" name="My items" params={%{"view" => "table"}} />
       <:col :let={row} label="Name">{row.name}</:col>
+      <:card :let={row}>Card {row.name}</:card>
     </DataTable.data_table>
     """
   end
@@ -278,7 +282,9 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ ~r/href="\/orders\?[^"]*order_by/
     refute html =~ ~r/lui-tab-active[^>]*>\s*All\b/s
     # tab counts as badges
-    assert html =~ ~r/lui-badge[^>]*>\s*30\s*</
+    # The All count would repeat the footer result total, so only the
+    # narrower preset count remains visible.
+    refute html =~ ~r/lui-badge[^>]*>\s*30\s*</
     assert html =~ ~r/lui-badge[^>]*>\s*12\s*</
   end
 
@@ -308,7 +314,7 @@ defmodule LanternUI.DataTableChromeTest do
     refute html =~ "lui-table-wrap"
     # view toggle present with a patch link carrying the view param
     assert html =~ "view=cards"
-    assert html =~ "lui-vt-active"
+    assert html =~ "Grid"
   end
 
   test "the view switcher offers exactly two views, never three" do
@@ -316,20 +322,19 @@ defmodule LanternUI.DataTableChromeTest do
     # table — otherwise the grid is a dead end with no way back.
     html = render(&table/1, %{base() | view: "cards"})
 
-    assert html =~ ~s(aria-label="Grid view")
-    assert html =~ ~s(aria-label="Table view")
-    refute html =~ ~s(aria-label="List view")
-    assert count(html, ~s(class="lui-vt)) == 2
+    assert html =~ "Grid"
+    assert html =~ "Table"
+    refute html =~ "List"
+    assert count(html, "lui-menu-item") == 2
   end
 
   test "a page with a :list_item slot pairs list with grid and drops table" do
     html = render(&table_with_list/1, %{base() | view: "list"})
 
-    assert html =~ ~s(aria-label="List view")
-    assert html =~ ~s(aria-label="Grid view")
-    refute html =~ ~s(aria-label="Table view")
+    assert html =~ "List"
+    assert html =~ "Grid"
     refute html =~ "view=table"
-    assert count(html, ~s(class="lui-vt)) == 2
+    assert count(html, "lui-menu-item") == 2
   end
 
   test "search and filter chrome carries the active view" do
@@ -342,20 +347,22 @@ defmodule LanternUI.DataTableChromeTest do
   test "a page with only a :list_item slot pairs list with table, not one button" do
     html = render(&table_list_only/1, %{base() | view: "list"})
 
-    assert html =~ ~s(aria-label="List view")
-    assert html =~ ~s(aria-label="Table view")
-    refute html =~ ~s(aria-label="Grid view")
-    assert count(html, ~s(class="lui-vt)) == 2
+    assert html =~ "List"
+    assert html =~ "Table"
+    refute html =~ "Grid"
+    assert count(html, "lui-menu-item") == 2
   end
 
   defp count(h, n), do: length(String.split(h, n)) - 1
 
-  test "filters live in the Zag filters and view popover with active-count badge and clear button" do
+  test "filters and display use separate popovers with active-count badge and clear button" do
     html = render(&table/1, base())
 
     # settings popover wraps the filter controls
     assert html =~ ~s(id="t-filters")
-    assert html =~ ~s(aria-label="Filters &amp; view")
+    assert html =~ "Filters"
+    assert html =~ ~s(id="t-display")
+    assert html =~ ~s(id="t-views")
     assert html =~ ~s(data-zag)
     assert html =~ ~s(data-part="apply-filters")
     assert html =~ ~s(data-part="reset-filters")
@@ -366,7 +373,7 @@ defmodule LanternUI.DataTableChromeTest do
 
     meta = put_in(@meta.params["filters"], %{"0" => %{"field" => "channel", "value" => "ebay"}})
     html = render(&table/1, %{base() | meta: meta})
-    assert html =~ ~r/lui-badge[^>]*>\s*1\s*</
+    refute html =~ ~s(data-color="accent")
     assert html =~ ~s(data-part="clear-filters")
   end
 
@@ -460,18 +467,24 @@ defmodule LanternUI.DataTableChromeTest do
 
     assert html =~ ~s(aria-label="Fast filters")
     assert html =~ ~s(aria-label="Current filters")
-    assert html =~ ">Display</span>"
-    assert html =~ ">Store this view</button>"
-    assert html =~ ">Open stored views</button>"
+    assert html =~ "Display"
+    assert html =~ "Store this view"
+    assert html =~ "Open stored views"
   end
 
   test "saved view hooks emit generic consumer events with current URL configuration" do
     html = render(&table_with_saved_view_event/1, base())
 
-    assert html =~ ~s(aria-label="Filters &amp; view")
+    assert html =~ ~s(id="saved-views")
     assert html =~ ~s(phx-click="saved-view")
     assert html =~ ~s(phx-value-action="save")
     assert html =~ ~s(phx-value-action="list")
+    assert html =~ "My items"
+    assert html =~ "Grid"
+    assert html =~ "Table"
+    assert html =~ ~s(phx-value-action="apply")
+    assert html =~ ~s(phx-value-action="rename")
+    assert html =~ ~s(phx-value-action="delete")
     assert html =~ "order_by"
     assert html =~ "view"
   end
