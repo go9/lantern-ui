@@ -365,6 +365,7 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ ~s(id="t-display")
     refute html =~ ~s(id="t-views")
     assert html =~ "Column visibility"
+    refute html =~ "Saved views"
     assert html =~ ~s(data-zag)
     assert html =~ ~s(data-part="apply-filters")
     assert html =~ ~s(data-part="filter-actions" hidden)

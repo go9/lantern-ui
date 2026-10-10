@@ -7,6 +7,7 @@ defmodule LanternUI.Components.Thumbnail do
   """
   use Phoenix.Component
 
+  alias LanternUI.Class
   alias LanternUI.Components.Icon
 
   attr(:id, :string, required: true, doc: "Stable DOM id for the preview hook.")
@@ -21,7 +22,7 @@ defmodule LanternUI.Components.Thumbnail do
       :if={@src}
       id={@id}
       type="button"
-      class={["lui-thumbnail", @class]}
+      class={Class.merge(["lui-thumbnail", @class])}
       data-size={@size}
       data-preview-src={@src}
       data-preview-alt={@alt}
@@ -33,7 +34,7 @@ defmodule LanternUI.Components.Thumbnail do
     <span
       :if={!@src}
       id={@id}
-      class={["lui-thumbnail", "lui-thumbnail-empty", @class]}
+      class={Class.merge(["lui-thumbnail", "lui-thumbnail-empty", @class])}
       data-size={@size}
       role="img"
       aria-label="No image"
