@@ -33,6 +33,16 @@ defmodule LanternUI.Components.Breadcrumb do
     doc: "When set, renders a leading home-icon crumb linking here (product chrome)."
   )
 
+  attr(:home_label, :string,
+    default: "Home",
+    doc: "Accessible name for the `home` crumb. Screen readers hear this; it is not drawn."
+  )
+
+  attr(:home_title, :string,
+    default: nil,
+    doc: "Tooltip (native `title`) for the `home` crumb. Omitted when nil."
+  )
+
   attr(:separator, :string,
     default: nil,
     doc: "Optional text separator between items. Default is a chevron icon."
@@ -55,8 +65,13 @@ defmodule LanternUI.Components.Breadcrumb do
     ~H"""
     <nav class={Class.merge(["lui-breadcrumb", @class])} aria-label={@aria_label} {@rest}>
       <ol class="lui-breadcrumb-list" role="list">
-        <li :if={@home} class="lui-breadcrumb-item">
-          <.link navigate={@home} class="lui-breadcrumb-home" aria-label="Home">
+        <li :if={@home} class="lui-breadcrumb-item lui-breadcrumb-item-home">
+          <.link
+            navigate={@home}
+            class="lui-breadcrumb-home"
+            aria-label={@home_label}
+            title={@home_title}
+          >
             <.home_icon />
           </.link>
         </li>

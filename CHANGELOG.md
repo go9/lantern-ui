@@ -24,6 +24,7 @@ All notable changes to this project are documented here. The format follows
 - `data-lui-control-scale="legacy"` maps the new strip and table control sizing through the existing legacy control tokens. It preserves the shared strip/sidebar row alignment while restoring legacy control metrics.
 
 ### Added
+- `<.page_shell home="/path" home_label="…" home_title="…">` and `<.breadcrumb home_label home_title>`: the leading home-icon crumb gets an accessible name and a native tooltip, and in `layout="strip"` it stays visible when the trail folds into the `…` menu.
 - Standalone `<.kbd>` keycap badge primitive (`LanternUI.Components.Kbd.kbd/1`) and `<.kbd_group>` with `size` (`xs`, `sm`, `md`, `lg`), `variant` (`outline`, `subtle`, `solid`, `ghost`), `keys` list/string support with symbol mapping (`⌘`, `⇧`, `⌥`, `⌃`, `Esc`, etc.), and full theme token styling.
 - Print styles for app-shell and table pages: hide interactive chrome and restore tables to natural document flow.
 - Data table active-filter chips and an accessible Zag `Filters & view` popover. Popover filter changes stage until Apply; Reset and Clear filters are caller-labelable. Optional saved-view actions emit generic consumer events without adding persistence policy.
