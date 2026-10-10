@@ -39,8 +39,8 @@ defmodule LanternUI.Components.DataTable do
   filter navigation remain immediate. A collapsible `:overview` slot accepts
   arbitrary content; `:stat` remains available for simple metric cards. Saved-view
   controls emit a generic consumer event and do not prescribe persistence.
-  Filter chips and quick filters share the toolbar row with separate Filters,
-  Display, and Views controls. Filters opens a field list, then a compact editor
+  Filter chips and quick filters share the toolbar row with Filters and View
+  controls. Filters opens a field list, then a compact editor
   with one Apply filter action; applied filters appear as removable chips.
   Search and quick-filter navigation remain immediate. Saved-view entries use
   `:view` slots and emit generic consumer events without prescribing persistence.
@@ -49,9 +49,9 @@ defmodule LanternUI.Components.DataTable do
 
   alias LanternUI.Class
   alias LanternUI.Components.Button
+  alias LanternUI.Components.Checkbox
   alias LanternUI.Components.EmptyState
   alias LanternUI.Components.Icon
-  alias LanternUI.Components.Menu
   alias LanternUI.Components.Badge
   alias LanternUI.Components.Pagination
   alias LanternUI.Components.Popover
@@ -161,7 +161,7 @@ defmodule LanternUI.Components.DataTable do
     doc: "Accessible label for the active filter chips."
   )
 
-  attr(:view_label, :string, default: "Display", doc: "Label for the view switcher.")
+  attr(:view_label, :string, default: "View", doc: "Label for the display and view switcher.")
 
   attr(:save_view_label, :string,
     default: "Save current view",
@@ -407,6 +407,7 @@ defmodule LanternUI.Components.DataTable do
         :if={@overview != [] || @stat != []}
         id={"#{@id}-overview"}
         class="lui-dt-overview"
+        hidden={@expandable && @expanded}
         phx-hook="LanternCollapse"
       >
         <button
@@ -672,35 +673,51 @@ defmodule LanternUI.Components.DataTable do
         </Popover.popover>
 
         <Popover.popover
-          :if={@col != []}
+          :if={
+            @col != [] || length(@layout_views) > 1 || @saved_view_event || @saved_view_slots != []
+          }
           id={"#{@id}-display"}
           class="lui-dt-displaypanel"
           placement="bottom-end"
         >
-          <Button.button size="sm" variant="outline" type="button" aria-label={@view_label}><Icon.icon name="view-columns" />
+          <Button.button size="md" variant="outline" type="button" aria-label={@view_label}><Icon.icon name="view-columns" />
           {@view_label}</Button.button>
           <:content>
             <div class="lui-dt-display-content" data-part="display-settings">
-              <input
-                :if={length(@col) > 6}
-                type="search"
-                class="lui-dt-column-search"
-                placeholder="Search columns…"
-                aria-label="Search columns"
-                data-part="column-search"
-              />
-              <div class="lui-dt-column-list" role="group" aria-label="Column visibility">
-                <label :for={{col, index} <- Enum.with_index(@col)} class="lui-dt-column-option">
-                  <input
-                    type="checkbox"
+              <div :if={length(@layout_views) > 1} class="lui-dt-view-section">
+                <span class="lui-dt-panel-title">Layout</span>
+                <.link
+                  :for={layout_view <- @layout_views}
+                  patch={view_path(@path, @meta, layout_view)}
+                  class="lui-dt-view-option"
+                >
+                  <Icon.icon :if={@view == layout_view} name="check" /> {layout_view_label(
+                    layout_view
+                  )}
+                </.link>
+              </div>
+              <div :if={@col != []} class="lui-dt-view-section">
+                <span class="lui-dt-panel-title">Columns</span>
+                <input
+                  :if={length(@col) > 6}
+                  type="search"
+                  class="lui-dt-column-search"
+                  placeholder="Search columns…"
+                  aria-label="Search columns"
+                  data-part="column-search"
+                />
+                <div class="lui-dt-column-list" role="group" aria-label="Column visibility">
+                  <Checkbox.checkbox
+                    :for={{col, index} <- Enum.with_index(@col)}
+                    class="lui-dt-column-option"
+                    label={col[:label] || column_key(col, index)}
                     data-part="column-toggle"
                     data-column-key={column_key(col, index)}
                     checked={column_key(col, index) not in @hidden_columns}
                   />
-                  <span>{col[:label] || column_key(col, index)}</span>
-                </label>
+                </div>
               </div>
-              <div class="lui-dt-density">
+              <div :if={@col != []} class="lui-dt-density">
                 <span class="lui-dt-filterlabel">Density</span>
                 <div
                   class="lui-segmented lui-dt-density-switch"
@@ -723,74 +740,63 @@ defmodule LanternUI.Components.DataTable do
                   >Comfortable</button>
                 </div>
               </div>
-              <button type="button" class="lui-dt-reset-display" data-part="reset-display">Reset</button>
+              <div :if={@saved_view_event || @saved_view_slots != []} class="lui-dt-view-section">
+                <span class="lui-dt-panel-title">{@saved_views_label}</span>
+                <div :for={saved_view <- @saved_view_slots} class="lui-dt-saved-view-row">
+                  <% saved_id = saved_view[:id] || saved_view[:name] %>
+                  <button
+                    type="button"
+                    class="lui-dt-savedview"
+                    data-part="saved-view"
+                    data-view-id={saved_id}
+                    phx-click={@saved_view_event}
+                    phx-value-action="apply"
+                    phx-value-id={saved_id}
+                    phx-value-params={Jason.encode!(saved_view[:params] || %{})}
+                  >
+                    <Icon.icon
+                      :if={to_string(@active_saved_view) == to_string(saved_id)}
+                      name="check"
+                    /> {saved_view[:name]}
+                  </button>
+                  <button
+                    :if={@saved_view_event}
+                    type="button"
+                    class="lui-dt-savedview-action lui-dt-rename-view"
+                    data-view-id={saved_id}
+                    phx-click={@saved_view_event}
+                    phx-value-action="rename"
+                    phx-value-id={saved_id}
+                  >Rename</button>
+                  <button
+                    :if={@saved_view_event}
+                    type="button"
+                    class="lui-dt-savedview-action"
+                    phx-click={@saved_view_event}
+                    phx-value-action="delete"
+                    phx-value-id={saved_id}
+                  >Delete</button>
+                </div>
+                <button
+                  :if={@saved_view_event}
+                  type="button"
+                  class="lui-dt-view-option lui-dt-save-view-open"
+                >{@save_view_label}…</button>
+                <button
+                  :if={@saved_view_event}
+                  type="button"
+                  class="lui-dt-view-option"
+                  phx-click={@saved_view_event}
+                  phx-value-action="list"
+                  phx-value-params={Jason.encode!(saved_view_params(@meta, @view))}
+                >{@load_view_label}</button>
+              </div>
+              <footer :if={@col != []} class="lui-dt-view-footer">
+                <button type="button" class="lui-dt-reset-display" data-part="reset-display">Reset</button>
+              </footer>
             </div>
           </:content>
         </Popover.popover>
-
-        <Menu.menu
-          :if={length(@layout_views) > 1 || @saved_view_event || @saved_view_slots != []}
-          id={"#{@id}-views"}
-          label="Views"
-          trigger_class="lui-dt-views-trigger"
-        >
-          <:trigger><Icon.icon name="chevron-down" /> Views</:trigger>
-          <Menu.menu_item
-            :for={layout_view <- @layout_views}
-            :if={length(@layout_views) > 1}
-            patch={view_path(@path, @meta, layout_view)}
-          >
-            <Icon.icon :if={@view == layout_view} name="check" /> {layout_view_label(layout_view)}
-          </Menu.menu_item>
-          <Menu.menu_separator :if={@saved_view_slots != []} />
-          <div :for={saved_view <- @saved_view_slots} class="lui-dt-saved-view-row">
-            <% saved_id = saved_view[:id] || saved_view[:name] %>
-            <button
-              type="button"
-              class="lui-dt-savedview"
-              data-part="saved-view"
-              data-view-id={saved_id}
-              phx-click={@saved_view_event}
-              phx-value-action="apply"
-              phx-value-id={saved_id}
-              phx-value-params={Jason.encode!(saved_view[:params] || %{})}
-            >
-              <Icon.icon
-                :if={to_string(@active_saved_view) == to_string(saved_id)}
-                name="check"
-              /> {saved_view[:name]}
-            </button>
-            <button
-              :if={@saved_view_event}
-              type="button"
-              class="lui-dt-savedview-action lui-dt-rename-view"
-              data-view-id={saved_view[:id] || saved_view[:name]}
-              phx-click={@saved_view_event}
-              phx-value-action="rename"
-              phx-value-id={saved_view[:id] || saved_view[:name]}
-            >Rename</button>
-            <button
-              :if={@saved_view_event}
-              type="button"
-              class="lui-dt-savedview-action"
-              phx-click={@saved_view_event}
-              phx-value-action="delete"
-              phx-value-id={saved_view[:id] || saved_view[:name]}
-            >Delete</button>
-          </div>
-          <Menu.menu_separator :if={@saved_view_event} />
-          <Menu.menu_item :if={@saved_view_event} class="lui-dt-save-view-open">
-            {@save_view_label}…
-          </Menu.menu_item>
-          <Menu.menu_item
-            :if={@saved_view_event}
-            phx-click={@saved_view_event}
-            phx-value-action="list"
-            phx-value-params={Jason.encode!(saved_view_params(@meta, @view))}
-          >
-            {@load_view_label}
-          </Menu.menu_item>
-        </Menu.menu>
         <dialog
           :if={@saved_view_event}
           class="lui-dt-save-dialog"
@@ -817,16 +823,6 @@ defmodule LanternUI.Components.DataTable do
             >Save</button>
           </div>
         </dialog>
-        <.link
-          :if={@expandable}
-          patch={expand_path(@path, @meta, @expanded)}
-          class="lui-dt-expand"
-          aria-label={if @expanded, do: @expanded_aria_label, else: @expand_aria_label}
-          title={if @expanded, do: @expanded_label, else: @expand_label}
-          data-part="expand"
-        >
-          <Icon.icon name={if @expanded, do: "arrows-pointing-in", else: "arrows-pointing-out"} />
-        </.link>
         <dialog
           :if={@saved_view_event}
           class="lui-dt-save-dialog"

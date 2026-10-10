@@ -12,7 +12,7 @@ The gate checks standard sizing, mixed toolbar heights, horizontal overflow, and
 Set `QA_REPORT_DIR` to save screenshots and JSON measurements. Mutation evidence is recorded in [control-scale-mutation.md](evidence/control-scale-mutation.md).
 
 The floating-layer first-frame check samples every animation frame from first
-visibility through 300ms later. It covers table Filters, Display, Views,
+visibility through 300ms later. It covers table Filters and View,
 chart settings, date range, the workspace switcher, and the action-bar More
 menu at 1440px and 1100px:
 

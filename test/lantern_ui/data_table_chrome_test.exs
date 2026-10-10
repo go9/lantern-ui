@@ -326,7 +326,7 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ "Grid"
     assert html =~ "Table"
     refute html =~ "List"
-    assert count(html, "lui-menu-item") == 2
+    assert count(html, "lui-dt-view-option") == 2
   end
 
   test "a page with a :list_item slot pairs list with grid and drops table" do
@@ -335,7 +335,7 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ "List"
     assert html =~ "Grid"
     refute html =~ "view=table"
-    assert count(html, "lui-menu-item") == 2
+    assert count(html, "lui-dt-view-option") == 2
   end
 
   test "search and filter chrome carries the active view" do
@@ -351,19 +351,23 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ "List"
     assert html =~ "Table"
     refute html =~ "Grid"
-    assert count(html, "lui-menu-item") == 2
+    assert count(html, "lui-dt-view-option") == 2
   end
 
   defp count(h, n), do: length(String.split(h, n)) - 1
 
-  test "filters use a compact field picker and one apply action beside display and views" do
+  test "filters use a compact field picker beside one View control" do
     html = render(&table/1, base())
 
     # settings popover wraps the filter controls
     assert html =~ ~s(id="t-filters")
     assert html =~ "Filters"
     assert html =~ ~s(id="t-display")
-    assert html =~ ~s(id="t-views")
+    refute html =~ ~s(id="t-views")
+    assert html =~ "Column visibility"
+    assert html =~ ~s(class="lui-checkbox")
+    assert html =~ ~s(class="lui-dt-view-footer")
+    refute html =~ "Saved views"
     assert html =~ ~s(data-zag)
     assert html =~ ~s(data-part="apply-filters")
     assert html =~ ~s(data-part="filter-actions" hidden)
@@ -478,7 +482,8 @@ defmodule LanternUI.DataTableChromeTest do
   test "saved view hooks emit generic consumer events with current URL configuration" do
     html = render(&table_with_saved_view_event/1, base())
 
-    assert html =~ ~s(id="saved-views")
+    assert html =~ ~s(id="saved-display")
+    refute html =~ ~s(id="saved-views")
     assert html =~ ~s(phx-click="saved-view")
     assert html =~ ~s(phx-value-action="save")
     assert html =~ ~s(phx-value-action="list")
@@ -488,6 +493,10 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ ~s(phx-value-action="apply")
     assert html =~ ~s(phx-value-action="rename")
     assert html =~ ~s(phx-value-action="delete")
+
+    assert elem(:binary.match(html, "Saved views"), 0) <
+             elem(:binary.match(html, "lui-dt-view-footer"), 0)
+
     assert html =~ "order_by"
     assert html =~ "view"
   end

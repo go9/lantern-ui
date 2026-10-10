@@ -620,7 +620,7 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 - `subtitle` (:string) — Secondary line under the table title.
 - `target` (:any) — LiveView target for selection and bulk events.
 - `title` (:string) — Optional table heading above the toolbar.
-- `view_label` (:string, default "Display") — Label for the view switcher.
+- `view_label` (:string, default "View") — Label for the display and view switcher.
 - `views` (:list) — Allowed views, as strings.
 Slots:
 - `:bulk_action` — Action shown in the bulk bar when rows are selected.
@@ -994,7 +994,7 @@ A small, curated inline-SVG icon set (Heroicons outline paths, MIT).
 Renders an icon by name.
 
 - `class` (:any) — Extra classes merged onto the root element.
-- `name` (:string, required, values: adjustments-horizontal, arrow-down-tray, arrow-path, arrow-right, arrow-trending-up, arrow-up-tray, arrows-pointing-in, arrows-pointing-out, bars-3, calendar, calendar-days, chart-bar, check, check-circle, chevron-down, chevron-left, chevron-right, chevron-up, chevron-up-down, circle-stack, clock, cloud, cursor-arrow-rays, document, ellipsis-horizontal, exclamation-circle, folder, folder-open, funnel, globe-alt, inbox, information-circle, magnifying-glass, map-pin, minus, pencil-square, plus, presentation-chart-line, printer, sparkles, squares-2x2, trash, view-columns, window, x-mark) — Icon key from the curated outline set.
+- `name` (:string, required, values: adjustments-horizontal, arrow-down-tray, arrow-path, arrow-right, arrow-trending-up, arrow-up-tray, arrows-pointing-in, arrows-pointing-out, bars-3, calendar, calendar-days, chart-bar, check, check-circle, chevron-down, chevron-left, chevron-right, chevron-up, chevron-up-down, circle-stack, clock, cloud, cursor-arrow-rays, document, ellipsis-horizontal, exclamation-circle, folder, folder-open, funnel, globe-alt, inbox, information-circle, magnifying-glass, map-pin, minus, pencil-square, photo, plus, presentation-chart-line, printer, sparkles, squares-2x2, trash, view-columns, window, x-mark) — Icon key from the curated outline set.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 
 ### LanternUI.Components.IconButton
@@ -2147,6 +2147,20 @@ Runtime theming — persisted `--lantern-*` token overrides.
 - `preset` (:string, values: shadcn, ) — Built-in theme preset.
 - `storage_key` (:string, default "lui-theme") — localStorage key for persisted token overrides.
 
+### LanternUI.Components.Thumbnail
+
+Fixed square image for dense rows.
+
+#### `thumbnail/1`
+
+Fixed square image for dense rows.
+
+- `alt` (:string, default "") — Image description and preview button label.
+- `class` (:any) — Extra classes on the thumbnail.
+- `id` (:string, required) — Stable DOM id for the preview hook.
+- `size` (:string, values: sm, md, default "sm") — Square thumbnail size.
+- `src` (:string) — Image URL, or nil for a neutral placeholder.
+
 ### LanternUI.Components.Timeline
 
 Timeline: a vertical sequence of events with a marker rail.
@@ -3022,6 +3036,17 @@ From `docs/recipes.md` (Block 8: confirm-destructive dialog plus empty/loading/e
     </.card_grid>
   </.stack>
 </.page_shell>
+```
+
+From `docs/recipes.md` (Block 8: confirm-destructive dialog plus empty/loading/error states):
+
+```heex
+<:col :let={row} label="Item">
+  <span class="lui-thumbnail-cell">
+    <.thumbnail id={"item-#{row.id}-image"} src={row.image_url} alt={row.name} size="sm" />
+    <span>{row.name}</span>
+  </span>
+</:col>
 ```
 
 From `README.md` (Usage):

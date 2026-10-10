@@ -942,3 +942,17 @@ the expandable data table remains available for assistive technology and print.
   </.stack>
 </.page_shell>
 ```
+# Row thumbnails
+
+Use `thumbnail/1` in a table column to keep item names aligned when some rows
+have no image. Give each instance a stable ID. Image rows open a larger preview
+on hover or keyboard focus; rows without a source show a neutral placeholder.
+
+```heex
+<:col :let={row} label="Item">
+  <span class="lui-thumbnail-cell">
+    <.thumbnail id={"item-#{row.id}-image"} src={row.image_url} alt={row.name} size="sm" />
+    <span>{row.name}</span>
+  </span>
+</:col>
+```

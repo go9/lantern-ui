@@ -444,7 +444,7 @@ defmodule LanternUI.DataTableTest do
         view: "table"
       })
 
-    assert html =~ ~s(id="list-views")
+    assert html =~ ~s(id="list-display")
     assert html =~ "List"
     assert html =~ "view=list"
     # Grid is absent without :card.

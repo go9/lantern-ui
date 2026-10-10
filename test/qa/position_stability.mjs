@@ -18,7 +18,6 @@ fs.mkdirSync(SHOTS, { recursive: true })
 const surfaces = [
   { name: "collection-filters", route: "/consistency?theme=blue", trigger: "#qa-consistency-table-filters [data-part=trigger] button", panel: "#qa-consistency-table-filters [data-part=content]" },
   { name: "collection-display", route: "/consistency?theme=blue", trigger: "#qa-consistency-table-display [data-part=trigger] button", panel: "#qa-consistency-table-display [data-part=content]" },
-  { name: "collection-views", route: "/consistency?theme=blue", trigger: "#qa-consistency-table-views [data-part=trigger] button", panel: "#qa-consistency-table-views [data-part=content]" },
   { name: "inventory-filters", route: "/qa?ctx=app_page_shell", trigger: "#qa-app-shell-table-filters [data-part=trigger] button", panel: "#qa-app-shell-table-filters [data-part=content]" },
   { name: "inventory-collapsed-filters", route: "/qa?ctx=app_page_shell_compact", trigger: "#qa-app-shell-table-filters [data-part=trigger] button", panel: "#qa-app-shell-table-filters [data-part=content]" },
   { name: "collection-shell-filters", route: "/qa?ctx=page_shell_strip", trigger: "#qa-strip-table-filters [data-part=trigger] button", panel: "#qa-strip-table-filters [data-part=content]" },

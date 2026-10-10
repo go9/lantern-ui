@@ -1,5 +1,18 @@
 # Upgrade guide
 
+## Unreleased table View control
+
+`data_table` now presents column visibility, density, layout choices, and optional
+saved views in one **View** popover. The existing `:view` slots,
+`saved_view_event`, `active_saved_view`, and save/load event payloads remain
+valid. Pages without saved-view assigns get no Saved views section. The public
+`view_label` attr still overrides the button label; its default is now `"View"`.
+Browser selectors targeting `-views`, `.lui-dt-views-trigger`, or the menu item
+markup should target `-display` and its View popover instead.
+
+Expanded tables now omit their overview while `expanded` is true and restore it
+when the URL-owned state becomes false.
+
 This guide covers the package released as `lantern_ui 0.9.0` through the current
 `0.10.1` main line. Hex published `0.10.0` on 2026-10-08. Main is newer than
 the latest Hex release: its 0.10.1 and Unreleased entries have not been

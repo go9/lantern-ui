@@ -327,6 +327,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `theme/1` — Runtime theming — persisted `--lantern-*` token overrides.
 
+### LanternUI.Components.Thumbnail
+
+- `thumbnail/1` — Fixed square image for dense rows.
+
 ### LanternUI.Components.Timeline
 
 - `timeline/1` — Timeline: a vertical sequence of events with a marker rail.
@@ -1114,6 +1118,17 @@ From `docs/recipes.md` (Block 8: confirm-destructive dialog plus empty/loading/e
     </.card_grid>
   </.stack>
 </.page_shell>
+```
+
+From `docs/recipes.md` (Block 8: confirm-destructive dialog plus empty/loading/error states):
+
+```heex
+<:col :let={row} label="Item">
+  <span class="lui-thumbnail-cell">
+    <.thumbnail id={"item-#{row.id}-image"} src={row.image_url} alt={row.name} size="sm" />
+    <span>{row.name}</span>
+  </span>
+</:col>
 ```
 
 From `README.md` (Usage):
