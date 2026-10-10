@@ -825,6 +825,18 @@ defmodule LanternUI.Charts do
             y1={@plot_top}
             y2={@plot_bottom}
           />
+          <rect
+            x={if(reference.vertical, do: reference.position, else: @plot_left)}
+            y={
+              if(reference.vertical,
+                do: @plot_top,
+                else: max(@plot_top, reference.position - 20)
+              )
+            }
+            width={min(reference.label_width, @plot_right - @plot_left)}
+            height="16"
+            rx="3"
+          />
           <text
             x={if(reference.vertical, do: reference.position + 4, else: @plot_left + 4)}
             y={
@@ -1439,7 +1451,8 @@ defmodule LanternUI.Charts do
 
               Map.merge(reference, %{
                 position: Geometry.round1(value_position),
-                vertical: assigns.orientation == :horizontal
+                vertical: assigns.orientation == :horizontal,
+                label_width: 8 + 6 * String.length("#{reference.label}: #{reference.value_label}")
               })
             end),
           else: []

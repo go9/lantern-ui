@@ -365,6 +365,8 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ ~s(id="t-display")
     refute html =~ ~s(id="t-views")
     assert html =~ "Column visibility"
+    assert html =~ ~s(class="lui-checkbox")
+    assert html =~ ~s(class="lui-dt-view-footer")
     refute html =~ "Saved views"
     assert html =~ ~s(data-zag)
     assert html =~ ~s(data-part="apply-filters")
@@ -491,6 +493,10 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ ~s(phx-value-action="apply")
     assert html =~ ~s(phx-value-action="rename")
     assert html =~ ~s(phx-value-action="delete")
+
+    assert elem(:binary.match(html, "Saved views"), 0) <
+             elem(:binary.match(html, "lui-dt-view-footer"), 0)
+
     assert html =~ "order_by"
     assert html =~ "view"
   end

@@ -91,7 +91,10 @@ defmodule LanternUI.QA.RegressionsLive do
             options={[{"Active", "Active"}, {"Draft", "Draft"}]}
           />
           <:col :let={row} label="Item" field={:name}>
-            <.thumbnail id={"qa-row-#{row.id}-image"} src={row.image} alt={row.name} /> {row.name}
+            <span class="lui-thumbnail-cell">
+              <.thumbnail id={"qa-row-#{row.id}-image"} src={row.image} alt={row.name} />
+              <span>{row.name}</span>
+            </span>
           </:col>
           <:col :let={row} label="Status" field={:status}>{row.status}</:col>
         </.data_table>

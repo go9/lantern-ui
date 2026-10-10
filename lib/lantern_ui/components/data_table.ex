@@ -49,6 +49,7 @@ defmodule LanternUI.Components.DataTable do
 
   alias LanternUI.Class
   alias LanternUI.Components.Button
+  alias LanternUI.Components.Checkbox
   alias LanternUI.Components.EmptyState
   alias LanternUI.Components.Icon
   alias LanternUI.Components.Badge
@@ -706,15 +707,14 @@ defmodule LanternUI.Components.DataTable do
                   data-part="column-search"
                 />
                 <div class="lui-dt-column-list" role="group" aria-label="Column visibility">
-                  <label :for={{col, index} <- Enum.with_index(@col)} class="lui-dt-column-option">
-                    <input
-                      type="checkbox"
-                      data-part="column-toggle"
-                      data-column-key={column_key(col, index)}
-                      checked={column_key(col, index) not in @hidden_columns}
-                    />
-                    <span>{col[:label] || column_key(col, index)}</span>
-                  </label>
+                  <Checkbox.checkbox
+                    :for={{col, index} <- Enum.with_index(@col)}
+                    class="lui-dt-column-option"
+                    label={col[:label] || column_key(col, index)}
+                    data-part="column-toggle"
+                    data-column-key={column_key(col, index)}
+                    checked={column_key(col, index) not in @hidden_columns}
+                  />
                 </div>
               </div>
               <div :if={@col != []} class="lui-dt-density">
@@ -740,12 +740,6 @@ defmodule LanternUI.Components.DataTable do
                   >Comfortable</button>
                 </div>
               </div>
-              <button
-                :if={@col != []}
-                type="button"
-                class="lui-dt-reset-display"
-                data-part="reset-display"
-              >Reset</button>
               <div :if={@saved_view_event || @saved_view_slots != []} class="lui-dt-view-section">
                 <span class="lui-dt-panel-title">{@saved_views_label}</span>
                 <div :for={saved_view <- @saved_view_slots} class="lui-dt-saved-view-row">
@@ -797,6 +791,9 @@ defmodule LanternUI.Components.DataTable do
                   phx-value-params={Jason.encode!(saved_view_params(@meta, @view))}
                 >{@load_view_label}</button>
               </div>
+              <footer :if={@col != []} class="lui-dt-view-footer">
+                <button type="button" class="lui-dt-reset-display" data-part="reset-display">Reset</button>
+              </footer>
             </div>
           </:content>
         </Popover.popover>

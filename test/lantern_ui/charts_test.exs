@@ -311,6 +311,9 @@ defmodule LanternUI.ChartsTest do
       assert Enum.at(interaction, 0)["raw_values"] == [8, 2]
       assert Enum.at(interaction, 1)["raw_values"] == [16, nil]
       assert html =~ "lui-time-series-chart__reference"
+      assert html =~ ~s(class="lui-time-series-chart__reference">)
+      assert html =~ ~s(<rect x="46" y="76.4" width="74" height="16")
+      assert html =~ ~s(width="74")
 
       assert File.read!("priv/static/lantern_ui.css") =~
                ".lui-time-series-chart__reference line { stroke: var(--lantern-accent); stroke-dasharray: 5 4;"

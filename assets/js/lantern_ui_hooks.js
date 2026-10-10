@@ -507,6 +507,15 @@ const ChartInteraction = {
       const above = anchorY - tooltipHeight - 8
       const preferredY = above >= 4 ? above : anchorY + 16
       this.tooltip.style.top = `${Math.max(4, Math.min(preferredY, chartHeight - tooltipHeight - 4))}px`
+      const reference = this.el.querySelector('.lui-time-series-chart__reference rect')
+      if (reference) {
+        const label = reference.getBoundingClientRect()
+        const tip = this.tooltip.getBoundingClientRect()
+        if (tip.left < label.right && tip.right > label.left && tip.top < label.bottom && tip.bottom > label.top) {
+          const clearTop = label.top - this.el.getBoundingClientRect().top - tooltipHeight - 8
+          if (clearTop >= 4) this.tooltip.style.top = `${clearTop}px`
+        }
+      }
     }
     this.overlay.removeAttribute("hidden")
     if (announce) {
@@ -3777,8 +3786,14 @@ const LanternThumbnail = {
     const gap = 8
     const right = rect.right + gap
     const left = rect.left - size - gap
-    this.preview.style.left = `${right + size <= win.innerWidth - gap ? right : Math.max(gap, left)}px`
-    this.preview.style.top = `${Math.max(gap, Math.min(rect.top, win.innerHeight - size - gap))}px`
+    if (right + size <= win.innerWidth - gap || left >= gap) {
+      this.preview.style.left = `${right + size <= win.innerWidth - gap ? right : left}px`
+      this.preview.style.top = `${Math.max(gap, Math.min(rect.top, win.innerHeight - size - gap))}px`
+    } else {
+      const below = rect.bottom + gap
+      this.preview.style.left = `${Math.max(gap, Math.min(rect.left, win.innerWidth - size - gap))}px`
+      this.preview.style.top = `${below + size <= win.innerHeight - gap ? below : Math.max(gap, rect.top - size - gap)}px`
+    }
   },
   hidePreview() { this.preview?.remove(); this.preview = null },
   destroyed() {

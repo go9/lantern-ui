@@ -45,9 +45,30 @@ for (const width of [1440, 1100, 390]) {
       for (const control of controls) assert.ok(Math.abs(control.height - controls[0].height) <= 1, `${width} ${theme} ${control.selector}: ${control.height} vs ${controls[0].height}`)
       const row = await page.evaluate(() => [...document.querySelectorAll("#qa-regression-table .lui-td .lui-thumbnail")].map((node) => node.getBoundingClientRect().width))
       assert.ok(row.length >= 3 && row.every((size) => size === row[0]), "thumbnail footprints differ")
+      const table = await page.evaluate(() => {
+        const cell = document.querySelector("#qa-regression-table .lui-thumbnail-cell")
+        const image = cell.querySelector(".lui-thumbnail").getBoundingClientRect()
+        const name = cell.querySelector("span").getBoundingClientRect()
+        const status = document.querySelector("#qa-regression-table .lui-tr .lui-td:nth-child(2)").getBoundingClientRect()
+        const edge = document.querySelector("#qa-regression-table .lui-tr .lui-td:last-child")
+        return { gap: name.left - image.right, imageCenter: (image.top + image.bottom) / 2, nameCenter: (name.top + name.bottom) / 2, statusCenter: (status.top + status.bottom) / 2, radius: getComputedStyle(edge).borderBottomRightRadius }
+      })
+      assert.ok(Math.abs(table.gap - 12) <= 1, `thumbnail gap is ${table.gap}px`)
+      assert.ok(Math.abs(table.imageCenter - table.nameCenter) <= 1 && Math.abs(table.imageCenter - table.statusCenter) <= 1, "row content is not vertically centered")
+      assert.equal(table.radius, "0px", "row separator has a rounded edge")
       const thumb = await page.$("#qa-row-1-image")
       await thumb.hover()
       await page.waitForSelector(".lui-thumbnail-preview")
+      const preview = await page.evaluate(() => {
+        const thumb = document.querySelector("#qa-row-1-image").getBoundingClientRect()
+        const panel = document.querySelector(".lui-thumbnail-preview")
+        const bounds = panel.getBoundingClientRect()
+        const style = getComputedStyle(panel)
+        return { offset: bounds.left >= thumb.right ? bounds.left - thumb.right : bounds.right <= thumb.left ? thumb.left - bounds.right : bounds.top >= thumb.bottom ? bounds.top - thumb.bottom : thumb.top - bounds.bottom, border: style.borderWidth, shadow: style.boxShadow }
+      })
+      assert.equal(preview.offset, 8, "thumbnail preview offset differs from 8px")
+      assert.notEqual(preview.border, "0px", "thumbnail preview has no border")
+      assert.notEqual(preview.shadow, "none", "thumbnail preview has no shadow")
       await shot("thumbnail-hover")
       await page.mouse.move(0, 0)
       await thumb.focus()
@@ -58,7 +79,21 @@ for (const width of [1440, 1100, 390]) {
       assert.equal(await page.$(".lui-thumbnail-preview"), null, "placeholder opened a preview")
     }
     const view = await page.$("#qa-regression-table-display [data-part=trigger] button")
-    if (view) { await view.click(); await new Promise((resolve) => setTimeout(resolve, 300)); await shot("view-open") }
+    if (view) {
+      await view.click()
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      if (!baseline) {
+        const panel = await page.evaluate(() => {
+          const root = document.querySelector("#qa-regression-table-display")
+          const box = root.querySelector("[data-part=column-toggle]")
+          const options = [...root.querySelectorAll(".lui-dt-view-option,.lui-dt-savedview,.lui-dt-savedview-action,.lui-dt-reset-display")]
+          return { checkbox: box.classList.contains("lui-checkbox"), sizes: options.map((node) => getComputedStyle(node).fontSize), footer: !!root.querySelector(".lui-dt-view-footer") }
+        })
+        assert.ok(panel.checkbox && panel.footer, "View panel missed Lantern checkbox or footer")
+        assert.equal(new Set(panel.sizes).size, 1, "View menu font sizes differ")
+      }
+      await shot("view-open")
+    }
     await page.keyboard.press("Escape")
     await page.evaluate(() => {
       document.activeElement?.blur()
@@ -95,6 +130,14 @@ for (const width of [1440, 1100, 390]) {
       assert.equal(hover.label, "Sep 28")
       assert.ok(hover.tip.left >= hover.frame.left && hover.tip.right <= hover.frame.right, "tooltip exceeds chart width")
       assert.ok(hover.tip.right <= hover.bar.left || hover.tip.left >= hover.bar.right, "tooltip covers bar")
+      const reference = await page.evaluate(() => {
+        const chart = document.querySelector("#qa-regression-chart svg")
+        const bar = chart.querySelector(".lui-time-series-chart__bar")
+        const label = chart.querySelector(".lui-time-series-chart__reference text")
+        const background = chart.querySelector(".lui-time-series-chart__reference rect")
+        return { aboveBars: !!(bar.compareDocumentPosition(label) & Node.DOCUMENT_POSITION_FOLLOWING), background: !!background && getComputedStyle(background).fill !== "none" }
+      })
+      assert.ok(reference.aboveBars && reference.background, "reference label is not painted above bars with a background")
     }
     await new Promise((resolve) => setTimeout(resolve, 100))
     await shot("chart-hover")

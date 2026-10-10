@@ -950,7 +950,9 @@ on hover or keyboard focus; rows without a source show a neutral placeholder.
 
 ```heex
 <:col :let={row} label="Item">
-  <.thumbnail id={"item-#{row.id}-image"} src={row.image_url} alt={row.name} size="sm" />
-  {row.name}
+  <span class="lui-thumbnail-cell">
+    <.thumbnail id={"item-#{row.id}-image"} src={row.image_url} alt={row.name} size="sm" />
+    <span>{row.name}</span>
+  </span>
 </:col>
 ```

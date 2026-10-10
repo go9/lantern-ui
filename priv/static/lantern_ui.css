@@ -1860,43 +1860,18 @@
   border-bottom: 1px solid var(--lantern-border); }
 .lui-datatable .lui-table-wrap { border: none; border-radius: 0; }
 
-/* A row's hover and selected states are rounded bands, not full-bleed slabs.
-   `border-collapse: collapse` hands every border and corner to the TABLE, so a
-   radius on a row or a cell is dropped on the floor — hence separate borders
-   with zero spacing, which draws the same hairlines (only the cells' bottom
-   edges are ever set, so nothing doubles up) while letting the outer cells
-   round. The tint moves from the row to its cells for the same reason: a
-   `border-radius` on a `tr` is not reliably honoured. */
+/* Keep separators square and full width, including on hover and selection. */
 .lui-datatable .lui-table { border-collapse: separate; border-spacing: 0; }
 .lui-datatable .lui-tr:hover { background: transparent; }
 .lui-datatable .lui-tr:hover .lui-td { background: var(--lantern-surface-hover); }
-/* A run of selected rows is one band, not a stack of cards. Every row rounding
-   on its own turns a block of them into separate tiles with the page showing
-   through the dividers, so the corners a row shares with a selected neighbour
-   are squared and the hairline between them goes. The tint is mixed into the
-   surface rather than laid over it as a translucent wash, so it does not
-   deepen where it meets the hover state. */
 .lui-datatable .lui-tr-selected .lui-td,
 .lui-datatable .lui-tr-selected:hover .lui-td {
   background: color-mix(in oklab, var(--lantern-accent) 12%, var(--lantern-surface));
 }
 .lui-datatable .lui-tr-selected:has(+ .lui-tr-selected) .lui-td {
   border-bottom-color: transparent;
-  border-end-start-radius: 0;
-  border-end-end-radius: 0;
 }
-.lui-datatable .lui-tr-selected + .lui-tr-selected .lui-td {
-  border-start-start-radius: 0;
-  border-start-end-radius: 0;
-}
-.lui-datatable .lui-tr .lui-td:first-child {
-  border-start-start-radius: var(--lantern-radius-sm);
-  border-end-start-radius: var(--lantern-radius-sm);
-}
-.lui-datatable .lui-tr .lui-td:last-child {
-  border-start-end-radius: var(--lantern-radius-sm);
-  border-end-end-radius: var(--lantern-radius-sm);
-}
+.lui-datatable .lui-tr .lui-td { border-radius: 0; }
 /* Inside a datatable the column header drops its tint. Standing alone the table
    is a bordered, rounded box and the sunken band reads as its cap; full-bleed in
    a card it is a hard-cornered slab jammed into the card's edge, in the same
@@ -4465,6 +4440,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-time-series-chart__annotation.tone-warning line { stroke: var(--lantern-warning); }
 .lui-time-series-chart__annotation.tone-danger line { stroke: var(--lantern-danger); }
 .lui-time-series-chart__reference line { stroke: var(--lantern-accent); stroke-dasharray: 5 4; stroke-width: 1.5; }
+.lui-time-series-chart__reference rect { fill: var(--lantern-surface-raised); stroke: var(--lantern-border); stroke-width: .5; }
 .lui-time-series-chart__reference text { fill: var(--lantern-fg-muted); font-size: 10px; }
 .lui-time-series-chart__point { fill: var(--lui-series-color); stroke: var(--lantern-surface); stroke-width: 1.5; }
 .lui-time-series-chart__empty { display: flex; min-height: 180px; align-items: center; justify-content: center; color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); }
@@ -5190,14 +5166,17 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-dt-view-option .lui-icon { width:var(--lui-control-icon-md); height:var(--lui-control-icon-md); }
 .lui-dt-panel-title { margin:0; font-size:var(--lantern-text-sm); font-weight:600; }
 .lui-dt-column-list { display:flex; flex-direction:column; gap:.15rem; max-height:16rem; overflow:auto; }
-.lui-dt-column-option { display:flex; align-items:center; gap:.55rem; padding:.3rem .35rem; border-radius:var(--lantern-radius-sm); color:var(--lantern-fg); font-size:var(--lantern-text-sm); cursor:pointer; }
+.lui-dt-column-option { border-radius:var(--lantern-radius-sm); }
+.lui-dt-column-option .lui-checkbox-row { box-sizing:border-box; min-height:var(--lui-control-h-sm); align-items:center; gap:var(--lui-gap-8); padding:0 .35rem; font-size:var(--lantern-text-sm); }
+.lui-dt-column-option .lui-checkbox { margin:0; }
 .lui-dt-column-option:hover { background:var(--lantern-surface-hover); }
 .lui-dt-column-search,.lui-dt-searchline input,.lui-dt-filtertext { min-width:0; border:1px solid var(--lantern-border); border-radius:var(--lantern-radius); background:var(--lantern-surface); color:var(--lantern-fg); padding:.4rem .55rem; font:inherit; }
 .lui-dt-density { display:flex; flex-direction:column; gap:.35rem; }
 .lui-dt-density-switch { align-self:flex-start; }
 .lui-dt-density-switch [role="radio"] { border:0; border-radius:var(--lantern-radius-sm); background:transparent; color:var(--lantern-fg-muted); padding:.3rem .55rem; font:inherit; font-size:var(--lantern-text-sm); cursor:pointer; }
 .lui-dt-density-switch [aria-checked="true"] { background:var(--lantern-surface-raised); color:var(--lantern-fg); box-shadow:var(--lantern-shadow-sm); }
-.lui-dt-reset-display { align-self:flex-start; border:0; padding:.2rem 0; background:none; color:var(--lantern-fg-muted); font:inherit; font-size:var(--lantern-text-sm); cursor:pointer; }
+.lui-dt-view-footer { border-top:1px solid var(--lantern-border); padding-top:var(--lui-gap-8); }
+.lui-dt-reset-display { width:100%; min-height:var(--lui-control-h-sm); border:0; border-radius:var(--lantern-radius-sm); padding:0 .35rem; background:none; color:var(--lantern-fg-muted); font:inherit; font-size:var(--lantern-text-sm); text-align:left; cursor:pointer; }
 .lui-dt-reset-display:hover { color:var(--lantern-fg); }
 .lui-dt-addfilter { display:flex; flex-direction:column; gap:.4rem; }
 .lui-dt-addfilter[hidden] { display:none; }
@@ -5211,10 +5190,6 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-dt-filterrow[hidden],.lui-command-item[hidden],.lui-dt-column-option[hidden] { display:none; }
 .lui-dt-filterfooter { border-top:0; padding-top:.25rem; }
 .lui-datatable[data-density="compact"] :is(.lui-th,.lui-td) { padding-block:.35rem; }
-.lui-dt-saved-view-row { display:flex; align-items:center; gap:.25rem; }
-.lui-dt-savedview { flex:1; display:flex; align-items:center; gap:.45rem; }
-.lui-dt-savedview-action { border:0; background:transparent; color:var(--lantern-fg-muted); font:inherit; font-size:var(--lantern-text-xs); cursor:pointer; }
-.lui-dt-savedview-action:hover { color:var(--lantern-fg); }
 .lui-dt-save-dialog { width:min(22rem,calc(100vw - 2rem)); border:1px solid var(--lantern-border); border-radius:var(--lantern-radius-lg); background:var(--lantern-surface-raised); color:var(--lantern-fg); padding:1rem; box-shadow:var(--lantern-shadow-lg); }
 .lui-dt-save-dialog::backdrop { background:rgb(0 0 0 / .28); }
 .lui-dt-save-dialog h3 { margin:0 0 .75rem; font-size:var(--lantern-text-sm); }
@@ -5223,15 +5198,16 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-dt-save-actions button { border:1px solid var(--lantern-border); border-radius:var(--lantern-radius); background:var(--lantern-surface); color:var(--lantern-fg); padding:.35rem .7rem; font:inherit; cursor:pointer; }
 .lui-dt-save-actions .lui-dt-save-confirm { border-color:var(--lantern-accent); background:var(--lantern-accent); color:var(--lantern-on-accent); }
 :is(.lui-dt-display-content,.lui-dt-filterpanel-inner,.lui-dt-save-dialog) :is(button,input,select):focus-visible { outline:2px solid var(--lantern-ring); outline-offset:2px; }
-.lui-dt-saved-view-row { display:flex; align-items:center; gap:.125rem; min-width:0; padding:.05rem .25rem; }
-.lui-dt-savedview { min-width:0; border:0; background:none; padding:.375rem .375rem; font:inherit; font-size:var(--lantern-text); }
-.lui-dt-savedview-action { flex:none; border:0; background:transparent; border-radius:var(--lantern-radius-sm); padding:.3rem .35rem; color:var(--lantern-fg-muted); font:inherit; font-size:var(--lantern-text-xs); cursor:pointer; }
+.lui-dt-saved-view-row { display:flex; align-items:center; gap:var(--lui-gap-4); min-width:0; min-height:var(--lui-control-h-sm); }
+.lui-dt-savedview { flex:1; min-width:0; min-height:var(--lui-control-h-sm); display:flex; align-items:center; gap:var(--lui-gap-4); border:0; border-radius:var(--lantern-radius-sm); background:none; padding:0 .35rem; color:var(--lantern-fg); font:inherit; font-size:var(--lantern-text-sm); text-align:left; }
+.lui-dt-savedview-action { flex:none; min-height:var(--lui-control-h-sm); border:0; background:transparent; border-radius:var(--lantern-radius-sm); padding:0 .35rem; color:var(--lantern-fg-muted); font:inherit; font-size:var(--lantern-text-sm); cursor:pointer; }
 .lui-dt-savedview-action:hover,.lui-dt-savedview-action:focus-visible { background:var(--lantern-surface-sunken); color:var(--lantern-fg); outline:none; }
 .lui-thumbnail { box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; flex:none; width:var(--lui-control-h-md); height:var(--lui-control-h-md); overflow:hidden; border:1px solid var(--lantern-border); border-radius:var(--lantern-radius-sm); background:var(--lantern-surface-sunken); padding:0; vertical-align:middle; cursor:zoom-in; }
 .lui-thumbnail[data-size="md"] { width:var(--lui-control-h-lg); height:var(--lui-control-h-lg); }
 .lui-thumbnail img { display:block; width:100%; height:100%; object-fit:cover; }
 .lui-thumbnail-empty { color:var(--lantern-fg-muted); cursor:default; }
 .lui-thumbnail-empty .lui-icon { width:var(--lui-control-icon-md); height:var(--lui-control-icon-md); }
+.lui-thumbnail-cell { display:inline-flex; align-items:center; gap:var(--lui-gap-12); vertical-align:middle; }
 .lui-thumbnail:focus-visible { outline:var(--lui-focus-ring-width) solid var(--lui-focus-ring-color); outline-offset:var(--lui-focus-ring-offset); }
-.lui-thumbnail-preview { position:fixed; z-index:var(--lantern-z-tooltip, 80); width:min(18rem, calc(100vw - 2rem)); aspect-ratio:1; box-sizing:border-box; overflow:hidden; border:1px solid var(--lantern-border); border-radius:var(--lantern-radius); background:var(--lantern-surface-raised); box-shadow:var(--lantern-shadow-lg); pointer-events:none; }
-.lui-thumbnail-preview img { width:100%; height:100%; object-fit:cover; }
+.lui-thumbnail-preview { position:fixed; z-index:var(--lantern-z-tooltip, 80); width:min(18rem, calc(100vw - 2rem)); aspect-ratio:1; box-sizing:border-box; overflow:hidden; border:1px solid var(--lantern-border-strong, var(--lantern-border)); border-radius:var(--lantern-radius); background:var(--lantern-surface-raised); padding:var(--lui-gap-4); box-shadow:var(--lantern-shadow-md); pointer-events:none; }
+.lui-thumbnail-preview img { width:100%; height:100%; object-fit:cover; border-radius:calc(var(--lantern-radius) - var(--lui-gap-4)); }
