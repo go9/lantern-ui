@@ -65,29 +65,20 @@ defmodule LanternUI.QA.ChartsLive do
       .lui-chart-qa { width: 100%; min-height: 100vh; max-width: none; box-sizing: border-box; margin: 0; background: var(--lantern-surface-sunken); }
       .lui-chart-qa header, .lui-chart-qa section { max-width: 70rem; margin-left: auto; margin-right: auto; }
       .lui-chart-qa header { margin-bottom: 1rem; }
-      .lui-chart-qa header p { margin: 0; color: var(--lantern-accent); font-size: .7rem; letter-spacing: .1em; }
       .lui-chart-qa h1 { margin: .25rem 0; font-size: 1.4rem; }
-      .lui-chart-qa header span { color: var(--lantern-fg-muted); font-size: .8rem; }
       .lui-chart-qa section { padding: 1rem; border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg); background: var(--lantern-surface); }
       @media (max-width: 40rem) { .lui-chart-qa { margin: .5rem auto; padding: .5rem; } .lui-chart-qa section { padding: .75rem; } }
     </style>
     <main class={"lui-chart-qa #{@theme}"}>
       <header>
-        <p>PORTFOLIO PERFORMANCE</p>
         <h1>Generic chart · {@type}</h1>
-        <span>Positive and negative values · April–August</span>
       </header>
       <.chart_card
         id="qa-chart-card"
         title="Portfolio value"
-        value="$8,420"
+        value={if @empty, do: "$8,420", else: nil}
         empty={if @empty, do: "No history in this period", else: nil}
       >
-        <:tabs><.button size="sm" variant="ghost">Value</.button></:tabs>
-        <:range_controls>
-          <.button size="sm" variant="outline">1M</.button>
-          <.button size="sm" variant="outline">1Y</.button>
-        </:range_controls>
         <:settings_trigger>
           <.chart_settings
             id="qa-chart-settings"
@@ -126,7 +117,6 @@ defmodule LanternUI.QA.ChartsLive do
           select_event="chart_select"
           glyphs
         />
-        <:footer_note>Illustrative data · updated daily</:footer_note>
       </.chart_card>
       <p :if={@selected_point} id="qa-chart-selection">
         Selected {@selected_point["x"]}: {Jason.encode!(@selected_point["values"])}
