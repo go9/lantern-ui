@@ -138,6 +138,13 @@ for (const width of [1440, 1100, 390]) {
         return { aboveBars: !!(bar.compareDocumentPosition(label) & Node.DOCUMENT_POSITION_FOLLOWING), background: !!background && getComputedStyle(background).fill !== "none" }
       })
       assert.ok(reference.aboveBars && reference.background, "reference label is not painted above bars with a background")
+      const labelClear = await page.evaluate(() => {
+        const chart = document.querySelector("#qa-regression-chart")
+        const label = chart.querySelector(".lui-time-series-chart__reference rect").getBoundingClientRect()
+        const tip = chart.querySelector('[data-part="html-tooltip"]').getBoundingClientRect()
+        return tip.right <= label.left || tip.left >= label.right || tip.bottom <= label.top || tip.top >= label.bottom
+      })
+      assert.ok(labelClear, "chart tooltip covers the reference label")
     }
     await new Promise((resolve) => setTimeout(resolve, 100))
     await shot("chart-hover")
