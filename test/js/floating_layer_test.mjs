@@ -9,7 +9,7 @@ import { afterEach, test } from "node:test"
 import { hooks, mountHook } from "./helpers/dom.mjs"
 import { mountZag, sleep } from "./helpers/zag_mount.mjs"
 
-const { FLOATING, floating, enterLayer, leaveLayer, syncLayer } = await import(
+const { FLOATING, floating, enterLayer, leaveLayer, markLayerPositioned, prepareLayerPositioning, syncLayer } = await import(
   "../../assets/js/layer.js"
 )
 const { LanternZagPopover } = await import("../../assets/js/zag/popover.js")
@@ -71,8 +71,70 @@ test("layer helpers are no-ops without the Popover API", () => {
   const h = mountHook(hooks.LanternOverlay, `<div id="x"><button data-part="trigger"></button><div id="p" data-part="panel" hidden></div></div>`)
   mounts.push(h)
   const panel = h.document.getElementById("p")
-  assert.doesNotThrow(() => syncLayer(panel, true))
+  assert.doesNotThrow(() => syncLayer(panel, true, { positionBeforeReveal: true }))
   assert.equal(panel.hasAttribute("popover"), false)
+})
+
+test("a Zag layer stays hidden until its first x/y position is available", async () => {
+  const h = mountHook(
+    hooks.LanternOverlay,
+    `<div id="x"><div id="p" data-part="positioner" popover="manual"><div data-part="content"></div></div></div>`
+  )
+  mounts.push(h)
+  installPopoverApi(h.window)
+  const positioner = h.document.getElementById("p")
+
+  syncLayer(positioner, true, { positionBeforeReveal: true })
+  assert.equal(positioner.hasAttribute("data-lantern-positioning"), true)
+  positioner.style.setProperty("--x", "40px")
+  positioner.style.setProperty("--y", "80px")
+  await sleep(0)
+  assert.equal(positioner.hasAttribute("data-lantern-positioning"), false)
+
+  syncLayer(positioner, false)
+  assert.equal(positioner.hasAttribute("data-lantern-positioning"), false)
+})
+
+test("a reopened Zag layer waits for its updated position instead of revealing stale coordinates", async () => {
+  const h = mountHook(
+    hooks.LanternOverlay,
+    `<div id="x"><div id="p" data-part="positioner" popover="manual"><div data-part="content"></div></div></div>`
+  )
+  mounts.push(h)
+  installPopoverApi(h.window)
+  const positioner = h.document.getElementById("p")
+  positioner.style.setProperty("--x", "40px")
+  positioner.style.setProperty("--y", "80px")
+
+  prepareLayerPositioning(positioner)
+  syncLayer(positioner, true, { positionBeforeReveal: true })
+  await sleep(0)
+  assert.equal(positioner.hasAttribute("data-lantern-positioning"), true)
+  positioner.style.setProperty("--x", "120px")
+  await sleep(0)
+  assert.equal(positioner.hasAttribute("data-lantern-positioning"), false)
+
+  syncLayer(positioner, false)
+  prepareLayerPositioning(positioner)
+  syncLayer(positioner, true, { positionBeforeReveal: true })
+  await sleep(0)
+  assert.equal(positioner.hasAttribute("data-lantern-positioning"), true)
+  markLayerPositioned(positioner)
+  assert.equal(positioner.hasAttribute("data-lantern-positioning"), false)
+})
+
+test("a position computed before the first layer render is ready on its first visible frame", () => {
+  const h = mountHook(
+    hooks.LanternOverlay,
+    `<div id="x"><div id="p" data-part="positioner" popover="manual"><div data-part="content"></div></div></div>`
+  )
+  mounts.push(h)
+  installPopoverApi(h.window)
+  const positioner = h.document.getElementById("p")
+
+  markLayerPositioned(positioner)
+  syncLayer(positioner, true, { positionBeforeReveal: true })
+  assert.equal(positioner.hasAttribute("data-lantern-positioning"), false)
 })
 
 test("opening a toast-covered layer re-raises the toast stack above it", () => {

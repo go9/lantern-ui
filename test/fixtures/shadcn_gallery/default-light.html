@@ -44,6 +44,11 @@
   --lui-topline-h: 2.25rem;
   --lui-actionbar-h: 2.75rem;
   --lui-strip-h: 2.75rem;
+  --lui-control-sm-h: 1.75rem;
+  --lui-control-md-h: 2rem;
+  --lui-control-lg-h: 2.25rem;
+  --lui-page-gutter: 1.5rem;
+  --lui-page-gap: 1rem;
   --lui-shell-h: calc(var(--lui-topline-h) + var(--lui-actionbar-h));
   --lui-control-h-sm: 1.75rem;
   --lui-control-h-md: 2rem;
@@ -850,14 +855,12 @@
 .lui-popover-panel { z-index: var(--lantern-z-popover, 70); padding: 0;
   max-height: var(--available-height, none); max-width: var(--available-width, none); overflow-y: auto;
   background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
-  border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md);
-  animation: lui-pop var(--lantern-duration) var(--lantern-ease); }
+  border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md); }
 .lui-dropdown { display: inline-block; position: relative; }
 .lui-dropdown-menu { z-index: var(--lantern-z-dropdown, 50); min-width: 11rem; padding: 0.25rem;
   max-height: var(--available-height, none); max-width: var(--available-width, none); overflow-y: auto;
   background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
-  border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md);
-  animation: lui-pop var(--lantern-duration) var(--lantern-ease); }
+  border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md); }
 .lui-dropdown-header { padding: 0.375rem 0.625rem; font-size: var(--lantern-text-sm);
   font-weight: 600; color: var(--lantern-fg-muted); white-space: nowrap; overflow: hidden;
   text-overflow: ellipsis; }
@@ -880,8 +883,8 @@
 .lui-menu-panel { z-index: var(--lantern-z-dropdown, 50); min-width: 11rem; padding: 0.25rem;
   max-height: var(--available-height, none); max-width: var(--available-width, none); overflow-y: auto;
   background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
-  border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md);
-  animation: lui-pop var(--lantern-duration) var(--lantern-ease); }
+  border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md); }
+[data-lantern-positioning] > [data-part="content"] { visibility: hidden !important; }
 .lui-menu-item { display: flex; align-items: center; gap: 0.5rem; width: 100%;
   box-sizing: border-box; padding: 0.375rem 0.625rem; border: none; background: none;
   text-align: left; text-decoration: none; font-size: var(--lantern-text);
@@ -949,7 +952,7 @@
 }
 
 /* ── App shell (top bar + fixed sidebar + main) ── */
-.lui-app { --lui-sidebar-w: 15rem; --lui-appbar-h: 3.25rem;
+.lui-app { --lui-sidebar-expanded-w: 15rem; --lui-sidebar-w: var(--lui-sidebar-expanded-w); --lui-appbar-h: 3.25rem;
   /* Page-shell sticky rows account for the fixed bar when the document scrolls. */
   --lui-shell-appbar-offset: var(--lui-appbar-h);
   min-height: 100vh; background: var(--lantern-surface); color: var(--lantern-fg);
@@ -1132,6 +1135,9 @@
   pointer-events: auto;
 }
 .lui-page-strip .lui-action-bar-notice { min-width: 0; }
+.lui-page-strip :is(button, input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select, [role="tab"]) {
+  min-height: var(--lui-control-md-h);
+}
 /* Narrow strip: keep the back crumb and the current page; fold the rest into `…`. */
 @container lui-page-strip (max-width: 40rem) {
   .lui-page-strip-trail .lui-breadcrumb-item:not(:nth-last-child(-n + 2)) { display: none; }
@@ -1249,6 +1255,10 @@
   }
 }
 
+@media (max-width: 768px) {
+  :root { --lui-page-gutter: 1rem; }
+}
+
 /* Sidebar (below the bar, fixed) */
 .lui-app-body { padding-top: var(--lui-appbar-h); }
 .lui-app-sidebar { position: fixed; top: var(--lui-appbar-h); bottom: 0; left: 0;
@@ -1268,6 +1278,7 @@
 /* Main (cleared past the fixed sidebar) */
 .lui-app-main { margin-left: var(--lui-sidebar-w); padding: 1.5rem 1.5rem 4rem; min-width: 0;
   transition: margin-left var(--lantern-duration) var(--lantern-ease); }
+.lui-app-main { padding-inline: var(--lui-page-gutter); }
 /* When the dense breadcrumb strip is first, don't also pay top padding: the
    strip's own 0.5rem padding is the breathing room, and it sits flush under the
    fixed appbar. */
@@ -1299,6 +1310,17 @@
 .lui-app-sidebar-header { flex: none; padding: 0.6rem 0.6rem 0.5rem; border-bottom: 1px solid var(--lantern-border); }
 .lui-app[data-collapsed] .lui-app-sidebar-header { padding-inline: 0.4rem; display: flex; justify-content: center; }
 
+/* Shared workspace header + page strip row. The app owns the switcher content;
+   Lantern owns the shell row geometry so both sides share a height and border. */
+.lui-app-sidebar-header { box-sizing: border-box; height: var(--lui-strip-h); min-height: var(--lui-strip-h);
+  display: flex; align-items: center; padding-block: 0; }
+.lui-app-main .lui-page-shell-strip > .lui-page-strip {
+  margin-inline: calc(-1 * var(--lui-page-gutter)); padding-inline: var(--lui-page-gutter);
+}
+.lui-app-main:has(.lui-page-shell-strip) { padding-top: 0; }
+.lui-app-main:has(.lui-page-shell-strip) .lui-page-content { padding-top: var(--lui-page-gap); }
+.lui-app[data-collapsed] .lui-app-sidebar-header { padding-inline: 0; }
+
 /* Nav */
 .lui-nav-group { margin-bottom: 1rem; }
 .lui-nav-group-label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
@@ -1313,6 +1335,14 @@
   background: var(--lantern-accent-soft); }
 .lui-nav-item-active:hover { color: var(--lantern-accent); background: var(--lantern-accent-soft); }
 .lui-nav-item-icon { font-size: 1.05rem; flex-shrink: 0; }
+.lui-sidebar-tooltip {
+  position: fixed; z-index: var(--lantern-z-tooltip, 80); transform: translateY(-50%);
+  max-width: min(20rem, calc(100vw - 1rem)); padding: 0.35rem 0.55rem;
+  border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm);
+  background: var(--lantern-surface); color: var(--lantern-fg);
+  box-shadow: var(--lantern-shadow-md); font-size: var(--lantern-text-sm);
+  font-weight: 500; white-space: nowrap; pointer-events: none;
+}
 /* A host heroicon (hero-*) renders as a CSS-mask span whose own hero-* class sets
    a larger default size (and loads after this file); constrain it to match
    lantern's inline icons. Two classes on the element out-specify the single
@@ -1403,11 +1433,13 @@
     transition: transform var(--lantern-duration) var(--lantern-ease); }
   .lui-app[data-nav-open] .lui-app-scrim { display: block; }
   .lui-app-main, .lui-app[data-collapsed] .lui-app-main { margin-left: 0;
-    padding: 1.25rem 1.25rem 4rem; }
-  /* Main's side padding drops to 1.25rem here, so the strip's bleed has to drop
-     with it — left at 1.5rem it hung a quarter rem off both edges. */
-  .lui-app-main > .lui-app-breadcrumb { margin-inline: -1.25rem;
-    padding-inline: 1.25rem; }
+    padding: 1.25rem var(--lui-page-gutter) 4rem; }
+  /* Keep the compact shell, legacy breadcrumb, and expanded table on the same
+     responsive page gutter. */
+  .lui-app-main > .lui-app-breadcrumb {
+    margin-inline: calc(-1 * var(--lui-page-gutter));
+    padding-inline: var(--lui-page-gutter);
+  }
   .lui-app-sidebar-foot { display: none; }
 }
 
@@ -1758,6 +1790,32 @@
   border-bottom: 1px solid var(--lantern-border); }
 .lui-dt-chromerow { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
   padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--lantern-border); }
+.lui-dt-chromerow { row-gap: 0.5rem; }
+.lui-dt-chromerow :is(button, input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select, [role="tab"], .lui-dt-chip, .lui-dt-expand) {
+  box-sizing: border-box; min-height: var(--lui-control-md-h); }
+.lui-dt-chromerow :is(input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select) {
+  height: var(--lui-control-md-h);
+}
+.lui-dt-chromerow .lui-dt-quickfilters :is(button, [role="tab"]) { height: var(--lui-control-md-h); }
+.lui-dt-chromerow .lui-dt-quickfilters .lui-tabs-list[data-variant="segmented"] {
+  box-sizing: border-box; height: var(--lui-control-md-h); min-height: var(--lui-control-md-h);
+  padding: 0; border: 0;
+}
+.lui-dt-chromerow .lui-dt-quickfilters .lui-tab {
+  box-sizing: border-box; height: var(--lui-control-md-h); min-height: var(--lui-control-md-h);
+}
+.lui-dt-bulkbar :is(button, input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select, [role="button"]) {
+  min-height: var(--lui-control-md-h);
+}
+
+/* New shell and table chrome follows the shared control-scale opt-out. Keep
+   strip/sidebar row geometry intact so the shell remains aligned; only the
+   controls inside those rows return to the consumer's legacy metrics. */
+[data-lui-control-scale="legacy"] {
+  --lui-control-sm-h: var(--lui-control-h-sm, 1.75rem);
+  --lui-control-md-h: var(--lui-control-h-md, 2rem);
+  --lui-control-lg-h: var(--lui-control-h-lg, 2.25rem);
+}
 .lui-dt-spacer { flex: 1; }
 .lui-dt-quickfilters { min-width: 0; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 .lui-dt-quickfilters::-webkit-scrollbar { display: none; }
@@ -1775,7 +1833,8 @@
 .lui-dt-chip:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: 2px; }
 .lui-dt-filterpanel { width: min(26rem, calc(100vw - 2rem)); max-height: min(38rem, calc(100dvh - 2rem));
   box-sizing: border-box; overflow: auto; }
-.lui-dt-filterpanel-inner { display: flex; flex-direction: column; gap: 0.65rem; padding: 0.75rem; }
+.lui-dt-filterpanel-filters { width: min(18rem, calc(100vw - 1rem)); }
+.lui-dt-filterpanel-inner { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.6rem; }
 .lui-dt-viewrow { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
   padding-top: 0.55rem; border-top: 1px solid var(--lantern-border); }
 .lui-dt-savedviews { display: flex; flex-direction: column; gap: 0.25rem;
@@ -1783,8 +1842,13 @@
 .lui-dt-savedview { align-self: flex-start; border: 0; background: none; padding: 0.25rem 0;
   color: var(--lantern-fg); font: inherit; cursor: pointer; }
 .lui-dt-savedview:hover { color: var(--lantern-accent); }
-.lui-dt-filterfooter { display: flex; justify-content: flex-end; gap: 0.5rem;
-  padding-top: 0.6rem; border-top: 1px solid var(--lantern-border); }
+.lui-dt-filterfooter { display: flex; justify-content: flex-end; gap: 0.5rem; padding-top: 0.25rem; }
+.lui-dt-filterfooter[hidden] { display: none; }
+.lui-dt-chromerow .lui-btn[data-variant="outline"],
+.lui-dt-chromerow .lui-dt-search { box-shadow: none; }
+.lui-dt-filterpanel-inner :is(input, select):focus-visible {
+  outline: 2px solid var(--lantern-ring); outline-offset: 2px; box-shadow: none;
+}
 .lui-dt-resetfilters, .lui-dt-applyfilters { min-height: var(--lantern-control-h); padding: 0.25rem 0.75rem;
   border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius);
   background: var(--lantern-surface); color: var(--lantern-fg); font: inherit; cursor: pointer; }
@@ -1794,13 +1858,11 @@
   .lui-dt-chromerow { flex-wrap: wrap; }
   .lui-dt-quickfilters { order: 0; flex: 1 0 100%; }
   .lui-dt-chips { order: 1; flex: 1 0 100%; }
-  .lui-dt-search { order: 2; flex: 1 1 0; min-width: 0; }
-  .lui-dt-chromerow > .lui-popover { order: 3; flex: none; }
+  .lui-dt-search { order: 1; flex: 1 0 100%; width: 100%; min-width: 0; }
+  .lui-dt-search input { width: 100%; min-width: 0; }
+  .lui-dt-chromerow > .lui-popover,
+  .lui-dt-chromerow > .lui-dt-expand { order: 2; flex: none; }
   .lui-dt-spacer { display: none; }
-  .lui-dt-chromerow [data-part="positioner"] { position: fixed !important; inset: auto 0 0 !important;
-    width: 100vw; max-width: 100vw; }
-  .lui-dt-filterpanel { position: static; inset: auto; width: 100vw; max-width: 100vw;
-    height: 90dvh; max-height: 90dvh; border-radius: var(--lantern-radius-lg) var(--lantern-radius-lg) 0 0; }
 }
 /* Standing alone the bulk bar is a rounded accent callout floating above the
    table. Inside a datatable it is a chrome row like the toolbar and the
@@ -1906,23 +1968,27 @@
 .lui-datatable-expanded .lui-table-wrap,
 .lui-datatable-expanded .lui-dt-list,
 .lui-datatable-expanded .lui-dt-cards { flex: 1 1 auto; min-height: 0; overflow: auto; }
-.lui-datatable-expanded .lui-dt-expand { color: var(--lantern-accent); }
-.lui-app[data-table-expand] { --lui-sidebar-w: 4.75rem; }
-.lui-app .lui-datatable-expanded { --lui-table-expand-top: var(--lui-appbar-h); --lui-table-expand-left: var(--lui-sidebar-w); }
+.lui-datatable-expanded .lui-dt-expand { color: var(--lantern-fg-muted); }
+.lui-app[data-table-expand]:not([data-table-expand-sidebar-open]) { --lui-sidebar-w: 4.75rem; }
+.lui-app[data-table-expand][data-table-expand-sidebar-open] { --lui-sidebar-w: var(--lui-sidebar-expanded-w); }
+.lui-app .lui-datatable-expanded { --lui-table-expand-top: var(--lui-appbar-h);
+  --lui-table-expand-left: calc(var(--lui-sidebar-w) + var(--lui-page-gutter));
+  --lui-table-expand-right: var(--lui-page-gutter); right: var(--lui-table-expand-right); }
 .lui-app .lui-page-shell-strip .lui-datatable-expanded {
-  --lui-table-expand-top: calc(var(--lui-appbar-h) + 2.375rem);
+  --lui-table-expand-top: calc(var(--lui-appbar-h) + var(--lui-strip-h) + var(--lui-page-gap));
 }
 .lui-dt-expand {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;
-  min-height: 2rem; padding: 0.25rem 0.55rem; border: 1px solid var(--lantern-border);
+  min-height: 2rem; padding: 0.25rem 0.55rem; border: 1px solid transparent;
   border-radius: var(--lantern-radius-sm); color: var(--lantern-fg-muted);
   text-decoration: none; white-space: nowrap; font-size: 0.75rem;
 }
 .lui-dt-expand:hover { color: var(--lantern-fg); background: var(--lantern-surface-hover); }
 @media (max-width: 48rem) {
-  .lui-app .lui-datatable-expanded { --lui-table-expand-top: var(--lui-appbar-h); --lui-table-expand-left: 0px; }
+  .lui-app .lui-datatable-expanded { --lui-table-expand-top: var(--lui-appbar-h);
+    --lui-table-expand-left: var(--lui-page-gutter); --lui-table-expand-right: var(--lui-page-gutter); }
   .lui-app .lui-page-shell-strip .lui-datatable-expanded {
-    --lui-table-expand-top: calc(var(--lui-appbar-h) + 2.375rem);
+    --lui-table-expand-top: calc(var(--lui-appbar-h) + var(--lui-strip-h) + var(--lui-page-gap));
   }
 }
 /* List/cards drop the panel and set overflow:visible so rows sit on the page.
@@ -1969,18 +2035,16 @@
 .lui-datatable.lui-datatable-flush .lui-dt-chromerow,
 .lui-datatable.lui-datatable-flush .lui-dt-pagination,
 .lui-datatable.lui-datatable-flush .lui-dt-bulkbar { padding-inline: 0; }
-/* The outer cells used to sit at the gutter on zero padding. That leaves a
-   rounded row highlight starting on the first glyph, so the padding comes back
-   and the table is pulled out by the same amount — the text still lands on the
-   gutter, and the band has somewhere to turn its corner. */
-.lui-datatable.lui-datatable-flush { --lui-dt-bleed: 0.6rem; }
+/* Cell padding gives the first and last columns room to breathe while the table
+   edge stays aligned with the overview, toolbar, and pagination. */
+.lui-datatable.lui-datatable-flush { --lui-dt-cell-inset: 0.6rem; }
 .lui-datatable.lui-datatable-flush .lui-table-wrap {
-  margin-inline: calc(var(--lui-dt-bleed) * -1);
+  margin-inline: 0;
 }
 .lui-datatable.lui-datatable-flush .lui-th:first-child,
-.lui-datatable.lui-datatable-flush .lui-td:first-child { padding-left: var(--lui-dt-bleed); }
+.lui-datatable.lui-datatable-flush .lui-td:first-child { padding-left: var(--lui-dt-cell-inset); }
 .lui-datatable.lui-datatable-flush .lui-th:last-child,
-.lui-datatable.lui-datatable-flush .lui-td:last-child { padding-right: var(--lui-dt-bleed); }
+.lui-datatable.lui-datatable-flush .lui-td:last-child { padding-right: var(--lui-dt-cell-inset); }
 .lui-datatable.lui-datatable-flush .lui-dt-cards { padding: 0.75rem 0 0; }
 
 /* The wrap carries the raised surface that makes a standalone table a panel, and
@@ -1995,8 +2059,7 @@
   font-family: inherit; background: var(--lantern-surface); color: var(--lantern-fg);
   border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-sm);
   width: 100%; box-sizing: border-box; }
-.lui-dt-filtertext:focus-visible { outline: none; border-color: var(--lantern-ring);
-  box-shadow: 0 0 0 3px var(--lantern-ring-soft); }
+.lui-dt-filtertext:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: 2px; border-color: var(--lantern-ring); }
 .lui-dt-filterrange { display: flex; align-items: center; gap: 0.35rem; }
 .lui-dt-rangesep { color: var(--lantern-fg-subtle); }
 
@@ -4874,15 +4937,22 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-action-bar-more-trigger { box-sizing: border-box; height: var(--lui-control-h-sm); min-width: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); }
 .lui-action-bar-menu .lui-menu-trigger .lui-btn { height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); font-size: var(--lui-control-font-sm); }
 .lui-dt-chromerow { gap: var(--lui-gap-8); }
-.lui-dt-chromerow .lui-tabs-list[data-size="sm"] { height: var(--lui-control-h-sm); }
-.lui-dt-chromerow .lui-dt-search { box-sizing: border-box; height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); gap: var(--lui-gap-4); }
-.lui-dt-chromerow .lui-dt-search input { font-size: var(--lui-control-font-sm); line-height: var(--lui-control-line-height); }
-.lui-dt-chromerow .lui-dt-chip { height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); }
-.lui-dt-chromerow .lui-dt-expand { box-sizing: border-box; height: var(--lui-control-h-sm); min-height: var(--lui-control-h-sm); padding: 0 var(--lui-control-px-sm); line-height: var(--lui-control-line-height); }
+.lui-dt-chromerow .lui-dt-expand { margin-left: auto; }
+.lui-dt-chromerow .lui-tabs-list[data-size="sm"] { height: var(--lui-control-h-md); }
+.lui-dt-chromerow .lui-dt-search { box-sizing: border-box; height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); gap: var(--lui-gap-4); }
+.lui-dt-chromerow .lui-dt-search input { font-size: var(--lui-control-font-md); line-height: var(--lui-control-line-height); }
+.lui-dt-chromerow .lui-dt-chip { height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); }
+.lui-dt-chromerow .lui-dt-expand { box-sizing: border-box; height: var(--lui-control-h-md); min-height: var(--lui-control-h-md); padding: 0 var(--lui-control-px-md); line-height: var(--lui-control-line-height); }
 .lui-dt-resetfilters, .lui-dt-applyfilters { box-sizing: border-box; min-height: var(--lui-control-h-sm); padding: 0 var(--lui-control-px-sm); border-radius: var(--lui-control-radius); font-size: var(--lui-control-font-sm); line-height: var(--lui-control-line-height); }
 .lui-dt-filtertext { box-sizing: border-box; height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); border-radius: var(--lui-control-radius); font-size: var(--lui-control-font-sm); line-height: var(--lui-control-line-height); }
 .lui-pg { box-sizing: border-box; height: var(--lui-control-h-md); min-width: var(--lui-control-h-md); font-size: var(--lui-control-font-sm); border-radius: var(--lui-control-radius); }
 .lui-pg-size { gap: var(--lui-gap-4); padding-inline: var(--lui-control-px-sm); }
+
+/* Page-strip and table action rows share the medium control baseline. */
+.lui-page-strip-actions .lui-btn,
+.lui-action-bar-inline .lui-btn { box-sizing: border-box; height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); font-size: var(--lui-control-font-md); }
+.lui-dt-chromerow .lui-dt-search { height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); }
+.lui-dt-chromerow .lui-dt-search input { font-size: var(--lui-control-font-md); }
 
 .lui-btn:focus-visible, .lui-input-wrap:focus-within, .lui-color-wrap:focus-within,
 .lui-dtf:focus-within, .lui-select-native:focus-visible, .lui-select-toggle:focus-visible,
@@ -5086,6 +5156,49 @@ a.lui-waterfall-lane-inner:focus-visible {
   font-size: var(--lantern-text-xs, 0.75rem);
   color: var(--lantern-fg-subtle, var(--lantern-fg-muted));
 }
+
+/* Quiet, separate data-table controls. Keep one panel surface and reserve
+   boxes for the outer table card rather than nesting extra cards inside it. */
+.lui-dt-display-content { display:flex; flex-direction:column; gap:.75rem; min-width:15rem; padding:.75rem; }
+.lui-dt-panel-title { margin:0; font-size:var(--lantern-text-sm); font-weight:600; }
+.lui-dt-column-list { display:flex; flex-direction:column; gap:.15rem; max-height:16rem; overflow:auto; }
+.lui-dt-column-option { display:flex; align-items:center; gap:.55rem; padding:.3rem .35rem; border-radius:var(--lantern-radius-sm); color:var(--lantern-fg); font-size:var(--lantern-text-sm); cursor:pointer; }
+.lui-dt-column-option:hover { background:var(--lantern-surface-hover); }
+.lui-dt-column-search,.lui-dt-searchline input,.lui-dt-filtertext { min-width:0; border:1px solid var(--lantern-border); border-radius:var(--lantern-radius); background:var(--lantern-surface); color:var(--lantern-fg); padding:.4rem .55rem; font:inherit; }
+.lui-dt-density { display:flex; flex-direction:column; gap:.35rem; }
+.lui-dt-density-switch { align-self:flex-start; }
+.lui-dt-density-switch [role="radio"] { border:0; border-radius:var(--lantern-radius-sm); background:transparent; color:var(--lantern-fg-muted); padding:.3rem .55rem; font:inherit; font-size:var(--lantern-text-sm); cursor:pointer; }
+.lui-dt-density-switch [aria-checked="true"] { background:var(--lantern-surface-raised); color:var(--lantern-fg); box-shadow:var(--lantern-shadow-sm); }
+.lui-dt-reset-display { align-self:flex-start; border:0; padding:.2rem 0; background:none; color:var(--lantern-fg-muted); font:inherit; font-size:var(--lantern-text-sm); cursor:pointer; }
+.lui-dt-reset-display:hover { color:var(--lantern-fg); }
+.lui-dt-addfilter { display:flex; flex-direction:column; gap:.4rem; }
+.lui-dt-addfilter[hidden] { display:none; }
+.lui-dt-searchline { display:flex; align-items:center; gap:.45rem; }
+.lui-dt-searchline .lui-icon { width:1rem; height:1rem; color:var(--lantern-fg-muted); }
+.lui-command-listbox { display:flex; flex-direction:column; max-height:10rem; overflow:auto; }
+.lui-command-item { text-align:left; border:0; border-radius:var(--lantern-radius-sm); background:transparent; padding:.4rem .5rem; color:var(--lantern-fg); font:inherit; font-size:var(--lantern-text-sm); cursor:pointer; }
+.lui-command-item:hover,.lui-command-item[aria-selected="true"] { background:var(--lantern-surface-hover); }
+.lui-dt-filterhead { display:flex; align-items:center; justify-content:space-between; gap:.5rem; }
+.lui-dt-operator { max-width:11rem; border:0; background:transparent; color:var(--lantern-fg-muted); font:inherit; font-size:var(--lantern-text-sm); }
+.lui-dt-filterrow[hidden],.lui-command-item[hidden],.lui-dt-column-option[hidden] { display:none; }
+.lui-dt-filterfooter { border-top:0; padding-top:.25rem; }
+.lui-datatable[data-density="compact"] :is(.lui-th,.lui-td) { padding-block:.35rem; }
+.lui-dt-saved-view-row { display:flex; align-items:center; gap:.25rem; }
+.lui-dt-savedview { flex:1; display:flex; align-items:center; gap:.45rem; }
+.lui-dt-savedview-action { border:0; background:transparent; color:var(--lantern-fg-muted); font:inherit; font-size:var(--lantern-text-xs); cursor:pointer; }
+.lui-dt-savedview-action:hover { color:var(--lantern-fg); }
+.lui-dt-save-dialog { width:min(22rem,calc(100vw - 2rem)); border:1px solid var(--lantern-border); border-radius:var(--lantern-radius-lg); background:var(--lantern-surface-raised); color:var(--lantern-fg); padding:1rem; box-shadow:var(--lantern-shadow-lg); }
+.lui-dt-save-dialog::backdrop { background:rgb(0 0 0 / .28); }
+.lui-dt-save-dialog h3 { margin:0 0 .75rem; font-size:var(--lantern-text-sm); }
+.lui-dt-save-dialog .lui-dt-view-name { width:100%; box-sizing:border-box; }
+.lui-dt-save-actions { display:flex; justify-content:flex-end; gap:.5rem; margin-top:.75rem; }
+.lui-dt-save-actions button { border:1px solid var(--lantern-border); border-radius:var(--lantern-radius); background:var(--lantern-surface); color:var(--lantern-fg); padding:.35rem .7rem; font:inherit; cursor:pointer; }
+.lui-dt-save-actions .lui-dt-save-confirm { border-color:var(--lantern-accent); background:var(--lantern-accent); color:var(--lantern-on-accent); }
+:is(.lui-dt-display-content,.lui-dt-filterpanel-inner,.lui-dt-save-dialog) :is(button,input,select):focus-visible { outline:2px solid var(--lantern-ring); outline-offset:2px; }
+.lui-dt-saved-view-row { display:flex; align-items:center; gap:.125rem; min-width:0; padding:.05rem .25rem; }
+.lui-dt-savedview { min-width:0; border:0; background:none; padding:.375rem .375rem; font:inherit; font-size:var(--lantern-text); }
+.lui-dt-savedview-action { flex:none; border:0; background:transparent; border-radius:var(--lantern-radius-sm); padding:.3rem .35rem; color:var(--lantern-fg-muted); font:inherit; font-size:var(--lantern-text-xs); cursor:pointer; }
+.lui-dt-savedview-action:hover,.lui-dt-savedview-action:focus-visible { background:var(--lantern-surface-sunken); color:var(--lantern-fg); outline:none; }
 
 /*
  * LanternUI design tokens + default theme.
@@ -5924,7 +6037,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-2309" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-3074" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5941,7 +6054,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-2341" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-3106" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5958,7 +6071,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-2373" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-3138" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -5975,7 +6088,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-2405" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-3170" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

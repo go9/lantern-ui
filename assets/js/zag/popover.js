@@ -33,7 +33,7 @@ import {
   readUpdatedServerBoolean,
 } from "./bridge.js"
 
-import { floating, syncLayer } from "../layer.js"
+import { floating, markLayerPositioned, prepareLayerPositioning, syncLayer } from "../layer.js"
 const SCOPE = "popover"
 
 const part = (name) => `[data-scope="${SCOPE}"][data-part="${name}"]`
@@ -53,8 +53,8 @@ export class LanternPopover extends Component {
 
     const positioner = this.el.querySelector(part("positioner"))
     if (positioner) {
+      syncLayer(positioner, this.api.open, { positionBeforeReveal: true })
       this.spreadProps(positioner, this.api.getPositionerProps())
-      syncLayer(positioner, this.api.open)
     }
 
     const content = this.el.querySelector(part("content"))
@@ -76,7 +76,10 @@ function popoverLayoutProps(el) {
     disabled: getBoolean(el, "disabled"),
     modal: getBoolean(el, "modal"),
     dir: getDir(el),
-    positioning: floating({ placement: getString(el, "placement") || "bottom-start" }),
+    positioning: floating({
+      placement: getString(el, "placement") || "bottom-start",
+      onPositioned: (details) => markLayerPositioned(el.querySelector(part("positioner")), details),
+    }),
   }
 }
 
@@ -115,6 +118,16 @@ export const LanternZagPopover = createZagLiveHook({
       ...readBooleanControlledZagProps(el, "open", "defaultOpen"),
     })
     el.__lanternPopover = component
+    const prepareOpen = (event) => {
+      const trigger = event.target?.closest?.(part("trigger"))
+      if (trigger && el.contains(trigger) && !component.api.open) {
+        prepareLayerPositioning(el.querySelector(part("positioner")))
+      }
+    }
+    dom.add("pointerdown", prepareOpen, true)
+    dom.add("keydown", (event) => {
+      if (["Enter", " ", "ArrowDown"].includes(event.key)) prepareOpen(event)
+    }, true)
 
     // Controlled machines ignore api.setOpen (the prop is truth).
     const applyOpen = (open) => {

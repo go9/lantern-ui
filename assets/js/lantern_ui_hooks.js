@@ -2136,6 +2136,12 @@ const LanternCollapse = {
     const stored = localStorage.getItem(this.key())
     if (stored === "true") this.el.setAttribute("data-collapsed", "")
     if (stored === "false") this.el.removeAttribute("data-collapsed")
+    this.syncExpanded()
+  },
+
+  syncExpanded() {
+    const toggle = this.el.querySelector('[data-part="collapse-toggle"]')
+    if (toggle) toggle.setAttribute("aria-expanded", String(!this.el.hasAttribute("data-collapsed")))
   },
 
   mounted() {
@@ -2143,6 +2149,7 @@ const LanternCollapse = {
     this.onClick = (e) => {
       if (!e.target.closest('[data-part="collapse-toggle"]')) return
       const collapsed = this.el.toggleAttribute("data-collapsed")
+      this.syncExpanded()
       try {
         localStorage.setItem(this.key(), String(collapsed))
       } catch (_) {}
@@ -2205,6 +2212,8 @@ const LanternTableChrome = {
     this.path = this.el.dataset.path
     this.expanded = this.el.dataset.expanded === "true"
     this.dispatchExpanded()
+    this.defaultDensity = this.el.dataset.density || "comfortable"
+    this.restoreDisplay()
 
     this.onInput = (e) => {
       const t = e.target
@@ -2212,9 +2221,31 @@ const LanternTableChrome = {
         clearTimeout(this.debounce)
         this.debounce = setTimeout(() => this.apply(t.dataset.field), 300)
       }
+      if (t.matches('[data-part="filter-search"], [data-part="column-search"]')) {
+        const selector = t.matches('[data-part="filter-search"]') ? '[data-filter-option]' : '.lui-dt-column-option'
+        const query = t.value.trim().toLowerCase()
+        this.el.querySelectorAll(selector).forEach((item) => {
+          item.hidden = !item.textContent.toLowerCase().includes(query)
+        })
+      }
     }
     this.onChange = (e) => {
       const rich = e.target.closest('[data-part="filter-rich"]')
+      if (e.target.matches('[data-part="filter-op"]')) {
+        this.el.querySelectorAll(`[data-part="filter"][data-field="${CSS.escape(e.target.dataset.field)}"]`).forEach((input) => {
+          input.dataset.op = e.target.value
+        })
+        const rich = this.el.querySelector(`[data-filter-editor="${CSS.escape(e.target.dataset.field)}"] [data-part="filter-rich"]`)
+        if (rich) rich.dataset.op = e.target.value
+      }
+      if (e.target.matches('[data-part="column-toggle"]')) this.saveDisplay()
+      if (e.target.matches('[data-part="density"]')) {
+        this.el.dataset.density = e.target.dataset.density
+        this.el.querySelectorAll('[data-part="density"]').forEach((button) => {
+          button.setAttribute('aria-checked', String(button === e.target))
+        })
+        this.saveDisplay()
+      }
       // Filter controls are drafts until Apply. Search and quick-filter links
       // remain immediate so the toolbar stays useful without opening the panel.
       if (
@@ -2225,12 +2256,80 @@ const LanternTableChrome = {
       }
     }
     this.onClick = (e) => {
+      const filterRoot = this.el.querySelector('[id$="-filters"]')
+      const filterPanel = filterRoot?.querySelector('[data-part="content"]')
+      const filterFields = filterPanel?.querySelector('.lui-dt-addfilter')
+      const filterActions = filterPanel?.querySelector('[data-part="filter-actions"]')
+      const filterTrigger = e.target.closest('[data-part="trigger"]')
+      if (filterTrigger && filterRoot?.contains(filterTrigger)) {
+        filterFields?.removeAttribute('hidden')
+        filterActions?.setAttribute('hidden', '')
+        filterPanel?.querySelectorAll('[data-filter-editor]').forEach((row) => { row.hidden = true })
+      }
+      const addFilter = e.target.closest('[data-part="add-filter"]')
+      if (addFilter) {
+        const field = addFilter.dataset.field
+        filterFields?.setAttribute('hidden', '')
+        filterActions?.removeAttribute('hidden')
+        this.el.querySelectorAll('[data-filter-editor]').forEach((row) => { row.hidden = row.dataset.filterEditor !== field })
+        this.el.querySelector(`[data-filter-editor="${CSS.escape(field)}"] input, [data-filter-editor="${CSS.escape(field)}"] select`)?.focus()
+        return
+      }
+      const density = e.target.closest('[data-part="density"]')
+      if (density) {
+        this.el.dataset.density = density.dataset.density
+        this.el.querySelectorAll('[data-part="density"]').forEach((button) => button.setAttribute('aria-checked', String(button === density)))
+        this.saveDisplay()
+        return
+      }
+      const resetDisplay = e.target.closest('[data-part="reset-display"]')
+      if (resetDisplay) {
+        localStorage.removeItem(this.displayKey())
+        const hidden = JSON.parse(this.el.dataset.hiddenColumns || '[]')
+        this.el.querySelectorAll('[data-part="column-toggle"]').forEach((input) => { input.checked = !hidden.includes(input.dataset.columnKey) })
+        this.el.dataset.density = this.defaultDensity
+        this.el.querySelectorAll('[data-part="density"]').forEach((button) => button.setAttribute('aria-checked', String(button.dataset.density === this.defaultDensity)))
+        this.updateColumns(hidden)
+        return
+      }
+      const saveOpen = e.target.closest('.lui-dt-save-view-open')
+      if (saveOpen) { this.el.querySelector('[data-part="save-view-dialog"]')?.showModal(); return }
+      const saveCancel = e.target.closest('[data-part="save-view-cancel"]')
+      if (saveCancel) { saveCancel.closest('dialog')?.close(); return }
+      const rename = e.target.closest('.lui-dt-rename-view')
+      if (rename) {
+        const dialog = this.el.querySelector('[data-part="rename-view-dialog"]')
+        if (dialog) { dialog.dataset.viewId = rename.dataset.viewId || ''; dialog.showModal() }
+        return
+      }
       const apply = e.target.closest('[data-part="apply-filters"]')
       if (apply) {
+        filterFields?.removeAttribute('hidden')
+        filterActions?.setAttribute('hidden', '')
+        filterPanel?.querySelectorAll('[data-filter-editor]').forEach((row) => { row.hidden = true })
+        filterPanel?.querySelector('[data-part="filter-search"]')?.setAttribute('value', '')
+        filterPanel?.querySelectorAll('[data-filter-option]').forEach((item) => { item.hidden = false })
+        filterRoot?.dispatchEvent(new CustomEvent('lantern:popover:set-open', { bubbles: true, detail: { open: false } }))
         this.apply("*")
         return
       }
 
+      const save = e.target.closest('[data-part="save-view-confirm"]')
+      if (save) {
+        const input = this.el.querySelector('[data-part="save-view-dialog"] [data-part="view-name"]')
+        if (input) save.setAttribute('phx-value-name', input.value.trim())
+        return
+      }
+      const renameSave = e.target.closest('[data-part="rename-view-confirm"]')
+      if (renameSave) {
+        const dialog = renameSave.closest('dialog')
+        const input = dialog?.querySelector('[data-part="view-name"]')
+        if (input) renameSave.setAttribute('phx-value-name', input.value.trim())
+        renameSave.setAttribute('phx-value-id', dialog?.dataset.viewId || '')
+        return
+      }
+      const renameCancel = e.target.closest('[data-part="rename-view-cancel"]')
+      if (renameCancel) { renameCancel.closest('dialog')?.close(); return }
       const reset = e.target.closest('[data-part="reset-filters"], [data-part="clear-filters"]')
       if (!reset) return
       // Each rich filter clears through its own control, so it can reset its
@@ -2251,7 +2350,29 @@ const LanternTableChrome = {
     this.el.addEventListener("change", this.onChange)
     this.el.addEventListener("click", this.onClick)
     this.onKeydown = (e) => {
-      if (!this.el.dataset.expandable || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return
+      const radio = e.target?.closest?.('[data-part="density"]')
+      if (radio && ["ArrowLeft", "ArrowUp", "ArrowRight", "ArrowDown"].includes(e.key)) {
+        const options = [...this.el.querySelectorAll('[data-part="density"]')]
+        const index = options.indexOf(radio)
+        const delta = e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 1
+        e.preventDefault()
+        options[(index + delta + options.length) % options.length]?.click()
+        options[(index + delta + options.length) % options.length]?.focus()
+        return
+      }
+      const option = e.target?.closest?.('[data-part="add-filter"]')
+      const search = e.target?.closest?.('[data-part="filter-search"]')
+      if ((option || search) && ["ArrowDown", "ArrowUp"].includes(e.key)) {
+        const options = [...this.el.querySelectorAll('[data-part="add-filter"]:not([hidden])')]
+        const index = options.indexOf(option)
+        const next = search || index < 0
+          ? options[0]
+          : options[(index + (e.key === "ArrowUp" ? -1 : 1) + options.length) % options.length]
+        if (next) { e.preventDefault(); next.focus() }
+        return
+      }
+      if (!this.el.dataset.expandable) return
       const owner = e.target?.closest?.('[data-expandable="true"]')
       if (owner && owner !== this.el) return
       if (!owner && e.__lanternTableExpandHandled) return
@@ -2274,6 +2395,32 @@ const LanternTableChrome = {
     document.addEventListener("keydown", this.onKeydown)
   },
 
+  displayKey() { return `lui-dt-display:${this.el.dataset.tableId || this.el.id}` },
+
+  restoreDisplay() {
+    let state
+    try { state = JSON.parse(localStorage.getItem(this.displayKey()) || 'null') } catch (_) { state = null }
+    const hidden = state?.hidden || JSON.parse(this.el.dataset.hiddenColumns || '[]')
+    const density = state?.density || this.el.dataset.density || 'comfortable'
+    this.el.dataset.density = density
+    this.el.querySelectorAll('[data-part="column-toggle"]').forEach((input) => { input.checked = !hidden.includes(input.dataset.columnKey) })
+    this.el.querySelectorAll('[data-part="density"]').forEach((button) => button.setAttribute('aria-checked', String(button.dataset.density === density)))
+    this.updateColumns(hidden)
+  },
+
+  updateColumns(hidden) {
+    const hiddenSet = new Set(hidden)
+    this.el.querySelectorAll('th[data-column-key], td[data-column-key]').forEach((cell) => { cell.hidden = hiddenSet.has(cell.dataset.columnKey) })
+  },
+
+  saveDisplay(persist = true) {
+    const hidden = [...this.el.querySelectorAll('[data-part="column-toggle"]:not(:checked)')].map((input) => input.dataset.columnKey)
+    const density = this.el.dataset.density || 'comfortable'
+    this.updateColumns(hidden)
+    if (persist) localStorage.setItem(this.displayKey(), JSON.stringify({ hidden, density }))
+    if (this.el.dataset.displayEvent) this.pushEvent(this.el.dataset.displayEvent, { hidden_columns: hidden, density })
+  },
+
   expandedUrl(expanded) {
     const url = new URL(window.location.href)
     if (expanded) url.searchParams.set("expand", "1")
@@ -2289,6 +2436,7 @@ const LanternTableChrome = {
   },
 
   updated() {
+    this.restoreDisplay()
     const expanded = this.el.dataset.expanded === "true"
     if (expanded === this.expanded) return
     this.expanded = expanded

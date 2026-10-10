@@ -5,17 +5,20 @@ defmodule LanternUI.QA.ConsistencyLive do
 
   @button_sizes ~w(xs sm md lg xl icon-xs icon-sm icon-md icon icon-lg icon-xl)
   @button_variants ~w(solid soft surface outline dashed ghost)
+  @segment_cases for size <- ~w(sm md lg), position <- ~w(first middle last), do: {size, position}
 
   def mount(params, _session, socket) do
-    theme = if params["theme"] == "dark", do: "dark", else: "light"
+    theme = if params["theme"] in ["dark", "blue"], do: params["theme"], else: "light"
     legacy? = params["legacy"] == "1"
 
     {:ok,
      socket
      |> assign(:theme, theme)
      |> assign(:legacy?, legacy?)
+     |> assign(:expanded?, params["expand"] == "1")
      |> assign(:button_sizes, @button_sizes)
      |> assign(:button_variants, @button_variants)
+     |> assign(:segment_cases, @segment_cases)
      |> assign(:rows, for(i <- 1..3, do: %{id: i, name: "Item #{i}"}))
      |> assign(:meta, %{
        flop: %{},
@@ -31,6 +34,9 @@ defmodule LanternUI.QA.ConsistencyLive do
      |> assign(:page_title, "Control consistency QA"), layout: false}
   end
 
+  def handle_params(params, _uri, socket),
+    do: {:noreply, assign(socket, :expanded?, params["expand"] == "1")}
+
   def render(assigns) do
     ~H"""
     <main
@@ -40,6 +46,12 @@ defmodule LanternUI.QA.ConsistencyLive do
     >
       <style>
         .lui-consistency-qa { min-height:100vh; padding:24px; background:var(--lantern-surface); color:var(--lantern-fg); font-family:var(--lantern-font); }
+        .lui-consistency-qa.blue {
+          --lantern-surface:#f8fafc; --lantern-surface-raised:#fff; --lantern-surface-sunken:#f1f5f9; --lantern-surface-hover:#f1f5f9;
+          --lantern-fg:#0f172a; --lantern-fg-muted:#64748b; --lantern-border:#e2e8f0;
+          --lantern-primary:#2563eb; --lantern-primary-fg:#fff; --lantern-accent:#2563eb; --lantern-on-accent:#fff;
+          --lantern-ring:#3b82f6; --lantern-ring-soft:rgb(59 130 246 / .18);
+        }
         .lui-consistency-head { margin:0 auto 20px; max-width:1200px; }
         .lui-consistency-head h1 { margin:0; font-size:24px; }
         .lui-consistency-head p { margin:4px 0 0; color:var(--lantern-fg-muted); font-size:13px; }
@@ -51,6 +63,10 @@ defmodule LanternUI.QA.ConsistencyLive do
         .lui-consistency-formrow { display:flex; align-items:flex-end; gap:12px; overflow-x:auto; padding:4px 2px; }
         .lui-consistency-formrow > .lui-field { flex:1 0 190px; min-width:170px; }
         .lui-consistency-popover-content { min-width:180px; padding:12px; }
+        .lui-consistency-overview { display:grid; grid-template-columns:minmax(0, 1fr) auto; align-items:center; gap:16px; min-height:80px; }
+        .lui-consistency-overview-chart { height:64px; position:relative; border-bottom:1px solid var(--lantern-border); background:linear-gradient(160deg, transparent 55%, var(--lantern-accent-soft) 56%); }
+        .lui-consistency-overview-stats { display:flex; gap:16px; color:var(--lantern-fg-muted); font-size:12px; }
+        @media (max-width:600px) { .lui-consistency-overview { grid-template-columns:1fr; gap:8px; } .lui-consistency-overview-stats { gap:12px; } }
         .lui-consistency-wrap-button { width:150px; height:auto; min-height:var(--lui-control-h-md); white-space:normal; line-height:1.15; }
         .lui-consistency-density { display:flex; align-items:flex-start; gap:12px; overflow-x:auto; padding:4px 2px; }
         .lui-consistency-qa .lui-dt-chromerow { flex-wrap:nowrap; }
@@ -61,6 +77,10 @@ defmodule LanternUI.QA.ConsistencyLive do
         <p>
           Kitchen sink · {@theme} theme · {(@legacy? && "legacy compatibility") || "standard scale"}
         </p>
+        <nav class="lui-consistency-themes" aria-label="QA theme">
+          <a href="/consistency?theme=light">Lantern</a>
+          <a href="/consistency?theme=blue">Neutral blue</a>
+        </nav>
       </header>
 
       <.page_shell
@@ -227,6 +247,23 @@ defmodule LanternUI.QA.ConsistencyLive do
               <:tab name="closed">Closed</:tab>
             </.tabs_list>
           </div>
+          <section class="lui-consistency-section" aria-label="Segmented control inset geometry">
+            <h2>Segmented inset · first / middle / last</h2>
+            <div :for={{size, position} <- @segment_cases} class="lui-consistency-line">
+              <span class="lui-consistency-label">{size} · {position}</span>
+              <.tabs_list
+                id={"qa-segment-#{size}-#{position}"}
+                active_tab={position}
+                size={size}
+                data-segment-geometry={"#{size}-#{position}"}
+                aria-label={"#{size} segmented #{position}"}
+              >
+                <:tab name="first">One</:tab>
+                <:tab name="middle">Two</:tab>
+                <:tab name="last">Three</:tab>
+              </.tabs_list>
+            </div>
+          </section>
           <div
             :for={size <- ~w(sm md lg)}
             class="lui-consistency-line"
@@ -302,15 +339,33 @@ defmodule LanternUI.QA.ConsistencyLive do
             search_field={:name}
             search_placeholder="Search items"
             expandable
+            expanded={@expanded?}
+            saved_view_event="saved-view"
+            available_views={["table", "cards"]}
+            active_saved_view="mine"
           >
+            <:overview>
+              <div class="lui-consistency-overview" aria-label="Overview chart and statistics">
+                <div class="lui-consistency-overview-chart" aria-hidden="true"><span></span></div>
+                <div class="lui-consistency-overview-stats">
+                  <span>24 results</span><span>Updated today</span>
+                </div>
+              </div>
+            </:overview>
+            <:view id="mine" name="My items" params={%{"order_by" => ["name"]}} />
             <:tab label="All" count={24} />
             <:tab label="Open" count={12} filters={[%{field: "status", value: "open"}]} />
+            <:filter field={:name} type={:text} label="Name" />
             <:filter
               field={:status}
               label="Status"
               options={[{"Open", "open"}, {"Closed", "closed"}]}
             />
-            <:col :let={row} label="Item">{row.name}</:col>
+            <:col :let={row} label="Item" field={:name}>{row.name}</:col>
+            <:col :let={row} label="Status" field={:status}>
+              {if rem(row.id, 2) == 0, do: "Open", else: "Closed"}
+            </:col>
+            <:card :let={row}>Item {row.name}</:card>
           </.data_table>
 
           <div class="lui-consistency-line" data-qa-toolbar-row="remaining-controls">
@@ -323,18 +378,6 @@ defmodule LanternUI.QA.ConsistencyLive do
             <div class="lui-toast-actions">
               <.button size="sm" data-qa-control="toast-button" data-qa-size="sm">Undo</.button>
             </div>
-            <button
-              type="button"
-              class="lui-dt-resetfilters"
-              data-qa-control="filter-action"
-              data-qa-size="sm"
-            >Reset filters</button>
-            <button
-              type="button"
-              class="lui-dt-applyfilters"
-              data-qa-control="filter-action"
-              data-qa-size="sm"
-            >Apply filters</button>
           </div>
 
           <div

@@ -38,7 +38,7 @@ import {
   syncInputFormAssociation,
 } from "./bridge.js"
 
-import { floating, syncLayer } from "../layer.js"
+import { floating, markLayerPositioned, prepareLayerPositioning, syncLayer } from "../layer.js"
 const SCOPE = "select"
 
 const part = (name) => `[data-scope="${SCOPE}"][data-part="${name}"]`
@@ -182,8 +182,8 @@ export class LanternSelect extends Component {
     for (const name of ["control", "trigger", "clear-trigger", "positioner"]) {
       const el = this.el.querySelector(part(name))
       if (!el) continue
+      if (name === "positioner") syncLayer(el, this.api.open, { positionBeforeReveal: true })
       this.spreadProps(el, this.api[partPropsMethod(name)]())
-      if (name === "positioner") syncLayer(el, this.api.open)
     }
 
     const contentEl = this.el.querySelector(part("content"))
@@ -219,7 +219,11 @@ function selectLayoutProps(el) {
     dir: getDir(el),
     name: getString(el, "name"),
     form: getString(el, "form"),
-    positioning: floating({ placement: "bottom-start", sameWidth: true }),
+    positioning: floating({
+      placement: "bottom-start",
+      sameWidth: true,
+      onPositioned: (details) => markLayerPositioned(el.querySelector(part("positioner")), details),
+    }),
   }
   const triggerId = getString(el, "triggerId")
   if (triggerId) props.ids = { trigger: triggerId }
@@ -292,6 +296,16 @@ export const LanternZagSelect = createZagLiveHook({
     lastValue = [...(component.api.value ?? [])].map(String)
     el.__lanternSelect = component
     hook.lastItemsJson = el.getAttribute("data-items") ?? "[]"
+    const prepareOpen = (event) => {
+      const trigger = event.target?.closest?.(part("trigger"))
+      if (trigger && el.contains(trigger) && !component.api.open) {
+        prepareLayerPositioning(el.querySelector(part("positioner")))
+      }
+    }
+    dom.add("pointerdown", prepareOpen, true)
+    dom.add("keydown", (event) => {
+      if (["Enter", " ", "ArrowDown"].includes(event.key)) prepareOpen(event)
+    }, true)
 
     dom.add("lantern:select:set-value", (event) => {
       const value = event.detail?.value

@@ -243,3 +243,76 @@ test("clear-filters drops owned filters and keeps unowned ones", () => {
   ])
   mount.unmount()
 })
+
+test("display changes hide columns and persist density with reset", () => {
+  const mount = mountHook(definition,
+    `<div id="chrome" data-path="/items" data-table-id="items" data-params="{}" data-hidden-columns="[]">
+      <table><thead><tr><th data-column-key="name">Name</th><th data-column-key="status">Status</th></tr></thead></table>
+      <input type="checkbox" data-part="column-toggle" data-column-key="status" checked>
+      <button type="button" role="radio" data-part="density" data-density="compact">Compact</button>
+      <button type="button" role="radio" data-part="density" data-density="comfortable">Comfortable</button>
+      <button type="button" data-part="reset-display">Reset</button>
+    </div>`, { rootId: "chrome" })
+  const checkbox = mount.el.querySelector('[data-column-key="status"][data-part]')
+  checkbox.checked = false
+  change(checkbox)
+  assert.equal(mount.el.querySelector('th[data-column-key="status"]').hidden, true)
+  assert.deepEqual(JSON.parse(localStorage.getItem("lui-dt-display:items")), { hidden: ["status"], density: "comfortable" })
+  mount.el.querySelector('[data-density="compact"]').click()
+  assert.equal(mount.el.dataset.density, "compact")
+  mount.el.querySelector('[data-part="reset-display"]').click()
+  assert.equal(mount.el.querySelector('th[data-column-key="status"]').hidden, false)
+  assert.equal(mount.el.dataset.density, "comfortable")
+  mount.unmount()
+})
+
+test("Add filter reveals the chosen editor and search filters the field list", () => {
+  const mount = mountHook(definition,
+    `<div id="chrome" data-path="/items" data-params="{}">
+      <input data-part="filter-search">
+      <button data-part="add-filter" data-field="status" data-filter-option>Status</button>
+      <button data-part="add-filter" data-field="owner" data-filter-option>Owner</button>
+      <div data-filter-editor="status" hidden><input data-part="filter" data-field="status"></div>
+      <div data-filter-editor="owner" hidden><input data-part="filter" data-field="owner"></div>
+    </div>`, { rootId: "chrome" })
+  const search = mount.el.querySelector('[data-part="filter-search"]')
+  search.value = "own"
+  search.dispatchEvent(new window.Event("input", { bubbles: true }))
+  assert.equal(mount.el.querySelector('[data-field="status"][data-filter-option]').hidden, true)
+  mount.el.querySelector('[data-field="owner"][data-filter-option]').click()
+  assert.equal(mount.el.querySelector('[data-filter-editor="owner"]').hidden, false)
+  assert.equal(mount.el.querySelector('[data-filter-editor="status"]').hidden, true)
+  mount.unmount()
+})
+
+
+test("Views menu opens the save dialog and submits the typed name", () => {
+  const mount = mountHook(definition,
+    `<div id="chrome" data-path="/items" data-table-id="items" data-params="{}">
+      <button type="button" class="lui-dt-save-view-open">Save current view…</button>
+      <dialog data-part="save-view-dialog"><input data-part="view-name"><button data-part="save-view-confirm">Save</button><button data-part="save-view-cancel">Cancel</button></dialog>
+    </div>`, { rootId: "chrome" })
+  const dialog = mount.el.querySelector('dialog')
+  dialog.showModal = () => { dialog.open = true }
+  dialog.close = () => { dialog.open = false }
+  mount.el.querySelector('.lui-dt-save-view-open').click()
+  assert.equal(dialog.open, true)
+  mount.el.querySelector('[data-part="view-name"]').value = "My view"
+  mount.el.querySelector('[data-part="save-view-confirm"]').click()
+  assert.equal(mount.el.querySelector('[data-part="save-view-confirm"]').getAttribute('phx-value-name'), "My view")
+  mount.unmount()
+})
+
+
+test("density segmented control supports arrow-key selection", () => {
+  const mount = mountHook(definition,
+    `<div id="chrome" data-path="/items" data-table-id="items" data-params="{}">
+      <div role="radiogroup"><button type="button" role="radio" aria-checked="true" data-part="density" data-density="compact">Compact</button><button type="button" role="radio" aria-checked="false" data-part="density" data-density="comfortable">Comfortable</button></div>
+    </div>`, { rootId: "chrome" })
+  const compact = mount.el.querySelector('[data-density="compact"]')
+  compact.focus()
+  compact.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }))
+  assert.equal(mount.el.dataset.density, "comfortable")
+  assert.equal(mount.el.querySelector('[data-density="comfortable"]').getAttribute("aria-checked"), "true")
+  mount.unmount()
+})

@@ -131,6 +131,8 @@ if (CONSISTENCY_ONLY) {
   const combos = [
     { vw: 1440, theme: "light" },
     { vw: 1440, theme: "dark" },
+    { vw: 1100, theme: "light" },
+    { vw: 1100, theme: "dark" },
     { vw: 390, theme: "light" },
     { vw: 390, theme: "dark" },
   ]
@@ -214,6 +216,9 @@ if (CONSISTENCY_ONLY) {
             height,
             delta: Math.round((height - expected) * 100) / 100,
             width: Math.round(r.width * 100) / 100,
+            iconOnly: target.classList.contains("lui-dt-expand") && target.textContent.trim() === "",
+            title: target.title,
+            ariaLabel: target.getAttribute("aria-label"),
             padding: { top: css("paddingTop"), right: css("paddingRight"), bottom: css("paddingBottom"), left: css("paddingLeft") },
             fontSize: css("fontSize"),
             lineHeight: css("lineHeight"),
@@ -245,19 +250,57 @@ if (CONSISTENCY_ONLY) {
           const heights = items.map((item) => Math.round(item.getBoundingClientRect().height * 100) / 100)
           return { selector, heights, mixed: heights.length > 1 && Math.max(...heights) - Math.min(...heights) > 1 }
         })
-        return { controls, toolbarRows, documentWidth: document.documentElement.scrollWidth, viewportWidth: innerWidth }
+        const segmentedGeometry = [...document.querySelectorAll("[data-segment-geometry]")].map((group) => {
+          const pill = group.querySelector(".lui-tab-active")
+          const gr = group.getBoundingClientRect(), pr = pill?.getBoundingClientRect()
+          const gs = getComputedStyle(group)
+          const inset = {
+            top: pr ? pr.top - gr.top : NaN,
+            right: pr ? gr.right - pr.right : NaN,
+            bottom: pr ? gr.bottom - pr.bottom : NaN,
+            left: pr ? pr.left - gr.left : NaN,
+          }
+          return {
+            id: group.dataset.segmentGeometry,
+            size: group.dataset.size,
+            height: gr.height,
+            pillHeight: pr?.height ?? 0,
+            inset,
+            padding: [gs.paddingTop, gs.paddingRight, gs.paddingBottom, gs.paddingLeft],
+            radii: [gs.borderRadius, pill ? getComputedStyle(pill).borderRadius : ""],
+            hasPill: !!pill,
+          }
+        })
+        return { controls, toolbarRows, segmentedGeometry, documentWidth: document.documentElement.scrollWidth, viewportWidth: innerWidth }
       }, scale)
       row.controls = result.controls
       row.toolbarRows = result.toolbarRows
+      row.segmentedGeometry = result.segmentedGeometry
       row.documentWidth = result.documentWidth
       row.viewportWidth = result.viewportWidth
       if (!legacy && !baseline) {
+        if (row.segmentedGeometry.length !== 9) row.problems.push(`segmented geometry: expected 9 cases, got ${row.segmentedGeometry.length}`)
+        for (const geometry of row.segmentedGeometry) {
+          const expected = scale[geometry.size]
+          const { top, right, bottom, left } = geometry.inset
+          if (!geometry.hasPill) row.problems.push(`${geometry.id}: active pill missing`)
+          if (Math.abs(geometry.height - expected) > 1) row.problems.push(`${geometry.id}: group height ${geometry.height}px != ${expected}px`)
+          if (Math.abs(top - bottom) > 1) row.problems.push(`${geometry.id}: vertical inset differs ${top.toFixed(2)}/${bottom.toFixed(2)}px`)
+          if ([top, right, bottom, left].some((inset) => inset < 2)) row.problems.push(`${geometry.id}: active pill escapes or crowds its group ${JSON.stringify(geometry.inset)}`)
+          if (geometry.padding.some((padding) => padding !== geometry.padding[0])) row.problems.push(`${geometry.id}: group padding is uneven ${geometry.padding.join("/")}`)
+          if (!geometry.radii[1]) row.problems.push(`${geometry.id}: active pill radius missing`)
+        }
         for (const control of row.controls) {
           if (control.kind !== "wrap-button" && control.kind !== "textarea") {
             if (Math.abs(control.delta) > 1) row.problems.push(`${control.id}: ${control.height}px is ${control.delta > 0 ? "+" : ""}${control.delta}px from ${control.size} token (${control.expectedHeight}px)`)
             if (Math.abs(control.expectedHeight - control.proposedHeight) > 1) row.problems.push(`${control.size} token is ${control.expectedHeight}px, expected proposed ${control.proposedHeight}px`)
           }
           if (control.clipping.clipped.length) row.problems.push(`${control.id}: clipped content/icon ${JSON.stringify(control.clipping.clipped)}`)
+          if (control.kind === "lui-dt-expand") {
+            if (Math.abs(control.width - control.height) > 1) row.problems.push(`${control.id}: expand control is not square (${control.width}×${control.height}px)`)
+            if (!control.iconOnly) row.problems.push(`${control.id}: expand control contains visible text`)
+            if (!control.title || !control.ariaLabel) row.problems.push(`${control.id}: expand control lacks tooltip or accessible name`)
+          }
         }
         for (const toolbar of row.toolbarRows) {
           if (toolbar.mixed) row.problems.push(`${toolbar.selector}: mixed control heights ${[...new Set(toolbar.heights)].join("/ ")}px`)
