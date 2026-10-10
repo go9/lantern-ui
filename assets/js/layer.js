@@ -68,6 +68,56 @@ export function enterLayer(el) {
   }
 }
 
+// Zag's popper computes its first position asynchronously. Keep the content
+// hidden while it does so; the positioner itself must remain measurable.
+export function markLayerPositioned(el, { placed = true } = {}) {
+  if (!el || !placed) return
+  el.__lanternHasPositioned = true
+  const rect = el.closest("[data-zag]")?.querySelector('[data-part="trigger"]')?.getBoundingClientRect()
+  if (rect) el.__lanternLastAnchorRect = { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
+  if (!el.__lanternLayerOpen) return
+  releasePositioning(el)
+}
+
+function releasePositioning(el) {
+  el.__lanternPositionObserver?.disconnect()
+  el.__lanternPositionObserver = null
+  el.removeAttribute("data-lantern-positioning")
+}
+
+function waitForPosition(el) {
+  const win = el.ownerDocument?.defaultView || globalThis
+  const Observer = win.MutationObserver || globalThis.MutationObserver
+  const previous = [el.style.getPropertyValue("--x"), el.style.getPropertyValue("--y")]
+  el.__lanternPositionObserver?.disconnect()
+  if (Observer) {
+    el.__lanternPositionObserver = new Observer(() => {
+      const current = [el.style.getPropertyValue("--x"), el.style.getPropertyValue("--y")]
+      if (current.every(Boolean) && current.some((value, index) => value !== previous[index])) {
+        markLayerPositioned(el)
+      }
+    })
+    el.__lanternPositionObserver.observe(el, { attributes: true, attributeFilter: ["style"] })
+  }
+  if (!Observer) {
+    win.requestAnimationFrame(() => win.requestAnimationFrame(() => markLayerPositioned(el)))
+  }
+}
+
+export function prepareLayerPositioning(el) {
+  if (!el) return
+  const rect = el.closest("[data-zag]")?.querySelector('[data-part="trigger"]')?.getBoundingClientRect()
+  const previous = el.__lanternLastAnchorRect
+  const unchanged = rect && previous && ["x", "y", "width", "height"].every((key) => rect[key] === previous[key])
+  if (unchanged && el.style.getPropertyValue("--x") && el.style.getPropertyValue("--y")) {
+    el.__lanternHasPositioned = true
+    return
+  }
+  el.__lanternPositionPending = true
+  el.setAttribute("data-lantern-positioning", "")
+  waitForPosition(el)
+}
+
 export function leaveLayer(el) {
   if (!el || !supported() || !isOpen(el)) return
   try {
@@ -76,7 +126,40 @@ export function leaveLayer(el) {
 }
 
 // Mirror an open/closed state onto the top layer (idempotent).
-export function syncLayer(el, open) {
-  if (open) enterLayer(el)
-  else leaveLayer(el)
+export function syncLayer(el, open, { positionBeforeReveal = false } = {}) {
+  if (!el) return
+  if (!positionBeforeReveal) {
+    if (open) enterLayer(el)
+    else {
+      el.__lanternLayerOpen = false
+      el.__lanternHasPositioned = false
+      el.__lanternPositionPending = false
+      releasePositioning(el)
+      leaveLayer(el)
+    }
+    return
+  }
+
+  if (open) {
+    if (!el.__lanternLayerOpen) {
+      el.__lanternLayerOpen = true
+      if (el.__lanternHasPositioned) releasePositioning(el)
+      else if (!el.__lanternPositionPending) {
+        const hasPosition = el.style.getPropertyValue("--x") && el.style.getPropertyValue("--y")
+        if (!hasPosition) el.setAttribute("data-lantern-positioning", "")
+        else releasePositioning(el)
+      }
+    } else {
+      el.__lanternLayerOpen = true
+    }
+    el.__lanternPositionPending = false
+    enterLayer(el)
+    if (positionBeforeReveal && el.hasAttribute("data-lantern-positioning") && !el.__lanternPositionObserver) waitForPosition(el)
+  } else {
+    el.__lanternLayerOpen = false
+    el.__lanternHasPositioned = false
+    el.__lanternPositionPending = false
+    releasePositioning(el)
+    leaveLayer(el)
+  }
 }

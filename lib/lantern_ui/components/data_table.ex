@@ -40,9 +40,10 @@ defmodule LanternUI.Components.DataTable do
   arbitrary content; `:stat` remains available for simple metric cards. Saved-view
   controls emit a generic consumer event and do not prescribe persistence.
   Filter chips and quick filters share the toolbar row with separate Filters,
-  Display, and Views controls. Filter changes are staged until Apply; search and
-  quick-filter navigation remain immediate. Saved-view entries use `:view`
-  slots and emit generic consumer events without prescribing persistence.
+  Display, and Views controls. Filters opens a field list, then a compact editor
+  with one Apply filter action; applied filters appear as removable chips.
+  Search and quick-filter navigation remain immediate. Saved-view entries use
+  `:view` slots and emit generic consumer events without prescribing persistence.
   """
   use Phoenix.Component
 
@@ -265,11 +266,12 @@ defmodule LanternUI.Components.DataTable do
   attr(:expand_label, :string,
     default: "Expand table",
     doc: "Tooltip shown on the expand control."
+    doc: "Tooltip text for the expand control."
   )
 
   attr(:expanded_label, :string,
     default: "Exit expand",
-    doc: "Text shown on the control while the table is expanded."
+    doc: "Tooltip text shown while the table is expanded."
   )
 
   attr(:expand_aria_label, :string,
@@ -532,13 +534,13 @@ defmodule LanternUI.Components.DataTable do
           <:content>
             <div class="lui-dt-filterpanel-inner">
               <div class="lui-dt-addfilter">
-                <label class="lui-sr-only" for={"#{@id}-filter-search"}>Add filter</label>
-                <div class="lui-dt-searchline">
+                <div :if={length(@filter) > 7} class="lui-dt-searchline">
                   <Icon.icon name="magnifying-glass" />
                   <input
                     id={"#{@id}-filter-search"}
                     type="search"
-                    placeholder="Add filter…"
+                    placeholder="Search fields…"
+                    aria-label="Search fields"
                     data-part="filter-search"
                   />
                 </div>
@@ -558,7 +560,7 @@ defmodule LanternUI.Components.DataTable do
                 :for={filter <- @filter}
                 class="lui-dt-filterrow"
                 data-filter-editor={filter[:field]}
-                hidden={!filter_active?(@meta, filter)}
+                hidden
               >
                 <div class="lui-dt-filterhead">
                   <label class="lui-dt-filterlabel" for={"#{@id}-filter-value-#{filter[:field]}"}>{filter[
@@ -663,17 +665,8 @@ defmodule LanternUI.Components.DataTable do
                     <% end %>
                 <% end %>
               </div>
-              <button
-                :if={active_filter_count(@meta, @filter) > 0}
-                type="button"
-                class="lui-dt-clearfilters"
-                data-part="clear-filters"
-              >
-                <Icon.icon name="x-mark" /> {@clear_filters_label}
-              </button>
-              <footer class="lui-dt-filterfooter">
-                <button type="button" class="lui-dt-resetfilters" data-part="reset-filters">{@reset_label}</button>
-                <button type="button" class="lui-dt-applyfilters" data-part="apply-filters">{@apply_label}</button>
+              <footer class="lui-dt-filterfooter" data-part="filter-actions" hidden>
+                <button type="button" class="lui-dt-applyfilters" data-part="apply-filters">Apply filter</button>
               </footer>
             </div>
           </:content>
@@ -825,6 +818,16 @@ defmodule LanternUI.Components.DataTable do
             >Save</button>
           </div>
         </dialog>
+        <.link
+          :if={@expandable}
+          patch={expand_path(@path, @meta, @expanded)}
+          class="lui-dt-expand"
+          aria-label={if @expanded, do: @expanded_aria_label, else: @expand_aria_label}
+          title={if @expanded, do: @expanded_label, else: @expand_label}
+          data-part="expand"
+        >
+          <Icon.icon name={if @expanded, do: "arrows-pointing-in", else: "arrows-pointing-out"} />
+        </.link>
         <dialog
           :if={@saved_view_event}
           class="lui-dt-save-dialog"
@@ -1039,20 +1042,6 @@ defmodule LanternUI.Components.DataTable do
 
   defp column_key(col, index),
     do: if(col[:field], do: to_string(col[:field]), else: "column-#{index}")
-
-  defp filter_active?(meta, %{type: :range, field: field}) do
-    filter_value(meta, field, ">=") not in [nil, ""] or
-      filter_value(meta, field, "<=") not in [nil, ""]
-  end
-
-  defp filter_active?(meta, filter) do
-    field = filter[:field]
-
-    case filter[:type] || :select do
-      :text -> filter_value(meta, field) not in [nil, ""]
-      _ -> filter_values(meta, field) != []
-    end
-  end
 
   defp selection_count(%{all_matching?: true, meta: meta, excluded_ids: excluded_ids}) do
     max((Map.get(meta, :total_count) || 0) - MapSet.size(MapSet.new(excluded_ids)), 0)
@@ -1416,15 +1405,6 @@ defmodule LanternUI.Components.DataTable do
     |> Map.get("filters", %{})
     |> normalize_filters()
     |> Enum.find_value([], fn f -> f["field"] == field_s && List.wrap(f["value"] || []) end)
-  end
-
-  defp active_filter_count(meta, filter_slots) do
-    fields = MapSet.new(filter_slots, &to_string(&1[:field]))
-
-    base_params(meta)
-    |> Map.get("filters", %{})
-    |> normalize_filters()
-    |> Enum.count(fn f -> to_string(f["field"]) in fields and f["value"] not in [nil, ""] end)
   end
 
   defp layout_view_label("cards"), do: "Grid"

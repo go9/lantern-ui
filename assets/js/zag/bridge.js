@@ -25,13 +25,13 @@ const REGISTRIES = Symbol("lantern:zag-hook-registries")
 export function createDomEventRegistry(target) {
   const entries = []
   return {
-    add(eventName, listener) {
-      target.addEventListener(eventName, listener)
-      entries.push({ eventName, listener })
+    add(eventName, listener, options) {
+      target.addEventListener(eventName, listener, options)
+      entries.push({ eventName, listener, options })
     },
     teardown() {
-      for (const { eventName, listener } of entries) {
-        target.removeEventListener(eventName, listener)
+      for (const { eventName, listener, options } of entries) {
+        target.removeEventListener(eventName, listener, options)
       }
       entries.length = 0
     },

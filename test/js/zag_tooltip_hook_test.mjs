@@ -72,13 +72,13 @@ test("client mode: hover opens the tip, leaving closes it", async () => {
 })
 
 test("client mode: open change pushes a server event and dispatches a client event", async () => {
-  const { el, pushEvent, clientEvents } = mount(
+  const { el, pushEvent, clientEvents, component } = mount(
     fixture({ extraRoot: `data-on-change="tip_changed" data-on-change-client="tip-toggled"` })
   )
   await sleep()
 
   openTooltip(el)
-  await sleep()
+  await waitFor(() => component().api.open === true)
 
   assert.deepEqual(pushEvent, [{ event: "tip_changed", payload: { id: "tip1", open: true } }])
   assert.equal(clientEvents.length, 1)
@@ -91,7 +91,7 @@ test("client mode: an unrelated server patch does not reset open state", async (
   await sleep()
 
   openTooltip(el)
-  await sleep()
+  await waitFor(() => component().api.open === true)
   assert.equal(content(el).hidden, false)
 
   // A patch that re-renders chrome (delay) while open: the machine wins.

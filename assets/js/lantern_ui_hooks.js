@@ -2256,11 +2256,22 @@ const LanternTableChrome = {
       }
     }
     this.onClick = (e) => {
+      const filterRoot = this.el.querySelector('[id$="-filters"]')
+      const filterPanel = filterRoot?.querySelector('[data-part="content"]')
+      const filterFields = filterPanel?.querySelector('.lui-dt-addfilter')
+      const filterActions = filterPanel?.querySelector('[data-part="filter-actions"]')
+      const filterTrigger = e.target.closest('[data-part="trigger"]')
+      if (filterTrigger && filterRoot?.contains(filterTrigger)) {
+        filterFields?.removeAttribute('hidden')
+        filterActions?.setAttribute('hidden', '')
+        filterPanel?.querySelectorAll('[data-filter-editor]').forEach((row) => { row.hidden = true })
+      }
       const addFilter = e.target.closest('[data-part="add-filter"]')
       if (addFilter) {
         const field = addFilter.dataset.field
+        filterFields?.setAttribute('hidden', '')
+        filterActions?.removeAttribute('hidden')
         this.el.querySelectorAll('[data-filter-editor]').forEach((row) => { row.hidden = row.dataset.filterEditor !== field })
-        this.el.querySelectorAll('[data-part="add-filter"]').forEach((item) => item.setAttribute('aria-selected', String(item === addFilter)))
         this.el.querySelector(`[data-filter-editor="${CSS.escape(field)}"] input, [data-filter-editor="${CSS.escape(field)}"] select`)?.focus()
         return
       }
@@ -2293,6 +2304,12 @@ const LanternTableChrome = {
       }
       const apply = e.target.closest('[data-part="apply-filters"]')
       if (apply) {
+        filterFields?.removeAttribute('hidden')
+        filterActions?.setAttribute('hidden', '')
+        filterPanel?.querySelectorAll('[data-filter-editor]').forEach((row) => { row.hidden = true })
+        filterPanel?.querySelector('[data-part="filter-search"]')?.setAttribute('value', '')
+        filterPanel?.querySelectorAll('[data-filter-option]').forEach((item) => { item.hidden = false })
+        filterRoot?.dispatchEvent(new CustomEvent('lantern:popover:set-open', { bubbles: true, detail: { open: false } }))
         this.apply("*")
         return
       }

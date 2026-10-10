@@ -8,13 +8,14 @@ defmodule LanternUI.QA.ConsistencyLive do
   @segment_cases for size <- ~w(sm md lg), position <- ~w(first middle last), do: {size, position}
 
   def mount(params, _session, socket) do
-    theme = if params["theme"] == "dark", do: "dark", else: "light"
+    theme = if params["theme"] in ["dark", "blue"], do: params["theme"], else: "light"
     legacy? = params["legacy"] == "1"
 
     {:ok,
      socket
      |> assign(:theme, theme)
      |> assign(:legacy?, legacy?)
+     |> assign(:expanded?, params["expand"] == "1")
      |> assign(:button_sizes, @button_sizes)
      |> assign(:button_variants, @button_variants)
      |> assign(:segment_cases, @segment_cases)
@@ -33,6 +34,9 @@ defmodule LanternUI.QA.ConsistencyLive do
      |> assign(:page_title, "Control consistency QA"), layout: false}
   end
 
+  def handle_params(params, _uri, socket),
+    do: {:noreply, assign(socket, :expanded?, params["expand"] == "1")}
+
   def render(assigns) do
     ~H"""
     <main
@@ -42,6 +46,12 @@ defmodule LanternUI.QA.ConsistencyLive do
     >
       <style>
         .lui-consistency-qa { min-height:100vh; padding:24px; background:var(--lantern-surface); color:var(--lantern-fg); font-family:var(--lantern-font); }
+        .lui-consistency-qa.blue {
+          --lantern-surface:#f8fafc; --lantern-surface-raised:#fff; --lantern-surface-sunken:#f1f5f9; --lantern-surface-hover:#f1f5f9;
+          --lantern-fg:#0f172a; --lantern-fg-muted:#64748b; --lantern-border:#e2e8f0;
+          --lantern-primary:#2563eb; --lantern-primary-fg:#fff; --lantern-accent:#2563eb; --lantern-on-accent:#fff;
+          --lantern-ring:#3b82f6; --lantern-ring-soft:rgb(59 130 246 / .18);
+        }
         .lui-consistency-head { margin:0 auto 20px; max-width:1200px; }
         .lui-consistency-head h1 { margin:0; font-size:24px; }
         .lui-consistency-head p { margin:4px 0 0; color:var(--lantern-fg-muted); font-size:13px; }
@@ -67,6 +77,10 @@ defmodule LanternUI.QA.ConsistencyLive do
         <p>
           Kitchen sink · {@theme} theme · {(@legacy? && "legacy compatibility") || "standard scale"}
         </p>
+        <nav class="lui-consistency-themes" aria-label="QA theme">
+          <a href="/consistency?theme=light">Lantern</a>
+          <a href="/consistency?theme=blue">Neutral blue</a>
+        </nav>
       </header>
 
       <.page_shell
@@ -325,6 +339,7 @@ defmodule LanternUI.QA.ConsistencyLive do
             search_field={:name}
             search_placeholder="Search items"
             expandable
+            expanded={@expanded?}
             saved_view_event="saved-view"
             available_views={["table", "cards"]}
             active_saved_view="mine"
@@ -363,18 +378,6 @@ defmodule LanternUI.QA.ConsistencyLive do
             <div class="lui-toast-actions">
               <.button size="sm" data-qa-control="toast-button" data-qa-size="sm">Undo</.button>
             </div>
-            <button
-              type="button"
-              class="lui-dt-resetfilters"
-              data-qa-control="filter-action"
-              data-qa-size="sm"
-            >Reset filters</button>
-            <button
-              type="button"
-              class="lui-dt-applyfilters"
-              data-qa-control="filter-action"
-              data-qa-size="sm"
-            >Apply filters</button>
           </div>
 
           <div

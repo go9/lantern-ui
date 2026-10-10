@@ -370,6 +370,11 @@ defmodule LanternUI.QA.MatrixLive do
             expandable
             expanded={@expand?}
           >
+            <:filter
+              field={:status}
+              label="Status"
+              options={[{"Ready", "ready"}, {"Paused", "paused"}]}
+            />
             <:col :let={row} label="Record">{row.name}</:col>
             <:col :let={row} label="Status">Ready {row.id}</:col>
             <:col :let={row} label="Owner">Team {rem(row.id, 4)}</:col>
@@ -442,7 +447,18 @@ defmodule LanternUI.QA.MatrixLive do
             flush
             expandable
             expanded={@expand?}
+            search_field={:name}
+            saved_view_event="saved-view"
+            available_views={["table", "cards"]}
+            active_saved_view="mine"
           >
+            <:view id="mine" name="My items" params={%{"order_by" => ["name"]}} />
+            <:filter
+              field={:status}
+              label="Status"
+              options={[{"Ready", "ready"}, {"Paused", "paused"}]}
+            />
+            <:tab label="All" count={32} />
             <:toolbar>
               <input type="checkbox" aria-label="QA checkbox" />
               <input type="radio" aria-label="QA radio" />
@@ -477,16 +493,21 @@ defmodule LanternUI.QA.MatrixLive do
     >
       <:brand>Lantern QA</:brand>
       <:sidebar_header>
-        <button
+        <.menu
           id="qa-sidebar-switcher"
-          type="button"
-          class="qa-switcher"
+          label="Acme workspace"
+          placement="bottom-start"
+          trigger_class="qa-switcher"
           title="Acme workspace"
           data-tooltip="Acme workspace"
         >
-          <span class="qa-avatar">AW</span>
-          <span class="qa-switcher-name">Acme workspace</span>
-        </button>
+          <:trigger>
+            <span class="qa-avatar">AW</span>
+            <span class="qa-switcher-name">Acme workspace</span>
+          </:trigger>
+          <.menu_item>Switch workspace</.menu_item>
+          <.menu_item>Settings</.menu_item>
+        </.menu>
       </:sidebar_header>
       <:sidebar>
         <.nav_group label="Workspace">

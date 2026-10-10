@@ -65,7 +65,7 @@ test("controlled (active_tab): machine follows the server value; arrows move foc
   const triggers = [...el.querySelectorAll('[data-part="trigger"]')]
   triggers[0].focus()
   triggers[0].dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }))
-  await sleep()
+  await waitFor(() => document.activeElement === triggers[1])
 
   // Manual model: focus moved, value unchanged (no auto-activation).
   assert.equal(document.activeElement, triggers[1])

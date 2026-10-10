@@ -113,7 +113,7 @@ defmodule LanternUI.DataTableChromeTest do
     assigns =
       Map.merge(
         %{
-          expand_label: "Expand",
+          expand_label: "Expand table",
           expanded_label: "Exit expand",
           expand_aria_label: "Expand table",
           expanded_aria_label: "Exit expand"
@@ -242,6 +242,7 @@ defmodule LanternUI.DataTableChromeTest do
 
     assert expanded_html =~ "lui-datatable-expanded"
     assert expanded_html =~ ~s(aria-label="Exit expand")
+    assert expanded_html =~ ~s(title="Exit expand")
     assert expanded_html =~ ~s(&quot;expand&quot;:&quot;1&quot;)
     [_, exit_href] = Regex.run(~r/<a href="([^"]+)"[^>]*class="lui-dt-expand"/, expanded_html)
 
@@ -256,7 +257,7 @@ defmodule LanternUI.DataTableChromeTest do
     assert exit_query["view"] == "cards"
   end
 
-  test "expand control text and accessible labels can be translated" do
+  test "expand control tooltip and accessible labels can be translated" do
     html =
       render(&expandable_table/1, %{
         rows: [],
@@ -269,7 +270,7 @@ defmodule LanternUI.DataTableChromeTest do
       })
 
     assert html =~ ~s(aria-label="Quitter le tableau agrandi")
-    assert html =~ "Quitter le plein écran"
+    assert html =~ ~s(title="Quitter le plein écran")
   end
 
   test "tabs render with counts; preset matching current filters is active" do
@@ -355,7 +356,7 @@ defmodule LanternUI.DataTableChromeTest do
 
   defp count(h, n), do: length(String.split(h, n)) - 1
 
-  test "filters and display use separate popovers with active-count badge and clear button" do
+  test "filters use a compact field picker and one apply action beside display and views" do
     html = render(&table/1, base())
 
     # settings popover wraps the filter controls
@@ -365,16 +366,18 @@ defmodule LanternUI.DataTableChromeTest do
     assert html =~ ~s(id="t-views")
     assert html =~ ~s(data-zag)
     assert html =~ ~s(data-part="apply-filters")
-    assert html =~ ~s(data-part="reset-filters")
+    assert html =~ ~s(data-part="filter-actions" hidden)
+    assert html =~ "Apply filter"
+    assert html =~ ~s(data-part="add-filter")
+    assert html =~ ~s(data-filter-editor="channel" hidden)
+    refute html =~ ~s(data-part="filter-search")
+    refute html =~ ~s(data-part="reset-filters")
+    refute html =~ ~s(data-part="clear-filters")
     assert html =~ "lui-dt-filterpanel"
-    # status filter is active in @meta but channel (the declared filter) is not,
-    # so no badge and no clear button
-    refute html =~ "lui-dt-clearfilters"
 
     meta = put_in(@meta.params["filters"], %{"0" => %{"field" => "channel", "value" => "ebay"}})
     html = render(&table/1, %{base() | meta: meta})
-    refute html =~ ~s(data-color="accent")
-    assert html =~ ~s(data-part="clear-filters")
+    assert html =~ "Channel: eBay"
   end
 
   test "multiple/searchable filter renders a rich select with in-op wrapper" do
