@@ -238,6 +238,12 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `popover/1` — Click-triggered floating panel holding arbitrary content.
 
+### LanternUI.Components.PriceGrid
+
+- `price_cell/1` — Renders one priced, selectable cell.
+- `price_cell_group/1` — Renders a captioned, wrapping row of price cells.
+- `price_grid/1` — Renders a rows x columns table of price cells.
+
 ### LanternUI.Components.Progress
 
 - `progress/1` — Progress bar or completion ring.

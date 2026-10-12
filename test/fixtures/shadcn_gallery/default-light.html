@@ -2969,6 +2969,68 @@
   }
 }
 
+/* ── Price grid ──
+ * Priced, selectable permutation cells (price_cell / price_cell_group /
+ * price_grid): a label over its price, a hairline at rest, the accent fill
+ * when selected. */
+.lui-price-group { display: flex; flex-direction: column; gap: 0.375rem; min-width: 0; }
+.lui-price-caption {
+  margin: 0;
+  font-size: var(--lantern-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lantern-fg-muted);
+}
+.lui-price-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.lui-price-cell {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  min-width: 3.625rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-md, var(--lantern-radius));
+  background: var(--lantern-surface-subtle, var(--lantern-surface-sunken));
+  color: var(--lantern-fg);
+  font: inherit;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background var(--lantern-duration) var(--lantern-ease), border-color var(--lantern-duration) var(--lantern-ease);
+}
+.lui-price-cell:hover:not(:disabled):not([data-selected]) { background: var(--lantern-surface-hover); }
+.lui-price-cell:focus-visible { outline: none; border-color: var(--lantern-ring); box-shadow: 0 0 0 3px var(--lantern-ring-soft); }
+.lui-price-cell:disabled { cursor: default; opacity: 0.55; }
+.lui-price-cell-label { font-size: var(--lantern-text-sm); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.lui-price-cell-price { font-size: var(--lantern-text-xs); color: var(--lantern-fg-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lui-price-cell[data-selected] {
+  border-color: var(--lantern-accent);
+  background: var(--lantern-accent);
+  color: var(--lantern-on-accent, var(--lantern-primary-fg, #fff));
+}
+.lui-price-cell[data-selected] .lui-price-cell-price { color: inherit; opacity: 0.85; }
+/* Grid cells: the row/column headers name the permutation, the cell shows its price. */
+.lui-price-cell-compact { width: 3.625rem; height: 2.125rem; padding: 0 0.25rem; }
+.lui-price-cell-compact .lui-price-cell-label {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+.lui-price-cell-compact .lui-price-cell-price { font-size: var(--lantern-text-sm); font-weight: 600; color: inherit; }
+.lui-price-grid-scroll { overflow-x: auto; }
+.lui-price-grid { border-collapse: separate; border-spacing: 0.3125rem; margin: -0.3125rem; }
+.lui-price-grid th {
+  padding: 0;
+  font-size: var(--lantern-text-xs);
+  font-weight: 600;
+  color: var(--lantern-fg-muted);
+  white-space: nowrap;
+}
+.lui-price-grid th[scope="col"] { text-align: center; }
+.lui-price-grid th[scope="row"] { text-align: left; padding-right: 0.25rem; }
+.lui-price-grid td { padding: 0; }
+@media (prefers-reduced-motion: reduce) { .lui-price-cell { transition: none; } }
+
 /* ── Accordion ──
  * Server renders the anatomy + initial open state; the LanternAccordion hook
  * toggles panels and drives the APG keyboard model. Panels stay in the DOM and
@@ -6055,7 +6117,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-935" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-4453" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6072,7 +6134,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-967" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-4485" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6089,7 +6151,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-999" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-4517" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6106,7 +6168,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1031" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-4549" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
