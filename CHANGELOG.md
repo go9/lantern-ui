@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- App-scale type tokens `text-micro` (10px), `text-footnote` (13px), `text-subhead` (15px), `text-headline` (17px), `text-display` (38px), each backed by a `--lantern-text-*` variable a host can override.
 - `list_row/1` `subtitle`: an optional muted second line under the title; the row grows to two lines (`data-lines="2"`).
 - `sortable/1` + `drop_zone/1` (`LanternUI.Components.Sortable`, `LanternSortable` hook): drag rows between lists of the same group (multi-select drags every `data-selected` row), drop on the landing area to append or between rows (`reorder`) to insert; pushes `%{ids, from, to, before_id}`. `drop_zone variant="target"` keeps the dashed drop shape with an accent border and fill.
 - `price_grid/1` row headers stay pinned while the grade columns scroll; set `--lui-price-grid-bg` to the surface behind the grid.

@@ -620,7 +620,12 @@ defmodule LanternUI.Lint do
     case Regex.run(~r/(\d+(?:\.\d+)?)px/, match) do
       [_, "11"] -> "use text-meta (11px) or text-mono-meta for ids"
       [_, "12"] -> "use text-caption (12px)"
-      _ -> "use text-meta, text-caption, or text-mono-meta"
+      [_, "10"] -> "use text-micro (10px)"
+      [_, "13"] -> "use text-footnote (13px)"
+      [_, "15"] -> "use text-subhead (15px)"
+      [_, "17"] -> "use text-headline (17px)"
+      [_, "38"] -> "use text-display (38px)"
+      _ -> "use a lantern text-* size (docs/scale.md)"
     end
   end
 

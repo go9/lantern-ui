@@ -148,6 +148,12 @@
   --lantern-text-caption-tracking: 0.005em;
   --lantern-text-mono-meta: 11px;
   --lantern-text-mono-meta-leading: 1.25;
+  /* App-scale type (iOS-style steps) for consumer pages that mirror a native app. */
+  --lantern-text-micro: 10px;
+  --lantern-text-footnote: 13px;
+  --lantern-text-subhead: 15px;
+  --lantern-text-headline: 17px;
+  --lantern-text-display: 38px;
   --lantern-gap: 0.4375rem;
 }
 
@@ -171,6 +177,11 @@
   --text-caption--line-height: var(--lantern-text-caption-leading);
   --text-mono-meta: var(--lantern-text-mono-meta);
   --text-mono-meta--line-height: var(--lantern-text-mono-meta-leading);
+  --text-micro: var(--lantern-text-micro);
+  --text-footnote: var(--lantern-text-footnote);
+  --text-subhead: var(--lantern-text-subhead);
+  --text-headline: var(--lantern-text-headline);
+  --text-display: var(--lantern-text-display);
   --background-color-base: var(--background-base);
   --background-color-accent: var(--background-accent);
   --background-color-surface: var(--surface);

@@ -16,6 +16,17 @@ that must stay denser than body.
 | `text-caption` | 12px | 1.35 | 0.005em | Helper text under a control, dense supporting copy in a rail or empty state. One step above meta, still below body. |
 | `text-mono-meta` | 11px | 1.25 | 0 | Identifiers: ticket ids, SHAs, slugs, tabular numbers. Monospace + `tabular-nums`. |
 
+App scale: consumer pages that mirror a native app (iOS-style steps). Leading is
+Tailwind's default for a custom size; set `leading-*` where it matters.
+
+| Class | Size | Use |
+|---|---|---|
+| `text-micro` | 10px | Overlay pills on a thumbnail (rank, badge counts). |
+| `text-footnote` | 13px | Small labels and chips beside body. |
+| `text-subhead` | 15px | App-style row titles and body copy. |
+| `text-headline` | 17px | Row chevrons, section emphasis. |
+| `text-display` | 38px | The hero numeral (a page's headline total). |
+
 Do not write `text-[Npx]`. Comfortable density (`data-lantern-density="comfortable"`)
 bumps meta/mono-meta to 12px and caption to 13px.
 
