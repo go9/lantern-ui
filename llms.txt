@@ -295,6 +295,11 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `slider/1` — Slider — a single-thumb range input built on the WAI-ARIA APG slider pattern.
 
+### LanternUI.Components.Sortable
+
+- `drop_zone/1` — The landing area of a `sortable/1` list: dropping here adds to the end.
+- `sortable/1` — Drag-and-drop between lists (board columns, bins, groups) and the landing area at the top of each list.
+
 ### LanternUI.Components.Stat
 
 - `stat_card/1` — Renders one compact summary metric.

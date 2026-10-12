@@ -87,6 +87,7 @@ defmodule LanternUI do
     icon_button: LanternUI.Components.IconButton,
     segmented: LanternUI.Components.Segmented,
     state_glyph: LanternUI.Components.StateGlyph,
+    sortable: LanternUI.Components.Sortable,
     progress_ring: LanternUI.Components.ProgressRing,
     side_panel: LanternUI.Components.SidePanel,
     progress: LanternUI.Components.Progress,

@@ -5344,3 +5344,26 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-thumbnail:focus-visible { outline:var(--lui-focus-ring-width) solid var(--lui-focus-ring-color); outline-offset:var(--lui-focus-ring-offset); }
 .lui-thumbnail-preview { position:fixed; z-index:var(--lantern-z-tooltip, 80); width:min(18rem, calc(100vw - 2rem)); aspect-ratio:1; box-sizing:border-box; overflow:hidden; border:1px solid var(--lantern-border-strong, var(--lantern-border)); border-radius:var(--lantern-radius); background:var(--lantern-surface-raised); padding:var(--lui-gap-4); box-shadow:var(--lantern-shadow-md); pointer-events:none; }
 .lui-thumbnail-preview img { width:100%; height:100%; object-fit:cover; border-radius:calc(var(--lantern-radius) - var(--lui-gap-4)); }
+
+/* ── Sortable lists + drop zone (LanternUI.Components.Sortable) ─────────── */
+.lui-drop-zone {
+  display: flex; align-items: center; gap: var(--lantern-space-sm);
+  padding: var(--lantern-space-sm) var(--lantern-space-md);
+  border: 1px dashed var(--lantern-border-strong); border-radius: var(--lantern-radius-md);
+  color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm);
+  transition: background var(--lantern-duration) var(--lantern-ease), border-color var(--lantern-duration) var(--lantern-ease);
+}
+.lui-drop-zone-icon { width: 1rem; height: 1rem; flex: none; }
+.lui-drop-zone-label { flex: 1; min-width: 0; }
+.lui-drop-zone-action { flex: none; }
+.lui-drop-zone[data-variant="target"] {
+  border-color: var(--lantern-accent); background: var(--lantern-accent-soft); color: var(--lantern-accent);
+}
+.lui-drop-zone[data-variant="target"] .lui-drop-zone-label { font-weight: 600; }
+.lui-sortable[data-drop-active] .lui-drop-zone {
+  border-style: solid; border-color: var(--lantern-accent); background: var(--lantern-accent-soft); color: var(--lantern-accent);
+}
+.lui-sortable [data-part="item"][draggable="true"] { cursor: grab; }
+.lui-sortable [data-part="item"][data-dragging] { opacity: 0.45; }
+.lui-sortable [data-part="item"][data-drop="before"] { box-shadow: inset 0 2px 0 var(--lantern-accent); }
+.lui-sortable [data-part="item"][data-drop="after"] { box-shadow: inset 0 -2px 0 var(--lantern-accent); }
