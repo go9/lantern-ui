@@ -947,7 +947,8 @@ the expandable data table remains available for assistive technology and print.
 Use this one cell for every item column so thumbnails, titles and subtitles line
 up in every table. The thumbnail slot is fixed: rows without a source, and rows
 whose image fails to load, show the same neutral placeholder. Title and
-subtitle stack beside the thumbnail and truncate to one line each. Give each
+subtitle stack beside the thumbnail; the title clamps at two lines, the
+subtitle at one. Give each
 thumbnail a stable ID. Image rows open a larger preview on hover or keyboard focus.
 
 ```heex
