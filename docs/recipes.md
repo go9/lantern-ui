@@ -944,15 +944,26 @@ the expandable data table remains available for assistive technology and print.
 ```
 # Row thumbnails
 
-Use `thumbnail/1` in a table column to keep item names aligned when some rows
-have no image. Give each instance a stable ID. Image rows open a larger preview
-on hover or keyboard focus; rows without a source show a neutral placeholder.
+Use this one cell for every item column so thumbnails, titles and subtitles line
+up in every table. The thumbnail slot is fixed: rows without a source, and rows
+whose image fails to load, show the same neutral placeholder. Title and
+subtitle stack beside the thumbnail; the title clamps at two lines, the
+subtitle at one. Give each
+thumbnail a stable ID. Image rows open a larger preview on hover or keyboard focus.
 
 ```heex
 <:col :let={row} label="Item">
   <span class="lui-thumbnail-cell">
     <.thumbnail id={"item-#{row.id}-image"} src={row.image_url} alt={row.name} size="sm" />
-    <span>{row.name}</span>
+    <span class="lui-thumbnail-cell-text">
+      <.link navigate={row.path} title={row.name}>{row.name}</.link>
+      <span :if={row.set_name} class="lui-thumbnail-cell-sub">{row.set_name}</span>
+    </span>
   </span>
 </:col>
 ```
+
+Per-row menus go in `:row_action` as `row_menu/1` (named "Row actions", 40px
+target). Mark low-value columns `hide_below="sm" | "md" | "lg"` so they drop
+when the table is narrower than that; anything still too wide scrolls with a
+faded edge.

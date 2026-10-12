@@ -112,6 +112,7 @@ their replacement. Full attribute tables are in llms-full.txt.
 ### LanternUI.Components.DataTable
 
 - `data_table/1` — The admin data table — one Flop-driven table to replace the per-app `admin_table` copies.
+- `row_menu/1` — The standard per-row menu for a `:row_action` slot: a ⋮ trigger with an accessible name and a 40px hit target, opening a dropdown of the given items.
 
 ### LanternUI.Components.DatePicker
 
@@ -1132,7 +1133,10 @@ From `docs/recipes.md` (Block 8: confirm-destructive dialog plus empty/loading/e
 <:col :let={row} label="Item">
   <span class="lui-thumbnail-cell">
     <.thumbnail id={"item-#{row.id}-image"} src={row.image_url} alt={row.name} size="sm" />
-    <span>{row.name}</span>
+    <span class="lui-thumbnail-cell-text">
+      <.link navigate={row.path} title={row.name}>{row.name}</.link>
+      <span :if={row.set_name} class="lui-thumbnail-cell-sub">{row.set_name}</span>
+    </span>
   </span>
 </:col>
 ```

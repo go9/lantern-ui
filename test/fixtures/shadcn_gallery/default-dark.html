@@ -1137,6 +1137,13 @@
   pointer-events: auto;
 }
 .lui-page-strip .lui-action-bar-notice { min-width: 0; }
+/* Keep room for what a narrow bar still shows (one promoted action and the
+   More menu) so the trail gives instead and its last crumb ellipsizes. The bar
+   is a size container, so its content cannot hold it open: at min-width 0 it
+   shrank under its buttons on a phone and they overflowed onto a long title. */
+.lui-page-strip .lui-action-bar:has(.lui-action-bar-actions) {
+  min-width: calc(2 * var(--lui-control-md-h) + 1.5rem);
+}
 .lui-page-strip :is(button, input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select, [role="tab"]) {
   min-height: var(--lui-control-md-h);
 }
@@ -1482,6 +1489,33 @@
 /* ── Table ── */
 .lui-table-wrap { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius);
   overflow-x: auto; background: var(--lantern-surface-raised); }
+/* Scroll cue: when a table is wider than its wrap, the edge that hides more
+   columns fades out. Driven by the wrap's own inline scroll position, so a
+   table that fits has no timeline and no fade. Dropdown menus render in the
+   top layer and are unaffected by the mask. Browsers without scroll timelines
+   keep the plain scroll. */
+.lui-table-wrap { container-type: inline-size; }
+@property --lui-fade-start { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --lui-fade-end { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@keyframes lui-table-scroll-fade {
+  0% { --lui-fade-start: 0rem; --lui-fade-end: 2.5rem; }
+  8% { --lui-fade-start: 2.5rem; }
+  92% { --lui-fade-end: 2.5rem; }
+  100% { --lui-fade-start: 2.5rem; --lui-fade-end: 0rem; }
+}
+@supports (animation-timeline: scroll()) {
+  .lui-table-wrap {
+    animation: lui-table-scroll-fade linear both;
+    animation-timeline: scroll(self inline);
+    mask-image: linear-gradient(to right, transparent, #000 var(--lui-fade-start),
+      #000 calc(100% - var(--lui-fade-end)), transparent);
+  }
+}
+/* `hide_below` on a column drops it when the table itself is narrower than the
+   breakpoint (container width, not viewport, so a sidebar counts). */
+@container (max-width: 40rem) { .lui-table [data-hide-below="sm"] { display: none; } }
+@container (max-width: 48rem) { .lui-table [data-hide-below="md"] { display: none; } }
+@container (max-width: 64rem) { .lui-table [data-hide-below="lg"] { display: none; } }
 .lui-table { width: 100%; border-collapse: collapse; font-size: var(--lantern-text); }
 /* Row height is set by the tallest thing in a cell, which in a table with row
    actions is the trigger button rather than the text — so the vertical padding
@@ -1642,11 +1676,15 @@
   margin-right: 0.25rem; font-variant-numeric: tabular-nums; }
 .lui-th-check, .lui-td-check { width: 2rem; text-align: center; }
 .lui-th-actions, .lui-td-actions { width: 2.25rem; text-align: right; }
+/* row_menu trigger: a 40px hit target that only takes 32px of row height.
+   Specificity 0,4,0 so the legacy control-scale sizes (0,3,0) cannot shrink it. */
+.lui-btn.lui-row-menu-trigger.lui-row-menu-trigger[data-size] { width: 2.5rem; height: 2.5rem; min-width: 2.5rem;
+  margin: -0.25rem; padding: 0; }
 .lui-th-sort { display: inline-flex; align-items: center; gap: 0.25rem; color: inherit;
   text-decoration: none; cursor: pointer; }
 .lui-th-sort:hover { color: var(--lantern-fg); }
 .lui-th-sort-icon { color: var(--lantern-accent); font-size: 0.85em; min-width: 0.7em; }
-.lui-td-empty { padding: 2rem 1rem; }
+.lui-td-empty, .lui-dt-empty { padding: 2rem 1rem; }
 .lui-dt-pagination { margin-top: 0.6rem; }
 
 /* ── Stat cards / data table chrome ── */
@@ -1664,7 +1702,10 @@
    columns leaves N-1 dead cells beside the final orphan (e.g. 4 stats in a
    3-column row). Flexing from the same basis keeps equal widths when they fit
    on one row, and lets the last row stretch to fill instead of gapping. */
-.lui-dt-stats { display: flex; flex-wrap: wrap; margin: -0.75rem -0.9rem;
+/* No negative margin: the overview body is unpadded, so pulling the stats out
+   by the old padding put the first tile flush against the card edge and under
+   the "Overview" header. */
+.lui-dt-stats { display: flex; flex-wrap: wrap; margin: 0;
   gap: 1px; background: var(--lantern-border); border-top: 1px solid var(--lantern-border); }
 .lui-stat-grid { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
   overflow: hidden; }
@@ -1726,6 +1767,10 @@
   background: var(--lantern-surface); padding: 0.625rem 0.75rem; box-sizing: border-box;
   min-width: 0; }
 .lui-dt-card:hover { background: var(--lantern-surface-hover); }
+/* Same arrangement as a list row: content left, row actions right. */
+.lui-dt-card:has(> .lui-dt-card-actions) { display: flex; align-items: flex-start; gap: 0.5rem; }
+.lui-dt-card-main { flex: 1; min-width: 0; }
+.lui-dt-card-actions { flex: none; display: flex; align-items: center; gap: 0.375rem; }
 
 /* List view: headerless index rows (name left, meta/actions right) */
 /* Breathing room under the chrome row's hairline. At padding 0 the first row of
@@ -4495,7 +4540,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-row-link { position: absolute; inset: 0; z-index: 0; }
 .lui-row-link:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: -2px; }
 .lui-row-linked :is(a:not(.lui-row-link), button, input, select, textarea, label, summary,
-  [role="button"], [data-row-ignore], .lui-td-actions, .lui-dt-list-actions) {
+  [role="button"], [data-row-ignore], .lui-td-actions, .lui-dt-list-actions, .lui-dt-card-actions) {
   position: relative; z-index: 1; }
 .lui-row-linked:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: -2px; }
 .lui-time-series-chart { position: relative; min-width: 0; color: var(--lantern-fg); }
@@ -4573,7 +4618,8 @@ a.lui-waterfall-lane-inner:focus-visible {
   .lui-datatable .lui-td-check,
   .lui-datatable .lui-th-actions,
   .lui-datatable .lui-td-actions,
-  .lui-datatable .lui-dt-list-actions { display: none !important; }
+  .lui-datatable .lui-dt-list-actions,
+  .lui-datatable .lui-dt-card-actions { display: none !important; }
   .lui-app-body { padding-top: 0; }
   .lui-app-main,
   .lui-app[data-collapsed] .lui-app-main { height: auto; margin: 0; padding: 0; overflow: visible; display: block; }
@@ -5284,7 +5330,14 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-thumbnail img { display:block; width:100%; height:100%; object-fit:cover; }
 .lui-thumbnail-empty { color:var(--lantern-fg-muted); cursor:default; }
 .lui-thumbnail-empty .lui-icon { width:var(--lui-control-icon-md); height:var(--lui-control-icon-md); }
-.lui-thumbnail-cell { display:inline-flex; align-items:center; gap:var(--lui-gap-12); vertical-align:middle; }
+.lui-thumbnail-cell { display:inline-flex; align-items:center; gap:var(--lui-gap-12); vertical-align:middle; min-width:0; max-width:100%; }
+.lui-thumbnail-cell-text { display:flex; flex-direction:column; min-width:0; }
+.lui-thumbnail-cell-text > * { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:break-word; }
+.lui-thumbnail-cell-sub { -webkit-line-clamp:1; color:var(--lantern-fg-muted); font-size:var(--lantern-text-sm); }
+.lui-thumbnail-fallback { display:none; }
+.lui-thumbnail[data-broken] { color:var(--lantern-fg-muted); cursor:default; }
+.lui-thumbnail[data-broken] img { display:none; }
+.lui-thumbnail[data-broken] .lui-thumbnail-fallback { display:block; width:var(--lui-control-icon-md); height:var(--lui-control-icon-md); }
 .lui-thumbnail:focus-visible { outline:var(--lui-focus-ring-width) solid var(--lui-focus-ring-color); outline-offset:var(--lui-focus-ring-offset); }
 .lui-thumbnail-preview { position:fixed; z-index:var(--lantern-z-tooltip, 80); width:min(18rem, calc(100vw - 2rem)); aspect-ratio:1; box-sizing:border-box; overflow:hidden; border:1px solid var(--lantern-border-strong, var(--lantern-border)); border-radius:var(--lantern-radius); background:var(--lantern-surface-raised); padding:var(--lui-gap-4); box-shadow:var(--lantern-shadow-md); pointer-events:none; }
 .lui-thumbnail-preview img { width:100%; height:100%; object-fit:cover; border-radius:calc(var(--lantern-radius) - var(--lui-gap-4)); }
@@ -6126,7 +6179,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-3525" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-26889" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6143,7 +6196,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-3557" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-26921" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6160,7 +6213,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-3589" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-26953" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6177,7 +6230,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-3621" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-26985" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

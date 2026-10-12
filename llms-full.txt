@@ -635,6 +635,7 @@ Slots:
   - `sortable` — Enable sort patch links on the header.
   - `class` — Extra classes on the header cell.
   - `td_class` — Extra classes on body cells for this column.
+  - `hide_below` — Drop the column when the table is narrower than "sm" (40rem), "md" (48rem) or "lg" (64rem).
 - `:empty` — Empty-state content when there are no rows.
 - `:filter` — Toolbar filter control bound to a Flop field.
   - `field` — Flop filter field atom.
@@ -666,6 +667,16 @@ Slots:
   - `id` — Saved view identifier emitted with the apply event.
   - `name` — Visible saved view name.
   - `params` — Saved view parameters supplied to the consumer event.
+
+#### `row_menu/1`
+
+The standard per-row menu for a `:row_action` slot: a ⋮ trigger with an accessible name and a 40px hit target, opening a dropdown of the given items.
+
+- `class` (:any) — Classes for the menu panel.
+- `id` (:string, required) — Stable DOM id for the dropdown.
+- `label` (:string, default "Row actions") — Accessible name of the trigger.
+Slots:
+- `:inner_block` (required) — Menu items.
 
 ### LanternUI.Components.DatePicker
 
@@ -994,7 +1005,7 @@ A small, curated inline-SVG icon set (Heroicons outline paths, MIT).
 Renders an icon by name.
 
 - `class` (:any) — Extra classes merged onto the root element.
-- `name` (:string, required, values: adjustments-horizontal, arrow-down-tray, arrow-path, arrow-right, arrow-trending-up, arrow-up-tray, arrows-pointing-in, arrows-pointing-out, bars-3, calendar, calendar-days, chart-bar, check, check-circle, chevron-down, chevron-left, chevron-right, chevron-up, chevron-up-down, circle-stack, clock, cloud, cursor-arrow-rays, document, ellipsis-horizontal, exclamation-circle, folder, folder-open, funnel, globe-alt, inbox, information-circle, magnifying-glass, map-pin, minus, pencil-square, photo, plus, presentation-chart-line, printer, sparkles, squares-2x2, trash, view-columns, window, x-mark) — Icon key from the curated outline set.
+- `name` (:string, required, values: adjustments-horizontal, arrow-down-tray, arrow-path, arrow-right, arrow-trending-up, arrow-up-tray, arrows-pointing-in, arrows-pointing-out, bars-3, calendar, calendar-days, chart-bar, check, check-circle, chevron-down, chevron-left, chevron-right, chevron-up, chevron-up-down, circle-stack, clock, cloud, cursor-arrow-rays, document, ellipsis-horizontal, ellipsis-vertical, exclamation-circle, folder, folder-open, funnel, globe-alt, inbox, information-circle, magnifying-glass, map-pin, minus, pencil-square, photo, plus, presentation-chart-line, printer, sparkles, squares-2x2, trash, view-columns, window, x-mark) — Icon key from the curated outline set.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 
 ### LanternUI.Components.IconButton
@@ -3084,7 +3095,10 @@ From `docs/recipes.md` (Block 8: confirm-destructive dialog plus empty/loading/e
 <:col :let={row} label="Item">
   <span class="lui-thumbnail-cell">
     <.thumbnail id={"item-#{row.id}-image"} src={row.image_url} alt={row.name} size="sm" />
-    <span>{row.name}</span>
+    <span class="lui-thumbnail-cell-text">
+      <.link navigate={row.path} title={row.name}>{row.name}</.link>
+      <span :if={row.set_name} class="lui-thumbnail-cell-sub">{row.set_name}</span>
+    </span>
   </span>
 </:col>
 ```
