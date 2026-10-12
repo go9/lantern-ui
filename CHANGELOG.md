@@ -12,6 +12,7 @@ All notable changes to this project are documented here. The format follows
 - `row_menu/1`: the standard data-table row menu, a ⋮ trigger named "Row actions" with a 40px hit target that keeps a 32px row footprint. `ellipsis-vertical` icon.
 - `:col` `hide_below` ("sm" 40rem, "md" 48rem, "lg" 64rem): drop a column when the table itself is narrower than the breakpoint.
 - `lui-thumbnail-cell-text` / `lui-thumbnail-cell-sub`: the row-thumbnail recipe stacks a title and subtitle beside a fixed thumbnail slot.
+- `time_series_chart` `variant={:hero}`: the headline chart look — full-bleed plot, no grid/axes/legend, a 2px line over a top-to-bottom gradient fill, a padded y-domain with run-off below the series, and a one-line value · date readout pinned above the plot. Single-series line/area charts keep the signed green/red split when no color is given.
 
 ### Fixed
 - Data-table overview stats no longer sit flush against the card edge and under the "Overview" header (the stats' negative margin assumed a padded body).

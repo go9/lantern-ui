@@ -705,6 +705,15 @@ defmodule LanternUI.Charts do
 
   attr(:aria_label, :string, default: "Time series chart", doc: "Accessible name for the SVG.")
 
+  attr(:variant, :atom,
+    default: :default,
+    values: [:default, :hero],
+    doc:
+      "`:hero` is the headline chart: full-bleed, no grid/axes/legend, a 2px line " <>
+        "over a gradient fill, a padded y-domain with run-off below the series, and a " <>
+        "one-line value · date readout pinned above the plot."
+  )
+
   attr(:value_format, :any,
     default: :number,
     doc: "`:number`, `:currency`, or a 1-arity number formatter."
@@ -716,7 +725,13 @@ defmodule LanternUI.Charts do
     ~H"""
     <div
       id={@id}
-      class={Class.merge(["lui-time-series-chart", @class])}
+      class={
+        Class.merge([
+          "lui-time-series-chart",
+          @variant == :hero && "lui-time-series-chart--hero",
+          @class
+        ])
+      }
       style={"--lui-chart-height:#{@height}px"}
       data-chart-type={@chart_type}
       data-orientation={@orientation}
@@ -777,8 +792,23 @@ defmodule LanternUI.Charts do
             {label}
           </text>
         </g>
-        <g :for={path <- @paths} class={path.class} style={"--lui-series-color:#{path.color}"}>
-          <path :if={path.fill != ""} d={path.fill} class="lui-time-series-chart__area" />
+        <g
+          :for={{path, path_index} <- Enum.with_index(@paths)}
+          class={path.class}
+          style={"--lui-series-color:#{path.color}"}
+        >
+          <defs :if={@variant == :hero and path.fill != ""}>
+            <linearGradient id={"#{@id}-hero-grad-#{path_index}"} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" style="stop-color:var(--lui-series-color);stop-opacity:0.34" />
+              <stop offset="1" style="stop-color:var(--lui-series-color);stop-opacity:0" />
+            </linearGradient>
+          </defs>
+          <path
+            :if={path.fill != ""}
+            d={path.fill}
+            class="lui-time-series-chart__area"
+            style={@variant == :hero && "fill:url(##{@id}-hero-grad-#{path_index})"}
+          />
           <path
             :if={path.line != ""}
             d={path.line}
@@ -1214,10 +1244,11 @@ defmodule LanternUI.Charts do
   end
 
   defp build_time_series_geometry(assigns, series, comparison, all_points, kind) do
-    plot_left = @margin.left
-    plot_right = assigns.width - @margin.right
-    plot_top = 18
-    plot_bottom = assigns.height - @margin.bottom
+    hero? = assigns.variant == :hero
+    plot_left = if hero?, do: 0, else: @margin.left
+    plot_right = if hero?, do: assigns.width, else: assigns.width - @margin.right
+    plot_top = if hero?, do: 8, else: 18
+    plot_bottom = if hero?, do: assigns.height, else: assigns.height - @margin.bottom
     primary_points = Enum.flat_map(series, & &1.points)
     interaction_series = series ++ comparison
     reference_specs = normalize_reference_lines(assigns.reference_lines, assigns.value_format)
@@ -1274,8 +1305,9 @@ defmodule LanternUI.Charts do
             5
           )
 
-    ymin = hd(ticks)
-    ymax = List.last(ticks)
+    {ymin, ymax} =
+      if hero?, do: hero_domain(raw_min, raw_max), else: {hd(ticks), List.last(ticks)}
+
     yf = fn y -> Geometry.scale(ymin, ymax, plot_bottom, plot_top, y) end
     numeric_x = fn value -> Geometry.scale(ymin, ymax, plot_left, plot_right, value) end
     zero_y = Geometry.round1(yf.(0))
@@ -1419,10 +1451,10 @@ defmodule LanternUI.Charts do
       zero_y: zero_y,
       zero_x: zero_x,
       markers: markers,
-      show_grid: assigns.grid,
-      show_axes: assigns.axes,
+      show_grid: assigns.grid and not hero?,
+      show_axes: assigns.axes and not hero?,
       legend:
-        series
+        if(hero?, do: [], else: series)
         |> Enum.with_index()
         |> Enum.map(fn {s, i} ->
           %{
@@ -1685,6 +1717,17 @@ defmodule LanternUI.Charts do
   end
 
   defp chart_domain_values(_series, _keys, _type, points), do: Enum.map(points, & &1.y)
+
+  # The hero y-domain: ~14% of the range padded above and below (at least 0.5),
+  # floored at zero unless the series itself goes negative, a span of at least
+  # 1, then the floor pushed 55% of that span lower so the gradient fill runs
+  # off the bottom of the plot instead of sitting on an axis.
+  defp hero_domain(raw_min, raw_max) do
+    pad = max((raw_max - raw_min) * 0.14, 0.5)
+    lo = if raw_min < 0, do: raw_min - pad, else: max(raw_min - pad, 0)
+    hi = max(raw_max + pad, lo + 1)
+    {lo - (hi - lo) * 0.55, hi}
+  end
 
   defp build_line_paths(assigns, series, axis_keys, xf, yf, curve, zero_y, area_baseline) do
     series
