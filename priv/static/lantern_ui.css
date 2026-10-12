@@ -1131,10 +1131,13 @@
   pointer-events: auto;
 }
 .lui-page-strip .lui-action-bar-notice { min-width: 0; }
-/* The actions keep their own width; the trail is what gives (its last crumb
-   ellipsizes). At min-width 0 the bar shrank below its buttons on a phone and
-   they overflowed back over a long page title. */
-.lui-page-strip .lui-action-bar:has(.lui-action-bar-actions) { min-width: min-content; }
+/* Keep room for what a narrow bar still shows (one promoted action and the
+   More menu) so the trail gives instead and its last crumb ellipsizes. The bar
+   is a size container, so its content cannot hold it open: at min-width 0 it
+   shrank under its buttons on a phone and they overflowed onto a long title. */
+.lui-page-strip .lui-action-bar:has(.lui-action-bar-actions) {
+  min-width: calc(2 * var(--lui-control-md-h) + 1.5rem);
+}
 .lui-page-strip :is(button, input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select, [role="tab"]) {
   min-height: var(--lui-control-md-h);
 }
@@ -5322,7 +5325,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-thumbnail-empty .lui-icon { width:var(--lui-control-icon-md); height:var(--lui-control-icon-md); }
 .lui-thumbnail-cell { display:inline-flex; align-items:center; gap:var(--lui-gap-12); vertical-align:middle; min-width:0; max-width:100%; }
 .lui-thumbnail-cell-text { display:flex; flex-direction:column; min-width:0; }
-.lui-thumbnail-cell-text > * { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere; }
+.lui-thumbnail-cell-text > * { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:break-word; }
 .lui-thumbnail-cell-sub { -webkit-line-clamp:1; color:var(--lantern-fg-muted); font-size:var(--lantern-text-sm); }
 .lui-thumbnail-fallback { display:none; }
 .lui-thumbnail[data-broken] { color:var(--lantern-fg-muted); cursor:default; }
