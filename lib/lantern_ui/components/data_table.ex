@@ -1081,7 +1081,10 @@ defmodule LanternUI.Components.DataTable do
   defp row_linked?(assigns, row), do: !!row_link(assigns, row) or assigns.row_click?
 
   defp row_click_attrs(%{row_click?: true, row_click: f}, row) do
-    [{"data-row-click", Jason.encode!(f.(row))}, {"tabindex", "0"}]
+    # A %JS{} renders as its encoded ops through Phoenix.HTML.Safe. Never
+    # Jason.encode! it: JS has no Jason.Encoder in apps on the built-in JSON
+    # library, and the row crashed the LiveView there.
+    [{"data-row-click", f.(row)}, {"tabindex", "0"}]
   end
 
   defp row_click_attrs(_assigns, _row), do: []
