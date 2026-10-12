@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- `list_row/1` `subtitle`: an optional muted second line under the title; the row grows to two lines (`data-lines="2"`).
 - `sortable/1` + `drop_zone/1` (`LanternUI.Components.Sortable`, `LanternSortable` hook): drag rows between lists of the same group (multi-select drags every `data-selected` row), drop on the landing area to append or between rows (`reorder`) to insert; pushes `%{ids, from, to, before_id}`. `drop_zone variant="target"` keeps the dashed drop shape with an accent border and fill.
 - `price_grid/1` row headers stay pinned while the grade columns scroll; set `--lui-price-grid-bg` to the surface behind the grid.
 - `price_cell/1`, `price_cell_group/1` and `price_grid/1` (`LanternUI.Components.PriceGrid`): priced, selectable permutation cells, a captioned wrapping row of them, and a rows x columns table (e.g. grading companies x grades). Selected cells take the accent fill and `aria-pressed="true"`.

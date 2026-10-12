@@ -4322,6 +4322,12 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-list-row-name {
   font-weight: 500;
 }
+/* Two-line row (`subtitle`): title line over a muted second line. */
+.lui-list-row[data-lines="2"] { height: auto; min-height: 3rem; padding-block: 0.375rem; }
+.lui-list-row[data-lines="2"] .lui-list-row-title { display: flex; flex-direction: column; }
+.lui-list-row-line,
+.lui-list-row-subtitle { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lui-list-row-subtitle { font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); }
 .lui-list-row-meta,
 .lui-list-row-trailing {
   display: inline-flex;

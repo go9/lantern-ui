@@ -28,6 +28,12 @@ defmodule LanternUI.Components.ListRow do
     doc: "Optional parent title rendered muted with a › before `title`."
   )
 
+  attr(:subtitle, :string,
+    default: nil,
+    doc:
+      "Optional second line under the title (e.g. kind · condition · id); the row grows to two lines."
+  )
+
   attr(:selected, :boolean, default: false, doc: "Selected/active row tint.")
   attr(:navigate, :string, default: nil, doc: "LiveView navigate target; whole row is a link.")
   attr(:patch, :string, default: nil, doc: "LiveView patch target; whole row is a link.")
@@ -46,6 +52,7 @@ defmodule LanternUI.Components.ListRow do
       :if={@link?}
       class={Class.merge(["lui-list-row", @class])}
       data-selected={@selected || nil}
+      data-lines={@subtitle && "2"}
       navigate={@navigate}
       patch={@patch}
       href={@href}
@@ -54,8 +61,13 @@ defmodule LanternUI.Components.ListRow do
       <span :if={@leading != []} class="lui-list-row-leading">{render_slot(@leading)}</span>
       <span :if={@identifier} class="lui-list-row-id">{@identifier}</span>
       <span class="lui-list-row-title">
-        <span :if={@parent} class="lui-list-row-parent">{@parent} ›</span>
-        <span class="lui-list-row-name">{@title}</span>
+        <span :if={!@subtitle && @parent} class="lui-list-row-parent">{@parent} ›</span>
+        <span :if={!@subtitle} class="lui-list-row-name">{@title}</span>
+        <span :if={@subtitle} class="lui-list-row-line">
+          <span :if={@parent} class="lui-list-row-parent">{@parent} ›</span>
+          <span class="lui-list-row-name">{@title}</span>
+        </span>
+        <span :if={@subtitle} class="lui-list-row-subtitle">{@subtitle}</span>
       </span>
       <span :if={@meta != []} class="lui-list-row-meta">{render_slot(@meta)}</span>
       <span :if={@trailing != []} class="lui-list-row-trailing">{render_slot(@trailing)}</span>
@@ -64,13 +76,19 @@ defmodule LanternUI.Components.ListRow do
       :if={!@link?}
       class={Class.merge(["lui-list-row", @class])}
       data-selected={@selected || nil}
+      data-lines={@subtitle && "2"}
       {@rest}
     >
       <span :if={@leading != []} class="lui-list-row-leading">{render_slot(@leading)}</span>
       <span :if={@identifier} class="lui-list-row-id">{@identifier}</span>
       <span class="lui-list-row-title">
-        <span :if={@parent} class="lui-list-row-parent">{@parent} ›</span>
-        <span class="lui-list-row-name">{@title}</span>
+        <span :if={!@subtitle && @parent} class="lui-list-row-parent">{@parent} ›</span>
+        <span :if={!@subtitle} class="lui-list-row-name">{@title}</span>
+        <span :if={@subtitle} class="lui-list-row-line">
+          <span :if={@parent} class="lui-list-row-parent">{@parent} ›</span>
+          <span class="lui-list-row-name">{@title}</span>
+        </span>
+        <span :if={@subtitle} class="lui-list-row-subtitle">{@subtitle}</span>
       </span>
       <span :if={@meta != []} class="lui-list-row-meta">{render_slot(@meta)}</span>
       <span :if={@trailing != []} class="lui-list-row-trailing">{render_slot(@trailing)}</span>

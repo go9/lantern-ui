@@ -50,4 +50,26 @@ defmodule LanternUI.SortableTest do
   test "the module is registered, so `use LanternUI` imports sortable/1 and drop_zone/1" do
     assert LanternUI.__components__()[:sortable] == Sortable
   end
+
+  test "list_row subtitle renders a second line and a draggable row passes through" do
+    html =
+      render(fn assigns ->
+        ~H"""
+        <LanternUI.Components.ListRow.list_row
+          title="Splinter Cell"
+          subtitle="Xbox · Good · ITM-1"
+          data-part="item"
+          data-id="7"
+          draggable="true"
+        />
+        <LanternUI.Components.ListRow.list_row title="Plain" />
+        """
+      end)
+
+    assert html =~ ~s(data-lines="2")
+    assert html =~ ~s(<span class="lui-list-row-subtitle">Xbox · Good · ITM-1</span>)
+    assert html =~ ~s(draggable="true")
+    assert html =~ ~s(<span class="lui-list-row-name">Plain</span>)
+    assert length(String.split(html, "data-lines")) == 2
+  end
 end

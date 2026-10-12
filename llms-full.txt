@@ -1245,6 +1245,7 @@ Dense issue/inbox row: leading glyph · muted mono id · truncating title · met
 - `patch` (:string) — LiveView patch target; whole row is a link.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `selected` (:boolean, default false) — Selected/active row tint.
+- `subtitle` (:string) — Optional second line under the title (e.g.
 - `title` (:string, required) — Primary line; truncated.
 Slots:
 - `:leading` — Leading glyph (status/priority/kind).
