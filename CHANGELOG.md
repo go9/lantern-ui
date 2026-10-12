@@ -19,6 +19,7 @@ All notable changes to this project are documented here. The format follows
 - The table empty state renders outside the horizontal scroll area, so it centres on the visible width on a phone.
 - `:row_action` renders on each card in cards view, as it already did in list view.
 - A thumbnail whose image fails to load shows the same placeholder as a missing image, and opens no preview.
+- `data_table` `row_click` no longer crashes the LiveView in apps whose JSON library is not Jason: the command renders through `Phoenix.HTML.Safe` instead of `Jason.encode!`.
 - Page strip: the actions keep room for one action and the More menu, so a long last crumb ellipsizes instead of running under the buttons on a phone.
 - Show one chart-card empty message/action in place of its value, chart, and footer; keep time-series data tables screen-reader accessible without a visible disclosure by default. Add caller-controlled `baseline`/`y_min` and single-point line markers.
 - Highlight the hovered bar without a vertical crosshair in bar, grouped bar, and stacked bar charts, including horizontal orientation; replace distorted SVG tooltip text with a clamped, token-styled HTML overlay.

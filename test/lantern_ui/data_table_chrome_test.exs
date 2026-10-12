@@ -829,6 +829,8 @@ defmodule LanternUI.DataTableChromeTest do
 
       assert html =~ ~s(phx-hook="LanternRowClick")
       assert html =~ "data-row-click="
+      assert html =~ ~s(&quot;push&quot;)
+      assert html =~ ~s(&quot;open&quot;)
       assert html =~ ~s(tabindex="0")
       assert html =~ "lui-row-linked"
       refute html =~ "lui-row-link\""
