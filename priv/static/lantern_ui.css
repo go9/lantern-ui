@@ -3021,7 +3021,16 @@
   white-space: nowrap;
 }
 .lui-price-grid th[scope="col"] { text-align: center; }
-.lui-price-grid th[scope="row"] { text-align: left; padding-right: 0.25rem; }
+/* Row headers stay put while the grades scroll (the app's fixed company column). */
+.lui-price-grid th[scope="row"] {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  text-align: left;
+  padding-right: 0.25rem;
+  background: var(--lui-price-grid-bg, var(--lantern-surface));
+  box-shadow: 0.3125rem 0 0 var(--lui-price-grid-bg, var(--lantern-surface));
+}
 .lui-price-grid td { padding: 0; }
 @media (prefers-reduced-motion: reduce) { .lui-price-cell { transition: none; } }
 

@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- `price_grid/1` row headers stay pinned while the grade columns scroll; set `--lui-price-grid-bg` to the surface behind the grid.
 - `price_cell/1`, `price_cell_group/1` and `price_grid/1` (`LanternUI.Components.PriceGrid`): priced, selectable permutation cells, a captioned wrapping row of them, and a rows x columns table (e.g. grading companies x grades). Selected cells take the accent fill and `aria-pressed="true"`.
 
 ### Fixed
