@@ -225,6 +225,89 @@ defmodule LanternUI.ChartsTest do
       assert line_html =~ ~s(stroke-width="1.75")
     end
 
+    test "variant: :hero is full-bleed with a gradient fill and no grid, axes or legend" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "hero",
+          variant: :hero,
+          type: :area,
+          curve: :monotone,
+          width: 600,
+          height: 300,
+          series: [
+            %{
+              id: :value,
+              label: "Collection",
+              color: "var(--lantern-success)",
+              points: [%{x: ~D[2026-01-01], y: 100}, %{x: ~D[2026-02-01], y: 160}]
+            }
+          ]
+        )
+
+      assert html =~ "lui-time-series-chart--hero"
+      assert html =~ ~s(id="hero-hero-grad-0")
+      assert html =~ "fill:url(#hero-hero-grad-0)"
+      refute html =~ "lui-time-series-chart__grid"
+      refute html =~ "lui-time-series-chart__y-tick"
+      refute html =~ "lui-time-series-chart__legend-item"
+      # Full bleed: the plot spans the whole viewBox and the crosshair starts at x=0.
+      assert html =~ ~s(data-plot-left="0")
+      assert html =~ ~s(data-plot-right="600")
+    end
+
+    test "hero draws no zero rule for a non-negative series and bridges a series' gaps" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "hero-gap",
+          variant: :hero,
+          type: :area,
+          series: [
+            %{
+              id: :a,
+              label: "a",
+              points: [
+                %{x: ~D[2026-01-01], y: 1},
+                %{x: ~D[2026-01-02], y: 2},
+                %{x: ~D[2026-01-03], y: 3}
+              ]
+            },
+            %{
+              id: :b,
+              label: "b",
+              points: [%{x: ~D[2026-01-01], y: 5}, %{x: ~D[2026-01-03], y: 6}]
+            }
+          ]
+        )
+
+      refute html =~ "lui-time-series-chart__zero"
+      # Series b skips Jan 2 but is still one line, not two glyphs.
+      refute html =~ ~s(class="lui-time-series-chart__point")
+    end
+
+    test "hero domain pads the range, floors at zero and runs off below the series" do
+      # 100..160: pad 8.4 → lo 91.6, hi 168.4, span 76.8 → floor 91.6 - 42.24 = 49.36.
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "hero-domain",
+          variant: :hero,
+          type: :area,
+          width: 600,
+          height: 300,
+          series: [
+            %{
+              id: :v,
+              label: "v",
+              points: [%{x: ~D[2026-01-01], y: 100}, %{x: ~D[2026-02-01], y: 160}]
+            }
+          ]
+        )
+
+      # The first point (y=100) maps to 8 + (1 - (100 - 49.36) / 119.04) * 292 ≈ 175.8;
+      # the last (y=160) to ≈ 28.6 — neither touches the top inset nor the bottom.
+      assert html =~ "175.8"
+      assert html =~ "28.6"
+    end
+
     test "renders the additive series-first contract with a signed zero axis" do
       html =
         render_component(&LanternUI.Charts.time_series_chart/1,
