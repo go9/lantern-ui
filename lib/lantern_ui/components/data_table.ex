@@ -50,6 +50,7 @@ defmodule LanternUI.Components.DataTable do
   alias LanternUI.Class
   alias LanternUI.Components.Button
   alias LanternUI.Components.Checkbox
+  alias LanternUI.Components.Dropdown
   alias LanternUI.Components.EmptyState
   alias LanternUI.Components.Icon
   alias LanternUI.Components.Badge
@@ -296,6 +297,11 @@ defmodule LanternUI.Components.DataTable do
     attr(:sortable, :boolean, doc: "Enable sort patch links on the header.")
     attr(:class, :any, doc: "Extra classes on the header cell.")
     attr(:td_class, :any, doc: "Extra classes on body cells for this column.")
+
+    attr(:hide_below, :string,
+      doc:
+        ~s|Drop the column when the table is narrower than "sm" (40rem), "md" (48rem) or "lg" (64rem).|
+    )
   end
 
   slot :bulk_action, doc: "Action shown in the bulk bar when rows are selected." do
@@ -893,7 +899,14 @@ defmodule LanternUI.Components.DataTable do
             <EmptyState.empty_state icon="inbox" title="Nothing here yet" />
           <% end %>
         <% else %>
-          <div :for={row <- @rows} class="lui-dt-card">{render_slot(@card, row)}</div>
+          <div :for={row <- @rows} class="lui-dt-card">
+            <%= if @row_action != [] do %>
+              <div class="lui-dt-card-main">{render_slot(@card, row)}</div>
+              <div class="lui-dt-card-actions">{render_slot(@row_action, row)}</div>
+            <% else %>
+              {render_slot(@card, row)}
+            <% end %>
+          </div>
         <% end %>
       </div>
 
@@ -948,6 +961,7 @@ defmodule LanternUI.Components.DataTable do
                 class={Class.merge(["lui-th", col[:class]])}
                 data-column-key={column_key(col, index)}
                 data-column-label={col[:label] || column_key(col, index)}
+                data-hide-below={col[:hide_below]}
                 scope="col"
                 aria-sort={col[:sortable] && col[:field] && sort_direction(@meta, col.field)}
               >
@@ -965,15 +979,6 @@ defmodule LanternUI.Components.DataTable do
             </tr>
           </thead>
           <tbody class="lui-tbody">
-            <tr :if={@rows == []}>
-              <td class="lui-td lui-td-empty" colspan={colspan(assigns)}>
-                <%= if @empty != [] do %>
-                  {render_slot(@empty)}
-                <% else %>
-                  <EmptyState.empty_state icon="inbox" title="Nothing here yet" />
-                <% end %>
-              </td>
-            </tr>
             <tr
               :for={row <- @rows}
               class={
@@ -999,6 +1004,7 @@ defmodule LanternUI.Components.DataTable do
               <td
                 :for={{col, i} <- Enum.with_index(@col)}
                 data-column-key={column_key(col, i)}
+                data-hide-below={col[:hide_below]}
                 id={i == 0 && row_link(assigns, row) && "#{@id}-row-#{@row_id_fn.(row)}-main"}
                 class={Class.merge(["lui-td", col[:td_class]])}
               >
@@ -1015,6 +1021,20 @@ defmodule LanternUI.Components.DataTable do
             </tr>
           </tbody>
         </table>
+      </div>
+      <%!-- Outside the scrolling wrap so it centres on the visible width, not on
+            the full width of a table that is wider than the screen. --%>
+      <div
+        :if={
+          @rows == [] && !(@card != [] && @view == "cards") && !(@list_item != [] && @view == "list")
+        }
+        class="lui-dt-empty"
+      >
+        <%= if @empty != [] do %>
+          {render_slot(@empty)}
+        <% else %>
+          <EmptyState.empty_state icon="inbox" title="Nothing here yet" />
+        <% end %>
       </div>
 
       <%!-- Shown whenever there are rows, not only when there is more than one
@@ -1081,14 +1101,37 @@ defmodule LanternUI.Components.DataTable do
     """
   end
 
-  defp colspan(assigns) do
-    length(assigns.col) + if(assigns.show_checkboxes, do: 1, else: 0) +
-      if(assigns.row_action != [], do: 1, else: 0)
-  end
-
   # ── URL builders ──────────────────────────────────────────────────────────
   # Start from meta.params (the current query string, incl. filters) and layer
   # page/order keys on top — the baseline admin_table's exact behavior.
+
+  @doc """
+  The standard per-row menu for a `:row_action` slot: a ⋮ trigger with an
+  accessible name and a 40px hit target, opening a dropdown of the given items.
+
+      <:row_action :let={row}>
+        <.row_menu id={"row-menu-\#{row.id}"}>
+          <.dropdown_button phx-click="edit" phx-value-id={row.id}>Edit</.dropdown_button>
+        </.row_menu>
+      </:row_action>
+  """
+  attr(:id, :string, required: true, doc: "Stable DOM id for the dropdown.")
+  attr(:label, :string, default: "Row actions", doc: "Accessible name of the trigger.")
+  attr(:class, :any, default: nil, doc: "Classes for the menu panel.")
+  slot(:inner_block, required: true, doc: "Menu items.")
+
+  def row_menu(assigns) do
+    ~H"""
+    <Dropdown.dropdown id={@id} placement="bottom-end" class={@class}>
+      <:toggle>
+        <Button.button variant="ghost" size="sm" label={@label} class="lui-row-menu-trigger">
+          <Icon.icon name="ellipsis-vertical" />
+        </Button.button>
+      </:toggle>
+      {render_slot(@inner_block)}
+    </Dropdown.dropdown>
+    """
+  end
 
   @doc false
   def page_path(path, meta, page_params) do

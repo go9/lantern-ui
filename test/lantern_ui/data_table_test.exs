@@ -167,11 +167,11 @@ defmodule LanternUI.DataTableTest do
     refute html =~ "lui-dt-bulkbar"
   end
 
-  test "empty slot renders across full colspan" do
+  test "empty slot renders outside the scrolling table wrap" do
     html = render(&table/1, %{rows: [], meta: @meta, selected: MapSet.new()})
-    assert html =~ "NOTHING"
-    # 2 cols + checkbox + row_action = 4
-    assert html =~ ~s(colspan="4")
+    doc = Floki.parse_fragment!(html)
+    assert doc |> Floki.find(".lui-dt-empty") |> Floki.text() =~ "NOTHING"
+    refute doc |> Floki.find(".lui-table-wrap") |> Floki.text() =~ "NOTHING"
   end
 
   test "sort_path toggles and resets direction" do
@@ -647,5 +647,52 @@ defmodule LanternUI.DataTableTest do
                ~s(href="/orders?filters[0][field]=status&amp;filters[0][value]=active) <>
                  ~s(&amp;filters[1][field]=search&amp;filters[1][value]=ada")
     end
+  end
+
+  defp cards_actions_table(assigns) do
+    ~H"""
+    <DataTable.data_table id="cards" rows={@rows} meta={@meta} path="/orders" view="cards">
+      <:col :let={r} label="Name" hide_below="md">{r.name}</:col>
+      <:card :let={r}>CARD-{r.name}</:card>
+      <:row_action :let={r}>ACT-{r.id}</:row_action>
+    </DataTable.data_table>
+    """
+  end
+
+  test ":row_action renders on each card, beside the card content" do
+    html = render(&cards_actions_table/1, %{rows: rows(), meta: @meta})
+    cards = html |> Floki.parse_fragment!() |> Floki.find(".lui-dt-card")
+    assert length(cards) == 2
+    assert Floki.find(cards, ".lui-dt-card-main") |> Floki.text() =~ "CARD-Ada"
+    assert Floki.find(cards, ".lui-dt-card-actions") |> Floki.text() =~ "ACT-1"
+  end
+
+  test "hide_below marks the column's header and body cells" do
+    html = render(&hide_table/1, %{rows: rows(), meta: @meta})
+    doc = Floki.parse_fragment!(html)
+    assert doc |> Floki.find(~s(th[data-hide-below="md"])) |> length() == 1
+    assert doc |> Floki.find(~s(td[data-hide-below="md"])) |> length() == 2
+    assert doc |> Floki.find("[data-hide-below]") |> length() == 3
+  end
+
+  defp hide_table(assigns) do
+    ~H"""
+    <DataTable.data_table id="t" rows={@rows} meta={@meta} path="/orders">
+      <:col :let={r} label="Name">{r.name}</:col>
+      <:col :let={r} label="ID" hide_below="md">{r.id}</:col>
+    </DataTable.data_table>
+    """
+  end
+
+  defp row_menu_fixture(assigns) do
+    ~H"""
+    <DataTable.row_menu id="m1"><button>Edit</button></DataTable.row_menu>
+    """
+  end
+
+  test "row_menu trigger has an accessible name and the 40px target class" do
+    html = render(&row_menu_fixture/1, %{})
+    [trigger] = html |> Floki.parse_fragment!() |> Floki.find("button.lui-row-menu-trigger")
+    assert Floki.attribute(trigger, "aria-label") == ["Row actions"]
   end
 end

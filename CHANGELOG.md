@@ -9,8 +9,16 @@ All notable changes to this project are documented here. The format follows
 ### Added
 - `price_grid/1` row headers stay pinned while the grade columns scroll; set `--lui-price-grid-bg` to the surface behind the grid.
 - `price_cell/1`, `price_cell_group/1` and `price_grid/1` (`LanternUI.Components.PriceGrid`): priced, selectable permutation cells, a captioned wrapping row of them, and a rows x columns table (e.g. grading companies x grades). Selected cells take the accent fill and `aria-pressed="true"`.
+- `row_menu/1`: the standard data-table row menu, a ⋮ trigger named "Row actions" with a 40px hit target that keeps a 32px row footprint. `ellipsis-vertical` icon.
+- `:col` `hide_below` ("sm" 40rem, "md" 48rem, "lg" 64rem): drop a column when the table itself is narrower than the breakpoint.
+- `lui-thumbnail-cell-text` / `lui-thumbnail-cell-sub`: the row-thumbnail recipe stacks a title and subtitle beside a fixed thumbnail slot.
 
 ### Fixed
+- Data-table overview stats no longer sit flush against the card edge and under the "Overview" header (the stats' negative margin assumed a padded body).
+- Tables wider than their container fade the edge that hides more columns (scroll-driven; no fade when the table fits).
+- The table empty state renders outside the horizontal scroll area, so it centres on the visible width on a phone.
+- `:row_action` renders on each card in cards view, as it already did in list view.
+- A thumbnail whose image fails to load shows the same placeholder as a missing image, and opens no preview.
 - Show one chart-card empty message/action in place of its value, chart, and footer; keep time-series data tables screen-reader accessible without a visible disclosure by default. Add caller-controlled `baseline`/`y_min` and single-point line markers.
 - Highlight the hovered bar without a vertical crosshair in bar, grouped bar, and stacked bar charts, including horizontal orientation; replace distorted SVG tooltip text with a clamped, token-styled HTML overlay.
 - Fit time-series plots to measured container width at a fixed requested height, preserve native text size during resize, and skip colliding axis ticks.

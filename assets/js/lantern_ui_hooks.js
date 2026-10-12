@@ -3758,13 +3758,23 @@ const LanternThumbnail = {
     this.el.addEventListener("keydown", this.onKey)
     this.el.ownerDocument.defaultView.addEventListener("scroll", this.onPosition, true)
     this.el.ownerDocument.defaultView.addEventListener("resize", this.onPosition)
+    // A source that fails to load shows the same placeholder as a missing one.
+    this.onError = () => { this.brokenSrc = this.el.dataset.previewSrc; this.markBroken() }
+    this.img = this.el.querySelector("img")
+    this.img?.addEventListener("error", this.onError)
+    if (this.img && this.img.complete && this.img.naturalWidth === 0) this.onError()
   },
   updated() {
     if (this.preview) this.preview.querySelector("img").src = this.el.dataset.previewSrc || ""
+    this.markBroken()
     this.positionPreview()
   },
+  markBroken() {
+    const broken = this.brokenSrc != null && this.brokenSrc === this.el.dataset.previewSrc
+    this.el.toggleAttribute("data-broken", broken)
+  },
   showPreview() {
-    if (!this.el.dataset.previewSrc) return
+    if (!this.el.dataset.previewSrc || this.el.hasAttribute("data-broken")) return
     if (!this.preview) {
       this.preview = this.el.ownerDocument.createElement("div")
       this.preview.className = "lui-thumbnail-preview"
@@ -3805,6 +3815,7 @@ const LanternThumbnail = {
     this.el.removeEventListener("keydown", this.onKey)
     this.el.ownerDocument.defaultView.removeEventListener("scroll", this.onPosition, true)
     this.el.ownerDocument.defaultView.removeEventListener("resize", this.onPosition)
+    this.img?.removeEventListener("error", this.onError)
   },
 }
 

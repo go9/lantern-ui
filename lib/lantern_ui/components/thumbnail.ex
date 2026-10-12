@@ -30,6 +30,7 @@ defmodule LanternUI.Components.Thumbnail do
       phx-hook="LanternThumbnail"
     >
       <img src={@src} alt="" loading="lazy" />
+      <Icon.icon name="photo" class="lui-thumbnail-fallback" />
     </button>
     <span
       :if={!@src}
