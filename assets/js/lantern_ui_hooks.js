@@ -3820,6 +3820,103 @@ const LanternThumbnail = {
   },
 }
 
+
+// Drag-and-drop between lists (LanternUI.Components.Sortable). Native HTML5
+// drag events; the hook only reports where things were dropped and the server
+// owns the order. One drag at a time, so the payload lives at module scope.
+let sortableDrag = null
+
+const LanternSortable = {
+  mounted() {
+    const el = this.el
+    const items = () => [...el.querySelectorAll('[data-part="item"]')]
+    const clear = () => {
+      el.removeAttribute("data-drop-active")
+      el.querySelectorAll("[data-drop]").forEach((n) => n.removeAttribute("data-drop"))
+    }
+
+    // Where a drop at clientY lands: { zone } for the landing area / empty
+    // space, or { row, before } for a gap between rows (reorder lists only).
+    this.locate = (e) => {
+      if (e.target.closest('[data-part="drop-zone"]')) return { zone: true }
+      const row = e.target.closest('[data-part="item"]')
+      if (!row || !el.hasAttribute("data-reorder")) return { zone: true }
+      const box = row.getBoundingClientRect()
+      return { row, before: e.clientY < box.top + box.height / 2 }
+    }
+
+    this.onDragStart = (e) => {
+      const row = e.target.closest('[data-part="item"]')
+      if (!row || !el.contains(row)) return
+      const group = el.dataset.group
+      let rows = [row]
+      if (row.hasAttribute("data-selected")) {
+        rows = [...document.querySelectorAll(`[phx-hook="LanternSortable"][data-group="${group}"] [data-part="item"][data-selected]`)]
+      }
+      sortableDrag = { group, from: el.dataset.key, ids: rows.map((r) => r.dataset.id) }
+      rows.forEach((r) => r.setAttribute("data-dragging", ""))
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = "move"
+        e.dataTransfer.setData("text/plain", sortableDrag.ids.join(","))
+      }
+    }
+
+    this.onDragOver = (e) => {
+      if (!sortableDrag || sortableDrag.group !== el.dataset.group) return
+      e.preventDefault()
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "move"
+      clear()
+      const spot = this.locate(e)
+      if (spot.zone) el.setAttribute("data-drop-active", "")
+      else spot.row.setAttribute("data-drop", spot.before ? "before" : "after")
+    }
+
+    this.onDragLeave = (e) => {
+      if (!el.contains(e.relatedTarget)) clear()
+    }
+
+    this.onDrop = (e) => {
+      if (!sortableDrag || sortableDrag.group !== el.dataset.group) return
+      e.preventDefault()
+      const spot = this.locate(e)
+      let beforeId = null
+      if (!spot.zone) {
+        const list = items()
+        const at = list.indexOf(spot.row) + (spot.before ? 0 : 1)
+        // Skip the dragged rows themselves: "before me" means before the next row that stays.
+        const next = list.slice(at).find((r) => !sortableDrag.ids.includes(r.dataset.id))
+        beforeId = next ? next.dataset.id : null
+      }
+      const payload = { ids: sortableDrag.ids, from: sortableDrag.from, to: el.dataset.key, before_id: beforeId }
+      const target = el.getAttribute("phx-target")
+      if (target) this.pushEventTo(target, el.dataset.event, payload)
+      else this.pushEvent(el.dataset.event, payload)
+      clear()
+    }
+
+    this.onDragEnd = () => {
+      sortableDrag = null
+      document.querySelectorAll("[data-dragging]").forEach((n) => n.removeAttribute("data-dragging"))
+      clear()
+    }
+
+    el.addEventListener("dragstart", this.onDragStart)
+    el.addEventListener("dragover", this.onDragOver)
+    el.addEventListener("dragleave", this.onDragLeave)
+    el.addEventListener("drop", this.onDrop)
+    el.addEventListener("dragend", this.onDragEnd)
+  },
+
+  destroyed() {
+    if (!this.onDragStart) return
+    this.el.removeEventListener("dragstart", this.onDragStart)
+    this.el.removeEventListener("dragover", this.onDragOver)
+    this.el.removeEventListener("dragleave", this.onDragLeave)
+    this.el.removeEventListener("drop", this.onDrop)
+    this.el.removeEventListener("dragend", this.onDragEnd)
+  },
+}
+
 export const Hooks = {
   ChartHover,
   LineHover,
@@ -3850,6 +3947,7 @@ export const Hooks = {
   LanternMediaTile,
   LanternThumbnail,
   LanternTheme,
+  LanternSortable,
 }
 export {
   ChartHover,
@@ -3881,6 +3979,7 @@ export {
   LanternMediaTile,
   LanternThumbnail,
   LanternTheme,
+  LanternSortable,
 }
 export default Hooks
 

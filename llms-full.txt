@@ -1245,6 +1245,7 @@ Dense issue/inbox row: leading glyph · muted mono id · truncating title · met
 - `patch` (:string) — LiveView patch target; whole row is a link.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `selected` (:boolean, default false) — Selected/active row tint.
+- `subtitle` (:string) — Optional second line under the title (e.g.
 - `title` (:string, required) — Primary line; truncated.
 Slots:
 - `:leading` — Leading glyph (status/priority/kind).
@@ -1933,6 +1934,35 @@ Slider — a single-thumb range input built on the WAI-ARIA APG slider pattern.
 - `sublabel` (:string) — Secondary label line under the primary label.
 - `value` (:any) — Current value; clamped to min..max, defaults to min.
 - `value_text` (:string) — Template for `aria-valuetext`; `{value}` interpolates, e.g.
+
+### LanternUI.Components.Sortable
+
+Drag-and-drop between lists (board columns, bins, groups) and the landing area at the top of each list.
+
+#### `drop_zone/1`
+
+The landing area of a `sortable/1` list: dropping here adds to the end.
+
+- `class` (:any) — 
+- `rest` (:global) — 
+- `variant` (:string, values: default, target, default "default") — 
+Slots:
+- `:action` — Optional trailing control, e.g.
+- `:inner_block` (required) — Label, e.g.
+
+#### `sortable/1`
+
+Drag-and-drop between lists (board columns, bins, groups) and the landing area at the top of each list.
+
+- `class` (:any) — 
+- `event` (:string, default "sortable:drop") — LiveView event pushed on drop.
+- `group` (:string, default "default") — Only lists with the same group exchange items.
+- `id` (:string, required) — Stable hook root id.
+- `key` (:string, required) — Sent as `to` (and `from` on drags out of this list).
+- `reorder` (:boolean, default false) — Allow drops between rows (`before_id`).
+- `rest` (:global) — 
+Slots:
+- `:inner_block` (required) —
 
 ### LanternUI.Components.Stat
 
