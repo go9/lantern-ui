@@ -1311,7 +1311,10 @@ defmodule LanternUI.Charts do
     yf = fn y -> Geometry.scale(ymin, ymax, plot_bottom, plot_top, y) end
     numeric_x = fn value -> Geometry.scale(ymin, ymax, plot_left, plot_right, value) end
     zero_y = Geometry.round1(yf.(0))
-    zero_line_y = if ymin <= 0 and ymax >= 0, do: zero_y, else: nil
+    # The hero plot has no axes: a series that never goes negative gets no zero
+    # rule, so its fill runs off the bottom of the plot like the app's.
+    zero_line_y =
+      if ymin <= 0 and ymax >= 0 and not (hero? and raw_min >= 0), do: zero_y, else: nil
 
     curve =
       if assigns.curve in [:linear, :monotone, :step, :cardinal], do: assigns.curve, else: :linear
@@ -1744,7 +1747,13 @@ defmodule LanternUI.Charts do
             :error -> nil
           end
         end)
-        |> split_point_runs()
+        |> then(fn points ->
+          # Hero: one line through the recorded days; a gap in one series never
+          # breaks it into dots because another series has that day.
+          if assigns.variant == :hero,
+            do: [Enum.reject(points, &is_nil/1)],
+            else: split_point_runs(points)
+        end)
 
       color =
         item.color ||

@@ -255,6 +255,35 @@ defmodule LanternUI.ChartsTest do
       assert html =~ ~s(data-plot-right="600")
     end
 
+    test "hero draws no zero rule for a non-negative series and bridges a series' gaps" do
+      html =
+        render_component(&LanternUI.Charts.time_series_chart/1,
+          id: "hero-gap",
+          variant: :hero,
+          type: :area,
+          series: [
+            %{
+              id: :a,
+              label: "a",
+              points: [
+                %{x: ~D[2026-01-01], y: 1},
+                %{x: ~D[2026-01-02], y: 2},
+                %{x: ~D[2026-01-03], y: 3}
+              ]
+            },
+            %{
+              id: :b,
+              label: "b",
+              points: [%{x: ~D[2026-01-01], y: 5}, %{x: ~D[2026-01-03], y: 6}]
+            }
+          ]
+        )
+
+      refute html =~ "lui-time-series-chart__zero"
+      # Series b skips Jan 2 but is still one line, not two glyphs.
+      refute html =~ ~s(class="lui-time-series-chart__point")
+    end
+
     test "hero domain pads the range, floors at zero and runs off below the series" do
       # 100..160: pad 8.4 → lo 91.6, hi 168.4, span 76.8 → floor 91.6 - 42.24 = 49.36.
       html =
