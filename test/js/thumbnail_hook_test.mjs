@@ -30,3 +30,13 @@ test("the broken mark survives a server patch of the same source and clears on a
   assert.equal(m.el.hasAttribute("data-broken"), false)
   m.unmount()
 })
+
+test("an image swapped in by a patch is still watched", () => {
+  const m = mountHook(hooks.LanternThumbnail, html("https://x.test/a.png"), { rootId: "th" })
+  m.el.dataset.previewSrc = "https://x.test/b.png"
+  m.el.innerHTML = '<img src="https://x.test/b.png" alt="">'
+  m.hook.updated()
+  m.el.querySelector("img").dispatchEvent(new m.window.Event("error"))
+  assert.equal(m.el.hasAttribute("data-broken"), true)
+  m.unmount()
+})
