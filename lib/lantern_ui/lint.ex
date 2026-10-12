@@ -625,7 +625,7 @@ defmodule LanternUI.Lint do
       [_, "15"] -> "use text-subhead (15px)"
       [_, "17"] -> "use text-headline (17px)"
       [_, "38"] -> "use text-display (38px)"
-      _ -> "use text-meta, text-caption, text-mono-meta, or the app scale (micro, footnote, subhead, headline, display)"
+      _ -> "use a lantern text-* size (docs/scale.md)"
     end
   end
 
