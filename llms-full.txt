@@ -1579,6 +1579,46 @@ Slots:
 - `:content` (required) — Panel content.
 - `:inner_block` (required) — The trigger element.
 
+### LanternUI.Components.PriceGrid
+
+Priced, selectable permutation cells: the price matrix a holding picks its condition, grade or contents from.
+
+#### `price_cell/1`
+
+Renders one priced, selectable cell.
+
+- `class` (:any) — Extra classes merged onto the cell.
+- `disabled` (:boolean, default false) — Not pickable.
+- `label` (:string, required) — Permutation name (condition, grade, contents).
+- `price` (:string) — Formatted price; nil renders an em dash.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `selected` (:boolean, default false) — The picked permutation (accent fill).
+- `show_price` (:boolean, default true) — Hide the price line (e.g.
+
+#### `price_cell_group/1`
+
+Renders a captioned, wrapping row of price cells.
+
+- `class` (:any) — Extra classes merged onto the group.
+- `label` (:string) — Caption above the row; also the group's name.
+- `rest` (:global) — Arbitrary HTML attributes passed through.
+Slots:
+- `:inner_block` (required) — The `price_cell/1`s.
+
+#### `price_grid/1`
+
+Renders a rows x columns table of price cells.
+
+- `cells` (:map, required) — `%{{row_key, column_key} => %{price, disabled?}}`; a missing key is an empty slot.
+- `class` (:any) — Extra classes merged onto the wrapper.
+- `columns` (:list, required) — Column headers: `%{key, label}` (e.g.
+- `label` (:string) — Caption above the grid; also the table's name.
+- `on_pick` (:any) — `phx-click` for every cell; sends `row` and `column` as phx-values.
+- `rest` (:global) — Arbitrary HTML attributes passed through.
+- `rows` (:list, required) — Row headers: `%{key, label}` (e.g.
+- `selected` (:any) — `{row_key, column_key}` of the picked cell.
+- `target` (:any) — `phx-target` for the pick event.
+
 ### LanternUI.Components.Progress
 
 Progress bar or completion ring.

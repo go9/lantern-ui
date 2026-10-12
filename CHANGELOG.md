@@ -6,6 +6,9 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- `price_cell/1`, `price_cell_group/1` and `price_grid/1` (`LanternUI.Components.PriceGrid`): priced, selectable permutation cells, a captioned wrapping row of them, and a rows x columns table (e.g. grading companies x grades). Selected cells take the accent fill and `aria-pressed="true"`.
+
 ### Fixed
 - Show one chart-card empty message/action in place of its value, chart, and footer; keep time-series data tables screen-reader accessible without a visible disclosure by default. Add caller-controlled `baseline`/`y_min` and single-point line markers.
 - Highlight the hovered bar without a vertical crosshair in bar, grouped bar, and stacked bar charts, including horizontal orientation; replace distorted SVG tooltip text with a clamped, token-styled HTML overlay.
