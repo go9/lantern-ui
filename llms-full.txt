@@ -599,6 +599,7 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 - `load_view_label` (:string, default "Load saved view") — Label for opening saved views.
 - `meta` (:map, required) — Flop.Meta (or same-shaped map)
 - `page_size_options` (:list, default [10, 25, 50, 100]) — Choices for the page-size control.
+- `pagination` (:boolean, default true) — Render the pagination bar.
 - `path` (:string, required) — base path for sort/pagination patches
 - `quick_filters_label` (:string, default "Quick filters") — Accessible label for the quick filter tabs.
 - `reset_label` (:string, default "Reset") — Label for resetting filter controls.

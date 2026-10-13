@@ -40,6 +40,26 @@ defmodule LanternUI.DataTableTest do
     """
   end
 
+  test "pagination={false} drops the pagination bar, keeping the rows" do
+    html =
+      render(
+        fn assigns ->
+          ~H"""
+          <DataTable.data_table id="t" rows={@rows} meta={@meta} path="/orders" pagination={false}>
+            <:col :let={r} label="Name">{r.name}</:col>
+          </DataTable.data_table>
+          """
+        end,
+        %{rows: rows(), meta: @meta}
+      )
+
+    assert html =~ "Ada"
+    refute html =~ "t-pagination"
+
+    assert render(&table/1, %{rows: rows(), meta: @meta, selected: MapSet.new()}) =~
+             "t-pagination"
+  end
+
   test "renders title, sortable header, rows, row actions, pagination" do
     html = render(&table/1, %{rows: rows(), meta: @meta, selected: MapSet.new()})
 
