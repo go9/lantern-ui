@@ -446,6 +446,48 @@ defmodule LanternUI.DataTableTest do
     """
   end
 
+  defp tile_table(assigns) do
+    ~H"""
+    <DataTable.data_table
+      id="tiles"
+      rows={@rows}
+      meta={@meta}
+      path="/orders"
+      selected_ids={@selected}
+      show_checkboxes
+      active_view={@view}
+      column_settings={false}
+      card_layout="tile"
+      row_click={fn r -> Phoenix.LiveView.JS.push("open", value: %{id: r.id}) end}
+    >
+      <:col :let={r} label="Name">{r.name}</:col>
+      <:card :let={r}>TILE-{r.name}</:card>
+      <:row_action :let={r}><button>ACT-{r.id}</button></:row_action>
+    </DataTable.data_table>
+    """
+  end
+
+  test "column_settings false drops columns/density and inlines the layout switch" do
+    html = render(&tile_table/1, %{rows: rows(), meta: @meta, selected: [1], view: "table"})
+
+    assert html =~ ~s(id="tiles-layout")
+    assert html =~ ~r/>\s*Grid\s*</
+    refute html =~ ~s(id="tiles-display")
+    refute html =~ "Column visibility"
+    refute html =~ "lui-dt-density"
+  end
+
+  test "tile cards carry selection, the row click and overlaid actions" do
+    html = render(&tile_table/1, %{rows: rows(), meta: @meta, selected: [1], view: "cards"})
+
+    assert html =~ ~s(data-card-layout="tile")
+    assert html =~ "TILE-Ada"
+    assert html =~ "lui-dt-card-check"
+    assert html =~ ~r/lui-dt-card-tile[^"]*lui-dt-card-selected/
+    assert html =~ "data-row-click"
+    assert html =~ "ACT-2"
+  end
+
   test "cards empty uses the :empty slot, matching list and table" do
     empty = %{@meta | current_page: 1, total_pages: 0, total_count: 0}
 

@@ -574,13 +574,16 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 
 - `active_filters_label` (:string, default "Active filters") — Accessible label for the active filter chips.
 - `active_saved_view` (:string) — Id or name of the currently active saved view.
+- `active_view` (:string) — The layout to render (`table`, `list` or `cards`); falls back to the first available.
 - `all_matching?` (:boolean, default false) — Whether all results matching the current query are selected.
 - `apply_label` (:string, default "Apply") — Label for applying filter changes.
 - `available_views` (:list) — Available layout views, equivalent to `views`; intersected with layouts supplied by slots.
 - `bordered` (:boolean, default true) — Render the table chrome inside one bordered card.
+- `card_layout` (:string, values: row, tile, default "row") — `row` puts row actions beside the card body; `tile` lays the selection checkbox and row actions over the card's top corners (image-first tiles).
 - `class` (:any) — Extra classes merged onto the root element.
 - `clear_filters_label` (:string, default "Clear filters") — Label for clearing active filters.
 - `clear_label` (:string, default "Clear") — Bulk selection clear action label.
+- `column_settings` (:boolean, default true) — Offer the column-visibility and density controls.
 - `current_id` (:any) — Id of the row to mark as the current one (`aria-current="true"` and a highlight), e.g.
 - `density` (:string, values: compact, comfortable, default "comfortable") — Initial table row density.
 - `display_event` (:string) — Optional event receiving hidden_columns and density changes.
