@@ -581,6 +581,7 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 - `class` (:any) — Extra classes merged onto the root element.
 - `clear_filters_label` (:string, default "Clear filters") — Label for clearing active filters.
 - `clear_label` (:string, default "Clear") — Bulk selection clear action label.
+- `current_id` (:any) — Id of the row to mark as the current one (`aria-current="true"` and a highlight), e.g.
 - `density` (:string, values: compact, comfortable, default "comfortable") — Initial table row density.
 - `display_event` (:string) — Optional event receiving hidden_columns and density changes.
 - `excluded_ids` (:any, default MapSet.new([])) — MapSet of matching row ids explicitly excluded while `all_matching?` is true.

@@ -116,6 +116,13 @@ defmodule LanternUI.Components.DataTable do
         "Ignored when `row_navigate` or `row_patch` is set."
   )
 
+  attr(:current_id, :any,
+    default: nil,
+    doc:
+      "Id of the row to mark as the current one (`aria-current=\"true\"` and a highlight), " <>
+        "e.g. the record a link pointed at. Distinct from the checkbox selection."
+  )
+
   attr(:show_checkboxes, :boolean,
     default: true,
     doc: "Show row selection checkboxes and bulk bar."
@@ -904,7 +911,11 @@ defmodule LanternUI.Components.DataTable do
             <EmptyState.empty_state icon="inbox" title="Nothing here yet" />
           <% end %>
         <% else %>
-          <div :for={row <- @rows} class="lui-dt-card">
+          <div
+            :for={row <- @rows}
+            class={Class.merge(["lui-dt-card", current_row?(assigns, row) && "lui-row-current"])}
+            aria-current={current_row?(assigns, row) && "true"}
+          >
             <%= if @row_action != [] do %>
               <div class="lui-dt-card-main">{render_slot(@card, row)}</div>
               <div class="lui-dt-card-actions">{render_slot(@row_action, row)}</div>
@@ -925,7 +936,14 @@ defmodule LanternUI.Components.DataTable do
         <% else %>
           <div
             :for={row <- @rows}
-            class={Class.merge(["lui-dt-list-row", row_linked?(assigns, row) && "lui-row-linked"])}
+            class={
+              Class.merge([
+                "lui-dt-list-row",
+                row_linked?(assigns, row) && "lui-row-linked",
+                current_row?(assigns, row) && "lui-row-current"
+              ])
+            }
+            aria-current={current_row?(assigns, row) && "true"}
             data-lantern-list-item={row_linked?(assigns, row) || nil}
             {row_click_attrs(assigns, row)}
           >
@@ -990,9 +1008,11 @@ defmodule LanternUI.Components.DataTable do
                 Class.merge([
                   "lui-tr",
                   selected_id?(@row_id_fn.(row), assigns) && "lui-tr-selected",
-                  row_linked?(assigns, row) && "lui-row-linked"
+                  row_linked?(assigns, row) && "lui-row-linked",
+                  current_row?(assigns, row) && "lui-row-current"
                 ])
               }
+              aria-current={current_row?(assigns, row) && "true"}
               {row_click_attrs(assigns, row)}
             >
               <td :if={@show_checkboxes} class="lui-td lui-td-check">
@@ -1068,6 +1088,11 @@ defmodule LanternUI.Components.DataTable do
   end
 
   defp selection_count(%{selected_ids: selected_ids}), do: MapSet.size(MapSet.new(selected_ids))
+
+  defp current_row?(%{current_id: nil}, _row), do: false
+
+  defp current_row?(assigns, row),
+    do: to_string(assigns.row_id_fn.(row)) == to_string(assigns.current_id)
 
   defp selected_id?(id, %{all_matching?: true, excluded_id_set: excluded_ids}),
     do: not MapSet.member?(excluded_ids, id)
