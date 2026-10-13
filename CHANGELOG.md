@@ -9,6 +9,8 @@ All notable changes to this project are documented here. The format follows
 ### Added
 - `app_shell/1` `inset` (opt-in): the top bar and sidebar share one chrome colour, `--lantern-chrome` (from the host's `--background-chrome`, falling back to the sunken surface), and main becomes one rounded, bordered content panel on it. Hover inside the chrome steps to the border colour.
 - A `data_table` inside a `card` drops its own border, radius and shadow (no card-in-card).
+- `settings_page/1`, `settings_section/1`, `danger_zone/1`, `danger_zone_item/1` (`LanternUI.Components.Settings`): a settings page with a title, subtitle and optional `:tabs` (a `tabs_list`, so patch tabs such as `?tab=connection` keep state in the URL); two-column sections (title + description beside the fields, a right-aligned `:actions` Save) split by dividers (also when each section is wrapped in its own `<.form>`) and stacking below 48rem; and a bordered danger-zone list of destructive actions.
+- `navlink/1` `:item` slot: child links make the navlink a collapsible `<details>` group, rendered open when `expanded` or a child is `active`. After mount the browser owns the open state, so a patch does not re-open a group the user closed.
 - App-scale type tokens `text-micro` (10px), `text-footnote` (13px), `text-subhead` (15px), `text-headline` (17px), `text-display` (38px), each backed by a `--lantern-text-*` variable a host can override.
 - `list_row/1` `subtitle`: an optional muted second line under the title; the row grows to two lines (`data-lines="2"`).
 - `sortable/1` + `drop_zone/1` (`LanternUI.Components.Sortable`, `LanternSortable` hook): drag rows between lists of the same group (multi-select drags every `data-selected` row), drop on the landing area to append or between rows (`reorder`) to insert; pushes `%{ids, from, to, before_id}`. `drop_zone variant="target"` keeps the dashed drop shape with an accent border and fill.
@@ -20,6 +22,7 @@ All notable changes to this project are documented here. The format follows
 - `time_series_chart` `variant={:hero}`: the headline chart look — full-bleed plot, no grid/axes/legend, a 2px line over a top-to-bottom gradient fill, a padded y-domain with run-off below the series, and a one-line value · date readout pinned above the plot. Single-series line/area charts keep the signed green/red split when no color is given.
 
 ### Fixed
+- Native `select` keeps room for its caret at every `size` (the control-scale padding had removed it, so the caret overlapped the selected text in a narrow `size="sm"` select).
 - Data-table overview stats no longer sit flush against the card edge and under the "Overview" header (the stats' negative margin assumed a padded body).
 - Tables wider than their container fade the edge that hides more columns (scroll-driven; no fade when the table fits).
 - The table empty state renders outside the horizontal scroll area, so it centres on the visible width on a phone.

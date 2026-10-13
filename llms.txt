@@ -278,6 +278,13 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `separator/1` — Visual divider — horizontal, vertical, or labeled.
 
+### LanternUI.Components.Settings
+
+- `danger_zone/1` — The last section of a settings page: a `settings_section` whose body is one bordered list of destructive actions.
+- `danger_zone_item/1` — One row of a `danger_zone`: title and consequence on the left, the action on the right.
+- `settings_page/1` — Settings page building blocks: a titled page with optional tabs, two-column sections that each save on their own, and a danger zone at the bottom.
+- `settings_section/1` — Settings page building blocks: a titled page with optional tabs, two-column sections that each save on their own, and a danger zone at the bottom.
+
 ### LanternUI.Components.Sheet
 
 - `sheet/1` — Slide-over panel (drawer) that enters from a screen edge.
