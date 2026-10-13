@@ -109,6 +109,8 @@
   --lantern-surface-raised: var(--surface, #ffffff);
   --lantern-surface-sunken: var(--background-accent, #f4f4f5);
   --lantern-surface-hover: var(--background-accent, #f4f4f5);
+  /* App frame (`app_shell inset`): top bar + sidebar. */
+  --lantern-chrome: var(--background-chrome, var(--background-accent, #f4f4f5));
   --lantern-border: var(--border-base, #e4e4e7);
   --lantern-border-strong: var(--border-base, #d4d4d8);
   --lantern-primary: var(--primary, #18181b);

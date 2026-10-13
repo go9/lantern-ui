@@ -1102,6 +1102,7 @@ App shell — a full-width top bar (brand + inline context + actions) over a fix
 - `collapsed` (:boolean, default false) — Initial sidebar collapsed (icon-rail) state.
 - `compact` (:boolean, default false) — Opt in to the slim shell topline height.
 - `id` (:string, required) — stable id — the collapse state is persisted per id
+- `inset` (:boolean, default false) — Inset frame: the top bar and sidebar share one chrome colour (`--lantern-chrome`) and the main column is one bordered, rounded content panel on it.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 Slots:
 - `:actions` — top-right of the bar (user menu, etc.)

@@ -1262,6 +1262,23 @@
   :root { --lui-page-gutter: 1rem; }
 }
 
+/* Inset frame (`app_shell inset`): the top bar and sidebar are ONE chrome
+   surface with no line between them, and main is ONE rounded, bordered content
+   panel on that chrome. Hover inside the chrome steps to the border colour, so it
+   stays visible on a chrome that already equals the sunken surface. */
+.lui-app[data-inset] { background: var(--lantern-chrome); }
+.lui-app[data-inset] .lui-appbar,
+.lui-app[data-inset] .lui-app-sidebar {
+  background: var(--lantern-chrome); border-color: transparent;
+  --lantern-surface-sunken: var(--lantern-border); --lantern-surface-hover: var(--lantern-border); }
+.lui-app[data-inset] .lui-app-sidebar-foot { border-top-color: transparent; }
+.lui-app[data-inset] .lui-app-main { background: var(--lantern-surface); }
+@media (min-width: 769px) {
+  .lui-app[data-inset] .lui-app-main {
+    border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
+    margin-right: 0.5rem; height: calc(100vh - var(--lui-appbar-h) - 0.5rem); }
+}
+
 /* Sidebar (below the bar, fixed) */
 .lui-app-body { padding-top: var(--lui-appbar-h); }
 .lui-app-sidebar { position: fixed; top: var(--lui-appbar-h); bottom: 0; left: 0;
@@ -1813,6 +1830,8 @@
 /* ── Data table card shell ── */
 .lui-datatable { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
   background: var(--lantern-surface-raised); overflow: hidden; box-shadow: var(--lantern-shadow); }
+/* A table inside a card is part of that card: no second box (no card-in-card). */
+.lui-card .lui-datatable { border: 0; border-radius: 0; box-shadow: none; }
 .lui-datatable.lui-datatable-borderless { border: 0; border-radius: 0;
   background: transparent; box-shadow: none; overflow: visible; }
 .lui-datatable .lui-dt-header { margin-bottom: 0; padding: 0.7rem 0.9rem;

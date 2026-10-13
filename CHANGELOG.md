@@ -7,6 +7,8 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- `app_shell/1` `inset` (opt-in): the top bar and sidebar share one chrome colour, `--lantern-chrome` (from the host's `--background-chrome`, falling back to the sunken surface), and main becomes one rounded, bordered content panel on it. Hover inside the chrome steps to the border colour.
+- A `data_table` inside a `card` drops its own border, radius and shadow (no card-in-card).
 - App-scale type tokens `text-micro` (10px), `text-footnote` (13px), `text-subhead` (15px), `text-headline` (17px), `text-display` (38px), each backed by a `--lantern-text-*` variable a host can override.
 - `list_row/1` `subtitle`: an optional muted second line under the title; the row grows to two lines (`data-lines="2"`).
 - `sortable/1` + `drop_zone/1` (`LanternUI.Components.Sortable`, `LanternSortable` hook): drag rows between lists of the same group (multi-select drags every `data-selected` row), drop on the landing area to append or between rows (`reorder`) to insert; pushes `%{ids, from, to, before_id}`. `drop_zone variant="target"` keeps the dashed drop shape with an accent border and fill.

@@ -58,6 +58,14 @@ defmodule LanternUI.Components.Layout do
   attr(:id, :string, required: true, doc: "stable id — the collapse state is persisted per id")
   attr(:collapsed, :boolean, default: false, doc: "Initial sidebar collapsed (icon-rail) state.")
   attr(:compact, :boolean, default: false, doc: "Opt in to the slim shell topline height.")
+
+  attr(:inset, :boolean,
+    default: false,
+    doc:
+      "Inset frame: the top bar and sidebar share one chrome colour (`--lantern-chrome`) " <>
+        "and the main column is one bordered, rounded content panel on it."
+  )
+
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
   slot(:brand, required: true, doc: "logo/name, top-left corner")
@@ -124,6 +132,7 @@ defmodule LanternUI.Components.Layout do
       phx-hook="LanternSidebar"
       data-collapsed={@collapsed || nil}
       data-compact={@compact || nil}
+      data-inset={@inset || nil}
       {@rest}
     >
       <header class="lui-appbar">
