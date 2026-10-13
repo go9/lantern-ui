@@ -1082,6 +1082,68 @@
   display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; flex: none;
 }
 
+/* ── Settings page: header, tabs, then sections split by hairlines. No cards:
+   the divider is the only chrome. Two columns once the page is 48rem wide. */
+.lui-settings-page { container: lui-settings / inline-size; min-width: 0; padding-top: var(--lantern-space-sm); }
+.lui-settings-page-header {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: var(--lantern-space-xs) var(--lantern-space-md);
+}
+.lui-settings-page-text { min-width: 0; flex: 1 1 12rem; }
+.lui-settings-page-title {
+  margin: 0; font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.005em; line-height: 1.25;
+  color: var(--lantern-fg);
+}
+.lui-settings-page-subtitle {
+  margin: 0.1rem 0 0; font-size: var(--lantern-text-xs, 0.75rem); line-height: 1.3;
+  color: var(--lantern-fg-muted);
+}
+.lui-settings-page-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--lantern-space-sm); flex: none; }
+.lui-settings-page-tabs { margin-top: var(--lantern-space-md); }
+.lui-settings-section {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--lantern-space-md);
+  padding-block: var(--lantern-space-lg) calc(var(--lantern-space-lg) * 1.5);
+}
+:is(.lui-settings-section, :has(> .lui-settings-section)) + .lui-settings-section,
+:is(.lui-settings-section, :has(> .lui-settings-section)) + :has(> .lui-settings-section) > .lui-settings-section {
+  border-top: 1px solid var(--lantern-border);
+}
+@container lui-settings (min-width: 48rem) {
+  .lui-settings-section { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: calc(var(--lantern-space-lg) * 2); }
+}
+.lui-settings-section-head { min-width: 0; }
+.lui-settings-section-title {
+  margin: 0; font-size: var(--lantern-text-sm, 0.8125rem); font-weight: 600; line-height: 1.3;
+  color: var(--lantern-fg);
+}
+.lui-settings-section-desc {
+  margin: 0.15rem 0 0; font-size: var(--lantern-text-xs, 0.75rem); line-height: 1.4;
+  color: var(--lantern-fg-muted);
+}
+.lui-settings-section-body { display: flex; flex-direction: column; gap: var(--lantern-space-md); min-width: 0; }
+.lui-settings-section-actions {
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--lantern-space-sm);
+  margin-top: var(--lantern-space-xs);
+}
+
+/* Danger zone: one bordered list, rows split by hairlines; the action carries the red. */
+.lui-danger-zone-list {
+  border: 1px solid color-mix(in srgb, var(--lantern-danger) 35%, var(--lantern-border));
+  border-radius: var(--lantern-radius);
+}
+.lui-danger-zone-item {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: var(--lantern-space-sm) var(--lantern-space-lg); padding: var(--lantern-space-md) var(--lantern-space-lg);
+}
+.lui-danger-zone-item + .lui-danger-zone-item { border-top: 1px solid var(--lantern-border); }
+.lui-danger-zone-item-text { min-width: 0; flex: 1 1 14rem; }
+.lui-danger-zone-item-title { font-size: var(--lantern-text-sm, 0.8125rem); font-weight: 600; color: var(--lantern-fg); }
+.lui-danger-zone-item-desc {
+  margin: 0.15rem 0 0; font-size: var(--lantern-text-xs, 0.75rem); line-height: 1.4;
+  color: var(--lantern-fg-muted);
+}
+.lui-danger-zone-item-action { flex: none; }
+
 /* ── Page shell ── */
 .lui-page-shell { min-width: 0; }
 .lui-page-topline {
@@ -1266,6 +1328,23 @@
 
 @media (max-width: 768px) {
   :root { --lui-page-gutter: 1rem; }
+}
+
+/* Inset frame (`app_shell inset`): the top bar and sidebar are ONE chrome
+   surface with no line between them, and main is ONE rounded, bordered content
+   panel on that chrome. Hover inside the chrome steps to the border colour, so it
+   stays visible on a chrome that already equals the sunken surface. */
+.lui-app[data-inset] { background: var(--lantern-chrome); }
+.lui-app[data-inset] .lui-appbar,
+.lui-app[data-inset] .lui-app-sidebar {
+  background: var(--lantern-chrome); border-color: transparent;
+  --lantern-surface-sunken: var(--lantern-border); --lantern-surface-hover: var(--lantern-border); }
+.lui-app[data-inset] .lui-app-sidebar-foot { border-top-color: transparent; }
+.lui-app[data-inset] .lui-app-main { background: var(--lantern-surface); }
+@media (min-width: 769px) {
+  .lui-app[data-inset] .lui-app-main {
+    border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
+    margin-right: 0.5rem; height: calc(100vh - var(--lui-appbar-h) - 0.5rem); }
 }
 
 /* Sidebar (below the bar, fixed) */
@@ -1771,6 +1850,21 @@
 .lui-dt-card:has(> .lui-dt-card-actions) { display: flex; align-items: flex-start; gap: 0.5rem; }
 .lui-dt-card-main { flex: 1; min-width: 0; }
 .lui-dt-card-actions { flex: none; display: flex; align-items: center; gap: 0.375rem; }
+/* Tile cards: the slot owns the whole tile (image-first); the checkbox and the
+   row actions float over its top corners, above the stretched row link. */
+.lui-dt-cards[data-card-layout="tile"] { grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.75rem; }
+@media (max-width: 30rem) {
+  .lui-dt-cards[data-card-layout="tile"] { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+}
+.lui-dt-card.lui-dt-card-tile { position: relative; display: block; padding: 0; border: 0;
+  background: transparent; border-radius: var(--lantern-radius-md); }
+.lui-dt-card.lui-dt-card-tile:hover { background: transparent; }
+.lui-dt-card-tile > .lui-dt-card-main { height: 100%; }
+.lui-dt-card.lui-dt-card-tile > .lui-dt-card-check { position: absolute; top: 0.5rem; left: 0.5rem; z-index: 2; }
+.lui-dt-card.lui-dt-card-tile > .lui-dt-card-actions { position: absolute; top: 0.25rem; right: 0.25rem; z-index: 2; }
+.lui-dt-cards > :only-child:not(.lui-dt-card) { grid-column: 1 / -1; }
+.lui-dt-card-tile.lui-dt-card-selected { outline: 2px solid var(--lantern-accent); outline-offset: 2px; }
 
 /* List view: headerless index rows (name left, meta/actions right) */
 /* Breathing room under the chrome row's hairline. At padding 0 the first row of
@@ -1819,6 +1913,8 @@
 /* ── Data table card shell ── */
 .lui-datatable { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
   background: var(--lantern-surface-raised); overflow: hidden; box-shadow: var(--lantern-shadow); }
+/* A table inside a card is part of that card: no second box (no card-in-card). */
+.lui-card .lui-datatable { border: 0; border-radius: 0; box-shadow: none; }
 .lui-datatable.lui-datatable-borderless { border: 0; border-radius: 0;
   background: transparent; box-shadow: none; overflow: visible; }
 .lui-datatable .lui-dt-header { margin-bottom: 0; padding: 0.7rem 0.9rem;
@@ -2821,6 +2917,22 @@
 .lui-navlink-icon {
   font-size: 1.05rem;
   flex-shrink: 0;
+}
+
+/* navlink with :item children — a native <details> disclosure. The parent is
+   not a destination, so it never takes the active fill; its child does. */
+.lui-navlink-group > summary { list-style: none; }
+.lui-navlink-group > summary::-webkit-details-marker { display: none; }
+.lui-navlink-group > summary.lui-navlink-active { background: none; }
+.lui-navlink-group > summary.lui-navlink-active:hover { background: var(--lantern-surface-sunken); }
+.lui-navlink-chevron {
+  margin-left: auto; font-size: 0.75rem; flex-shrink: 0; color: var(--lantern-fg-subtle);
+  transition: transform var(--lantern-duration) var(--lantern-ease);
+}
+.lui-navlink-group[open] > summary .lui-navlink-chevron { transform: rotate(90deg); }
+.lui-navlink-items {
+  display: flex; flex-direction: column; gap: 0.15rem;
+  margin: 0.15rem 0 0 0.85rem; padding-left: 0.5rem; border-left: 1px solid var(--lantern-border);
 }
 
 /* ── Loading ── */
@@ -5036,6 +5148,15 @@ a.lui-waterfall-lane-inner:focus-visible {
   line-height: var(--lui-control-line-height);
 }
 .lui-select-native { height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); }
+.lui-select-native-wrap { --lui-select-px: var(--lui-control-px-md); --lui-select-icon: var(--lui-control-icon-md); }
+.lui-field[data-size="xs"] .lui-select-native-wrap,
+.lui-field[data-size="sm"] .lui-select-native-wrap { --lui-select-px: var(--lui-control-px-sm); --lui-select-icon: var(--lui-control-icon-sm); }
+.lui-field[data-size="lg"] .lui-select-native-wrap,
+.lui-field[data-size="xl"] .lui-select-native-wrap { --lui-select-px: var(--lui-control-px-lg); --lui-select-icon: var(--lui-control-icon-lg); }
+.lui-select-native, .lui-field[data-size] .lui-select-native {
+  padding-right: calc(var(--lui-select-px) + var(--lui-select-icon) + var(--lui-gap-8));
+}
+.lui-select-native-wrap .lui-select-caret { right: var(--lui-select-px); width: var(--lui-select-icon); height: var(--lui-select-icon); font-size: inherit; }
 .lui-select-native:focus-visible, .lui-select-toggle:focus-visible { outline: none; }
 .lui-autocomplete-control { height: var(--lui-control-h-md); min-height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); }
 .lui-autocomplete-input { font-size: var(--lui-control-font-md); line-height: var(--lui-control-line-height); }
@@ -5225,6 +5346,8 @@ a.lui-waterfall-lane-inner:focus-visible {
 [data-lui-control-scale="legacy"] .lui-input-wrap, [data-lui-control-scale="legacy"] .lui-field .lui-input-wrap { padding: 0 0.625rem; }
 [data-lui-control-scale="legacy"] .lui-autocomplete-control, [data-lui-control-scale="legacy"] .lui-field[data-size] .lui-autocomplete-control { padding: 0 var(--lantern-control-px); }
 [data-lui-control-scale="legacy"] .lui-field[data-size] .lui-select-native { padding: 0 1.9rem 0 var(--lantern-control-px); font-size: var(--lantern-text); line-height: normal; }
+[data-lui-control-scale="legacy"] .lui-select-native { padding-right: 1.9rem; }
+[data-lui-control-scale="legacy"] .lui-select-native-wrap .lui-select-caret { right: 0.6rem; width: 1.05em; height: 1.05em; font-size: 0.9em; }
 [data-lui-control-scale="legacy"] .lui-action-bar-more-trigger, [data-lui-control-scale="legacy"] .lui-action-bar-menu .lui-menu-trigger .lui-btn { padding-inline: 0.375rem; }
 [data-lui-control-scale="legacy"] .lui-btn:focus-visible,
 [data-lui-control-scale="legacy"] .lui-input-wrap:focus-within,
@@ -5457,6 +5580,8 @@ a.lui-waterfall-lane-inner:focus-visible {
   --lantern-surface-raised: var(--surface, #ffffff);
   --lantern-surface-sunken: var(--background-accent, #f4f4f5);
   --lantern-surface-hover: var(--background-accent, #f4f4f5);
+  /* App frame (`app_shell inset`): top bar + sidebar. */
+  --lantern-chrome: var(--background-chrome, var(--background-accent, #f4f4f5));
 
   /* ── Color · lines ← fluxon border-base ── */
   --lantern-border: var(--border-base, #e4e4e7);
@@ -6246,7 +6371,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-2627" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-50149" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6263,7 +6388,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-2659" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-50181" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6280,7 +6405,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-2691" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-50213" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6297,7 +6422,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-2723" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-50245" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
