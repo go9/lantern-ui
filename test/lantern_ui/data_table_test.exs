@@ -60,6 +60,25 @@ defmodule LanternUI.DataTableTest do
              "t-pagination"
   end
 
+  test "current_id marks that one row as current, apart from the selection" do
+    html =
+      render(
+        fn assigns ->
+          ~H"""
+          <DataTable.data_table id="t" rows={@rows} meta={@meta} path="/orders" current_id="2">
+            <:col :let={r} label="Name">{r.name}</:col>
+          </DataTable.data_table>
+          """
+        end,
+        %{rows: rows(), meta: @meta}
+      )
+
+    [current] = Regex.scan(~r/<tr[^>]*aria-current="true"[^>]*>/, html)
+    assert hd(current) =~ "lui-row-current"
+    refute hd(current) =~ "lui-tr-selected"
+    assert [_] = Regex.scan(~r/lui-row-current/, html)
+  end
+
   test "renders title, sortable header, rows, row actions, pagination" do
     html = render(&table/1, %{rows: rows(), meta: @meta, selected: MapSet.new()})
 

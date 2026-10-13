@@ -1923,6 +1923,16 @@
   border-bottom-color: transparent;
 }
 .lui-datatable .lui-tr .lui-td { border-radius: 0; }
+/* The row a link pointed at (data_table current_id): a soft tint and an accent edge. */
+.lui-datatable .lui-row-current .lui-td {
+  background: color-mix(in oklab, var(--lantern-accent) 8%, var(--lantern-surface));
+}
+.lui-datatable .lui-row-current .lui-td:first-child { box-shadow: inset 2px 0 0 var(--lantern-accent); }
+.lui-dt-list-row.lui-row-current {
+  background: color-mix(in oklab, var(--lantern-accent) 8%, var(--lantern-surface));
+  box-shadow: inset 2px 0 0 var(--lantern-accent);
+}
+.lui-dt-card.lui-row-current { border-color: var(--lantern-accent); }
 /* Inside a datatable the column header drops its tint. Standing alone the table
    is a bordered, rounded box and the sunken band reads as its cap; full-bleed in
    a card it is a hard-cornered slab jammed into the card's edge, in the same
@@ -6236,7 +6246,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-583" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-585" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6253,7 +6263,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-615" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-617" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6270,7 +6280,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-647" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-649" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6287,7 +6297,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-679" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-681" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

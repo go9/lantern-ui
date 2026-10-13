@@ -1936,6 +1936,16 @@
   border-bottom-color: transparent;
 }
 .lui-datatable .lui-tr .lui-td { border-radius: 0; }
+/* The row a link pointed at (data_table current_id): a soft tint and an accent edge. */
+.lui-datatable .lui-row-current .lui-td {
+  background: color-mix(in oklab, var(--lantern-accent) 8%, var(--lantern-surface));
+}
+.lui-datatable .lui-row-current .lui-td:first-child { box-shadow: inset 2px 0 0 var(--lantern-accent); }
+.lui-dt-list-row.lui-row-current {
+  background: color-mix(in oklab, var(--lantern-accent) 8%, var(--lantern-surface));
+  box-shadow: inset 2px 0 0 var(--lantern-accent);
+}
+.lui-dt-card.lui-row-current { border-color: var(--lantern-accent); }
 /* Inside a datatable the column header drops its tint. Standing alone the table
    is a bordered, rounded box and the sunken band reads as its cap; full-bleed in
    a card it is a hard-cornered slab jammed into the card's edge, in the same
