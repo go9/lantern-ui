@@ -455,7 +455,7 @@ defmodule LanternUI.DataTableTest do
       path="/orders"
       selected_ids={@selected}
       show_checkboxes
-      view={@view}
+      active_view={@view}
       column_settings={false}
       card_layout="tile"
       row_click={fn r -> Phoenix.LiveView.JS.push("open", value: %{id: r.id}) end}

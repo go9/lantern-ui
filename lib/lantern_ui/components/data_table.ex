@@ -231,6 +231,11 @@ defmodule LanternUI.Components.DataTable do
     doc: "Optional event receiving hidden_columns and density changes."
   )
 
+  attr(:active_view, :string,
+    default: nil,
+    doc: "The layout to render (`table`, `list` or `cards`); falls back to the first available."
+  )
+
   attr(:column_settings, :boolean,
     default: true,
     doc:
@@ -387,7 +392,9 @@ defmodule LanternUI.Components.DataTable do
   def data_table(assigns) do
     # Phoenix stores the new :view slot in assigns.view. Keep accepting the old
     # string-valued view attr while the slot uses the same public name.
-    legacy_view = if is_binary(assigns.view), do: assigns.view, else: "table"
+    legacy_view =
+      assigns.active_view || if(is_binary(assigns.view), do: assigns.view, else: "table")
+
     saved_view_slots = if is_list(assigns.view), do: assigns.view, else: []
 
     assigns =
