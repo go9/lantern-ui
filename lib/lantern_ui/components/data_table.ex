@@ -231,6 +231,21 @@ defmodule LanternUI.Components.DataTable do
     doc: "Optional event receiving hidden_columns and density changes."
   )
 
+  attr(:column_settings, :boolean,
+    default: true,
+    doc:
+      "Offer the column-visibility and density controls. Set false to drop them; " <>
+        "the table/grid layout switch then renders inline as a segmented toggle."
+  )
+
+  attr(:card_layout, :string,
+    default: "row",
+    values: ~w(row tile),
+    doc:
+      "`row` puts row actions beside the card body; `tile` lays the selection " <>
+        "checkbox and row actions over the card's top corners (image-first tiles)."
+  )
+
   attr(:views, :list,
     default: nil,
     doc:
@@ -400,6 +415,14 @@ defmodule LanternUI.Components.DataTable do
       )
 
     assigns = resolve_views(assigns)
+
+    assigns =
+      assign(
+        assigns,
+        :inline_layout?,
+        !assigns.column_settings and length(assigns.layout_views) > 1 and
+          !assigns.saved_view_event and assigns.saved_view_slots == []
+      )
 
     ~H"""
     <div
@@ -690,9 +713,29 @@ defmodule LanternUI.Components.DataTable do
           </:content>
         </Popover.popover>
 
+        <Tabs.tabs_list
+          :if={@inline_layout?}
+          id={"#{@id}-layout"}
+          active_tab={@view}
+          variant="segmented"
+          size="sm"
+          class="lui-dt-layout-switch"
+          role="radiogroup"
+          aria-label="Layout"
+        >
+          <:tab
+            :for={layout_view <- @layout_views}
+            name={layout_view}
+            patch={view_path(@path, @meta, layout_view)}
+          >
+            {layout_view_label(layout_view)}
+          </:tab>
+        </Tabs.tabs_list>
+
         <Popover.popover
           :if={
-            @col != [] || length(@layout_views) > 1 || @saved_view_event || @saved_view_slots != []
+            (@column_settings && @col != []) || (length(@layout_views) > 1 && !@inline_layout?) ||
+              @saved_view_event || @saved_view_slots != []
           }
           id={"#{@id}-display"}
           class="lui-dt-displaypanel"
@@ -714,7 +757,7 @@ defmodule LanternUI.Components.DataTable do
                   )}
                 </.link>
               </div>
-              <div :if={@col != []} class="lui-dt-view-section">
+              <div :if={@column_settings && @col != []} class="lui-dt-view-section">
                 <span class="lui-dt-panel-title">Columns</span>
                 <input
                   :if={length(@col) > 6}
@@ -735,7 +778,7 @@ defmodule LanternUI.Components.DataTable do
                   />
                 </div>
               </div>
-              <div :if={@col != []} class="lui-dt-density">
+              <div :if={@column_settings && @col != []} class="lui-dt-density">
                 <span class="lui-dt-filterlabel">Density</span>
                 <div
                   class="lui-segmented lui-dt-density-switch"
@@ -903,7 +946,11 @@ defmodule LanternUI.Components.DataTable do
         </Button.button>
       </div>
 
-      <div :if={@card != [] && @view == "cards"} class="lui-dt-cards">
+      <div
+        :if={@card != [] && @view == "cards"}
+        class="lui-dt-cards"
+        data-card-layout={@card_layout}
+      >
         <%= if @rows == [] do %>
           <%= if @empty != [] do %>
             {render_slot(@empty)}
@@ -913,6 +960,43 @@ defmodule LanternUI.Components.DataTable do
         <% else %>
           <div
             :for={row <- @rows}
+            :if={@card_layout == "tile"}
+            class={
+              Class.merge([
+                "lui-dt-card lui-dt-card-tile",
+                selected_id?(@row_id_fn.(row), assigns) && "lui-dt-card-selected",
+                row_linked?(assigns, row) && "lui-row-linked",
+                current_row?(assigns, row) && "lui-row-current"
+              ])
+            }
+            aria-current={current_row?(assigns, row) && "true"}
+            {row_click_attrs(assigns, row)}
+          >
+            <div id={"#{@id}-card-#{@row_id_fn.(row)}-main"} class="lui-dt-card-main">
+              {render_slot(@card, row)}
+            </div>
+            <.row_anchor
+              :if={row_link(assigns, row)}
+              link={row_link(assigns, row)}
+              labelledby={"#{@id}-card-#{@row_id_fn.(row)}-main"}
+            />
+            <input
+              :if={@show_checkboxes}
+              type="checkbox"
+              class="lui-checkbox lui-dt-card-check"
+              checked={selected_id?(@row_id_fn.(row), assigns)}
+              phx-click="toggle_select"
+              phx-value-id={@row_id_fn.(row)}
+              phx-target={@target}
+              aria-label="Select row"
+            />
+            <div :if={@row_action != []} class="lui-dt-card-actions">
+              {render_slot(@row_action, row)}
+            </div>
+          </div>
+          <div
+            :for={row <- @rows}
+            :if={@card_layout == "row"}
             class={Class.merge(["lui-dt-card", current_row?(assigns, row) && "lui-row-current"])}
             aria-current={current_row?(assigns, row) && "true"}
           >
