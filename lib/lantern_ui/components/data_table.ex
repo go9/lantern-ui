@@ -135,6 +135,11 @@ defmodule LanternUI.Components.DataTable do
     doc: "Choices for the page-size control."
   )
 
+  attr(:pagination, :boolean,
+    default: true,
+    doc: "Render the pagination bar. Turn off for an unpaginated list that shows every row."
+  )
+
   attr(:search_field, :atom,
     default: nil,
     doc: "Flop filter field the built-in search box binds to"
@@ -1044,7 +1049,7 @@ defmodule LanternUI.Components.DataTable do
             a table that has not finished loading. An empty table has no count to
             report, so that is where it goes. --%>
       <Pagination.pagination
-        :if={@rows != []}
+        :if={@pagination and @rows != []}
         id={"#{@id}-pagination"}
         meta={@meta}
         patch_fn={&page_path(@path, @meta, &1)}

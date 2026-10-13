@@ -599,6 +599,7 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 - `load_view_label` (:string, default "Load saved view") — Label for opening saved views.
 - `meta` (:map, required) — Flop.Meta (or same-shaped map)
 - `page_size_options` (:list, default [10, 25, 50, 100]) — Choices for the page-size control.
+- `pagination` (:boolean, default true) — Render the pagination bar.
 - `path` (:string, required) — base path for sort/pagination patches
 - `quick_filters_label` (:string, default "Quick filters") — Accessible label for the quick filter tabs.
 - `reset_label` (:string, default "Reset") — Label for resetting filter controls.
@@ -1601,6 +1602,7 @@ Priced, selectable permutation cells: the price matrix a holding picks its condi
 Renders one priced, selectable cell.
 
 - `class` (:any) — Extra classes merged onto the cell.
+- `count` (:integer) — Copies held at this permutation: a corner `×N` badge and an outline.
 - `disabled` (:boolean, default false) — Not pickable.
 - `label` (:string, required) — Permutation name (condition, grade, contents).
 - `price` (:string) — Formatted price; nil renders an em dash.
@@ -1622,7 +1624,7 @@ Slots:
 
 Renders a rows x columns table of price cells.
 
-- `cells` (:map, required) — `%{{row_key, column_key} => %{price, disabled?}}`; a missing key is an empty slot.
+- `cells` (:map, required) — `%{{row_key, column_key} => %{price, disabled, count}}`; a missing key is an empty slot.
 - `class` (:any) — Extra classes merged onto the wrapper.
 - `columns` (:list, required) — Column headers: `%{key, label}` (e.g.
 - `label` (:string) — Caption above the grid; also the table's name.

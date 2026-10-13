@@ -92,4 +92,35 @@ defmodule LanternUI.PriceGridTest do
     # cgc / 9 has no price point: an empty slot, no button.
     assert length(Regex.scan(~r/<button/, html)) == 3
   end
+
+  test "a held count marks the cell and is announced; nil and 0 render nothing" do
+    html = render(fn assigns -> ~H|<PriceGrid.price_cell label="NM" price="$42" count={3} />| end)
+    assert html =~ ~s(data-counted="true")
+    assert html =~ ~s(class="lui-price-cell-count")
+    assert html =~ "×3"
+    assert html =~ "3 held"
+
+    for count <- [nil, 0] do
+      html =
+        render(fn assigns -> ~H|<PriceGrid.price_cell label="NM" count={@count} />| end, %{
+          count: count
+        })
+
+      refute html =~ "data-counted"
+      refute html =~ "lui-price-cell-count"
+    end
+
+    html =
+      render(fn assigns ->
+        ~H"""
+        <PriceGrid.price_grid
+          rows={[%{key: "psa", label: "PSA"}]}
+          columns={[%{key: "10", label: "10"}]}
+          cells={%{{"psa", "10"} => %{price: "$410", count: 2}}}
+        />
+        """
+      end)
+
+    assert html =~ "×2"
+  end
 end

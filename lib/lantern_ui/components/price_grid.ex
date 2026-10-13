@@ -35,6 +35,12 @@ defmodule LanternUI.Components.PriceGrid do
   attr(:show_price, :boolean, default: true, doc: "Hide the price line (e.g. edition cells).")
   attr(:selected, :boolean, default: false, doc: "The picked permutation (accent fill).")
   attr(:disabled, :boolean, default: false, doc: "Not pickable.")
+
+  attr(:count, :integer,
+    default: nil,
+    doc: "Copies held at this permutation: a corner `×N` badge and an outline. nil/0 hides it."
+  )
+
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the cell.")
 
   attr(:rest, :global,
@@ -50,14 +56,20 @@ defmodule LanternUI.Components.PriceGrid do
       class={Class.merge(["lui-price-cell", @class])}
       aria-pressed={to_string(@selected)}
       data-selected={@selected && "true"}
+      data-counted={counted?(@count) && "true"}
       disabled={@disabled}
       {@rest}
     >
       <span class="lui-price-cell-label">{@label}</span>
       <span :if={@show_price} class="lui-price-cell-price">{@price || "—"}</span>
+      <span :if={counted?(@count)} class="lui-price-cell-count">
+        <span aria-hidden="true">×{@count}</span><span class="lui-sr-only">, {@count} held</span>
+      </span>
     </button>
     """
   end
+
+  defp counted?(count), do: is_integer(count) and count > 0
 
   attr(:label, :string, default: nil, doc: "Caption above the row; also the group's name.")
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the group.")
@@ -82,7 +94,8 @@ defmodule LanternUI.Components.PriceGrid do
 
   attr(:cells, :map,
     required: true,
-    doc: "`%{{row_key, column_key} => %{price, disabled?}}`; a missing key is an empty slot."
+    doc:
+      "`%{{row_key, column_key} => %{price, disabled, count}}`; a missing key is an empty slot."
   )
 
   attr(:selected, :any, default: nil, doc: "`{row_key, column_key}` of the picked cell.")
@@ -119,6 +132,7 @@ defmodule LanternUI.Components.PriceGrid do
                   price={cell[:price]}
                   selected={@selected == {row.key, column.key}}
                   disabled={cell[:disabled] || false}
+                  count={cell[:count]}
                   class="lui-price-cell-compact"
                   phx-click={@on_pick}
                   phx-target={@target}
