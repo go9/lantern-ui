@@ -572,6 +572,7 @@ defmodule LanternUI.ComponentsTest do
                :segmented,
                :select,
                :separator,
+               :settings,
                :sheet,
                :side_panel,
                :skeleton,

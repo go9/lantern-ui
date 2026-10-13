@@ -1076,6 +1076,51 @@
   display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; flex: none;
 }
 
+/* ── Settings page: header, tabs, then sections split by hairlines. No cards:
+   the divider is the only chrome. Two columns once the page is 48rem wide. */
+.lui-settings-page { container: lui-settings / inline-size; min-width: 0; padding-top: var(--lantern-space-sm); }
+.lui-settings-page-tabs { margin-top: var(--lantern-space-md); }
+.lui-settings-section {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--lantern-space-md);
+  padding-block: var(--lantern-space-lg) calc(var(--lantern-space-lg) * 1.5);
+}
+.lui-settings-section + .lui-settings-section { border-top: 1px solid var(--lantern-border); }
+@container lui-settings (min-width: 48rem) {
+  .lui-settings-section { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: calc(var(--lantern-space-lg) * 2); }
+}
+.lui-settings-section-head { min-width: 0; }
+.lui-settings-section-title {
+  margin: 0; font-size: var(--lantern-text-sm, 0.8125rem); font-weight: 600; line-height: 1.3;
+  color: var(--lantern-fg);
+}
+.lui-settings-section-desc {
+  margin: 0.15rem 0 0; font-size: var(--lantern-text-xs, 0.75rem); line-height: 1.4;
+  color: var(--lantern-fg-muted);
+}
+.lui-settings-section-body { display: flex; flex-direction: column; gap: var(--lantern-space-md); min-width: 0; }
+.lui-settings-section-actions {
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--lantern-space-sm);
+  margin-top: var(--lantern-space-xs);
+}
+
+/* Danger zone: one bordered list, rows split by hairlines; the action carries the red. */
+.lui-danger-zone-list {
+  border: 1px solid color-mix(in srgb, var(--lantern-danger) 35%, var(--lantern-border));
+  border-radius: var(--lantern-radius);
+}
+.lui-danger-zone-item {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: var(--lantern-space-sm) var(--lantern-space-lg); padding: var(--lantern-space-md) var(--lantern-space-lg);
+}
+.lui-danger-zone-item + .lui-danger-zone-item { border-top: 1px solid var(--lantern-border); }
+.lui-danger-zone-item-text { min-width: 0; flex: 1 1 14rem; }
+.lui-danger-zone-item-title { font-size: var(--lantern-text-sm, 0.8125rem); font-weight: 600; color: var(--lantern-fg); }
+.lui-danger-zone-item-desc {
+  margin: 0.15rem 0 0; font-size: var(--lantern-text-xs, 0.75rem); line-height: 1.4;
+  color: var(--lantern-fg-muted);
+}
+.lui-danger-zone-item-action { flex: none; }
+
 /* ── Page shell ── */
 .lui-page-shell { min-width: 0; }
 .lui-page-topline {
@@ -2849,6 +2894,22 @@
 .lui-navlink-icon {
   font-size: 1.05rem;
   flex-shrink: 0;
+}
+
+/* navlink with :item children — a native <details> disclosure. The parent is
+   not a destination, so it never takes the active fill; its child does. */
+.lui-navlink-group > summary { list-style: none; }
+.lui-navlink-group > summary::-webkit-details-marker { display: none; }
+.lui-navlink-group > summary.lui-navlink-active { background: none; }
+.lui-navlink-group > summary.lui-navlink-active:hover { background: var(--lantern-surface-sunken); }
+.lui-navlink-chevron {
+  margin-left: auto; font-size: 0.75rem; flex-shrink: 0; color: var(--lantern-fg-subtle);
+  transition: transform var(--lantern-duration) var(--lantern-ease);
+}
+.lui-navlink-group[open] > summary .lui-navlink-chevron { transform: rotate(90deg); }
+.lui-navlink-items {
+  display: flex; flex-direction: column; gap: 0.15rem;
+  margin: 0.15rem 0 0 0.85rem; padding-left: 0.5rem; border-left: 1px solid var(--lantern-border);
 }
 
 /* ── Loading ── */

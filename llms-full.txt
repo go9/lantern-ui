@@ -1536,6 +1536,7 @@ A nav list item.
 
 - `active` (:boolean, default false) — Highlight as the current page.
 - `class` (:any) — Extra classes merged onto the root element.
+- `expanded` (:boolean, default false) — Render an `:item` group open even when no child is active.
 - `href` (:string) — External or full-page href; renders as a link.
 - `icon` (:string) — Leading icon name from the icon set.
 - `navigate` (:string) — LiveView navigate target; renders as a link.
@@ -1543,6 +1544,11 @@ A nav list item.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 Slots:
 - `:inner_block` (required) — Link or button label content.
+- `:item` — Child links; when present the navlink becomes a collapsible group.
+  - `navigate` — LiveView navigate target.
+  - `patch` — LiveView patch target.
+  - `href` — External or full-page href.
+  - `active` — Highlight as the current page; opens the group.
 
 #### `navlist/1`
 
@@ -1832,6 +1838,59 @@ Visual divider — horizontal, vertical, or labeled.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `text` (:string) — Optional centered label on a horizontal rule.
 - `vertical` (:boolean, default false) — Render a vertical divider instead of horizontal.
+
+### LanternUI.Components.Settings
+
+Settings page building blocks: a titled page with optional tabs, two-column sections that each save on their own, and a danger zone at the bottom.
+
+#### `danger_zone/1`
+
+The last section of a settings page: a `settings_section` whose body is one bordered list of destructive actions.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `description` (:string) — Optional line under the title.
+- `id` (:string) — Element id; also labels the section for assistive tech.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `title` (:string, default "Danger zone") — Label-column title.
+Slots:
+- `:inner_block` (required) — danger_zone_item rows.
+
+#### `danger_zone_item/1`
+
+One row of a `danger_zone`: title and consequence on the left, the action on the right.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `description` (:string) — Its consequence, in one line.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `title` (:string, required) — What the action does.
+Slots:
+- `:action` (required) — The destructive control (e.g.
+
+#### `settings_page/1`
+
+Settings page building blocks: a titled page with optional tabs, two-column sections that each save on their own, and a danger zone at the bottom.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `subtitle` (:string) — One supporting line under the title.
+- `title` (:string, required) — Page heading.
+Slots:
+- `:actions` — Right-side page actions (rarely needed: sections own their Save).
+- `:inner_block` (required) — settings_section / danger_zone children.
+- `:tabs` — A `tabs_list` for related settings groups (patch tabs keep state in the URL).
+
+#### `settings_section/1`
+
+Settings page building blocks: a titled page with optional tabs, two-column sections that each save on their own, and a danger zone at the bottom.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `description` (:string) — One-line description under the title.
+- `id` (:string) — Element id; also labels the section for assistive tech.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `title` (:string, required) — Section title, shown in the label column.
+Slots:
+- `:actions` — Footer under the fields, right-aligned (the section's Save button).
+- `:inner_block` (required) — The section's fields.
 
 ### LanternUI.Components.Sheet
 

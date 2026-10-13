@@ -13,6 +13,7 @@ Code.require_file("date_range_live.ex", __DIR__)
 Code.require_file("kbd_live.ex", __DIR__)
 Code.require_file("consistency_live.ex", __DIR__)
 Code.require_file("regressions_live.ex", __DIR__)
+Code.require_file("settings_live.ex", __DIR__)
 
 defmodule LanternUI.QA.Layouts do
   use Phoenix.Component
@@ -67,6 +68,7 @@ defmodule LanternUI.QA.Router do
     live("/kbd", LanternUI.QA.KbdLive)
     live("/consistency", LanternUI.QA.ConsistencyLive)
     live("/regressions", LanternUI.QA.RegressionsLive)
+    live("/settings", LanternUI.QA.SettingsLive)
   end
 end
 
