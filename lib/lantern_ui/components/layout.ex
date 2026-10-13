@@ -65,6 +65,7 @@ defmodule LanternUI.Components.Layout do
       "Inset frame: the top bar and sidebar share one chrome colour (`--lantern-chrome`) " <>
         "and the main column is one bordered, rounded content panel on it."
   )
+
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
   slot(:brand, required: true, doc: "logo/name, top-left corner")
