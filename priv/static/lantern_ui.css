@@ -3067,6 +3067,15 @@
 }
 .lui-price-cell-compact .lui-price-cell-price { font-size: var(--lantern-text-sm); font-weight: 600; color: inherit; }
 .lui-price-grid-scroll { overflow-x: auto; }
+/* The table's scroll cue: the edge hiding more columns fades out. */
+@supports (animation-timeline: scroll()) {
+  .lui-price-grid-scroll {
+    animation: lui-table-scroll-fade linear both;
+    animation-timeline: scroll(self inline);
+    mask-image: linear-gradient(to right, transparent, #000 var(--lui-fade-start),
+      #000 calc(100% - var(--lui-fade-end)), transparent);
+  }
+}
 .lui-price-grid { border-collapse: separate; border-spacing: 0.3125rem; margin: -0.3125rem; }
 .lui-price-grid th {
   padding: 0;

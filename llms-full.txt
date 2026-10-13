@@ -1601,6 +1601,7 @@ Priced, selectable permutation cells: the price matrix a holding picks its condi
 Renders one priced, selectable cell.
 
 - `class` (:any) — Extra classes merged onto the cell.
+- `count` (:integer) — Copies held at this permutation: a corner `×N` badge and an outline.
 - `disabled` (:boolean, default false) — Not pickable.
 - `label` (:string, required) — Permutation name (condition, grade, contents).
 - `price` (:string) — Formatted price; nil renders an em dash.
@@ -1622,7 +1623,7 @@ Slots:
 
 Renders a rows x columns table of price cells.
 
-- `cells` (:map, required) — `%{{row_key, column_key} => %{price, disabled?}}`; a missing key is an empty slot.
+- `cells` (:map, required) — `%{{row_key, column_key} => %{price, disabled, count}}`; a missing key is an empty slot.
 - `class` (:any) — Extra classes merged onto the wrapper.
 - `columns` (:list, required) — Column headers: `%{key, label}` (e.g.
 - `label` (:string) — Caption above the grid; also the table's name.
