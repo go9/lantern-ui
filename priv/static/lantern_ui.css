@@ -1793,8 +1793,9 @@
   background: transparent; border-radius: var(--lantern-radius-md); }
 .lui-dt-card.lui-dt-card-tile:hover { background: transparent; }
 .lui-dt-card-tile > .lui-dt-card-main { height: 100%; }
-.lui-dt-card-tile > .lui-dt-card-check { position: absolute; top: 0.5rem; left: 0.5rem; z-index: 2; }
-.lui-dt-card-tile > .lui-dt-card-actions { position: absolute; top: 0.25rem; right: 0.25rem; z-index: 2; }
+.lui-dt-card.lui-dt-card-tile > .lui-dt-card-check { position: absolute; top: 0.5rem; left: 0.5rem; z-index: 2; }
+.lui-dt-card.lui-dt-card-tile > .lui-dt-card-actions { position: absolute; top: 0.25rem; right: 0.25rem; z-index: 2; }
+.lui-dt-cards > :only-child:not(.lui-dt-card) { grid-column: 1 / -1; }
 .lui-dt-card-tile.lui-dt-card-selected { outline: 2px solid var(--lantern-accent); outline-offset: 2px; }
 
 /* List view: headerless index rows (name left, meta/actions right) */
