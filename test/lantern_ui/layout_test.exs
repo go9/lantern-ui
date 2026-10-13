@@ -109,6 +109,38 @@ defmodule LanternUI.LayoutTest do
       refute default =~ ~s(data-compact)
     end
 
+    test "inset is opt-in: one chrome + one content panel, styled from --lantern-chrome" do
+      inset =
+        render(fn assigns ->
+          ~H"""
+          <Layout.app_shell id="inset" inset>
+            <:brand>b</:brand><:sidebar>n</:sidebar>x
+          </Layout.app_shell>
+          """
+        end)
+
+      assert inset =~ ~s(data-inset)
+
+      default =
+        render(fn assigns ->
+          ~H"""
+          <Layout.app_shell id="flat">
+            <:brand>b</:brand><:sidebar>n</:sidebar>x
+          </Layout.app_shell>
+          """
+        end)
+
+      refute default =~ ~s(data-inset)
+
+      css = File.read!("priv/static/lantern_ui.css")
+      assert css =~ ".lui-app[data-inset] { background: var(--lantern-chrome); }"
+      assert css =~ ".lui-app[data-inset] .lui-app-main { background: var(--lantern-surface); }"
+
+      for theme <- ["priv/static/lantern_ui_theme.css", "priv/static/lantern_ui_compat.css"] do
+        assert File.read!(theme) =~ "--lantern-chrome: var(--background-chrome,"
+      end
+    end
+
     test "header and actions bars are omitted when their slots are empty" do
       html =
         render(fn assigns ->
