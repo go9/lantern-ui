@@ -38,8 +38,8 @@ defmodule LanternUI.SettingsTest do
         )
 
       doc = parse(html)
-      assert text(q(doc, "h2.lui-page-title")) == "Account"
-      assert text(q(doc, "p.lui-page-desc")) == "Manage your account."
+      assert text(q(doc, "h2.lui-settings-page-title")) == "Account"
+      assert text(q(doc, "p.lui-settings-page-subtitle")) == "Manage your account."
       assert html =~ "Export"
 
       active = q(doc, ".lui-settings-page-tabs [aria-selected=true]")
@@ -57,8 +57,8 @@ defmodule LanternUI.SettingsTest do
           """
         end)
 
-      refute html =~ "lui-page-desc"
-      refute html =~ "lui-page-header-actions"
+      refute html =~ "lui-settings-page-subtitle"
+      refute html =~ "lui-settings-page-actions"
       refute html =~ "lui-settings-page-tabs"
     end
   end

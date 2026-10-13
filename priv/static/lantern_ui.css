@@ -1079,6 +1079,20 @@
 /* ── Settings page: header, tabs, then sections split by hairlines. No cards:
    the divider is the only chrome. Two columns once the page is 48rem wide. */
 .lui-settings-page { container: lui-settings / inline-size; min-width: 0; padding-top: var(--lantern-space-sm); }
+.lui-settings-page-header {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: var(--lantern-space-xs) var(--lantern-space-md);
+}
+.lui-settings-page-text { min-width: 0; flex: 1 1 12rem; }
+.lui-settings-page-title {
+  margin: 0; font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.005em; line-height: 1.25;
+  color: var(--lantern-fg);
+}
+.lui-settings-page-subtitle {
+  margin: 0.1rem 0 0; font-size: var(--lantern-text-xs, 0.75rem); line-height: 1.3;
+  color: var(--lantern-fg-muted);
+}
+.lui-settings-page-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--lantern-space-sm); flex: none; }
 .lui-settings-page-tabs { margin-top: var(--lantern-space-md); }
 .lui-settings-section {
   display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--lantern-space-md);

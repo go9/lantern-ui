@@ -27,8 +27,12 @@ defmodule LanternUI.Components.Settings do
   one-line description) beside the fields, collapsing to one column when the
   page is narrower than 48rem. There is no card or border around a section.
 
-  The page title renders as an `h2`: inside `page_shell/1` the shell owns the
-  page's `h1`.
+  Render it inside `page_shell/1`, which owns the breadcrumb, page actions and
+  the page's `h1`; the settings title is therefore an `h2`.
+
+      <.page_shell id="settings" title="Settings">
+        <.settings_page title="Account">…</.settings_page>
+      </.page_shell>
   """
   use Phoenix.Component
 
@@ -49,12 +53,12 @@ defmodule LanternUI.Components.Settings do
   def settings_page(assigns) do
     ~H"""
     <div class={Class.merge(["lui-settings-page", @class])} {@rest}>
-      <header class="lui-page-header-row lui-settings-page-header">
-        <div class="lui-page-header-text">
-          <h2 class="lui-page-title">{@title}</h2>
-          <p :if={@subtitle} class="lui-page-desc">{@subtitle}</p>
+      <header class="lui-settings-page-header">
+        <div class="lui-settings-page-text">
+          <h2 class="lui-settings-page-title">{@title}</h2>
+          <p :if={@subtitle} class="lui-settings-page-subtitle">{@subtitle}</p>
         </div>
-        <div :if={@actions != []} class="lui-page-header-actions">{render_slot(@actions)}</div>
+        <div :if={@actions != []} class="lui-settings-page-actions">{render_slot(@actions)}</div>
       </header>
       <div :if={@tabs != []} class="lui-settings-page-tabs">{render_slot(@tabs)}</div>
       {render_slot(@inner_block)}
