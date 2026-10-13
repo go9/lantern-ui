@@ -100,6 +100,53 @@ defmodule LanternUI.SettingsTest do
     end
   end
 
+  describe "section dividers" do
+    @css File.read!("priv/static/lantern_ui.css")
+
+    test "draw between bare sections and between sections each wrapped in a form" do
+      assert @css =~
+               ":is(.lui-settings-section, :has(> .lui-settings-section)) + .lui-settings-section,"
+
+      assert @css =~
+               ":is(.lui-settings-section, :has(> .lui-settings-section)) + :has(> .lui-settings-section) > .lui-settings-section {\n  border-top: 1px solid var(--lantern-border);"
+
+      html =
+        render(fn assigns ->
+          ~H"""
+          <div>
+            <.form for={%{}} as={:a}>
+              <Settings.settings_section title="A"><input /></Settings.settings_section>
+            </.form>
+            <.form for={%{}} as={:b}>
+              <Settings.settings_section title="B"><input /></Settings.settings_section>
+            </.form>
+          </div>
+          """
+        end)
+
+      assert Enum.count(q(parse(html), "form + form > section.lui-settings-section")) == 1
+    end
+
+    test "native select reserves caret room at every size, after the size rules" do
+      [_, after_sizes] =
+        String.split(
+          @css,
+          ".lui-select-native { height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); }",
+          parts: 2
+        )
+
+      for size <- ~w(xs sm lg xl) do
+        assert after_sizes =~ ~s(.lui-field[data-size="#{size}"] .lui-select-native-wrap)
+      end
+
+      assert after_sizes =~
+               ".lui-select-native, .lui-field[data-size] .lui-select-native {\n  padding-right: calc(var(--lui-select-px) + var(--lui-select-icon) + var(--lui-gap-8));"
+
+      assert after_sizes =~
+               ".lui-select-native-wrap .lui-select-caret { right: var(--lui-select-px);"
+    end
+  end
+
   describe "danger_zone/1" do
     test "is a settings section with a bordered list of items" do
       html =

@@ -27,6 +27,17 @@ defmodule LanternUI.Components.Settings do
   one-line description) beside the fields, collapsing to one column when the
   page is narrower than 48rem. There is no card or border around a section.
 
+  Give each section its own form so Save submits only that section's fields.
+  The divider still draws when sections are wrapped (in a form or any other
+  element whose direct child is the section):
+
+      <.form for={@profile_form} phx-submit="save_profile">
+        <.settings_section id="profile" title="Profile">…</.settings_section>
+      </.form>
+      <.form for={@password_form} phx-submit="save_password">
+        <.settings_section id="password" title="Password">…</.settings_section>
+      </.form>
+
   Render it inside `page_shell/1`, which owns the breadcrumb, page actions and
   the page's `h1`; the settings title is therefore an `h2`.
 

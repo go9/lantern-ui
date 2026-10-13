@@ -12,6 +12,8 @@ defmodule LanternUI.QA.SettingsLive do
     {:noreply, assign(socket, tab: params["tab"] || "general", nav: params["nav"])}
   end
 
+  def handle_event("noop", _params, socket), do: {:noreply, socket}
+
   def render(assigns) do
     ~H"""
     <div data-lantern-theme={@theme}>
@@ -56,7 +58,36 @@ defmodule LanternUI.QA.SettingsLive do
               </.tabs_list>
             </:tabs>
 
+            <%!-- One form per section: the divider must survive the wrapper. --%>
+            <.form :if={@tab == "connection"} for={%{}} as={:server} phx-submit="noop">
+              <.settings_section id="server" title="Server" description="Where the client connects.">
+                <.input name="host" label="Host" value="db.internal" />
+                <:actions><.button variant="solid" type="submit">Save</.button></:actions>
+              </.settings_section>
+            </.form>
+            <.form :if={@tab == "connection"} for={%{}} as={:access} phx-submit="noop">
+              <.settings_section
+                id="access"
+                title="Access"
+                description="Default role for new members."
+              >
+                <div style="max-width: 5rem;">
+                  <.select
+                    id="qa-settings-role"
+                    name="role"
+                    label="Role"
+                    native
+                    size="sm"
+                    value="admin"
+                    options={[{"Admin", "admin"}, {"Member", "member"}, {"Viewer", "viewer"}]}
+                  />
+                </div>
+                <:actions><.button variant="solid" type="submit">Save</.button></:actions>
+              </.settings_section>
+            </.form>
+
             <.settings_section
+              :if={@tab != "connection"}
               id="personal"
               title="Personal information"
               description="Your name and contact details."
@@ -67,7 +98,12 @@ defmodule LanternUI.QA.SettingsLive do
               <:actions><.button variant="solid">Save changes</.button></:actions>
             </.settings_section>
 
-            <.settings_section id="password" title="Password" description="Change your password.">
+            <.settings_section
+              :if={@tab != "connection"}
+              id="password"
+              title="Password"
+              description="Change your password."
+            >
               <.input name="current" type="password" label="Current password" />
               <.input name="new" type="password" label="New password" />
               <:actions><.button variant="solid">Save changes</.button></:actions>
