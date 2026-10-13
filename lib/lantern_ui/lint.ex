@@ -31,15 +31,20 @@ defmodule LanternUI.Lint do
   # control tags, and case arms (`:pattern ->` or `{...} ->` on a line of its own,
   # or `->` inside `<% ... %>`). An HTML comment's `-->` and a `fn x ->` inside an
   # attribute are not branches.
-  @branch_boundaries [
-    ~r/^\s*defp?\s/m,
-    ~r/^\s*defmacrop?\s/m,
-    ~r/^\s*(?:case|cond|if|unless)\b.*\bdo\s*$/m,
-    ~r/^\s*else\s*$/m,
-    ~r/<%=?\s*(?:case|cond|if|unless|else)\b/,
-    ~r/<%[^%]*?->\s*%>/,
-    ~r/^\s*(?::\w+|\{[^}<]*\}|\[[^\]<]*\]|_\w*|\d+|nil|true|false)(?:\s+when\s[^\n<]*)?\s*->\s*$/m
-  ]
+  # A function, not a module attribute: OTP 28 compiled regexes cannot be
+  # escaped into module attributes on Elixir 1.18.
+  defp branch_boundaries do
+    [
+      ~r/^\s*defp?\s/m,
+      ~r/^\s*defmacrop?\s/m,
+      ~r/^\s*(?:case|cond|if|unless)\b.*\bdo\s*$/m,
+      ~r/^\s*else\s*$/m,
+      ~r/<%=?\s*(?:case|cond|if|unless|else)\b/,
+      ~r/<%[^%]*?->\s*%>/,
+      ~r/^\s*(?::\w+|\{[^}<]*\}|\[[^\]<]*\]|_\w*|\d+|nil|true|false)(?:\s+when\s[^\n<]*)?\s*->\s*$/m
+    ]
+  end
+
   @lantern_table_call ~r/<\.(table|data_table|resource_list)\b/
   @component_call ~r/<\.([a-z][a-z0-9_]*[!?]?)\b/
   @local_def ~r/defp?\s+([a-z][a-z0-9_]*[!?]?)[\s(]/
@@ -403,7 +408,7 @@ defmodule LanternUI.Lint do
 
   defp branch_between?(source, from, to) do
     between = binary_part(source, from, to - from)
-    Enum.any?(@branch_boundaries, &Regex.match?(&1, between))
+    Enum.any?(branch_boundaries(), &Regex.match?(&1, between))
   end
 
   # Splits shells, in source order, into regions with no branch between neighbours.
