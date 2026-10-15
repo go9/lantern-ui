@@ -6,6 +6,9 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- Searchable `select/1` (legacy hook) re-reads its parts on every LiveView update, so a patch that replaces the panel no longer leaves the toggle driving a detached panel (the select stopped opening); an open panel stays open with its search text.
+
 ### Added
 - `select/1` searchable: an option map's optional `keywords` list adds hidden search terms (e.g. a printed barcode), and Enter on an exact keyword picks that option over the first match, so a wedge scan into the search box selects it.
 - `app_shell/1` `inset` (opt-in): the top bar and sidebar share one chrome colour, `--lantern-chrome` (from the host's `--background-chrome`, falling back to the sunken surface), and main becomes one rounded, bordered content panel on it. Hover inside the chrome steps to the border colour.

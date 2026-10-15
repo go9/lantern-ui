@@ -1516,12 +1516,7 @@ const LanternSidebar = {
 // type and navigation skips hidden options.
 const LanternSelectLegacy = {
   mounted() {
-    this.toggle = this.el.querySelector('[data-part="toggle"]')
-    this.panel = this.el.querySelector('[data-part="panel"]')
-    this.native = this.el.querySelector('[data-part="native"]')
-    this.label = this.el.querySelector('[data-part="label"]')
-    this.search = this.el.querySelector('[data-part="search-input"]')
-    this.noResults = this.el.querySelector('[data-part="no-results"]')
+    this.queryParts()
     this.multiple = this.el.hasAttribute("data-multiple")
     this.max = parseInt(this.el.dataset.max || "0", 10) || null
     this.cleanup = []
@@ -1539,8 +1534,34 @@ const LanternSelectLegacy = {
     })
 
     this.el.addEventListener("keydown", (e) => this.onKey(e))
-    if (this.search) {
-      this.search.addEventListener("input", () => this.filter())
+    // Delegated, so a search input a patch replaced still filters.
+    this.el.addEventListener("input", (e) => {
+      if (e.target.matches('[data-part="search-input"]')) this.filter()
+    })
+  },
+
+  queryParts() {
+    this.toggle = this.el.querySelector('[data-part="toggle"]')
+    this.panel = this.el.querySelector('[data-part="panel"]')
+    this.native = this.el.querySelector('[data-part="native"]')
+    this.label = this.el.querySelector('[data-part="label"]')
+    this.search = this.el.querySelector('[data-part="search-input"]')
+    this.noResults = this.el.querySelector('[data-part="no-results"]')
+  },
+
+  // A LiveView patch can replace the parts (and re-render the panel
+  // `hidden`): re-read them, and keep an open panel open with its search.
+  updated() {
+    const query = this.search?.value
+    this.queryParts()
+    if (!this.open) return
+    this.cleanup.forEach((fn) => fn())
+    this.cleanup = []
+    this.open = false
+    this.show()
+    if (this.search && query) {
+      this.search.value = query
+      this.filter()
     }
   },
 
@@ -2221,6 +2242,7 @@ const LanternSelect = {
   updated() {
     if (this._zagDelegate) this._zagDelegate.updated()
     else if (this.el.hasAttribute("data-zag")) this._zagPendingUpdate = true
+    else LanternSelectLegacy.updated.call(this)
   },
 
   destroyed() {

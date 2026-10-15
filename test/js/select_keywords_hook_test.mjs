@@ -70,3 +70,23 @@ test("Enter without an exact keyword still picks the first visible option", () =
   assert.equal(m.el.querySelector('[data-part="native"]').value, "1")
   m.unmount()
 })
+
+// A LiveView patch can replace the panel (re-rendered `hidden`). The hook must
+// re-read its parts on update, or the toggle drives a detached panel and the
+// select never opens again (seen on the Intake defaults row).
+test("after a patch replaces the panel, the toggle still opens the live one", () => {
+  const m = mountHook(hooks.LanternSelect, fixture, { rootId: "loc-select" })
+  globalThis.Event = m.window.Event
+  const stale = m.el.querySelector('[data-part="panel"]')
+  stale.replaceWith(stale.cloneNode(true))
+  m.hook.updated()
+
+  m.hook.show = function () {
+    this.open = true
+    this.panel.hidden = false
+  }
+  m.el.querySelector('[data-part="toggle"]').click()
+
+  assert.equal(m.el.querySelector('[data-part="panel"]').hidden, false)
+  m.unmount()
+})
