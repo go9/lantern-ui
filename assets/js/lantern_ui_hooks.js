@@ -1608,11 +1608,20 @@ const LanternSelectLegacy = {
     const q = (this.search?.value || "").trim().toLowerCase()
     let any = false
     this.options().forEach((o) => {
-      const hit = q === "" || o.textContent.trim().toLowerCase().includes(q)
+      const hit =
+        q === "" ||
+        o.textContent.trim().toLowerCase().includes(q) ||
+        this.keywords(o).some((k) => k.includes(q))
       o.hidden = !hit
       any = any || hit
     })
     if (this.noResults) this.noResults.hidden = any
+  },
+
+  // Extra search terms per option (`keywords` on an option map), e.g. the
+  // barcode a scanner types: matched like the label, never shown.
+  keywords(opt) {
+    return (opt.dataset.keywords || "").split("\n").filter(Boolean)
   },
 
   select(opt) {
@@ -1690,7 +1699,11 @@ const LanternSelectLegacy = {
     } else if (e.key === "Enter" || (e.key === " " && e.target !== this.search)) {
       e.preventDefault()
       if (idx >= 0) this.select(opts[idx])
-      else if (this.search && e.key === "Enter" && opts[0]) this.select(opts[0])
+      else if (this.search && e.key === "Enter" && opts[0]) {
+        // A keyword typed in full (a scanned code) wins over the first match.
+        const q = this.search.value.trim().toLowerCase()
+        this.select(opts.find((o) => this.keywords(o).includes(q)) || opts[0])
+      }
     } else if (e.key.length === 1 && /\S/.test(e.key) && e.target !== this.search) {
       const q = e.key.toLowerCase()
       const start = idx + 1
