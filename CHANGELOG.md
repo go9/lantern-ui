@@ -6,7 +6,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- Searchable `select/1` (legacy hook) re-reads its parts on every LiveView update, so a patch that replaces the panel no longer leaves the toggle driving a detached panel (the select stopped opening); an open panel stays open with its search text.
+
 ### Added
+- `select/1` searchable: an option map's optional `keywords` list adds hidden search terms (e.g. a printed barcode), and Enter on an exact keyword picks that option over the first match, so a wedge scan into the search box selects it.
 - `app_shell/1` `inset` (opt-in): the top bar and sidebar share one chrome colour, `--lantern-chrome` (from the host's `--background-chrome`, falling back to the sunken surface), and main becomes one rounded, bordered content panel on it. Hover inside the chrome steps to the border colour.
 - A `data_table` inside a `card` drops its own border, radius and shadow (no card-in-card).
 - `settings_page/1`, `settings_section/1`, `danger_zone/1`, `danger_zone_item/1` (`LanternUI.Components.Settings`): a settings page with a title, subtitle and optional `:tabs` (a `tabs_list`, so patch tabs such as `?tab=connection` keep state in the URL); two-column sections (title + description beside the fields, a right-aligned `:actions` Save) split by dividers (also when each section is wrapped in its own `<.form>`) and stacking below 48rem; and a bordered danger-zone list of destructive actions.

@@ -230,6 +230,26 @@ defmodule LanternUI.SelectZagTest do
       refute html =~ "data-scope"
     end
 
+    test "searchable renders an option map's keywords as hidden search terms" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Select.select
+            id="loc"
+            name="loc"
+            searchable
+            options={[%{label: "Attic / Bin 12", value: 12, keywords: ["LOC-12", "Bin-12"]}, {"Garage", 1}]}
+          />
+          """
+        end)
+
+      [bin, garage] = html |> Floki.parse_document!() |> Floki.find(~s([data-part="option"]))
+      assert html_attr(bin, "data-keywords") == "loc-12\nbin-12"
+      assert html_attr(garage, "data-keywords") == nil
+      assert Floki.text(bin) =~ "Attic / Bin 12"
+      refute Floki.text(bin) =~ "LOC-12"
+    end
+
     test "native stays hook-free with no zag markup" do
       html =
         render(fn assigns ->

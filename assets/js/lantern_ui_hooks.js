@@ -1516,12 +1516,7 @@ const LanternSidebar = {
 // type and navigation skips hidden options.
 const LanternSelectLegacy = {
   mounted() {
-    this.toggle = this.el.querySelector('[data-part="toggle"]')
-    this.panel = this.el.querySelector('[data-part="panel"]')
-    this.native = this.el.querySelector('[data-part="native"]')
-    this.label = this.el.querySelector('[data-part="label"]')
-    this.search = this.el.querySelector('[data-part="search-input"]')
-    this.noResults = this.el.querySelector('[data-part="no-results"]')
+    this.queryParts()
     this.multiple = this.el.hasAttribute("data-multiple")
     this.max = parseInt(this.el.dataset.max || "0", 10) || null
     this.cleanup = []
@@ -1539,8 +1534,34 @@ const LanternSelectLegacy = {
     })
 
     this.el.addEventListener("keydown", (e) => this.onKey(e))
-    if (this.search) {
-      this.search.addEventListener("input", () => this.filter())
+    // Delegated, so a search input a patch replaced still filters.
+    this.el.addEventListener("input", (e) => {
+      if (e.target.matches('[data-part="search-input"]')) this.filter()
+    })
+  },
+
+  queryParts() {
+    this.toggle = this.el.querySelector('[data-part="toggle"]')
+    this.panel = this.el.querySelector('[data-part="panel"]')
+    this.native = this.el.querySelector('[data-part="native"]')
+    this.label = this.el.querySelector('[data-part="label"]')
+    this.search = this.el.querySelector('[data-part="search-input"]')
+    this.noResults = this.el.querySelector('[data-part="no-results"]')
+  },
+
+  // A LiveView patch can replace the parts (and re-render the panel
+  // `hidden`): re-read them, and keep an open panel open with its search.
+  updated() {
+    const query = this.search?.value
+    this.queryParts()
+    if (!this.open) return
+    this.cleanup.forEach((fn) => fn())
+    this.cleanup = []
+    this.open = false
+    this.show()
+    if (this.search && query) {
+      this.search.value = query
+      this.filter()
     }
   },
 
@@ -1608,11 +1629,20 @@ const LanternSelectLegacy = {
     const q = (this.search?.value || "").trim().toLowerCase()
     let any = false
     this.options().forEach((o) => {
-      const hit = q === "" || o.textContent.trim().toLowerCase().includes(q)
+      const hit =
+        q === "" ||
+        o.textContent.trim().toLowerCase().includes(q) ||
+        this.keywords(o).some((k) => k.includes(q))
       o.hidden = !hit
       any = any || hit
     })
     if (this.noResults) this.noResults.hidden = any
+  },
+
+  // Extra search terms per option (`keywords` on an option map), e.g. the
+  // barcode a scanner types: matched like the label, never shown.
+  keywords(opt) {
+    return (opt.dataset.keywords || "").split("\n").filter(Boolean)
   },
 
   select(opt) {
@@ -1690,7 +1720,11 @@ const LanternSelectLegacy = {
     } else if (e.key === "Enter" || (e.key === " " && e.target !== this.search)) {
       e.preventDefault()
       if (idx >= 0) this.select(opts[idx])
-      else if (this.search && e.key === "Enter" && opts[0]) this.select(opts[0])
+      else if (this.search && e.key === "Enter" && opts[0]) {
+        // A keyword typed in full (a scanned code) wins over the first match.
+        const q = this.search.value.trim().toLowerCase()
+        this.select(opts.find((o) => this.keywords(o).includes(q)) || opts[0])
+      }
     } else if (e.key.length === 1 && /\S/.test(e.key) && e.target !== this.search) {
       const q = e.key.toLowerCase()
       const start = idx + 1
@@ -2208,6 +2242,7 @@ const LanternSelect = {
   updated() {
     if (this._zagDelegate) this._zagDelegate.updated()
     else if (this.el.hasAttribute("data-zag")) this._zagPendingUpdate = true
+    else LanternSelectLegacy.updated.call(this)
   },
 
   destroyed() {

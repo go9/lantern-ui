@@ -58,7 +58,12 @@ defmodule LanternUI.Components.Select do
     doc: "Form field; derives id, name, value, and errors."
   )
 
-  attr(:options, :list, default: [], doc: "Choices as values or {label, value} tuples.")
+  attr(:options, :list,
+    default: [],
+    doc:
+      "Choices as values, {label, value} tuples, or %{label, value} maps; a map's optional `keywords` list adds hidden search terms (searchable path) and an Enter on an exact keyword picks that option."
+  )
+
   attr(:label, :string, default: nil, doc: "Primary label above the control.")
   attr(:sublabel, :string, default: nil, doc: "Secondary label line under the primary label.")
   attr(:description, :string, default: nil, doc: "Helper text under the label stack.")
@@ -467,6 +472,7 @@ defmodule LanternUI.Components.Select do
               role="option"
               data-part="option"
               data-value={value}
+              data-keywords={@keywords[to_string(value)]}
               aria-selected={to_string(to_string(value) in @values_s)}
               tabindex="-1"
             >
@@ -493,6 +499,7 @@ defmodule LanternUI.Components.Select do
 
     assigns
     |> assign(:opts, Enum.map(assigns.options, &option_pair/1))
+    |> assign(:keywords, option_keywords(assigns.options))
     |> assign(:value_s, List.first(values_s))
     |> assign(:values_s, values_s)
     |> assign(:id, assigns.id || default_id(assigns))
@@ -524,6 +531,14 @@ defmodule LanternUI.Components.Select do
       {false, [v | _]} -> selected_label(opts, v)
       {true, [v]} -> selected_label(opts, v)
       {true, vs} -> "#{length(vs)} selected"
+    end
+  end
+
+  # Searchable path: an option map's `keywords` (hidden search terms, e.g. a
+  # barcode) keyed by value, lowercased and newline-joined for the hook.
+  defp option_keywords(options) do
+    for %{value: value, keywords: [_ | _] = keywords} <- options, into: %{} do
+      {to_string(value), keywords |> Enum.map(&String.downcase(to_string(&1))) |> Enum.join("\n")}
     end
   end
 
