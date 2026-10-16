@@ -1814,7 +1814,7 @@ Select — mirrors Fluxon's `select/1` surface: a `FormField`-aware select with 
 - `native` (:boolean, default false) — Use a native <select> instead of the rich listbox.
 - `on_change` (:string) — server event pushed with `%{id, value}` when the Zag select value changes (non-searchable rich path only).
 - `on_change_client` (:string) — bubbling DOM CustomEvent dispatched with `%{id, value}` on Zag value changes (non-searchable rich path only).
-- `options` (:list, default []) — Choices as values or {label, value} tuples.
+- `options` (:list, default []) — Choices as values, {label, value} tuples, or %{label, value} maps; a map's optional `keywords` list adds hidden search terms (searchable path) and an Enter on an exact keyword picks that option.
 - `placeholder` (:string, default "Select…") — Toggle text when nothing is selected.
 - `prompt` (:string) — blank first option (native path)
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
