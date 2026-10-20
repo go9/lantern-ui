@@ -26,7 +26,7 @@ const SHELL = `
             <div class="lui-nav-row" data-part="nav-row">
               <a class="lui-nav-item" href="/acme" id="acme-link">Acme</a>
               <button data-part="nav-disclosure" aria-expanded="false" aria-controls="p-acme-subnav"
-                data-storage-key="u1:o1:p-acme" id="acme-disclosure">v</button>
+                data-storage-key="u1:o1:p-acme" data-default-expanded="false" id="acme-disclosure">v</button>
               <button data-part="nav-action" aria-pressed="true" id="acme-pin">pin</button>
             </div>
             <div id="p-acme-subnav" data-part="nav-subpanel"><a class="lui-nav-item" href="/acme/runs">Runs</a></div>
@@ -119,6 +119,30 @@ test("a stored open state survives a remount under the same key only", () => {
   m.hook.updated()
   assert.equal(other.getAttribute("aria-expanded"), "false")
   m.unmount()
+})
+
+test("a retained node whose key changes drops the previous key's state", () => {
+  withStorage(memoryStorage({ "lui-nav:u1:o1:p-acme": "true", "lui-nav:u3:o1:p-acme": "false" }), () => {
+    const m = mount()
+    const btn = $(m, "#acme-disclosure")
+    assert.equal(btn.getAttribute("aria-expanded"), "true", "u1 opened it")
+
+    // LiveView patches the same node to another account's key; the hook's
+    // sticky attributes survive the patch, so only the hook can reset them.
+    btn.setAttribute("data-storage-key", "u2:o1:p-acme")
+    m.hook.updated()
+    assert.equal(btn.getAttribute("aria-expanded"), "false", "nothing stored for u2: server default")
+    assert.equal(btn.hasAttribute("data-expanded"), false)
+
+    // Back to a key with a stored state: that key's state, not u2's.
+    btn.setAttribute("data-storage-key", "u1:o1:p-acme")
+    m.hook.updated()
+    assert.equal(btn.getAttribute("aria-expanded"), "true")
+    btn.setAttribute("data-storage-key", "u3:o1:p-acme")
+    m.hook.updated()
+    assert.equal(btn.getAttribute("aria-expanded"), "false")
+    m.unmount()
+  })
 })
 
 test("closing a disclosure persists false, and the click leaves the drawer open", () => {

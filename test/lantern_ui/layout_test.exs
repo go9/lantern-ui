@@ -457,6 +457,8 @@ defmodule LanternUI.LayoutTest do
       assert Floki.attribute(disclosure, "aria-expanded") == ["false"]
       assert Floki.attribute(disclosure, "aria-controls") == ["project-acme-subnav"]
       assert Floki.attribute(disclosure, "data-storage-key") == ["u1:o2:project-acme"]
+      # The server default, for the hook to fall back to when the key changes.
+      assert Floki.attribute(disclosure, "data-default-expanded") == ["false"]
       assert [_] = Floki.find(doc, "#project-acme-subnav[data-part=nav-subpanel]")
 
       # Trailing action: named, pressed, not a nav item (so the drawer stays open).
@@ -532,6 +534,7 @@ defmodule LanternUI.LayoutTest do
       assert Floki.attribute(toggle, "aria-controls") == ["factory-subnav"]
       assert Floki.attribute(toggle, "aria-expanded") == ["true"]
       assert Floki.attribute(toggle, "data-storage-key") == ["u1:o2:factory"]
+      assert Floki.attribute(toggle, "data-default-expanded") == ["true"]
     end
 
     test "the stylesheet hides closed panels from the tab order and shows actions on touch" do

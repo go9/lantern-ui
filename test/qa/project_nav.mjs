@@ -10,6 +10,7 @@
 // Screenshots go to $QA_SHOTS (default /tmp/lantern-qa/project-nav).
 import { createRequire } from "node:module"
 import { mkdirSync } from "node:fs"
+import { createHash } from "node:crypto"
 
 const require = createRequire(import.meta.url)
 const puppeteer = require(process.env.PUPPETEER_CORE || "puppeteer-core")
@@ -51,13 +52,51 @@ const tab = async (shift = false) => {
   if (shift) await p.keyboard.up("Shift")
 }
 
-// ---------- Desktop 1280x800 ----------
-for (const theme of ["light", "dark"]) {
-  await p.setViewport({ width: 1280, height: 800 })
-  await load(`?theme=${theme}`, { clear: true })
-  await p.screenshot({ path: `${SHOTS}/desktop-${theme}.png` })
+// Force a theme regardless of the machine's own preference: the theme CSS
+// follows system dark unless the root says `.light`, so a descendant `.dark`
+// class alone cannot produce a light shot on a dark-mode host.
+const setTheme = async (theme) => {
+  await p.emulateMediaFeatures([{ name: "prefers-color-scheme", value: theme }])
+  await p.evaluate((t) => {
+    for (const el of [document.documentElement, document.querySelector("#qa-project-nav-theme")]) {
+      el.classList.toggle("dark", t === "dark")
+      el.classList.toggle("light", t === "light")
+    }
+  }, theme)
+  await sleep(250)
 }
+const sidebarColors = () =>
+  p.$eval("#qa-project-nav-sidebar", (el) => {
+    const s = getComputedStyle(el)
+    return { bg: s.backgroundColor, fg: getComputedStyle(el.querySelector(".lui-nav-item")).color }
+  })
+const luminance = (rgb) => {
+  const [r, g, b] = rgb.match(/[\d.]+/g).map(Number)
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+// Shoot both themes and prove they are really different.
+const shootThemes = async (name) => {
+  const shot = {}
+  for (const theme of ["light", "dark"]) {
+    await setTheme(theme)
+    shot[theme] = { colors: await sidebarColors(), png: await p.screenshot({ path: `${SHOTS}/${name}-${theme}.png` }) }
+  }
+  const { light, dark } = shot
+  check(
+    `${name}: light and dark differ in computed colours`,
+    light.colors.bg !== dark.colors.bg && light.colors.fg !== dark.colors.fg &&
+      luminance(light.colors.bg) > luminance(dark.colors.bg) && luminance(light.colors.fg) < luminance(dark.colors.fg),
+    JSON.stringify({ light: light.colors, dark: dark.colors }),
+  )
+  const sha = (buf) => createHash("sha1").update(buf).digest("hex")
+  check(`${name}: light and dark screenshots differ`, sha(light.png) !== sha(dark.png))
+  await setTheme("light")
+}
+
+// ---------- Desktop 1280x800 ----------
+await p.setViewport({ width: 1280, height: 800 })
 await load("", { clear: true })
+await shootThemes("desktop")
 
 // B3: link, disclosure and pin are three separate tab stops in that order.
 await focus("#qa-project-beacon a.lui-nav-item")
@@ -165,14 +204,7 @@ for (const width of [375, 768]) {
   check(`${width}: focus enters`, (await active()) === "Close navigation", await active())
   check(`${width}: main is inert`, await p.$eval(".lui-app-main", (el) => el.inert))
   check(`${width}: page scroll locked`, (await htmlOverflow()) === "hidden", await htmlOverflow())
-  if (width === 375) {
-    for (const theme of ["light", "dark"]) {
-      await p.evaluate((t) => document.querySelector("#qa-project-nav-theme").classList.toggle("dark", t === "dark"), theme)
-      await sleep(250)
-      await p.screenshot({ path: `${SHOTS}/mobile-${width}-open-${theme}.png` })
-    }
-    await p.evaluate(() => document.querySelector("#qa-project-nav-theme").classList.remove("dark"))
-  }
+  if (width === 375) await shootThemes(`mobile-${width}-open`)
 
   // Trap: Shift+Tab from the first stop wraps to the last, Tab wraps back.
   await tab(true)

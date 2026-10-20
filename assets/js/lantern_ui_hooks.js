@@ -1567,10 +1567,15 @@ const LanternSidebar = {
   restoreDisclosures() {
     for (const btn of this.el.querySelectorAll('[data-part="nav-disclosure"][data-storage-key]')) {
       const key = btn.dataset.storageKey
-      if (btn.__lanternNavKey === key) continue
+      const previous = btn.__lanternNavKey
+      if (previous === key) continue
       btn.__lanternNavKey = key
-      const open = readNavState(key)
-      if (open === null) continue
+      let open = readNavState(key)
+      // A retained node whose key changed (another user/org/group) must not
+      // keep the previous key's state: with nothing stored, fall back to the
+      // server default.
+      if (open === null && previous === undefined) continue
+      if (open === null) open = btn.dataset.defaultExpanded === "true"
       this.stickyAttr(btn, "aria-expanded", String(open))
       this.stickyAttr(btn, "data-expanded", open ? "" : null)
     }
@@ -4189,25 +4194,44 @@ const LanternMessageScroller = {
       this.reportSeen()
     }
     // `on_seen`: tell the host the newest item the reader has actually seen —
-    // only while the viewport is at the bottom and the page is visible, so a
-    // message appended while they read history stays unseen until they get to
-    // it (scroll, Jump to latest, or return to the tab).
+    // only while the viewport is at the bottom, the page is visible and the
+    // item itself is rendered and on screen, so a message appended while they
+    // read history (or while the transcript is hidden) stays unseen until they
+    // get to it. An id counts as reported only once the push succeeds; a
+    // rejected push (LiveView disconnected) is retried on reconnect.
     this.lastSeen = null
+    this.pendingSeen = null
     this.reportSeen = () => {
       const event = this.el.dataset.onSeen
       if (!event || !this.atBottom || document.visibilityState === "hidden") return
       const items = this.content.querySelectorAll('[data-part="item"][data-message-id]')
-      const id = items[items.length - 1]?.dataset.messageId
-      if (!id || id === this.lastSeen) return
-      this.lastSeen = id
-      try {
-        this.pushEvent(event, { message_id: id })
-      } catch (_) {
-        this.lastSeen = null
+      const item = items[items.length - 1]
+      const id = item?.dataset.messageId
+      if (!id || id === this.lastSeen || id === this.pendingSeen || !this.inView(item)) return
+      this.pendingSeen = id
+      const settle = (ok) => {
+        if (this.pendingSeen === id) this.pendingSeen = null
+        if (ok) this.lastSeen = id
       }
+      let result
+      try {
+        result = this.pushEvent(event, { message_id: id })
+      } catch (_) {
+        return settle(false)
+      }
+      if (typeof result?.then === "function") result.then(() => settle(true), () => settle(false))
+      else settle(true)
     }
     this.onVisibility = () => this.reportSeen()
     document.addEventListener("visibilitychange", this.onVisibility)
+    // A transcript revealed after being display:none (mobile list/thread,
+    // collapsed panel) reports what is now in view.
+    if (typeof IntersectionObserver === "function") {
+      this.seenObserver = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) this.reportSeen()
+      })
+      this.seenObserver.observe(this.viewport)
+    }
     this.scroll = () => {
       this.updateState()
       if (this.atBottom) this.following = true
@@ -4237,6 +4261,24 @@ const LanternMessageScroller = {
     window.addEventListener("resize", this.resize)
     requestAnimationFrame(() => { if (this.following) this.scrollToBottom(); else this.updateState() })
   },
+  // Rendered (no display:none / visibility:hidden / content-visibility up the
+  // tree) and overlapping both the scroll viewport and the window.
+  inView(item) {
+    const visible = item.checkVisibility
+      ? item.checkVisibility({ visibilityProperty: true, contentVisibilityAuto: true })
+      : item.getClientRects().length > 0 && window.getComputedStyle(item).visibility !== "hidden"
+    if (!visible) return false
+    const rect = item.getBoundingClientRect()
+    const port = this.viewport.getBoundingClientRect()
+    const top = Math.max(port.top, 0)
+    const bottom = Math.min(port.bottom, window.innerHeight)
+    const left = Math.max(port.left, 0)
+    const right = Math.min(port.right, window.innerWidth)
+    return rect.bottom > top && rect.top < bottom && rect.right > left && rect.left < right
+  },
+  reconnected() {
+    this.reportSeen()
+  },
   scrollToBottom() {
     this.el.dataset.autoscrolling = "true"
     this.viewport.scrollTop = this.viewport.scrollHeight
@@ -4250,6 +4292,7 @@ const LanternMessageScroller = {
     this.observer?.disconnect()
     window.removeEventListener("resize", this.resize)
     document.removeEventListener("visibilitychange", this.onVisibility)
+    this.seenObserver?.disconnect()
   },
 }
 

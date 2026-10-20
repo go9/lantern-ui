@@ -613,6 +613,7 @@ defmodule LanternUI.Components.Layout do
           aria-controls={@panel_id}
           data-expanded={@expanded || nil}
           data-storage-key={@storage_key}
+          data-default-expanded={@storage_key && to_string(@expanded)}
           data-part="nav-disclosure"
           phx-click={toggle_disclosure()}
         >
@@ -630,6 +631,7 @@ defmodule LanternUI.Components.Layout do
         aria-controls={@panel_id}
         data-expanded={@expanded || nil}
         data-storage-key={@storage_key}
+        data-default-expanded={@storage_key && to_string(@expanded)}
         data-part="nav-disclosure"
         phx-click={toggle_disclosure()}
         {@rest}
