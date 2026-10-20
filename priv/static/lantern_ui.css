@@ -1406,7 +1406,7 @@
 /* Nav */
 .lui-nav-group { margin-bottom: 1rem; }
 .lui-nav-group-label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.05em; color: var(--lantern-fg-subtle); padding: 0 0.5rem; margin-bottom: 0.25rem;
+  letter-spacing: 0.05em; color: var(--lantern-fg-muted); padding: 0 0.5rem; margin-bottom: 0.25rem;
   white-space: nowrap; }
 .lui-nav-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.5rem;
   border-radius: var(--lantern-radius-sm); font-size: 0.8125rem; font-weight: 500; line-height: 1.3;

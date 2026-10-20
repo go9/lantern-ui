@@ -8,12 +8,16 @@
 //     node test/qa/project_nav.mjs
 //
 // Screenshots go to $QA_SHOTS (default /tmp/lantern-qa/project-nav).
+// axe-core is resolved next to puppeteer-core (or set AXE_CORE to axe.min.js).
 import { createRequire } from "node:module"
 import { mkdirSync } from "node:fs"
 import { createHash } from "node:crypto"
 
 const require = createRequire(import.meta.url)
 const puppeteer = require(process.env.PUPPETEER_CORE || "puppeteer-core")
+const AXE =
+  process.env.AXE_CORE ||
+  require.resolve("axe-core/axe.min.js", { paths: [process.env.PUPPETEER_CORE || process.cwd()].map((p) => p.replace(/node_modules.*$/, "")) })
 const BASE = process.env.BASE || "http://127.0.0.1:4013"
 const SHOTS = process.env.QA_SHOTS || "/tmp/lantern-qa/project-nav"
 const CHROME = process.env.CHROME_PATH || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
@@ -74,12 +78,36 @@ const luminance = (rgb) => {
   const [r, g, b] = rgb.match(/[\d.]+/g).map(Number)
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
+// axe (WCAG 2 A/AA): no serious or critical violation in the current state.
+// KNOWN lists pre-existing defects awaiting an owner decision; each is printed
+// on every run and the check fails once one disappears (then delete it here).
+const KNOWN = {
+  // Active nav item: brand accent on its 12% soft tint, ~3.3:1 in light.
+  "color-contrast .lui-nav-item-active > .lui-nav-item-label": "#3880 owner decision pending",
+}
+const knownSeen = new Set()
+const axe = async (label) => {
+  if (!(await p.evaluate(() => !!window.axe))) await p.addScriptTag({ path: AXE })
+  const { violations } = await p.evaluate(() =>
+    window.axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa"] } }),
+  )
+  const found = violations
+    .filter((v) => v.impact === "serious" || v.impact === "critical")
+    .flatMap((v) => v.nodes.map((n) => ({ key: `${v.id} ${n.target.join(" ")}`, impact: v.impact })))
+  const bad = found.filter((f) => !KNOWN[f.key])
+  for (const f of found.filter((f) => KNOWN[f.key])) knownSeen.add(f.key)
+  for (const f of found.filter((f) => KNOWN[f.key])) console.log(`KNOWN ${label}: ${f.impact} ${f.key} (${KNOWN[f.key]})`)
+  check(`${label}: axe has no serious/critical violations`, bad.length === 0, bad.map((f) => `${f.impact} ${f.key}`).join("; "))
+  return found
+}
+
 // Shoot both themes and prove they are really different.
 const shootThemes = async (name) => {
   const shot = {}
   for (const theme of ["light", "dark"]) {
     await setTheme(theme)
     shot[theme] = { colors: await sidebarColors(), png: await p.screenshot({ path: `${SHOTS}/${name}-${theme}.png` }) }
+    await axe(`${name} ${theme}`)
   }
   const { light, dark } = shot
   check(
@@ -280,5 +308,6 @@ for (const width of [375, 768]) {
 
 check("no page/console errors", errors.length === 0, errors.slice(0, 3).join(" | "))
 await browser.close()
+for (const key of Object.keys(KNOWN)) check(`known axe issue still present (else delete it from KNOWN): ${key}`, knownSeen.has(key))
 console.log(`\n${failed ? `${failed} FAILED` : "all passed"} — screenshots in ${SHOTS}`)
 process.exit(failed ? 1 : 0)

@@ -7,6 +7,8 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Fixed
+- `menu/1`: the trigger's role-less wrapper `<span data-part="trigger">` no longer carries `aria-haspopup` / `aria-expanded` / `aria-controls` (axe critical `aria-allowed-attr`). The inner trigger `<button>` keeps all three and is the only element that changes state. `LanternMenu` (and the `dropdown` toggle wrapper) also stops the menu machine from spreading them onto a wrapper that has no role but contains an `[aria-haspopup]` button. If a consumer selects on the span's `aria-expanded`, it should select on the button instead.
+- Sidebar group labels (`.lui-nav-group-label`) use `--lantern-fg-muted` instead of `--lantern-fg-subtle`, which meets WCAG AA (4.5:1) in light and dark (axe serious `color-contrast`). The labels are slightly darker.
 - A closed `:subnav` panel is `visibility: hidden`, so its links are out of the tab order and the accessibility tree (they were reachable while invisible).
 - `LanternSidebar` no longer throws on mount when localStorage is blocked.
 - Chat Kit guide: install from Hex (`~> 0.9`); the git-ref instructions for an unpublished 0.8 were stale.
