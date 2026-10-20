@@ -19,6 +19,14 @@ defmodule LanternUI.Components.MessageScroller do
   commands. The viewport is labelled and the jump-to-latest button becomes
   keyboard reachable when the user scrolls away.
 
+  `on_seen` names a LiveView event pushed with `%{"message_id" => id}` (the
+  `message_id` of the last item) when the reader has that item in view: the
+  viewport is at the bottom and the page is visible. A message appended while
+  the reader is scrolled up is not reported until they reach it, so a host can
+  advance a read cursor without marking unseen messages read. Each id is
+  reported once per mount; treat the event as "seen up to", never move a
+  cursor backwards, and re-check it server-side.
+
   See the [Chat Kit guide](https://github.com/go9/lantern-ui/blob/main/docs/chat-kit.md)
   for the composed API and accessibility behavior.
   """
@@ -31,6 +39,12 @@ defmodule LanternUI.Components.MessageScroller do
   attr(:follow, :boolean, default: true, doc: "Follow the latest message and mount at the bottom")
   attr(:peek, :integer, default: 40)
   attr(:busy, :boolean, default: false)
+
+  attr(:on_seen, :string,
+    default: nil,
+    doc: "LiveView event pushed with the `message_id` of the last item once it is in view."
+  )
+
   attr(:class, :any, default: nil)
   attr(:rest, :global)
   slot(:inner_block, required: true)
@@ -44,6 +58,7 @@ defmodule LanternUI.Components.MessageScroller do
       data-part="scroller"
       data-follow={to_string(@follow)}
       data-peek={@peek}
+      data-on-seen={@on_seen}
       {@rest}
     >
       <div

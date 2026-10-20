@@ -1,12 +1,13 @@
 # Chat Kit
 
-Chat Kit is present on the main branch, which currently targets LanternUI 0.8.0.
-Hex 0.8 is not published yet. Install the reproducible git revision below until
-that release is available:
+Chat Kit (`avatar/1`, `message/1`, `message_scroller/1`, `message_scroller_item/1`
+and the `LanternMessageScroller` hook) has shipped on Hex since 0.9.0:
 
 ```elixir
-{:lantern_ui, git: "https://github.com/go9/lantern-ui.git", ref: "0ad0627054ee6765c81eceace58ad316959565bb"}
+{:lantern_ui, "~> 0.9"}
 ```
+
+`on_seen` (below) is newer; check the CHANGELOG for the release that includes it.
 
 Chat Kit is a composed model for conversations. `Avatar`, `Message`, and
 `MessageScroller` are designed to work together: avatars provide identity,
@@ -71,6 +72,28 @@ position. For example:
 <.message_scroller_item id="assistant-turn" scroll_anchor={true}>
   <.message>Here is the next turn.</.message>
 </.message_scroller_item>
+```
+
+## Read state: `on_seen`
+
+A host that keeps a per-reader cursor needs to know what the reader has seen,
+not what the server rendered. Pass `on_seen` and the hook pushes
+`%{"message_id" => id}` (the last item's `message_id`) when that item is in
+view: the viewport is at the bottom and the page is visible. A message appended
+while the reader is scrolled up stays unreported until they reach it by
+scrolling, by Jump to latest, or by returning to the tab.
+
+```heex
+<.message_scroller id="thread" label="Conversation" on_seen="seen">
+  ...
+</.message_scroller>
+```
+
+```elixir
+def handle_event("seen", %{"message_id" => id}, socket) do
+  # Re-check the id belongs to this thread and only ever move the cursor forward.
+  {:noreply, socket}
+end
 ```
 
 ## Streaming

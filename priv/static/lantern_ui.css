@@ -1450,9 +1450,42 @@
   color: var(--lantern-fg-subtle);
   transition: transform var(--lantern-duration) var(--lantern-ease); }
 .lui-nav-item[data-expanded] .lui-nav-sub-chevron { transform: rotate(90deg); }
-.lui-nav-sub-panel { display: grid; grid-template-rows: 0fr;
+/* A closed panel is hidden, not just zero-height, so its links leave the tab
+   order and the accessibility tree; visibility flips after the slide. */
+.lui-nav-sub-panel { display: grid; grid-template-rows: 0fr; visibility: hidden;
+  transition: grid-template-rows var(--lantern-duration) var(--lantern-ease),
+    visibility 0s linear var(--lantern-duration); }
+.lui-nav-item[data-expanded] + .lui-nav-sub-panel,
+.lui-nav-row:has(> [data-part="nav-disclosure"][data-expanded]) + .lui-nav-sub-panel {
+  grid-template-rows: 1fr; visibility: visible;
   transition: grid-template-rows var(--lantern-duration) var(--lantern-ease); }
-.lui-nav-item[data-expanded] + .lui-nav-sub-panel { grid-template-rows: 1fr; }
+
+/* Split row: a link, a chevron button for its subnav, and trailing actions
+   (pin) as siblings, never nested. */
+.lui-nav-row { display: flex; align-items: center; gap: 0.125rem; }
+.lui-nav-row > .lui-nav-item { flex: 1; min-width: 0; }
+.lui-nav-disclosure, .lui-nav-action { flex: none; display: inline-flex; align-items: center;
+  justify-content: center; width: 1.75rem; height: 1.75rem; padding: 0; border: none;
+  border-radius: var(--lantern-radius-sm); background: none; color: var(--lantern-fg-subtle);
+  cursor: pointer; }
+.lui-nav-disclosure:hover, .lui-nav-action:hover { color: var(--lantern-fg);
+  background: var(--lantern-surface-sunken); }
+.lui-nav-disclosure:focus-visible, .lui-nav-action:focus-visible { outline: none;
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft); color: var(--lantern-fg); }
+.lui-nav-disclosure .lui-nav-sub-chevron { margin-left: 0; }
+.lui-nav-disclosure[data-expanded] .lui-nav-sub-chevron { transform: rotate(90deg); }
+.lui-nav-action[aria-pressed="true"] { color: var(--lantern-accent); }
+.lui-nav-action:disabled { cursor: default; opacity: 0.5; }
+/* Actions appear on hover or focus. Touch has no hover, so they always show
+   there, at a finger-sized target. */
+.lui-nav-action:not(:focus-visible) { opacity: 0; }
+.lui-nav-row:hover .lui-nav-action, .lui-nav-row:focus-within .lui-nav-action { opacity: 1; }
+@media (hover: none) {
+  .lui-nav-action:not(:focus-visible) { opacity: 1; }
+}
+@media (pointer: coarse) {
+  .lui-nav-disclosure, .lui-nav-action { width: 2.5rem; height: 2.5rem; }
+}
 .lui-nav-sub-inner { overflow: hidden; margin-left: 0.85rem; padding-left: 0.5rem;
   border-left: 1px solid var(--lantern-border); }
 
@@ -1483,8 +1516,12 @@
   .lui-app[data-collapsed] .lui-brand-name,
   .lui-app[data-collapsed] .lui-nav-sub-chevron,
   .lui-app[data-collapsed] .lui-collapse-label { display: none; }
-  /* On the rail, don't expand the subnav panel. */
-  .lui-app[data-collapsed] .lui-nav-sub-panel { grid-template-rows: 0fr; }
+  /* On the rail, don't expand the subnav panel, and drop the row's chevron
+     and actions: the rail shows one icon per row. */
+  .lui-app[data-collapsed] .lui-nav-sub .lui-nav-sub-panel { grid-template-rows: 0fr;
+    visibility: hidden; }
+  .lui-app[data-collapsed] .lui-nav-disclosure,
+  .lui-app[data-collapsed] .lui-nav-action { display: none; }
   .lui-app[data-collapsed] .lui-nav-item { justify-content: center; padding-inline: 0;
     position: relative; }
   /* On the rail a count has nowhere to sit and nothing to sit beside, so it
@@ -1498,6 +1535,14 @@
   .lui-app[data-collapsed] .lui-collapse-icon { transform: rotate(180deg); }
   .lui-app[data-collapsed] .lui-nav-group { margin-bottom: 0.5rem; }
 }
+
+/* Close button of the mobile drawer; hidden on desktop. */
+.lui-app-sidebar-close { display: none; position: absolute; top: 0.5rem; right: 0.5rem; z-index: 1;
+  align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; padding: 0;
+  border: none; border-radius: var(--lantern-radius-sm); background: none;
+  color: var(--lantern-fg-muted); cursor: pointer; }
+.lui-app-sidebar-close:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
+.lui-app-sidebar-close:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--lantern-ring-soft); }
 
 /* Scrim: only ever painted behind the open mobile drawer. */
 .lui-app-scrim { display: none; position: fixed; inset: var(--lui-appbar-h) 0 0 0; z-index: 19;
@@ -1523,6 +1568,12 @@
     padding-inline: var(--lui-page-gutter);
   }
   .lui-app-sidebar-foot { display: none; }
+  /* The drawer is a modal sheet: its own close button, and no page scroll
+     behind it. The lock is pure CSS, so no script can leak or stomp it. */
+  .lui-app-sidebar-close { display: inline-flex; }
+  .lui-app-sidebar:has(> .lui-app-sidebar-close) > .lui-app-sidebar-header {
+    padding-right: 3rem; }
+  html:has(.lui-app[data-nav-open]), html:has(.lui-app[data-nav-open]) body { overflow: hidden; }
 }
 
 @media (max-width: 768px) and (prefers-reduced-motion: reduce) {

@@ -7,9 +7,17 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Fixed
+- A closed `:subnav` panel is `visibility: hidden`, so its links are out of the tab order and the accessibility tree (they were reachable while invisible).
+- `LanternSidebar` no longer throws on mount when localStorage is blocked.
+- Chat Kit guide: install from Hex (`~> 0.9`); the git-ref instructions for an unpublished 0.8 were stale.
 - Searchable `select/1` (legacy hook) re-reads its parts on every LiveView update, so a patch that replaces the panel no longer leaves the toggle driving a detached panel (the select stopped opening); an open panel stays open with its search text.
 
 ### Added
+- `nav_item/1` `:action` slot: a trailing icon button on the row (e.g. pin), a sibling of the link, with a required `label` and optional `pressed` (`aria-pressed`). It shows on hover/focus and always on touch screens, keeps the mobile drawer open, and gets a stable id (`<item id>-action-<n>`). When the action removes its own row, `LanternSidebar` moves focus to the action now in its place; when a patch only reorders the row, focus stays on it.
+- `nav_item/1` with a `:subnav` **and** a `navigate`/`patch`/`href` splits into independent controls: the label links to the item, and a separate chevron button (`disclosure_label`, default "Toggle <label>") opens the subnav, with `aria-controls` when the item has an `id`. Before, the link target was ignored and the whole row was the toggle.
+- `nav_item/1` `storage_key`: the subnav open state persists in localStorage (`lui-nav:<key>`) via `LanternSidebar`; `expanded` is the default until the user chooses. Compose the key server-side from trusted ids (user/org/group). Malformed values and blocked storage are ignored.
+- `app_shell/1` `nav_label` (default "Navigation") names the sidebar, and its mobile drawer is now a modal sheet: `role="dialog"` + `aria-modal` while open, a close button inside it, focus moved in, trapped and returned to the hamburger, the main column and the rest of the bar `inert`, and Escape left to a menu or dialog open on top of it. The page scroll lock is CSS (`:has`) instead of an inline `body` style, so it cannot leak.
+- `message_scroller/1` `on_seen`: pushes `%{"message_id" => id}` for the last item once the reader has it in view (at the bottom, page visible), so a host can advance a read cursor without acknowledging messages appended while the reader was scrolled up.
 - `select/1` searchable: an option map's optional `keywords` list adds hidden search terms (e.g. a printed barcode), and Enter on an exact keyword picks that option over the first match, so a wedge scan into the search box selects it.
 - `app_shell/1` `inset` (opt-in): the top bar and sidebar share one chrome colour, `--lantern-chrome` (from the host's `--background-chrome`, falling back to the sunken surface), and main becomes one rounded, bordered content panel on it. Hover inside the chrome steps to the border colour.
 - A `data_table` inside a `card` drops its own border, radius and shadow (no card-in-card).

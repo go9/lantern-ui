@@ -41,9 +41,14 @@ defmodule LanternUI.Components.Layout do
   the `LanternSidebar` hook.
 
   On narrow viewports the sidebar becomes an off-canvas drawer opened by the
-  hamburger in the bar, over a scrim. It closes on scrim click, Escape, and on
-  tapping a nav item — so a `navigate` link doesn't leave the drawer covering
-  the page it just went to.
+  hamburger in the bar, over a scrim. It is the same navigation, not a copy, and
+  behaves as a modal sheet: a dialog named by `nav_label`, focus moves into it
+  and stays there, the bar and main content are inert, the page does not scroll
+  behind it, and focus returns to the hamburger on close. It closes on its close
+  button, scrim click, Escape (unless a menu or dialog opened from it is on
+  top), and on tapping a nav item — so a `navigate` link doesn't leave the
+  drawer covering the page it just went to. A subnav chevron or row action
+  keeps it open.
   """
   use Phoenix.Component
 
@@ -64,6 +69,11 @@ defmodule LanternUI.Components.Layout do
     doc:
       "Inset frame: the top bar and sidebar share one chrome colour (`--lantern-chrome`) " <>
         "and the main column is one bordered, rounded content panel on it."
+  )
+
+  attr(:nav_label, :string,
+    default: "Navigation",
+    doc: "Accessible name of the sidebar, and of the mobile drawer dialog."
   )
 
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
@@ -153,7 +163,20 @@ defmodule LanternUI.Components.Layout do
 
       <div class="lui-app-body">
         <div class="lui-app-scrim" data-part="sidebar-scrim" aria-hidden="true"></div>
-        <aside id={"#{@id}-sidebar"} class="lui-app-sidebar" data-part="sidebar">
+        <aside
+          id={"#{@id}-sidebar"}
+          class="lui-app-sidebar"
+          data-part="sidebar"
+          aria-label={@nav_label}
+        >
+          <button
+            type="button"
+            class="lui-app-sidebar-close"
+            data-part="sidebar-close"
+            aria-label="Close navigation"
+          >
+            <Icon.icon name="x-mark" />
+          </button>
           <div :if={@sidebar_header != []} class="lui-app-sidebar-header">
             {render_slot(@sidebar_header)}
           </div><div class="lui-app-nav">{render_slot(@sidebar)}</div>
@@ -464,8 +487,43 @@ defmodule LanternUI.Components.Layout do
   Pass a `:subnav` slot of nested `nav_item`s to make it an expandable section
   (Fluxon parity): the item becomes a toggle with a chevron, and the subnav
   slides open/closed client-side. Use `expanded` for the initial open state
-  (e.g. `expanded={@in_this_section?}`). The subnav is hidden on the icon rail.
+  (e.g. `expanded={@in_this_section?}`). The subnav is hidden on the icon rail,
+  and a closed subnav's links are out of the tab order.
+
+  Give a `:subnav` item a `navigate`/`patch`/`href` too and the row splits into
+  independent controls: the label is a link to the item itself, and a separate
+  chevron button (named by `disclosure_label`) opens the subnav. Nothing
+  interactive is nested inside anything else. With an `id`, the chevron points
+  at the panel with `aria-controls`.
+
+  `storage_key` remembers the open state in localStorage (`lui-nav:<key>`), read
+  back by the shell's `LanternSidebar` hook; `expanded` is only the default
+  until the user chooses. Build the key on the server from trusted ids (user,
+  org, group), never from params, so one account's choice never reaches another.
+
+  An `:action` is a trailing button on the row, a sibling of the link, e.g. a
+  pin. It needs a `label` (it is icon-only) and takes `pressed` for a toggle
+  (`aria-pressed`). It is always in the tab order, shown on hover/focus and
+  always on touch screens, and does not close the mobile drawer. When the action
+  removes its own row, the hook moves focus to the same place in the list.
+
+      <.nav_item
+        id="project-acme"
+        label="Acme"
+        navigate={~p"/projects/acme"}
+        storage_key={"u\#{@user.id}:o\#{@org.id}:project-acme"}
+      >
+        <:action label="Unpin Acme" icon="hero-bookmark" pressed phx-click="unpin" phx-value-id="acme" />
+        <:subnav>
+          <.nav_item label="Overview" navigate={~p"/projects/acme"} active />
+        </:subnav>
+      </.nav_item>
   """
+  attr(:id, :string,
+    default: nil,
+    doc: "DOM id on the item's outer element; a subnav panel gets `<id>-subnav`."
+  )
+
   attr(:label, :string, required: true, doc: "Nav label; becomes the collapsed-rail tooltip.")
 
   attr(:expanded, :boolean,
@@ -499,25 +557,81 @@ defmodule LanternUI.Components.Layout do
     doc: "Arbitrary HTML/`phx-*` attributes passed through."
   )
 
+  attr(:storage_key, :string,
+    default: nil,
+    doc:
+      "Persist a `:subnav`'s open state in localStorage under this key. Compose it " <>
+        "server-side from trusted ids (user/org/group)."
+  )
+
+  attr(:disclosure_label, :string,
+    default: nil,
+    doc: "Accessible name of the split row's chevron button. Defaults to \"Toggle <label>\"."
+  )
+
   slot(:subnav, doc: "Nested nav_items. When present the item becomes an expandable section.")
 
-  def nav_item(assigns) do
-    assigns = assign(assigns, :link?, assigns.navigate || assigns.patch || assigns.href)
+  slot :action, doc: "Trailing icon button on the row (e.g. pin), a sibling of the link." do
+    attr(:label, :string, required: true, doc: "Accessible name (the button is icon-only).")
+    attr(:icon, :string, doc: "Lantern icon name or host `hero-*` name.")
+    attr(:pressed, :boolean, doc: "Toggle state, rendered as `aria-pressed`. Omit for none.")
+    attr(:id, :string, doc: "DOM id of the button. Defaults to `<item id>-action-<n>`.")
+    attr(:disabled, :boolean, doc: "Disable the button.")
+    attr(:"phx-click", :any, doc: "LiveView event or JS command.")
+    attr(:"phx-value-id", :string, doc: "phx-value-id sent with the click.")
+    attr(:"phx-target", :any, doc: "LiveView target for the click.")
+  end
+
+  def nav_item(%{subnav: [_ | _]} = assigns) do
+    assigns =
+      assigns
+      |> assign(:link?, assigns.navigate || assigns.patch || assigns.href)
+      |> assign(:panel_id, assigns.id && "#{assigns.id}-subnav")
 
     ~H"""
-    <div :if={@subnav != []} class="lui-nav-sub">
+    <div id={@id} class="lui-nav-sub">
+      <div :if={@link?} class="lui-nav-row" data-part="nav-row">
+        <.link
+          class={Class.merge(["lui-nav-item", @active && "lui-nav-item-active", @class])}
+          navigate={@navigate}
+          patch={@patch}
+          href={@href}
+          title={@label}
+          data-tooltip={@label}
+          aria-current={@active && "page"}
+          {@rest}
+        >
+          <.nav_item_icon :if={@icon} name={@icon} />
+          <span class="lui-nav-item-label">{@label}</span>
+          <span :if={@badge} class="lui-nav-item-badge">{@badge}</span>
+        </.link>
+        <button
+          type="button"
+          class="lui-nav-disclosure"
+          aria-label={@disclosure_label || "Toggle #{@label}"}
+          aria-expanded={to_string(@expanded)}
+          aria-controls={@panel_id}
+          data-expanded={@expanded || nil}
+          data-storage-key={@storage_key}
+          data-part="nav-disclosure"
+          phx-click={toggle_disclosure()}
+        >
+          <Icon.icon name="chevron-right" class="lui-nav-sub-chevron" />
+        </button>
+        <.nav_item_actions id={@id} action={@action} />
+      </div>
       <button
+        :if={!@link?}
         type="button"
         class={Class.merge(["lui-nav-item", @active && "lui-nav-item-active", @class])}
         title={@label}
         data-tooltip={@label}
         aria-expanded={to_string(@expanded)}
+        aria-controls={@panel_id}
         data-expanded={@expanded || nil}
+        data-storage-key={@storage_key}
         data-part="nav-disclosure"
-        phx-click={
-          JS.toggle_attribute({"data-expanded", ""})
-          |> JS.toggle_attribute({"aria-expanded", "true", "false"})
-        }
+        phx-click={toggle_disclosure()}
         {@rest}
       >
         <.nav_item_icon :if={@icon} name={@icon} />
@@ -525,12 +639,39 @@ defmodule LanternUI.Components.Layout do
         <span :if={@badge} class="lui-nav-item-badge">{@badge}</span>
         <Icon.icon name="chevron-right" class="lui-nav-sub-chevron" />
       </button>
-      <div class="lui-nav-sub-panel">
+      <div id={@panel_id} class="lui-nav-sub-panel" data-part="nav-subpanel">
         <div class="lui-nav-sub-inner">{render_slot(@subnav)}</div>
       </div>
     </div>
+    """
+  end
+
+  def nav_item(%{action: [_ | _]} = assigns) do
+    ~H"""
+    <div id={@id} class="lui-nav-row" data-part="nav-row">
+      <.nav_item
+        label={@label}
+        icon={@icon}
+        badge={@badge}
+        active={@active}
+        navigate={@navigate}
+        patch={@patch}
+        href={@href}
+        class={@class}
+        {@rest}
+      />
+      <.nav_item_actions id={@id} action={@action} />
+    </div>
+    """
+  end
+
+  def nav_item(assigns) do
+    assigns = assign(assigns, :link?, assigns.navigate || assigns.patch || assigns.href)
+
+    ~H"""
     <.link
-      :if={@subnav == [] && @link?}
+      :if={@link?}
+      id={@id}
       class={Class.merge(["lui-nav-item", @active && "lui-nav-item-active", @class])}
       navigate={@navigate}
       patch={@patch}
@@ -545,7 +686,8 @@ defmodule LanternUI.Components.Layout do
       <span :if={@badge} class="lui-nav-item-badge">{@badge}</span>
     </.link>
     <button
-      :if={@subnav == [] && !@link?}
+      :if={!@link?}
+      id={@id}
       type="button"
       class={Class.merge(["lui-nav-item", @active && "lui-nav-item-active", @class])}
       title={@label}
@@ -604,6 +746,36 @@ defmodule LanternUI.Components.Layout do
       <span class="lui-nav-link-label">{@label}</span>
       <Icon.icon :if={@external} name="arrow-right" class="lui-nav-link-out" />
     </.link>
+    """
+  end
+
+  defp toggle_disclosure do
+    JS.toggle_attribute({"data-expanded", ""})
+    |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+  end
+
+  attr(:id, :string, default: nil)
+  attr(:action, :list, required: true)
+
+  # An action gets a stable id from its row (`<id>-action-<n>`), so a patch that
+  # reorders rows moves the button instead of rebuilding it under the focus.
+  defp nav_item_actions(assigns) do
+    ~H"""
+    <button
+      :for={{action, index} <- Enum.with_index(@action)}
+      id={action[:id] || (@id && "#{@id}-action-#{index}")}
+      type="button"
+      class="lui-nav-action"
+      data-part="nav-action"
+      aria-label={action.label}
+      aria-pressed={if is_boolean(action[:pressed]), do: to_string(action[:pressed])}
+      disabled={action[:disabled]}
+      phx-click={action[:"phx-click"]}
+      phx-value-id={action[:"phx-value-id"]}
+      phx-target={action[:"phx-target"]}
+    >
+      <.nav_item_icon :if={action[:icon]} name={action[:icon]} />
+    </button>
     """
   end
 
