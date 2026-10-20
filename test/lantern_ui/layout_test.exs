@@ -136,9 +136,24 @@ defmodule LanternUI.LayoutTest do
       assert css =~ ".lui-app[data-inset] { background: var(--lantern-chrome); }"
       assert css =~ ".lui-app[data-inset] .lui-app-main { background: var(--lantern-surface); }"
 
+      assert css =~
+               "--lantern-fg-muted: color-mix(in srgb, var(--lantern-fg) 10%, var(--lantern-fg-muted));"
+
       for theme <- ["priv/static/lantern_ui_theme.css", "priv/static/lantern_ui_compat.css"] do
         assert File.read!(theme) =~ "--lantern-chrome: var(--background-chrome,"
       end
+
+      theme = File.read!("priv/static/lantern_ui_theme.css")
+
+      assert theme =~
+               "--lantern-chrome: var(--background-chrome, var(--background-accent, #18181b))"
+    end
+
+    test "active nav item uses foreground for the label, accent as a marker" do
+      css = File.read!("priv/static/lantern_ui.css")
+      assert css =~ ".lui-nav-item-active { color: var(--lantern-fg);"
+      refute css =~ ".lui-nav-item-active { color: var(--lantern-accent);"
+      assert css =~ ".lui-nav-item-active::before"
     end
 
     test "header and actions bars are omitted when their slots are empty" do

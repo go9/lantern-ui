@@ -20,6 +20,7 @@ defmodule LanternUI.QA.ProjectNavLive do
        theme: if(params["theme"] == "dark", do: "dark", else: "light"),
        user: params["user"] || "1",
        org: params["org"] || "acme",
+       inset: params["inset"] in ~w(1 true),
        pinned: ~w(atlas beacon),
        messages: messages,
        seen: nil
@@ -83,7 +84,7 @@ defmodule LanternUI.QA.ProjectNavLive do
       class={@theme == "dark" && "dark"}
       style="min-height: 100vh; background: var(--lantern-bg);"
     >
-      <.app_shell id="qa-project-nav" nav_label="Project navigation">
+      <.app_shell id="qa-project-nav" nav_label="Project navigation" inset={@inset}>
         <:brand>Lantern QA</:brand>
         <:sidebar_header>
           <.menu id="qa-org-menu" placement="bottom-start">

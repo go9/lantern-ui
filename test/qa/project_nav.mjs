@@ -79,13 +79,6 @@ const luminance = (rgb) => {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 // axe (WCAG 2 A/AA): no serious or critical violation in the current state.
-// KNOWN lists pre-existing defects awaiting an owner decision; each is printed
-// on every run and the check fails once one disappears (then delete it here).
-const KNOWN = {
-  // Active nav item: brand accent on its 12% soft tint, ~3.3:1 in light.
-  "color-contrast .lui-nav-item-active > .lui-nav-item-label": "#3880 owner decision pending",
-}
-const knownSeen = new Set()
 const axe = async (label) => {
   if (!(await p.evaluate(() => !!window.axe))) await p.addScriptTag({ path: AXE })
   const { violations } = await p.evaluate(() =>
@@ -94,11 +87,15 @@ const axe = async (label) => {
   const found = violations
     .filter((v) => v.impact === "serious" || v.impact === "critical")
     .flatMap((v) => v.nodes.map((n) => ({ key: `${v.id} ${n.target.join(" ")}`, impact: v.impact })))
-  const bad = found.filter((f) => !KNOWN[f.key])
-  for (const f of found.filter((f) => KNOWN[f.key])) knownSeen.add(f.key)
-  for (const f of found.filter((f) => KNOWN[f.key])) console.log(`KNOWN ${label}: ${f.impact} ${f.key} (${KNOWN[f.key]})`)
-  check(`${label}: axe has no serious/critical violations`, bad.length === 0, bad.map((f) => `${f.impact} ${f.key}`).join("; "))
+  check(`${label}: axe has no serious/critical violations`, found.length === 0, found.map((f) => `${f.impact} ${f.key}`).join("; "))
   return found
+}
+const axeThemes = async (name) => {
+  for (const theme of ["light", "dark"]) {
+    await setTheme(theme)
+    await axe(`${name} ${theme}`)
+  }
+  await setTheme("light")
 }
 
 // Shoot both themes and prove they are really different.
@@ -307,7 +304,19 @@ for (const width of [375, 768]) {
 }
 
 check("no page/console errors", errors.length === 0, errors.slice(0, 3).join(" | "))
+
+// Inset frame: muted nav on --lantern-chrome must also meet AA.
+await p.setViewport({ width: 1280, height: 800 })
+await load("?inset=1", { clear: true })
+check("inset: data-inset is set", await p.$eval("#qa-project-nav", (el) => el.hasAttribute("data-inset")))
+await axeThemes("desktop-inset")
+await p.setViewport({ width: 375, height: 812, hasTouch: true, isMobile: true })
+await load("?inset=1", { clear: true })
+await p.click("[data-part=sidebar-toggle]")
+await sleep(300)
+check("inset 375: drawer opens", await p.$eval("#qa-project-nav", (el) => el.hasAttribute("data-nav-open")))
+await axeThemes("mobile-375-inset-open")
+
 await browser.close()
-for (const key of Object.keys(KNOWN)) check(`known axe issue still present (else delete it from KNOWN): ${key}`, knownSeen.has(key))
 console.log(`\n${failed ? `${failed} FAILED` : "all passed"} — screenshots in ${SHOTS}`)
 process.exit(failed ? 1 : 0)

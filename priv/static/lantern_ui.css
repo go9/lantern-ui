@@ -1332,7 +1332,10 @@
 .lui-app[data-inset] .lui-appbar,
 .lui-app[data-inset] .lui-app-sidebar {
   background: var(--lantern-chrome); border-color: transparent;
-  --lantern-surface-sunken: var(--lantern-border); --lantern-surface-hover: var(--lantern-border); }
+  --lantern-surface-sunken: var(--lantern-border); --lantern-surface-hover: var(--lantern-border);
+  /* Muted-on-chrome is ~4.4:1 in light (just below AA). Mix toward fg; uses the
+     inherited muted so a host override still tracks. Dark already clears 4.5:1. */
+  --lantern-fg-muted: color-mix(in srgb, var(--lantern-fg) 10%, var(--lantern-fg-muted)); }
 .lui-app[data-inset] .lui-app-sidebar-foot { border-top-color: transparent; }
 .lui-app[data-inset] .lui-app-main { background: var(--lantern-surface); }
 @media (min-width: 769px) {
@@ -1411,11 +1414,17 @@
 .lui-nav-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.5rem;
   border-radius: var(--lantern-radius-sm); font-size: 0.8125rem; font-weight: 500; line-height: 1.3;
   color: var(--lantern-fg-muted); text-decoration: none; white-space: nowrap; cursor: pointer;
-  background: none; border: none; width: 100%; text-align: left; box-sizing: border-box; }
+  background: none; border: none; width: 100%; text-align: left; box-sizing: border-box;
+  position: relative; }
 .lui-nav-item:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
-.lui-nav-item-active { color: var(--lantern-accent); font-weight: 600;
+.lui-nav-item-active { color: var(--lantern-fg); font-weight: 600;
   background: var(--lantern-accent-soft); }
-.lui-nav-item-active:hover { color: var(--lantern-accent); background: var(--lantern-accent-soft); }
+.lui-nav-item-active:hover { color: var(--lantern-fg); background: var(--lantern-accent-soft); }
+/* Accent as a marker only: brand orange on the 12% tint fails AA (~3.3:1). */
+.lui-nav-item-active::before {
+  content: ""; position: absolute; left: 0;
+  top: 0.15rem; bottom: 0.15rem; width: 2px; border-radius: 1px;
+  background: var(--lantern-accent); }
 .lui-nav-item-icon { font-size: 1.05rem; flex-shrink: 0; }
 .lui-sidebar-tooltip {
   position: fixed; z-index: var(--lantern-z-tooltip, 80); transform: translateY(-50%);
