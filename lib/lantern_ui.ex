@@ -59,6 +59,7 @@ defmodule LanternUI do
     top_shell: LanternUI.Components.TopShell,
     action_bar: LanternUI.Components.ActionBar,
     badge: LanternUI.Components.Badge,
+    provenance_badge: LanternUI.Components.ProvenanceBadge,
     table: LanternUI.Components.Table,
     tabs: LanternUI.Components.Tabs,
     select: LanternUI.Components.Select,

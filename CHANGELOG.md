@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- `provenance_badge/1`: shared origin (own/inherited/override) and temporal evidence (current/historical/unknown) labels, composed from `badge/1`, with an optional caller-owned revert slot for overrides. Unknown never falls back to Current.
 - `split_pane/1`: two resizable columns with pointer/keyboard resizing, opt-in scoped width persistence, and a server-controlled mobile list-or-detail view.
 - `stage_strip/1`: compact ordered workflow pips with done/active/waiting/pending/skipped/failed states and a generated accessible summary. Static, server-owned state; no JS or workflow policy.
 - `data_table` ordered `group` row bands in table/cards (empty groups omitted, single-group labels hidden), with named rowgroups/lists. Non-table views get a compact Sort select and direction button from sortable columns, using the same sort parameters as table headers.

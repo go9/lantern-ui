@@ -1713,6 +1713,21 @@ Deprecated alias of `LanternUI.Components.Progress.progress/1` with `shape="ring
 Slots:
 - `:inner_block` — Optional caption beside the ring (counts, short copy).
 
+### LanternUI.Components.ProvenanceBadge
+
+Provenance labels for inherited configuration and temporal retrieval evidence.
+
+#### `provenance_badge/1`
+
+Provenance labels for inherited configuration and temporal retrieval evidence.
+
+- `class` (:any) — Extra classes merged onto the root.
+- `rest` (:global) — HTML and phx attributes on the root.
+- `source` (:string) — Parent name for inherited/override labels; ignored for other states.
+- `state` (:string, values: own, inherited, override, current, historical, unknown, default "unknown") — Configuration origin or temporal evidence state; defaults safely to unknown.
+Slots:
+- `:revert` — Optional caller-owned revert button, rendered only when state is override.
+
 ### LanternUI.Components.Radio
 
 Radio group for exclusive single selection.
@@ -3576,6 +3591,14 @@ From `docs/recipes.md` (Environment tree):
     </span>
   </span>
 </:col>
+```
+
+From `docs/recipes.md` (Provenance beside an existing editor):
+
+```heex
+<.provenance_badge state="inherited" source="Production" />
+<.provenance_badge state="historical" />
+<.provenance_badge />
 ```
 
 From `docs/recipes.md` (Resizable list/detail or main/cockpit):

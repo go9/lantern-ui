@@ -579,6 +579,7 @@ defmodule LanternUI.ComponentsTest do
                :price_grid,
                :progress,
                :progress_ring,
+               :provenance_badge,
                :radio,
                :resource_list,
                :scroll_area,
