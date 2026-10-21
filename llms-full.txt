@@ -2055,6 +2055,27 @@ Drag-and-drop between lists (board columns, bins, groups) and the landing area a
 Slots:
 - `:inner_block` (required) —
 
+### LanternUI.Components.SplitPane
+
+Two resizable columns for list/detail pages and main/cockpit layouts.
+
+#### `split_pane/1`
+
+Render a horizontal split with a keyboard and pointer resize separator.
+
+- `class` (:any) — Extra root classes.
+- `id` (:string, required) — Stable root id; pane and separator ids derive from it.
+- `label` (:string, required) — Accessible name of the resize separator.
+- `max` (:integer, default 80) — Maximum primary percentage, less than 100.
+- `min` (:integer, default 20) — Minimum primary percentage, greater than zero.
+- `mobile_pane` (:string, values: primary, secondary, default "primary") — Server-selected visible pane below 48rem.
+- `rest` (:global) — Global attributes passed to the root.
+- `size` (:integer, default 35) — Initial primary width as a percentage.
+- `storage_key` (:string) — Opt-in localStorage key suffix.
+Slots:
+- `:primary` (required) — Inline-start content, whose width the separator controls.
+- `:secondary` (required) — Content filling the remaining column space.
+
 ### LanternUI.Components.StageStrip
 
 Compact, ordered stage pips for a workflow summary.
@@ -3555,6 +3576,17 @@ From `docs/recipes.md` (Environment tree):
     </span>
   </span>
 </:col>
+```
+
+From `docs/recipes.md` (Resizable list/detail or main/cockpit):
+
+```heex
+<.split_pane id="suggestions" label="Suggestions list width"
+  storage_key={"#{@user.id}:#{@project.id}:suggestions"}
+  mobile_pane={if @selected, do: "secondary", else: "primary"}>
+  <:primary>{render_slot(@reports)}</:primary>
+  <:secondary>{render_slot(@detail)}</:secondary>
+</.split_pane>
 ```
 
 From `docs/recipes.md` (Compact stage summary):

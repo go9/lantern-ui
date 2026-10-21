@@ -4694,3 +4694,95 @@ Hooks.LanternTabs = LanternTabs
 Hooks.LanternSegmented = LanternSegmented
 Hooks.LanternPagination = LanternPagination
 export { LanternTabs, LanternSegmented, LanternPagination }
+
+// Width is local UI state. Delegate through the root so patched parts keep working.
+const LanternSplitPane = {
+  mounted() {
+    this.value = Number(this.el.dataset.size)
+    this.loadWidth()
+    this.onSplitKey = (event) => {
+      if (event.target !== this.separator()) return
+      const rtl = this.el.ownerDocument.defaultView.getComputedStyle(this.el).direction === "rtl"
+      const step = event.shiftKey ? 10 : 1
+      let next
+      if (event.key === "Home") next = Number(this.el.dataset.min)
+      else if (event.key === "End") next = Number(this.el.dataset.max)
+      else if (event.key === "ArrowLeft") next = this.value + (rtl ? step : -step)
+      else if (event.key === "ArrowRight") next = this.value + (rtl ? -step : step)
+      else return
+      event.preventDefault()
+      this.setWidth(next, true)
+    }
+    this.onSplitDown = (event) => {
+      if (event.target !== this.separator() || event.button !== 0 || event.isPrimary === false) return
+      event.preventDefault()
+      this.stopDrag()
+      const separator = this.separator()
+      separator.focus()
+      const pointerId = event.pointerId
+      separator.setPointerCapture?.(pointerId)
+      const move = (e) => {
+        if (e.pointerId !== pointerId) return
+        const rect = this.el.getBoundingClientRect()
+        const available = rect.width - separator.getBoundingClientRect().width
+        if (available <= 0) return
+        const rtl = this.el.ownerDocument.defaultView.getComputedStyle(this.el).direction === "rtl"
+        const distance = rtl ? rect.right - e.clientX : e.clientX - rect.left
+        this.setWidth(distance / available * 100)
+      }
+      const end = (e) => {
+        if (e.pointerId !== pointerId) return
+        this.saveWidth()
+        this.stopDrag()
+      }
+      separator.addEventListener("pointermove", move)
+      separator.addEventListener("pointerup", end)
+      separator.addEventListener("pointercancel", end)
+      separator.addEventListener("lostpointercapture", end)
+      this.dragCleanup = () => {
+        separator.removeEventListener("pointermove", move)
+        separator.removeEventListener("pointerup", end)
+        separator.removeEventListener("pointercancel", end)
+        separator.removeEventListener("lostpointercapture", end)
+        if (separator.hasPointerCapture?.(pointerId)) separator.releasePointerCapture(pointerId)
+      }
+    }
+    this.el.addEventListener("keydown", this.onSplitKey)
+    this.el.addEventListener("pointerdown", this.onSplitDown)
+  },
+  separator() { return this.el.querySelector(':scope > [data-part="separator"]') },
+  loadWidth() {
+    this.storageKey = this.el.dataset.storageKey
+    this.value = Number(this.el.dataset.size)
+    if (this.storageKey) {
+      try {
+        const stored = this.el.ownerDocument.defaultView.localStorage.getItem(`lui-split-pane:${this.storageKey}`)
+        if (stored !== null && stored.trim() !== "" && Number.isFinite(Number(stored))) this.value = Number(stored)
+      } catch (_) { /* Storage may be blocked. Resizing still works. */ }
+    }
+    this.setWidth(this.value)
+  },
+  setWidth(value, persist = false) {
+    this.value = Math.round(Math.max(Number(this.el.dataset.min), Math.min(Number(this.el.dataset.max), value)) * 100) / 100
+    this.el.querySelector(':scope > [data-part="primary"]')?.style.setProperty("--lantern-split-size", String(this.value / 100))
+    this.separator()?.setAttribute("aria-valuenow", String(this.value))
+    if (persist) this.saveWidth()
+  },
+  saveWidth() {
+    if (!this.storageKey) return
+    try { this.el.ownerDocument.defaultView.localStorage.setItem(`lui-split-pane:${this.storageKey}`, String(this.value)) } catch (_) {}
+  },
+  stopDrag() { this.dragCleanup?.(); this.dragCleanup = null },
+  beforeUpdate() { this.stopDrag() },
+  updated() {
+    if (this.storageKey !== this.el.dataset.storageKey) this.loadWidth()
+    else this.setWidth(this.value)
+  },
+  destroyed() {
+    this.stopDrag()
+    this.el.removeEventListener("keydown", this.onSplitKey)
+    this.el.removeEventListener("pointerdown", this.onSplitDown)
+  },
+}
+Hooks.LanternSplitPane = LanternSplitPane
+export { LanternSplitPane }
