@@ -1305,3 +1305,24 @@ interaction, and no animation under any motion preference. Put keyboard actions
 on the report link and trace controls. Use `timeline` for the detailed trace;
 `progress` measures an amount and `waterfall` compares durations. See the runnable
 `/stage_strip` QA demo (`test/qa/server.exs`) for a report row and all six states.
+
+## Inline citations
+
+**When to use:** Evidence in Ask prose or attached draft context. Use a full source
+name for `label`, a compact label in the slot, and omit `number` for attached
+context. Handle `preview` in the host LiveView and derive `active` from its
+selected source. Keep preview content, source navigation and provenance in the
+host. See [citation chip](cite-chip.md) and the `/cite_chip` QA demo.
+
+```heex
+<.cite_chip number={1} label="Open citation: lib/search.ex, lines 12–18"
+  phx-click="preview" phx-value-source="search">
+  search.ex:12–18
+</.cite_chip>
+<.cite_chip label="Open citation: ticket 212" phx-click="preview" phx-value-source="212">
+  #212
+</.cite_chip>
+<.cite_chip label="Open citation: memory 167" phx-click="preview" phx-value-source="167">
+  memory
+</.cite_chip>
+```

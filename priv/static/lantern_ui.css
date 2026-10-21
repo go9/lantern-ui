@@ -5931,3 +5931,25 @@ a.lui-waterfall-lane-inner:focus-visible {
   font-size: var(--lantern-text-caption);
   font-variant-numeric: tabular-nums;
 }
+/* Inline evidence references reuse button focus and native keyboard behavior. */
+.lui-btn.lui-cite-chip {
+  height: auto;
+  min-height: 0;
+  padding: 0 var(--lantern-space-xs);
+  gap: var(--lantern-space-xs);
+  vertical-align: baseline;
+  font-family: var(--lantern-font-mono);
+  font-size: var(--lantern-text-caption);
+  line-height: var(--lantern-text-caption-leading);
+  border-radius: var(--lantern-radius-sm);
+  color: var(--lantern-fg-muted);
+  background: var(--lantern-surface);
+  transition: none;
+}
+.lui-btn.lui-cite-chip:hover,
+.lui-btn.lui-cite-chip[aria-pressed="true"] {
+  color: var(--lantern-fg);
+  border-color: var(--lantern-ring);
+  background: var(--lantern-surface-sunken);
+}
+.lui-cite-chip-number { color: var(--lantern-primary); }

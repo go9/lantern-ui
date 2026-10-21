@@ -60,6 +60,7 @@ defmodule LanternUI do
     action_bar: LanternUI.Components.ActionBar,
     badge: LanternUI.Components.Badge,
     provenance_badge: LanternUI.Components.ProvenanceBadge,
+    cite_chip: LanternUI.Components.CiteChip,
     table: LanternUI.Components.Table,
     tabs: LanternUI.Components.Tabs,
     select: LanternUI.Components.Select,

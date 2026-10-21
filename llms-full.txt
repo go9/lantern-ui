@@ -462,6 +462,22 @@ Checkbox with label, description, and error states.
 - `unchecked_value` (:any, default "false") — Hidden input value submitted when unchecked.
 - `value` (:any) — Current value used to derive checked state.
 
+### LanternUI.Components.CiteChip
+
+Inline citation button for evidence in prose or attached context.
+
+#### `cite_chip/1`
+
+Inline citation button for evidence in prose or attached context.
+
+- `active` (:boolean, default false) — Whether this source is shown in the preview rail.
+- `class` (:any) — Extra classes merged onto the button.
+- `label` (:string, required) — Full accessible name, including the source location.
+- `number` (:integer) — Optional citation number within the answer.
+- `rest` (:global) — HTML/ARIA and phx-* attrs, including id and preview click events.
+Slots:
+- `:inner_block` (required) — Compact source label; no interactive descendants.
+
 ### LanternUI.Components.ColorInput
 
 Native color picker paired with a hex readout.
@@ -3645,6 +3661,21 @@ From `docs/recipes.md` (Compact stage summary):
   %{label: "Shipped", state: :pending},
   %{label: "Told", state: :pending}
 ]} />
+```
+
+From `docs/recipes.md` (Inline citations):
+
+```heex
+<.cite_chip number={1} label="Open citation: lib/search.ex, lines 12–18"
+  phx-click="preview" phx-value-source="search">
+  search.ex:12–18
+</.cite_chip>
+<.cite_chip label="Open citation: ticket 212" phx-click="preview" phx-value-source="212">
+  #212
+</.cite_chip>
+<.cite_chip label="Open citation: memory 167" phx-click="preview" phx-value-source="167">
+  memory
+</.cite_chip>
 ```
 
 From `README.md` (Usage):

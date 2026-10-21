@@ -96,6 +96,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `checkbox/1` — Checkbox with label, description, and error states.
 
+### LanternUI.Components.CiteChip
+
+- `cite_chip/1` — Inline citation button for evidence in prose or attached context.
+
 ### LanternUI.Components.ColorInput
 
 - `color_input/1` — Native color picker paired with a hex readout.
@@ -1432,6 +1436,21 @@ From `docs/recipes.md` (Compact stage summary):
   %{label: "Shipped", state: :pending},
   %{label: "Told", state: :pending}
 ]} />
+```
+
+From `docs/recipes.md` (Inline citations):
+
+```heex
+<.cite_chip number={1} label="Open citation: lib/search.ex, lines 12–18"
+  phx-click="preview" phx-value-source="search">
+  search.ex:12–18
+</.cite_chip>
+<.cite_chip label="Open citation: ticket 212" phx-click="preview" phx-value-source="212">
+  #212
+</.cite_chip>
+<.cite_chip label="Open citation: memory 167" phx-click="preview" phx-value-source="167">
+  memory
+</.cite_chip>
 ```
 
 From `README.md` (Usage):
