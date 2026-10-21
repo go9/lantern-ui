@@ -15,6 +15,8 @@ Code.require_file("consistency_live.ex", __DIR__)
 Code.require_file("regressions_live.ex", __DIR__)
 Code.require_file("settings_live.ex", __DIR__)
 Code.require_file("project_nav_live.ex", __DIR__)
+Code.require_file("conversation_live.ex", __DIR__)
+Code.require_file("trace_live.ex", __DIR__)
 
 defmodule LanternUI.QA.Layouts do
   use Phoenix.Component
@@ -71,6 +73,8 @@ defmodule LanternUI.QA.Router do
     live("/regressions", LanternUI.QA.RegressionsLive)
     live("/settings", LanternUI.QA.SettingsLive)
     live("/project_nav", LanternUI.QA.ProjectNavLive)
+    live("/conversation", LanternUI.QA.ConversationLive)
+    live("/trace", LanternUI.QA.TraceLive)
   end
 end
 

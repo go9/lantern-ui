@@ -29,7 +29,7 @@ defmodule LanternUI.RecipesTest do
     docs = File.read!("docs/recipes.md")
     skill = File.read!("skills/lantern-recipes/SKILL.md")
 
-    assert length(Recipes.names()) == 8
+    assert length(Recipes.names()) == 10
 
     for name <- Recipes.names() do
       body = heex_body(name)
@@ -147,5 +147,43 @@ defmodule LanternUI.RecipesTest do
     assert html =~ "$12"
     assert html =~ "3 waiting"
     assert html =~ "5 busy"
+  end
+
+  test "conversation composes list, scroller, action card, and kept draft" do
+    html = render_recipe(:conversation)
+    refute html =~ "lui-group-band"
+    assert html =~ "lui-message-scroller"
+    assert html =~ ~s(phx-hook="LanternMessageScroller")
+    assert html =~ ~s(aria-label="Jump to latest")
+    assert html =~ ~s(data-follow="true")
+    assert html =~ "lui-message"
+    assert html =~ "lui-avatar"
+    assert html =~ "lui-list-row"
+    assert html =~ "Index the docs bucket"
+    assert html =~ ~s(id="action-plan-4-approve")
+    assert html =~ ~s(id="action-plan-4-reject")
+    assert html =~ "Ship the plan as written."
+    assert html =~ "The run rejected this message"
+    assert html =~ ~s(id="composer")
+    assert html =~ ~s(phx-submit="send")
+  end
+
+  test "trace composes follow-aware timeline items with disclosure and live state" do
+    html = render_recipe(:trace)
+    refute html =~ "lui-group-band"
+    assert html =~ "lui-message-scroller"
+    assert html =~ ~s(aria-busy="true")
+    assert html =~ "Live"
+    assert html =~ "lui-loading"
+    assert html =~ "lui-timeline"
+    assert html =~ ~s(id="event-e2")
+    assert html =~ ~s(data-part="item")
+    assert html =~ ~s(data-message-id="e2")
+    assert html =~ "data-scroll-anchor"
+    assert html =~ "lui-timeline-details"
+    assert html =~ "ignore_attrs"
+    assert html =~ "embedded 4/12 files"
+    assert html =~ "lui-log-view"
+    assert html =~ "Pause run"
   end
 end

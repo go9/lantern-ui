@@ -388,6 +388,160 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 <.badge color="success" size="sm">{@capacity.busy} busy</.badge>
 ```
 
+## Conversation thread
+
+**When to use:** An inbox thread: conversation list, follow-aware transcript, an action card in the stream, and a composer that keeps a pending or rejected draft. Do not add a chat framework. `follow={true}` starts at the latest message; scrolling away pauses follow and makes Jump to latest keyboard reachable; appending while the reader is in history must not steal the viewport. Keep `@draft` on send failure (the textarea value is the assign). Give action buttons stable ids so a patch cannot drop focus. Autosize and Enter-to-send are out of scope — use the existing textarea and an explicit Send.
+
+**Origin:** lantern-ui Chat Kit, composed for Ask / Inbox.
+
+```heex
+<.card_grid>
+  <.card flush title="Inbox">
+    <.scroll_area label="Threads" data-lantern-list-nav style="max-height: 24rem;">
+      <.list_row
+        :for={thread <- @threads}
+        identifier={thread.identifier}
+        title={thread.title}
+        subtitle={thread.preview}
+        navigate={thread.href}
+        selected={thread.selected}
+        data-lantern-list-item
+      >
+        <:leading><.avatar size="sm" initials={thread.initials} /></:leading>
+        <:meta>
+          <.badge :if={thread.unread} size="sm" color="info">{thread.unread}</.badge>
+        </:meta>
+        <:trailing>{thread.date}</:trailing>
+      </.list_row>
+    </.scroll_area>
+  </.card>
+  <.card title={@thread.title} description={@thread.meta}>
+    <.message_scroller
+      id="thread"
+      label="Conversation"
+      follow={true}
+      busy={@streaming}
+      on_seen="seen"
+      style="height: 24rem;"
+    >
+      <.message_scroller_item
+        :for={message <- @messages}
+        id={"message-#{message.id}"}
+        message_id={message.id}
+        scroll_anchor={message.role == :assistant}
+      >
+        <.message
+          align={if message.role == :user, do: "end", else: "start"}
+          tone={if message.role == :user, do: "primary", else: "surface"}
+        >
+          <:avatar><.avatar size="sm" initials={message.initials} /></:avatar>
+          <:header>{message.author}</:header>
+          {message.content}
+          <:footer>{message.at}</:footer>
+        </.message>
+      </.message_scroller_item>
+      <.message_scroller_item
+        :if={@action}
+        id={"action-#{@action.id}"}
+        message_id={"action-#{@action.id}"}
+      >
+        <.card title={@action.title} description={@action.summary}>
+          {@action.body}
+          <:footer>
+            <.button
+              id={"action-#{@action.id}-approve"}
+              variant="solid"
+              phx-click="approve"
+              phx-value-id={@action.id}
+            >
+              Approve
+            </.button>
+            <.button
+              id={"action-#{@action.id}-reject"}
+              variant="outline"
+              color="danger"
+              phx-click="reject"
+              phx-value-id={@action.id}
+            >
+              Reject
+            </.button>
+          </:footer>
+        </.card>
+      </.message_scroller_item>
+    </.message_scroller>
+    <:footer>
+      <.stack gap="sm">
+        <.alert :if={@send_error} color="danger" title="Message not sent">{@send_error}</.alert>
+        <form phx-change="draft" phx-submit="send">
+          <.stack gap="sm">
+            <.textarea
+              id="composer"
+              name="draft"
+              value={@draft}
+              label="Message"
+              rows={3}
+              placeholder="Write a reply"
+            />
+            <.button type="submit" variant="solid" disabled={@streaming}>Send</.button>
+          </.stack>
+        </form>
+      </.stack>
+    </:footer>
+  </.card>
+</.card_grid>
+```
+
+## Run trace
+
+**When to use:** A live run or Ask trace: timeline events with disclosure payloads inside a follow-aware scroller. Mark each event as a scroller item (`data-part="item"`, `data-message-id`, optional `data-scroll-anchor`) so append/follow/jump-to-latest reuse Chat Kit. Keep collecting events when the reader has scrolled away — pausing follow is not pausing ingest. Live / paused / done is a text badge (never color or motion alone); the spinner is extra and already static under `prefers-reduced-motion`. Native `details` keep their open state across patches after mount. Do not group events into bands; filter or a phase column if you need grouping.
+
+**Origin:** lantern-ui timeline + log_view + message_scroller, composed for RunTrace / index logs.
+
+```heex
+<.card title={@run.title} description={@run.summary}>
+  <:actions>
+    <.badge :if={@run.state == :live} color="info" size="sm">Live</.badge>
+    <.badge :if={@run.state == :paused} color="warning" size="sm">Paused</.badge>
+    <.badge :if={@run.state == :done} color="success" size="sm">Done</.badge>
+    <.loading :if={@run.state == :live} size="sm" label="Run is live" />
+    <.button :if={@run.state == :live} size="sm" phx-click="pause_run">Pause run</.button>
+    <.button :if={@run.state == :paused} size="sm" variant="solid" phx-click="resume_run">
+      Resume run
+    </.button>
+  </:actions>
+  <.message_scroller
+    id="run-trace"
+    label="Run trace"
+    follow={@follow}
+    busy={@run.state == :live}
+    style="height: 24rem;"
+  >
+    <.timeline>
+      <.timeline_item
+        :for={event <- @events}
+        id={"event-#{event.id}"}
+        title={event.title}
+        label={event.label}
+        at={event.at}
+        status={event.status}
+        open={event.open}
+        data-part="item"
+        data-message-id={event.id}
+        data-scroll-anchor={event.anchor || nil}
+      >
+        <:detail :if={event.detail}>
+          <.log_view id={"event-#{event.id}-payload"} label="Payload">
+            <.log_line at={event.at} channel={event.channel} severity={event.severity}>
+              {event.detail}
+            </.log_line>
+          </.log_view>
+        </:detail>
+      </.timeline_item>
+    </.timeline>
+  </.message_scroller>
+</.card>
+```
+
 ## Block 1: app shell with sidebar and page shell
 
 **When to use:** The page needs the full frame — brand, a workspace switcher at the top of the sidebar, sidebar nav with groups and count badges, and a `page_shell` with its breadcrumb trail, title, and actions — in one shell. `layout="strip"` puts the trail on the left and the notice and actions on the right of one row under the app bar; leave it off for the 0.10 stacked topline with its floating action row. `compact` opts the app chrome into the slim topline (36px, 38px at 46.1875rem and below); leave it off to keep the 0.9 layout. `:sidebar_header` holds the switcher; on the icon rail it should collapse to an avatar (`.lui-app[data-collapsed]`). Pass the trail to `<.page_shell breadcrumbs>`, not to the app shell's `:breadcrumb` slot, so the route keeps one breadcrumb row. Hosts with plain `use LanternUI` write `<.app_shell>`; the fixture below calls it fully qualified only because the test module defines its own `app_shell/1` template function.

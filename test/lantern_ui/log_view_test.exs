@@ -198,6 +198,7 @@ defmodule LanternUI.LogViewTest do
       assert [details] = Floki.find(doc, "details.lui-log-line-details")
       assert Floki.find(details, "summary.lui-log-line-row") |> Floki.text() =~ "failed"
       assert Floki.find(details, ".lui-log-line-detail") |> Floki.text() =~ "stack trace here"
+      assert html =~ "ignore_attrs"
 
       # A line with no detail must not become a disclosure that opens onto
       # nothing.

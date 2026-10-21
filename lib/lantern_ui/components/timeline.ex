@@ -36,12 +36,15 @@ defmodule LanternUI.Components.Timeline do
 
   When `:detail` is present the title/label/at row becomes a native
   `<details>`/`<summary>` disclosure (no accordion, no JS hook). `open`
-  sets the initial expanded state.
+  sets the initial expanded state. After mount the browser owns `open`,
+  so a LiveView patch that appends later items does not collapse a
+  disclosure the reader opened (same contract as `navlink/1` groups).
   """
   use Phoenix.Component
 
   alias LanternUI.Class
   alias LanternUI.Components.Icon
+  alias Phoenix.LiveView.JS
 
   @statuses [:done, :active, :pending, :danger, :neutral]
   @label_positions [:inline, :leading]
@@ -153,7 +156,11 @@ defmodule LanternUI.Components.Timeline do
       </div>
       <div class="lui-timeline-content">
         <%= if @has_detail? do %>
-          <details class="lui-timeline-details" open={@open}>
+          <details
+            class="lui-timeline-details"
+            open={@open}
+            phx-mounted={JS.ignore_attributes(["open"])}
+          >
             <summary class="lui-timeline-summary">
               <span :if={@title} class="lui-timeline-title">{@title}</span>
               <span :if={@label} class="lui-timeline-label">{@label}</span>

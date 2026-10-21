@@ -1,0 +1,42 @@
+<.card title={@run.title} description={@run.summary}>
+  <:actions>
+    <.badge :if={@run.state == :live} color="info" size="sm">Live</.badge>
+    <.badge :if={@run.state == :paused} color="warning" size="sm">Paused</.badge>
+    <.badge :if={@run.state == :done} color="success" size="sm">Done</.badge>
+    <.loading :if={@run.state == :live} size="sm" label="Run is live" />
+    <.button :if={@run.state == :live} size="sm" phx-click="pause_run">Pause run</.button>
+    <.button :if={@run.state == :paused} size="sm" variant="solid" phx-click="resume_run">
+      Resume run
+    </.button>
+  </:actions>
+  <.message_scroller
+    id="run-trace"
+    label="Run trace"
+    follow={@follow}
+    busy={@run.state == :live}
+    style="height: 24rem;"
+  >
+    <.timeline>
+      <.timeline_item
+        :for={event <- @events}
+        id={"event-#{event.id}"}
+        title={event.title}
+        label={event.label}
+        at={event.at}
+        status={event.status}
+        open={event.open}
+        data-part="item"
+        data-message-id={event.id}
+        data-scroll-anchor={event.anchor || nil}
+      >
+        <:detail :if={event.detail}>
+          <.log_view id={"event-#{event.id}-payload"} label="Payload">
+            <.log_line at={event.at} channel={event.channel} severity={event.severity}>
+              {event.detail}
+            </.log_line>
+          </.log_view>
+        </:detail>
+      </.timeline_item>
+    </.timeline>
+  </.message_scroller>
+</.card>

@@ -1,0 +1,94 @@
+<.card_grid>
+  <.card flush title="Inbox">
+    <.scroll_area label="Threads" data-lantern-list-nav style="max-height: 24rem;">
+      <.list_row
+        :for={thread <- @threads}
+        identifier={thread.identifier}
+        title={thread.title}
+        subtitle={thread.preview}
+        navigate={thread.href}
+        selected={thread.selected}
+        data-lantern-list-item
+      >
+        <:leading><.avatar size="sm" initials={thread.initials} /></:leading>
+        <:meta>
+          <.badge :if={thread.unread} size="sm" color="info">{thread.unread}</.badge>
+        </:meta>
+        <:trailing>{thread.date}</:trailing>
+      </.list_row>
+    </.scroll_area>
+  </.card>
+  <.card title={@thread.title} description={@thread.meta}>
+    <.message_scroller
+      id="thread"
+      label="Conversation"
+      follow={true}
+      busy={@streaming}
+      on_seen="seen"
+      style="height: 24rem;"
+    >
+      <.message_scroller_item
+        :for={message <- @messages}
+        id={"message-#{message.id}"}
+        message_id={message.id}
+        scroll_anchor={message.role == :assistant}
+      >
+        <.message
+          align={if message.role == :user, do: "end", else: "start"}
+          tone={if message.role == :user, do: "primary", else: "surface"}
+        >
+          <:avatar><.avatar size="sm" initials={message.initials} /></:avatar>
+          <:header>{message.author}</:header>
+          {message.content}
+          <:footer>{message.at}</:footer>
+        </.message>
+      </.message_scroller_item>
+      <.message_scroller_item
+        :if={@action}
+        id={"action-#{@action.id}"}
+        message_id={"action-#{@action.id}"}
+      >
+        <.card title={@action.title} description={@action.summary}>
+          {@action.body}
+          <:footer>
+            <.button
+              id={"action-#{@action.id}-approve"}
+              variant="solid"
+              phx-click="approve"
+              phx-value-id={@action.id}
+            >
+              Approve
+            </.button>
+            <.button
+              id={"action-#{@action.id}-reject"}
+              variant="outline"
+              color="danger"
+              phx-click="reject"
+              phx-value-id={@action.id}
+            >
+              Reject
+            </.button>
+          </:footer>
+        </.card>
+      </.message_scroller_item>
+    </.message_scroller>
+    <:footer>
+      <.stack gap="sm">
+        <.alert :if={@send_error} color="danger" title="Message not sent">{@send_error}</.alert>
+        <form phx-change="draft" phx-submit="send">
+          <.stack gap="sm">
+            <.textarea
+              id="composer"
+              name="draft"
+              value={@draft}
+              label="Message"
+              rows={3}
+              placeholder="Write a reply"
+            />
+            <.button type="submit" variant="solid" disabled={@streaming}>Send</.button>
+          </.stack>
+        </form>
+      </.stack>
+    </:footer>
+  </.card>
+</.card_grid>

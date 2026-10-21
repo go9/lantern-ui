@@ -249,6 +249,11 @@ defmodule LanternUI.TimelineTest do
       [open_details] = Floki.find(open_doc, "details.lui-timeline-details")
       refute List.keyfind(elem(closed_details, 1), "open", 0)
       assert List.keyfind(elem(open_details, 1), "open", 0)
+
+      # After mount the browser owns `open`, so an append patch cannot collapse
+      # a disclosure the reader opened.
+      assert closed =~ "ignore_attrs"
+      assert open =~ "ignore_attrs"
     end
 
     test "without detail slot there is no details element" do

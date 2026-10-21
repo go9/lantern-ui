@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- Conversation and run-trace recipes: compose existing avatar/message/scroller/list_row/card and timeline/log_view. Chat Kit follow/jump-to-latest, a pending/rejected draft kept in the composer, action-card buttons with stable ids, timeline disclosures that keep their open state across patches, and live/paused/done as a text badge (spinner is extra; already static under reduced motion). No new chat/trace components and no textarea autosize/Enter-to-send.
+- `timeline_item/1` and `log_line/1` native disclosures: after mount the browser owns `open` (`JS.ignore_attributes`), so appending later events does not collapse a detail the reader opened.
+
 ### Fixed
 - Active sidebar items (`.lui-nav-item-active`) use `--lantern-fg` for the label, not the brand accent on its 12% tint (that pair was ~3.3:1). The orange stays as a left marker plus the existing tint, so the label meets WCAG AA in light and dark.
 - Inset `app_shell` chrome: muted nav text meets AA against `--lantern-chrome` (light was ~4.4:1). The mix is computed on a parent `--lantern-nav-muted-inset` token so it is not a same-element `--lantern-fg-muted: … var(--lantern-fg-muted)` cycle (that declaration is invalid CSS and fell back to full foreground). Dark chrome now uses the dark sunken fallback (`#18181b`) instead of staying light grey.
