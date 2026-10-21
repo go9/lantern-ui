@@ -8,6 +8,7 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 - `provenance_badge/1`: shared origin (own/inherited/override) and temporal evidence (current/historical/unknown) labels, composed from `badge/1`, with an optional caller-owned revert slot for overrides. Unknown never falls back to Current.
+- `host_badge/1`: noninteractive host identity with an optional, visibly labelled Coming soon state; reuses the small neutral badge.
 - `split_pane/1`: two resizable columns with pointer/keyboard resizing, opt-in scoped width persistence, and a server-controlled mobile list-or-detail view.
 - `cite_chip/1`: inline optionally numbered evidence button for file, ticket, and memory references, with an accessible source label and server-owned preview selection. Reuses button keyboard/focus behavior; no JS.
 - `stage_strip/1`: compact ordered workflow pips with done/active/waiting/pending/skipped/failed states and a generated accessible summary. Static, server-owned state; no JS or workflow policy.

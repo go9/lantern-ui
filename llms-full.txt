@@ -1051,6 +1051,19 @@ Slots:
   - `count` — Non-negative bucket count, formatted by the component.
   - `overflow` — Hide an empty stage unless selected; default false.
 
+### LanternUI.Components.HostBadge
+
+Noninteractive host identity, built on `badge/1`.
+
+#### `host_badge/1`
+
+Noninteractive host identity, built on `badge/1`.
+
+- `class` (:any) — Extra classes merged onto the badge.
+- `coming_soon` (:boolean, default false) — Unavailable host; adds Coming soon text.
+- `host` (:string, required) — Host display name.
+- `rest` (:global) — HTML attributes passed through to the noninteractive span.
+
 ### LanternUI.Components.Icon
 
 A small, curated inline-SVG icon set (Heroicons outline paths, MIT).
@@ -3676,6 +3689,14 @@ From `docs/recipes.md` (Inline citations):
 <.cite_chip label="Open citation: memory 167" phx-click="preview" phx-value-source="167">
   memory
 </.cite_chip>
+```
+
+From `docs/recipes.md` (Host identity in resource lists and creation):
+
+```heex
+<.host_badge host="Flicker" />
+<.host_badge host="Fly" coming_soon />
+<.host_badge host="Neon" coming_soon />
 ```
 
 From `README.md` (Usage):

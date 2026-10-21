@@ -1326,3 +1326,25 @@ host. See [citation chip](cite-chip.md) and the `/cite_chip` QA demo.
   memory
 </.cite_chip>
 ```
+
+## Host identity in resource lists and creation
+
+Use `<.host_badge host="Flicker" />` in the Host column of Apps and Databases,
+or once under a resource title beside its separate health glyph. Availability
+belongs to the app; pass any host display name without encoding provider policy
+in the library.
+
+```heex
+<.host_badge host="Flicker" />
+<.host_badge host="Fly" coming_soon />
+<.host_badge host="Neon" coming_soon />
+```
+
+In a shared Add dialog, put the badge beside a **native disabled radio** for an
+unavailable host. The badge is text, never a link, radio, or tab stop; it does
+not disable an enclosing control. Keep unavailable hosts out of real resource
+rows until the app supports them. Do not add fake provider navigation, resource
+health, or preview data to this identity label.
+
+See [the host badge demo and contract](host-badge.md) and the runnable QA page at
+`/host_badge` (`MIX_ENV=test mix run --no-halt test/qa/server.exs`).
