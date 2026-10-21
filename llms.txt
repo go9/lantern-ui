@@ -215,6 +215,12 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `log_line/1` — Log view: monospace lines with a timestamp gutter and per-line severity.
 - `log_view/1` — Log view: monospace lines with a timestamp gutter and per-line severity.
 
+### LanternUI.Components.MatrixTable
+
+- `matrix_cell/1` — Environment-by-component grid: rows are things (environments), columns are components, every cell is one state.
+- `matrix_row/1` — Environment-by-component grid: rows are things (environments), columns are components, every cell is one state.
+- `matrix_table/1` — Environment-by-component grid: rows are things (environments), columns are components, every cell is one state.
+
 ### LanternUI.Components.MediaTile
 
 - `media_tile/1` — Renders a generic media tile cell.
