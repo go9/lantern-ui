@@ -5,7 +5,10 @@ defmodule LanternUI.QA.HostBadgeLive do
 
   def render(assigns) do
     ~H"""
-    <main class="lui-settings-page">
+    <main
+      class="lui-settings-page"
+      style="min-height: 100vh; box-sizing: border-box; padding: var(--lantern-space-lg); background: var(--lantern-surface); color: var(--lantern-fg);"
+    >
       <h1>Host identity</h1>
       <p>One identity label in resource lists and creation choices.</p>
       <.table id="host-resources">
