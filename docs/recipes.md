@@ -1390,3 +1390,16 @@ resizable main/cockpit, or use it alone at the app shell edge.
   </:thread>
 </.cockpit_dock>
 ```
+
+## Environment × component matrix
+
+Use `matrix_table` for a project hub that shows what exists in each
+environment: one row per environment (indent forks with `depth`), one column per
+app or database, each cell a state with words (`present`, `degraded`, `failed`,
+`in_rule`, `absent`). A missing component is a `+` button with a full name
+("Add worker to dev/maya"); present cells link to the resource. Collapse
+previews into a trailing `table_placeholder_row` ("3 previews"), not a column.
+Do not add column groups, a column chooser, or secrets/profile/pool rows to the
+hub grid; each of those has its own page.
+
+See [matrix table](matrix-table.md) and the `/matrix_table` QA demo.

@@ -63,6 +63,7 @@ defmodule LanternUI do
     cite_chip: LanternUI.Components.CiteChip,
     host_badge: LanternUI.Components.HostBadge,
     table: LanternUI.Components.Table,
+    matrix_table: LanternUI.Components.MatrixTable,
     tabs: LanternUI.Components.Tabs,
     select: LanternUI.Components.Select,
     pagination: LanternUI.Components.Pagination,

@@ -6024,3 +6024,28 @@ a.lui-waterfall-lane-inner:focus-visible {
   color: var(--lantern-fg-muted);
   text-align: center;
 }
+
+/* ── Matrix table: pinned row heads, state dot + words ── */
+.lui-matrix .lui-matrix-corner,
+.lui-matrix .lui-matrix-head { position: sticky; left: 0; z-index: 1; }
+.lui-matrix .lui-matrix-head { background: var(--lantern-surface-raised); text-align: left;
+  font-weight: 500; padding-left: calc(0.7rem + var(--lui-matrix-depth, 0) * 1rem); }
+.lui-matrix .lui-tr:hover .lui-matrix-head { background: var(--lantern-surface-hover); }
+.lui-matrix-kind, .lui-matrix-meta { display: block; font-size: var(--lantern-text-sm);
+  font-weight: 400; color: var(--lantern-fg-muted); }
+.lui-matrix-name { color: var(--lantern-fg); text-decoration: none; }
+a.lui-matrix-name:hover, a.lui-matrix-state:hover { text-decoration: underline; }
+.lui-matrix-state { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--lantern-fg);
+  text-decoration: none; border-radius: var(--lantern-radius-sm, 4px); }
+a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
+  outline: 2px solid var(--lantern-accent); outline-offset: 2px; }
+.lui-matrix-dot { width: 0.4rem; height: 0.4rem; border-radius: 50%; flex: none;
+  background: var(--lantern-success); }
+.lui-matrix-cell[data-state="degraded"] .lui-matrix-dot { background: var(--lantern-warning); }
+.lui-matrix-cell[data-state="failed"] .lui-matrix-dot { background: var(--lantern-danger); }
+.lui-matrix-cell[data-state="failed"] .lui-matrix-state { color: var(--lantern-danger); }
+.lui-matrix-cell[data-state="in_rule"] .lui-matrix-state,
+.lui-matrix-cell[data-state="absent"] .lui-matrix-state { color: var(--lantern-fg-muted); }
+.lui-matrix-cell[data-state="in_rule"] .lui-matrix-dot,
+.lui-matrix-cell[data-state="absent"] .lui-matrix-dot { background: transparent;
+  box-shadow: inset 0 0 0 1px var(--lantern-fg-muted); }
