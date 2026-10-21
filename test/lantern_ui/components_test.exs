@@ -591,6 +591,7 @@ defmodule LanternUI.ComponentsTest do
                :skeleton,
                :slider,
                :sortable,
+               :split_pane,
                :stat,
                :state_glyph,
                :switch,

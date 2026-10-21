@@ -307,6 +307,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `drop_zone/1` — The landing area of a `sortable/1` list: dropping here adds to the end.
 - `sortable/1` — Drag-and-drop between lists (board columns, bins, groups) and the landing area at the top of each list.
 
+### LanternUI.Components.SplitPane
+
+- `split_pane/1` — Render a horizontal split with a keyboard and pointer resize separator.
+
 ### LanternUI.Components.Stat
 
 - `stat_card/1` — Renders one compact summary metric.
@@ -1384,6 +1388,17 @@ From `docs/recipes.md` (Environment tree):
     </span>
   </span>
 </:col>
+```
+
+From `docs/recipes.md` (Resizable list/detail or main/cockpit):
+
+```heex
+<.split_pane id="suggestions" label="Suggestions list width"
+  storage_key={"#{@user.id}:#{@project.id}:suggestions"}
+  mobile_pane={if @selected, do: "secondary", else: "primary"}>
+  <:primary>{render_slot(@reports)}</:primary>
+  <:secondary>{render_slot(@detail)}</:secondary>
+</.split_pane>
 ```
 
 From `README.md` (Usage):

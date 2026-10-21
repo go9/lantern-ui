@@ -5837,3 +5837,18 @@ a.lui-waterfall-lane-inner:focus-visible {
 @media (hover: hover) and (pointer: fine) {
   :is(.lui-tr, .lui-dt-card, .lui-dt-list-row):is(:hover, :focus-within) .lui-reveal { opacity: 1; }
 }
+
+/* Split pane: immediate resizing, with no motion to suppress. */
+.lui-split-pane { display: flex; min-inline-size: 0; min-block-size: 0; }
+.lui-split-pane-primary { flex: 0 0 calc((100% - var(--lantern-space-sm, var(--lui-gap-4))) * var(--lantern-split-size)); }
+.lui-split-pane-secondary { flex: 1 1 0; }
+.lui-split-pane-primary, .lui-split-pane-secondary { min-inline-size: 0; min-block-size: 0; overflow: auto; }
+.lui-split-pane-separator { flex: 0 0 var(--lantern-space-sm, var(--lui-gap-4)); background: var(--lantern-border); cursor: col-resize; touch-action: none; }
+.lui-split-pane-separator:hover { background: var(--lantern-ring); }
+.lui-split-pane-separator:focus-visible { outline: var(--lui-focus-ring-width) solid var(--lui-focus-ring-color); outline-offset: calc(-1 * var(--lui-focus-ring-width)); }
+@media (max-width: 47.999rem) {
+  .lui-split-pane > .lui-split-pane-separator,
+  .lui-split-pane[data-mobile-pane="primary"] > .lui-split-pane-secondary,
+  .lui-split-pane[data-mobile-pane="secondary"] > .lui-split-pane-primary { display: none; }
+  .lui-split-pane > .lui-split-pane-primary, .lui-split-pane > .lui-split-pane-secondary { flex: 1 1 100%; }
+}

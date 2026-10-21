@@ -92,6 +92,7 @@ defmodule LanternUI do
     sortable: LanternUI.Components.Sortable,
     progress_ring: LanternUI.Components.ProgressRing,
     side_panel: LanternUI.Components.SidePanel,
+    split_pane: LanternUI.Components.SplitPane,
     progress: LanternUI.Components.Progress,
     meter: LanternUI.Components.Meter,
     price_cell: LanternUI.Components.PriceGrid,
