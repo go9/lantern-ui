@@ -62,6 +62,15 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 </.media_tile_grid>
 ```
 
+## Counted stage filters
+
+**When to use:** Counts are the filter for one flat list. Use `funnel_line` with
+`:stage` values, labels, and counts; set `overflow` for secondary buckets that
+should disappear at zero. Keep the selected empty bucket visible until the host
+changes selection. Do not add a second filter menu or repeat the total. See the
+[recipe and interactive demo](funnel-line.md) for the Suggestions example,
+server event, and keyboard contract.
+
 ## Metric cards with trends
 
 **When to use:** A compact dashboard summary with a small trend line. Sparklines are decorative unless `sparkline_label` gives an informative trend an accessible name. Tone accents use the theme's semantic tokens; metric and subtitle text keep foreground tokens for light and dark contrast.

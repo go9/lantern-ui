@@ -23,6 +23,7 @@ Code.require_file("table_bands_live.ex", __DIR__)
 Code.require_file("provenance_live.ex", __DIR__)
 Code.require_file("split_pane_live.ex", __DIR__)
 Code.require_file("stage_strip_live.ex", __DIR__)
+Code.require_file("funnel_live.ex", __DIR__)
 
 defmodule LanternUI.QA.Layouts do
   use Phoenix.Component
@@ -87,6 +88,7 @@ defmodule LanternUI.QA.Router do
     live("/table_bands", LanternUI.QA.TableBandsLive)
     live("/provenance", LanternUI.QA.ProvenanceLive)
     live("/split_pane", LanternUI.QA.SplitPaneLive)
+    live("/funnel", LanternUI.QA.FunnelLive)
   end
 end
 

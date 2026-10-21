@@ -1013,6 +1013,28 @@ Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
 Slots:
 - `:inner_block` (required) — Primary label text.
 
+### LanternUI.Components.FunnelLine
+
+A compact sequence of counted filters, with optional overflow stages.
+
+#### `funnel_line/1`
+
+Renders a named line of counted, server-controlled filter buttons.
+
+- `class` (:any) — Extra classes merged onto the line.
+- `id` (:string, required) — Stable root id; button ids derive from stage values.
+- `label` (:string, required) — Accessible name for the filter group.
+- `on_change` (:any, required) — Click event or JS command; sends params["value"].
+- `rest` (:global) — HTML attributes passed through to the group.
+- `target` (:any) — Optional LiveComponent target for the click event.
+- `value` (:string, required) — Selected stage value, owned by the server.
+Slots:
+- `:stage` (required) — One counted filter; primary stages precede overflow stages.
+  - `value` — Unique stable filter key.
+  - `label` — Visible stage name.
+  - `count` — Non-negative bucket count, formatted by the component.
+  - `overflow` — Hide an empty stage unless selected; default false.
+
 ### LanternUI.Components.Icon
 
 A small, curated inline-SVG icon set (Heroicons outline paths, MIT).

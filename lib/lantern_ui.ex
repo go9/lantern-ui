@@ -66,6 +66,7 @@ defmodule LanternUI do
     pagination: LanternUI.Components.Pagination,
     data_table: LanternUI.Components.DataTable,
     stat: LanternUI.Components.Stat,
+    funnel_line: LanternUI.Components.FunnelLine,
     switch: LanternUI.Components.Switch,
     slider: LanternUI.Components.Slider,
     radio: LanternUI.Components.Radio,
