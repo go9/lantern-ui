@@ -121,6 +121,16 @@ defmodule LanternUI.TopShellTest do
     end
   end
 
+  test "command trigger text derives from fg, not the host's soft fg-muted (axe color-contrast)" do
+    css = File.read!("priv/static/lantern_ui.css")
+    [rule] = Regex.run(~r/\.lui-command-trigger \{.*?\}/s, css)
+    [kbd] = Regex.run(~r/\.lui-command-trigger-kbd \{.*?\}/s, css)
+
+    assert rule =~ "--lui-command-muted: color-mix(in srgb, var(--lantern-fg)"
+    refute rule =~ "color: var(--lantern-fg-muted)"
+    assert kbd =~ "color: var(--lui-command-muted)"
+  end
+
   test "is importable via use LanternUI" do
     assert {:top_shell, 1} in LanternUI.Components.TopShell.__info__(:functions)
     assert Map.has_key?(LanternUI.__components__(), :top_shell)

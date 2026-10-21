@@ -207,3 +207,31 @@ test("menu: component-owned trigger keeps stable ids and toggles", async () => {
     "file-actions-trigger"
   )
 })
+
+test("menu: custom toggle slot keeps menu-button ARIA off the role-less wrapper", async () => {
+  const html = `
+  <div id="custom-dd" data-zag data-default-value="false" data-placement="bottom-start">
+    <div data-scope="menu" data-part="trigger"><button type="button">Actions</button></div>
+    <div data-scope="menu" data-part="positioner">
+      <div data-scope="menu" data-part="content" hidden role="menu">
+        <button type="button" role="menuitem" tabindex="-1">New</button>
+      </div>
+    </div>
+  </div>`
+  const ctx = mountZag(LanternZagMenu, html, { rootId: "custom-dd", componentKey: "__lanternMenu" })
+  mounts.push(ctx)
+  const { el, component } = ctx
+  await sleep()
+
+  el.querySelector("button").click()
+  await waitFor(() => component().api.open === true)
+
+  const wrapper = el.querySelector('[data-part="trigger"]')
+  for (const name of ["aria-haspopup", "aria-expanded", "aria-controls"]) {
+    assert.equal(wrapper.hasAttribute(name), false, `${name} on the wrapper div`)
+  }
+  const button = wrapper.querySelector("button")
+  assert.equal(button.getAttribute("aria-haspopup"), "menu")
+  assert.equal(button.getAttribute("aria-expanded"), "true")
+  assert.ok(button.getAttribute("aria-controls"))
+})
