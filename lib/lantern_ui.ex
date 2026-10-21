@@ -56,6 +56,7 @@ defmodule LanternUI do
     thumbnail: LanternUI.Components.Thumbnail,
     description_list: LanternUI.Components.DescriptionList,
     layout: LanternUI.Components.Layout,
+    top_shell: LanternUI.Components.TopShell,
     action_bar: LanternUI.Components.ActionBar,
     badge: LanternUI.Components.Badge,
     table: LanternUI.Components.Table,

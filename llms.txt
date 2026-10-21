@@ -364,6 +364,12 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `tooltip/1` — Tooltip - mirrors Fluxon's `tooltip/1` API.
 
+### LanternUI.Components.TopShell
+
+- `command_trigger/1` — A search field look-alike that opens a `command/1` palette.
+- `top_nav_item/1` — A primary link in `top_shell/1`'s `:nav`.
+- `top_shell/1` — Top-navigation app shell: a sticky top bar (brand, primary nav, a search slot, actions) over a content column, with no sidebar.
+
 ### LanternUI.Components.Tree
 
 - `tree/1` — Accessible nested tree for environments and source choosers.
