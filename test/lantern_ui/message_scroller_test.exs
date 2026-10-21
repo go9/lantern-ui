@@ -46,6 +46,19 @@ defmodule LanternUI.MessageScrollerTest do
     assert html =~ ~s(data-peek="72")
   end
 
+  test "on_seen is opt-in and names the event on the hook root" do
+    html =
+      render(fn assigns ->
+        ~H"""
+        <MessageScroller.message_scroller id="a" on_seen="seen">x</MessageScroller.message_scroller>
+        <MessageScroller.message_scroller id="b">x</MessageScroller.message_scroller>
+        """
+      end)
+
+    assert html =~ ~s(id="a" class="lui-message-scroller" phx-hook="LanternMessageScroller")
+    assert [_] = Regex.scan(~r/data-on-seen="seen"/, html)
+  end
+
   test "message_scroller_item renders optional identity and anchor data" do
     html =
       render(fn assigns ->

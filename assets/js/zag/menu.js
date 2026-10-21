@@ -83,9 +83,13 @@ export class LanternMenuMachine extends Component {
       this.spreadProps(trigger, this.api.getTriggerProps())
       // The default toggle button carries its own stale `aria-expanded`
       // from the server render; mirror machine truth onto it.
-      trigger
-        .querySelectorAll("[aria-haspopup]")
-        .forEach((inner) => inner.setAttribute("aria-expanded", String(this.api.open)))
+      const inner = trigger.querySelectorAll("[aria-haspopup]")
+      inner.forEach((button) => button.setAttribute("aria-expanded", String(this.api.open)))
+      // A role-less wrapper around that button must not carry the
+      // menu-button ARIA itself (axe aria-allowed-attr): the button owns it.
+      if (inner.length && !trigger.hasAttribute("role")) {
+        for (const name of ["aria-haspopup", "aria-expanded", "aria-controls"]) trigger.removeAttribute(name)
+      }
     }
 
     const positioner = this.el.querySelector(part("positioner"))

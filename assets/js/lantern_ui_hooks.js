@@ -655,7 +655,9 @@ function trapFocus(container, initialFocusSelector = null) {
   const prev = document.activeElement
 
   const visibleFocusable = (root) =>
-    [...root.querySelectorAll(FOCUSABLE)].filter((el) => el.offsetParent !== null)
+    [...root.querySelectorAll(FOCUSABLE)].filter(
+      (el) => el.offsetParent !== null && el.checkVisibility?.({ visibilityProperty: true }) !== false
+    )
 
   const onKeydown = (e) => {
     if (e.key !== "Tab") return
@@ -1293,15 +1295,53 @@ const LanternPicker = {
 //     [data-part="toggle"], which other components (date picker, dropdown)
 //     use inside the shell.
 //   data-nav-open — the mobile off-canvas drawer, opened by the bar's
-//     hamburger. Ephemeral: closes on scrim click, Escape, widening past the
-//     drawer breakpoint, and on any nav item click that is a destination —
-//     that last one is what stops a `navigate` link from leaving the drawer
-//     over the new page. A disclosure parent is not a destination and is
-//     excluded, or opening a section would close the drawer around it.
+//     hamburger. Ephemeral: closes on its close button, scrim click, Escape,
+//     widening past the drawer breakpoint, and on any nav item click that is a
+//     destination — that last one is what stops a `navigate` link from leaving
+//     the drawer over the new page. A disclosure parent or a row action (pin)
+//     is not a destination and is excluded, or using it would close the drawer
+//     around it. While open the drawer is a modal sheet: role=dialog, focus
+//     trapped inside and restored to the hamburger on close, main content and
+//     the rest of the bar inert. The scroll lock is CSS (`:has`), so it cannot
+//     leak. Escape is left to a menu or dialog opened on top of the drawer.
+//   nav disclosures with data-storage-key — open state persisted per key in
+//     localStorage (`lui-nav:<key>`); only "true"/"false" are trusted.
 //
 // The drawer attribute is re-asserted in updated() because a LiveView patch
-// re-renders the root without it.
+// re-renders the root without it. Attributes on other elements go through the
+// hook's sticky `js()` commands where LiveView provides them, so patches keep
+// them too.
 const MOBILE_NAV_MQ = "(min-width: 769px)"
+const NAV_STATE_PREFIX = "lui-nav:"
+
+function readNavState(key) {
+  try {
+    const value = localStorage.getItem(NAV_STATE_PREFIX + key)
+    if (value === "true") return true
+    if (value === "false") return false
+  } catch (_) {}
+  return null
+}
+
+function writeNavState(key, open) {
+  try {
+    localStorage.setItem(NAV_STATE_PREFIX + key, String(open))
+  } catch (_) {}
+}
+
+// Another floating layer (menu, popover, dialog) is open, so Escape is its.
+function otherLayerOpen(root) {
+  for (const el of document.querySelectorAll("[popover]")) {
+    if (el.classList.contains("lui-toasts")) continue
+    try {
+      if (el.matches(":popover-open")) return true
+    } catch (_) {
+      return false
+    }
+  }
+  const sidebar = root.querySelector('[data-part="sidebar"]')
+  return !!sidebar?.querySelector('[aria-expanded="true"]:not([data-part="nav-disclosure"])')
+}
 
 const LanternSidebar = {
   key() {
@@ -1314,6 +1354,7 @@ const LanternSidebar = {
     this.transientCollapse = null
     this.sessionCollapseChoice = null
     this.syncCollapsed()
+    this.restoreDisclosures()
 
     this.onClick = (e) => {
       if (e.target.closest('[data-part="sidebar-collapse"]')) {
@@ -1321,6 +1362,12 @@ const LanternSidebar = {
       }
       if (e.target.closest('[data-part="sidebar-toggle"]')) return this.setNav(!this.navOpen)
       if (e.target.closest('[data-part="sidebar-scrim"]')) return this.setNav(false)
+      if (e.target.closest('[data-part="sidebar-close"]')) return this.setNav(false)
+
+      // A row action (pin) acts in place; remember where it was so focus has
+      // somewhere to go if the action removes its own row.
+      const action = e.target.closest('[data-part="nav-action"]')
+      if (action) return this.rememberAction(action)
 
       // A disclosure parent wears .lui-nav-item but is not a destination: it
       // reveals its children in place. Closing the drawer on it would shut the
@@ -1328,7 +1375,11 @@ const LanternSidebar = {
       // and never falls through to the nav-item rule below.
       const disclosure = e.target.closest('[data-part="nav-disclosure"]')
       if (disclosure) {
-        if (!this.el.hasAttribute("data-collapsed")) return
+        // LiveView's own click listener (on window) runs after this one, so
+        // the attribute still holds the state before its toggle.
+        if (!this.el.hasAttribute("data-collapsed")) {
+          return this.persistDisclosure(disclosure, disclosure.getAttribute("aria-expanded") !== "true")
+        }
         // On the icon rail the panel is hidden, so the markup's own toggle
         // would flip a section nobody can see — and it would still be flipped
         // when the rail comes back. Take the click instead: open the rail with
@@ -1338,7 +1389,7 @@ const LanternSidebar = {
         this.setCollapsed(false)
         disclosure.setAttribute("data-expanded", "")
         disclosure.setAttribute("aria-expanded", "true")
-        return
+        return this.persistDisclosure(disclosure, true)
       }
 
       if (e.target.closest('[data-part="sidebar"] .lui-nav-item')) this.setNav(false)
@@ -1371,6 +1422,7 @@ const LanternSidebar = {
       if (target && target === this.focusTooltipTarget && !target.contains(e.relatedTarget)) this.hideFocusTooltip()
     }
     this.onFocusIn = (e) => {
+      if (this.pendingFocus && e.target !== this.pendingFocus.button) this.pendingFocus = null
       const target = e.target.closest("[data-tooltip]")
       if (!target || !target.matches(":focus-visible")) return
       this.showSidebarTooltip(target)
@@ -1393,8 +1445,13 @@ const LanternSidebar = {
     this.el.addEventListener("lantern:table-expand", this.onTableExpand)
     this.syncTablesFromDOM()
 
-    this.onKey = (e) => e.key === "Escape" && this.setNav(false)
-    document.addEventListener("keydown", this.onKey)
+    // Capture phase: a menu inside the drawer has not closed itself yet, so
+    // its open state still says this Escape belongs to it.
+    this.onKey = (e) => {
+      if (e.key !== "Escape" || !this.navOpen || otherLayerOpen(this.el)) return
+      this.setNav(false)
+    }
+    document.addEventListener("keydown", this.onKey, true)
 
     this.mq = window.matchMedia(MOBILE_NAV_MQ)
     this.onMq = () => this.mq.matches && this.setNav(false)
@@ -1461,13 +1518,109 @@ const LanternSidebar = {
     this.el.toggleAttribute("data-nav-open", open)
     const btn = this.el.querySelector('[data-part="sidebar-toggle"]')
     if (btn) btn.setAttribute("aria-expanded", String(open))
-    // Only the drawer touches the scroll lock, and only on a real transition —
-    // re-asserting it every patch would stomp an open modal's lock.
-    document.body.style.overflow = open ? "hidden" : ""
+    this.applyModal(open)
+    if (open) {
+      this.releaseTrap = trapFocus(this.el.querySelector('[data-part="sidebar"]') || this.el)
+    } else {
+      // Returns focus to the hamburger (a no-op once it is hidden on desktop).
+      this.releaseTrap?.()
+      this.releaseTrap = null
+    }
+  },
+
+  // Set or (value null) remove an attribute so a LiveView patch keeps it.
+  stickyAttr(el, name, value) {
+    let js = null
+    try {
+      js = this.js?.()
+    } catch (_) {}
+    if (js) value === null ? js.removeAttribute(el, name) : js.setAttribute(el, name, value)
+    else value === null ? el.removeAttribute(name) : el.setAttribute(name, value)
+  },
+
+  // The open drawer is a modal: a dialog, with the page behind it inert. The
+  // hamburger stays live so a tap on it still closes the drawer.
+  applyModal(open) {
+    const sidebar = this.el.querySelector('[data-part="sidebar"]')
+    if (sidebar) {
+      this.stickyAttr(sidebar, "role", open ? "dialog" : null)
+      this.stickyAttr(sidebar, "aria-modal", open ? "true" : null)
+    }
+    if (open) {
+      const bar = this.el.querySelector(".lui-appbar")
+      const background = [
+        ...(bar ? [...bar.children].filter((el) => el.dataset.part !== "sidebar-toggle") : []),
+        ...this.el.querySelectorAll(".lui-app-main"),
+      ]
+      this.inerted = this.inerted || []
+      for (const el of background) {
+        if (el.hasAttribute("inert") && !this.inerted.includes(el)) continue
+        this.stickyAttr(el, "inert", "")
+        if (!this.inerted.includes(el)) this.inerted.push(el)
+      }
+    } else {
+      for (const el of this.inerted || []) this.stickyAttr(el, "inert", null)
+      this.inerted = []
+    }
+  },
+
+  restoreDisclosures() {
+    for (const btn of this.el.querySelectorAll('[data-part="nav-disclosure"][data-storage-key]')) {
+      const key = btn.dataset.storageKey
+      const previous = btn.__lanternNavKey
+      if (previous === key) continue
+      btn.__lanternNavKey = key
+      let open = readNavState(key)
+      // A retained node whose key changed (another user/org/group) must not
+      // keep the previous key's state: with nothing stored, fall back to the
+      // server default.
+      if (open === null && previous === undefined) continue
+      if (open === null) open = btn.dataset.defaultExpanded === "true"
+      this.stickyAttr(btn, "aria-expanded", String(open))
+      this.stickyAttr(btn, "data-expanded", open ? "" : null)
+    }
+  },
+
+  persistDisclosure(btn, open) {
+    if (btn.dataset.storageKey) writeNavState(btn.dataset.storageKey, open)
+  },
+
+  rememberAction(button) {
+    const scope = button.closest(".lui-nav-group") || button.closest('[data-part="sidebar"]') || this.el
+    const index = [...scope.querySelectorAll('[data-part="nav-action"]')].indexOf(button)
+    this.pendingFocus = { button, id: button.id, scope, index }
+  },
+
+  // A patch after a row action dropped focus to <body>. If the row was only
+  // moved (a reorder detaches the node and blurs it), focus its button again;
+  // if the row is gone, focus the action now in its place, else the group's
+  // first link. Focus the user moved elsewhere is never taken.
+  recoverFocus() {
+    const pending = this.pendingFocus
+    if (!pending) return
+    const active = document.activeElement
+    if (active && active !== document.body && active.isConnected) {
+      if (!pending.button.isConnected) this.pendingFocus = null
+      return
+    }
+    this.pendingFocus = null
+    const same = pending.button.isConnected ? pending.button : pending.id && document.getElementById(pending.id)
+    if (same) return same.focus()
+    const sidebar = this.el.querySelector('[data-part="sidebar"]') || this.el
+    const scope = pending.scope.isConnected ? pending.scope : sidebar
+    const actions = [...scope.querySelectorAll('[data-part="nav-action"]:not(:disabled)')]
+    const target =
+      actions[Math.min(pending.index, actions.length - 1)] ||
+      scope.querySelector(".lui-nav-item") ||
+      sidebar.querySelector(".lui-nav-item")
+    target?.focus()
   },
 
   syncCollapsed() {
-    const stored = localStorage.getItem(this.key())
+    let stored = null
+    try {
+      stored = localStorage.getItem(this.key())
+    } catch (_) {}
     if (stored === "true") this.el.setAttribute("data-collapsed", "")
     if (stored === "false") this.el.removeAttribute("data-collapsed")
   },
@@ -1491,6 +1644,9 @@ const LanternSidebar = {
       this.syncCollapsed()
     }
     this.el.toggleAttribute("data-nav-open", this.navOpen)
+    if (this.navOpen) this.applyModal(true)
+    this.restoreDisclosures()
+    this.recoverFocus()
   },
 
   destroyed() {
@@ -1503,9 +1659,12 @@ const LanternSidebar = {
     this.el.removeEventListener("lantern:table-expand", this.onTableExpand)
     this.transientTables.clear()
     this.syncTransientCollapse()
-    document.removeEventListener("keydown", this.onKey)
+    document.removeEventListener("keydown", this.onKey, true)
     this.mq.removeEventListener("change", this.onMq)
-    if (this.navOpen) document.body.style.overflow = ""
+    if (this.navOpen) this.applyModal(false)
+    this.releaseTrap?.()
+    this.releaseTrap = null
+    this.pendingFocus = null
   },
 }
 
@@ -4032,6 +4191,46 @@ const LanternMessageScroller = {
       this.button.dataset.active = String(!this.atBottom)
       this.button.setAttribute("aria-hidden", this.atBottom ? "true" : "false")
       this.button.setAttribute("tabindex", this.atBottom ? "-1" : "0")
+      this.reportSeen()
+    }
+    // `on_seen`: tell the host the newest item the reader has actually seen —
+    // only while the viewport is at the bottom, the page is visible and the
+    // item itself is rendered and on screen, so a message appended while they
+    // read history (or while the transcript is hidden) stays unseen until they
+    // get to it. An id counts as reported only once the push succeeds; a
+    // rejected push (LiveView disconnected) is retried on reconnect.
+    this.lastSeen = null
+    this.pendingSeen = null
+    this.reportSeen = () => {
+      const event = this.el.dataset.onSeen
+      if (!event || !this.atBottom || document.visibilityState === "hidden") return
+      const items = this.content.querySelectorAll('[data-part="item"][data-message-id]')
+      const item = items[items.length - 1]
+      const id = item?.dataset.messageId
+      if (!id || id === this.lastSeen || id === this.pendingSeen || !this.inView(item)) return
+      this.pendingSeen = id
+      const settle = (ok) => {
+        if (this.pendingSeen === id) this.pendingSeen = null
+        if (ok) this.lastSeen = id
+      }
+      let result
+      try {
+        result = this.pushEvent(event, { message_id: id })
+      } catch (_) {
+        return settle(false)
+      }
+      if (typeof result?.then === "function") result.then(() => settle(true), () => settle(false))
+      else settle(true)
+    }
+    this.onVisibility = () => this.reportSeen()
+    document.addEventListener("visibilitychange", this.onVisibility)
+    // A transcript revealed after being display:none (mobile list/thread,
+    // collapsed panel) reports what is now in view.
+    if (typeof IntersectionObserver === "function") {
+      this.seenObserver = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) this.reportSeen()
+      })
+      this.seenObserver.observe(this.viewport)
     }
     this.scroll = () => {
       this.updateState()
@@ -4062,6 +4261,24 @@ const LanternMessageScroller = {
     window.addEventListener("resize", this.resize)
     requestAnimationFrame(() => { if (this.following) this.scrollToBottom(); else this.updateState() })
   },
+  // Rendered (no display:none / visibility:hidden / content-visibility up the
+  // tree) and overlapping both the scroll viewport and the window.
+  inView(item) {
+    const visible = item.checkVisibility
+      ? item.checkVisibility({ visibilityProperty: true, contentVisibilityAuto: true })
+      : item.getClientRects().length > 0 && window.getComputedStyle(item).visibility !== "hidden"
+    if (!visible) return false
+    const rect = item.getBoundingClientRect()
+    const port = this.viewport.getBoundingClientRect()
+    const top = Math.max(port.top, 0)
+    const bottom = Math.min(port.bottom, window.innerHeight)
+    const left = Math.max(port.left, 0)
+    const right = Math.min(port.right, window.innerWidth)
+    return rect.bottom > top && rect.top < bottom && rect.right > left && rect.left < right
+  },
+  reconnected() {
+    this.reportSeen()
+  },
   scrollToBottom() {
     this.el.dataset.autoscrolling = "true"
     this.viewport.scrollTop = this.viewport.scrollHeight
@@ -4074,6 +4291,8 @@ const LanternMessageScroller = {
     this.el.removeEventListener("click", this._onRootClick)
     this.observer?.disconnect()
     window.removeEventListener("resize", this.resize)
+    document.removeEventListener("visibilitychange", this.onVisibility)
+    this.seenObserver?.disconnect()
   },
 }
 

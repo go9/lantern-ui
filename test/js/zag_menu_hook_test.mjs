@@ -190,6 +190,15 @@ test("menu: component-owned trigger keeps stable ids and toggles", async () => {
   el.querySelector("#file-actions-trigger").click()
   await waitFor(() => component().api.open === true)
 
+  // The machine spreads menu-button ARIA onto the trigger part; on a
+  // role-less wrapper it must land only on the inner button.
+  const wrapper = el.querySelector('[data-part="trigger"]')
+  for (const name of ["aria-haspopup", "aria-expanded", "aria-controls"]) {
+    assert.equal(wrapper.hasAttribute(name), false, `${name} on the wrapper span`)
+  }
+  assert.equal(wrapper.querySelector("button").getAttribute("aria-expanded"), "true")
+  assert.equal(wrapper.querySelector("button").getAttribute("aria-controls"), "file-actions-menu")
+
   // Stable ids survive the machine spread (aria wiring intact).
   assert.equal(el.querySelector('[data-part="trigger"]').id, "file-actions-trigger")
   assert.equal(el.querySelector('[data-part="content"]').id, "file-actions-menu")

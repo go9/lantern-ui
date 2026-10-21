@@ -136,9 +136,32 @@ defmodule LanternUI.LayoutTest do
       assert css =~ ".lui-app[data-inset] { background: var(--lantern-chrome); }"
       assert css =~ ".lui-app[data-inset] .lui-app-main { background: var(--lantern-surface); }"
 
+      # Parent captures inherited muted; chrome children consume the dedicated
+      # token. A same-element `--lantern-fg-muted: … var(--lantern-fg-muted)` mix
+      # is a custom-property cycle and the browser drops it.
+      assert css =~
+               "--lantern-nav-muted-inset: color-mix(in srgb, var(--lantern-fg) 10%, var(--lantern-fg-muted));"
+
+      assert css =~ "--lantern-fg-muted: var(--lantern-nav-muted-inset);"
+
+      refute css =~
+               ~r/--lantern-fg-muted\s*:[^;{}]*var\(\s*--lantern-fg-muted(?=[\s,)])/
+
       for theme <- ["priv/static/lantern_ui_theme.css", "priv/static/lantern_ui_compat.css"] do
         assert File.read!(theme) =~ "--lantern-chrome: var(--background-chrome,"
       end
+
+      theme = File.read!("priv/static/lantern_ui_theme.css")
+
+      assert theme =~
+               "--lantern-chrome: var(--background-chrome, var(--background-accent, #18181b))"
+    end
+
+    test "active nav item uses foreground for the label, accent as a marker" do
+      css = File.read!("priv/static/lantern_ui.css")
+      assert css =~ ".lui-nav-item-active { color: var(--lantern-fg);"
+      refute css =~ ".lui-nav-item-active { color: var(--lantern-accent);"
+      assert css =~ ".lui-nav-item-active::before"
     end
 
     test "header and actions bars are omitted when their slots are empty" do
@@ -416,6 +439,172 @@ defmodule LanternUI.LayoutTest do
 
       assert html =~ "<svg"
       refute html =~ "lui-nav-item-icon-mask"
+    end
+  end
+
+  describe "nav_item/1 split row, actions and keyed disclosure" do
+    defp project_row(assigns) do
+      ~H"""
+      <Layout.nav_item
+        id="project-acme"
+        label="Acme"
+        icon="folder"
+        navigate="/projects/acme"
+        storage_key="u1:o2:project-acme"
+      >
+        <:action label="Unpin Acme" icon="map-pin" pressed phx-click="unpin" phx-value-id="acme" />
+        <:subnav>
+          <Layout.nav_item label="Overview" navigate="/projects/acme" active />
+          <Layout.nav_item label="Runs" navigate="/projects/acme/runs" />
+        </:subnav>
+      </Layout.nav_item>
+      """
+    end
+
+    test "a subnav item with a link splits into link, disclosure and action siblings" do
+      doc = render(&project_row/1) |> Floki.parse_fragment!()
+
+      [row] = Floki.find(doc, "#project-acme > [data-part=nav-row]")
+      controls = row |> Floki.children() |> Enum.map(&elem(&1, 0))
+      assert controls == ["a", "button", "button"]
+
+      # Identity link: navigates, carries the label, is not a toggle.
+      [link] = Floki.find(row, "a.lui-nav-item")
+      assert Floki.attribute(link, "href") == ["/projects/acme"]
+      assert Floki.attribute(link, "aria-expanded") == []
+      assert Floki.text(link) =~ "Acme"
+
+      # Disclosure: its own named button that controls the panel.
+      [disclosure] = Floki.find(row, "[data-part=nav-disclosure]")
+      assert Floki.attribute(disclosure, "aria-label") == ["Toggle Acme"]
+      assert Floki.attribute(disclosure, "aria-expanded") == ["false"]
+      assert Floki.attribute(disclosure, "aria-controls") == ["project-acme-subnav"]
+      assert Floki.attribute(disclosure, "data-storage-key") == ["u1:o2:project-acme"]
+      # The server default, for the hook to fall back to when the key changes.
+      assert Floki.attribute(disclosure, "data-default-expanded") == ["false"]
+      assert [_] = Floki.find(doc, "#project-acme-subnav[data-part=nav-subpanel]")
+
+      # Trailing action: named, pressed, not a nav item (so the drawer stays open).
+      [action] = Floki.find(row, "[data-part=nav-action]")
+      assert Floki.attribute(action, "aria-label") == ["Unpin Acme"]
+      assert Floki.attribute(action, "aria-pressed") == ["true"]
+      assert Floki.attribute(action, "phx-click") == ["unpin"]
+      assert Floki.attribute(action, "phx-value-id") == ["acme"]
+      assert Floki.attribute(action, "class") == ["lui-nav-action"]
+    end
+
+    test "no interactive control is nested inside another" do
+      doc = render(&project_row/1) |> Floki.parse_fragment!()
+
+      assert Floki.find(doc, "a a, a button, button a, button button") == []
+    end
+
+    test "a leaf item with an action wraps link + button in one row" do
+      doc =
+        render(fn assigns ->
+          ~H"""
+          <Layout.nav_item id="project-beta" label="Beta" navigate="/projects/beta" active>
+            <:action label="Pin Beta" icon="map-pin" pressed={false} phx-click="pin" />
+          </Layout.nav_item>
+          """
+        end)
+        |> Floki.parse_fragment!()
+
+      [row] = Floki.find(doc, "#project-beta.lui-nav-row")
+      assert row |> Floki.children() |> Enum.map(&elem(&1, 0)) == ["a", "button"]
+      assert Floki.attribute(doc, "a", "aria-current") == ["page"]
+      assert Floki.attribute(doc, "[data-part=nav-action]", "aria-pressed") == ["false"]
+    end
+
+    test "an action without pressed is a plain button (no aria-pressed)" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Layout.nav_item label="Beta" navigate="/b">
+            <:action label="More for Beta" icon="ellipsis-horizontal" />
+          </Layout.nav_item>
+          """
+        end)
+
+      refute html =~ "aria-pressed"
+    end
+
+    test "without an action or subnav the markup is unchanged: one bare link" do
+      doc =
+        render(fn assigns ->
+          ~H"""
+          <Layout.nav_item id="dash" label="Dashboard" navigate="/" />
+          """
+        end)
+        |> Floki.parse_fragment!()
+
+      assert [{"a", _, _}] = doc
+      assert Floki.attribute(doc, "id") == ["dash"]
+    end
+
+    test "a whole-row disclosure points at its panel when given an id" do
+      doc =
+        render(fn assigns ->
+          ~H"""
+          <Layout.nav_item id="factory" label="Factory" storage_key="u1:o2:factory" expanded>
+            <:subnav><Layout.nav_item label="Work" navigate="/w" /></:subnav>
+          </Layout.nav_item>
+          """
+        end)
+        |> Floki.parse_fragment!()
+
+      [toggle] = Floki.find(doc, "#factory > button[data-part=nav-disclosure]")
+      assert Floki.attribute(toggle, "aria-controls") == ["factory-subnav"]
+      assert Floki.attribute(toggle, "aria-expanded") == ["true"]
+      assert Floki.attribute(toggle, "data-storage-key") == ["u1:o2:factory"]
+      assert Floki.attribute(toggle, "data-default-expanded") == ["true"]
+    end
+
+    test "the stylesheet hides closed panels from the tab order and shows actions on touch" do
+      css = File.read!("priv/static/lantern_ui.css")
+
+      assert css =~ ~r/\.lui-nav-sub-panel \{[^}]*visibility: hidden/
+
+      assert css =~
+               ~s|.lui-nav-row:has(> [data-part="nav-disclosure"][data-expanded]) + .lui-nav-sub-panel|
+
+      assert css =~
+               ~r/@media \(hover: none\) \{\s*\.lui-nav-action:not\(:focus-visible\) \{ opacity: 1; \}/
+
+      assert css =~ ".lui-app[data-collapsed] .lui-nav-action { display: none; }"
+    end
+  end
+
+  describe "app_shell/1 mobile drawer" do
+    test "the sidebar is labelled and carries its own close button" do
+      doc =
+        render(fn assigns ->
+          ~H"""
+          <Layout.app_shell id="app" nav_label="Project navigation">
+            <:brand>B</:brand>
+            <:sidebar>NAV</:sidebar>
+            BODY
+          </Layout.app_shell>
+          """
+        end)
+        |> Floki.parse_fragment!()
+
+      [aside] = Floki.find(doc, "aside#app-sidebar")
+      assert Floki.attribute(aside, "aria-label") == ["Project navigation"]
+      # Modal semantics are hook-owned: the server never renders them.
+      assert Floki.attribute(aside, "role") == []
+      assert Floki.attribute(aside, "aria-modal") == []
+
+      assert Floki.attribute(doc, "aside [data-part=sidebar-close]", "aria-label") == [
+               "Close navigation"
+             ]
+    end
+
+    test "the scroll lock is CSS, scoped to the open drawer on narrow screens" do
+      css = File.read!("priv/static/lantern_ui.css")
+
+      assert css =~
+               "html:has(.lui-app[data-nav-open]), html:has(.lui-app[data-nav-open]) body { overflow: hidden; }"
     end
   end
 

@@ -182,6 +182,7 @@
   --lantern-surface-raised: var(--surface, #ffffff);
   --lantern-surface-sunken: var(--background-accent, #f4f4f5);
   --lantern-surface-hover: var(--background-accent, #f4f4f5);
+  --lantern-chrome: var(--background-chrome, var(--background-accent, #f4f4f5));
 
   --lantern-border: var(--border-base, #e4e4e7);
   --lantern-border-strong: var(--border-base, #d4d4d8);
@@ -232,6 +233,7 @@
   --lantern-surface-raised: var(--surface, #0c0c0e);
   --lantern-surface-sunken: var(--background-accent, #18181b);
   --lantern-surface-hover: var(--background-accent, #26262a);
+  --lantern-chrome: var(--background-chrome, var(--background-accent, #18181b));
 
   --lantern-border: var(--border-base, #26262a);
   --lantern-border-strong: var(--border-base, #3f3f46);
@@ -276,6 +278,7 @@
     --lantern-surface-raised: var(--surface, #0c0c0e);
     --lantern-surface-sunken: var(--background-accent, #18181b);
     --lantern-surface-hover: var(--background-accent, #26262a);
+    --lantern-chrome: var(--background-chrome, var(--background-accent, #18181b));
 
     --lantern-border: var(--border-base, #26262a);
     --lantern-border-strong: var(--border-base, #3f3f46);

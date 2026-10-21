@@ -114,9 +114,6 @@ defmodule LanternUI.Components.Menu do
         data-part="trigger"
         id={"#{@id}-trigger"}
         class="lui-menu-trigger"
-        aria-haspopup="menu"
-        aria-expanded="false"
-        aria-controls={"#{@id}-menu"}
       >
         <LanternUI.Components.Button.button
           type="button"

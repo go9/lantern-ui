@@ -91,8 +91,18 @@ class Element {
 }
 
 class Document {
-  constructor() { this.body = new Element(this, "body") }
+  constructor() {
+    this.body = new Element(this, "body")
+    this.listeners = new Map()
+    this.visibilityState = "visible"
+  }
   createElement(tag) { return new Element(this, tag) }
+  addEventListener(type, listener) {
+    this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener])
+  }
+  removeEventListener(type, listener) {
+    this.listeners.set(type, (this.listeners.get(type) ?? []).filter((item) => item !== listener))
+  }
 }
 
 let observerCallback
@@ -227,10 +237,11 @@ test("a new scroll anchor lands near the top using the peek offset", () => {
 })
 
 test("destroyed removes all registered listeners and supports re-mounting", () => {
-  const { hook, root, viewport, button, windowListeners, observer } = setup()
+  const { hook, root, viewport, button, windowListeners, observer, document } = setup()
   hook.following = false
   hook.destroyed()
   assert.equal(observer.disconnected, true)
+  assert.equal(document.listeners.get("visibilitychange")?.length ?? 0, 0)
   assert.equal(root.listeners.get("click")?.length ?? 0, 0)
   assert.equal(viewport.listeners.get("scroll")?.length ?? 0, 0)
   assert.equal(windowListeners.get("resize")?.length ?? 0, 0)

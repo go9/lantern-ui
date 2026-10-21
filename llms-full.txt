@@ -1107,6 +1107,7 @@ App shell — a full-width top bar (brand + inline context + actions) over a fix
 - `compact` (:boolean, default false) — Opt in to the slim shell topline height.
 - `id` (:string, required) — stable id — the collapse state is persisted per id
 - `inset` (:boolean, default false) — Inset frame: the top bar and sidebar share one chrome colour (`--lantern-chrome`) and the main column is one bordered, rounded content panel on it.
+- `nav_label` (:string, default "Navigation") — Accessible name of the sidebar, and of the mobile drawer dialog.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 Slots:
 - `:actions` — top-right of the bar (user menu, etc.)
@@ -1165,14 +1166,26 @@ A sidebar nav item.
 - `active` (:boolean, default false) — Highlight as the current page.
 - `badge` (:any) — A count or short marker for what is waiting behind this link.
 - `class` (:any) — Extra classes merged onto the root element.
+- `disclosure_label` (:string) — Accessible name of the split row's chevron button.
 - `expanded` (:boolean, default false) — Initial open state when a `:subnav` is present.
 - `href` (:string) — External or full-page href; renders as a link.
 - `icon` (:string) — Leading icon.
+- `id` (:string) — DOM id on the item's outer element; a subnav panel gets `<id>-subnav`.
 - `label` (:string, required) — Nav label; becomes the collapsed-rail tooltip.
 - `navigate` (:string) — LiveView navigate target; renders as a link.
 - `patch` (:string) — LiveView patch target; renders as a link.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `storage_key` (:string) — Persist a `:subnav`'s open state in localStorage under this key.
 Slots:
+- `:action` — Trailing icon button on the row (e.g.
+  - `label` — Accessible name (the button is icon-only).
+  - `icon` — Lantern icon name or host `hero-*` name.
+  - `pressed` — Toggle state, rendered as `aria-pressed`.
+  - `id` — DOM id of the button.
+  - `disabled` — Disable the button.
+  - `phx-click` — LiveView event or JS command.
+  - `phx-value-id` — phx-value-id sent with the click.
+  - `phx-target` — LiveView target for the click.
 - `:subnav` — Nested nav_items.
 
 #### `nav_link/1`
@@ -1445,6 +1458,7 @@ Accessible, follow-aware transcript viewport for chat messages.
 - `follow` (:boolean, default true) — Follow the latest message and mount at the bottom
 - `id` (:string, required) — 
 - `label` (:string, default "Messages") — 
+- `on_seen` (:string) — LiveView event pushed with the `message_id` of the last item once it is in view.
 - `peek` (:integer, default 40) — 
 - `rest` (:global) — 
 Slots:
