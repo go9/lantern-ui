@@ -7,6 +7,9 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- `top_shell/1`, `top_nav_item/1` and `command_trigger/1` (`LanternUI.Components.TopShell`): a top-navigation app shell with no sidebar, for consumer-facing tools. A sticky bar (brand, primary nav as a named `nav` landmark with `aria-current="page"`, a centred search slot, actions), an optional sticky `:subheader` toolbar row, and a content column capped by `width` (`prose` / `wide` / `full`). The bar height is published as `--lantern-top-shell-h` for sticky rails. Below ~48rem the nav moves into a disclosure panel behind a menu button (`aria-expanded` / `aria-controls`, Escape and a link click close it), with plain `Phoenix.LiveView.JS` and no hook. `command_trigger/1` is a search-field look-alike button that opens a `command/1` palette and shows its hotkey hint. Additive: `app_shell/1` is unchanged.
+
+### Added
 - Conversation and run-trace recipes: compose existing avatar/message/scroller/list_row/card and timeline/log_view. Chat Kit follow/jump-to-latest, a pending/rejected draft kept in the composer, action-card buttons with stable ids, timeline disclosures that keep their open state across patches, and live/paused/done as a text badge (spinner is extra; already static under reduced motion). No new chat/trace components and no textarea autosize/Enter-to-send.
 - `timeline_item/1` and `log_line/1` native disclosures: after mount the browser owns `open` (`JS.ignore_attributes`), so appending later events does not collapse a detail the reader opened.
 

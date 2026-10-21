@@ -2417,6 +2417,54 @@ Slots:
 - `:content` — Rich tip body; overrides `value` when present.
 - `:inner_block` (required) — Trigger element that shows the tip.
 
+### LanternUI.Components.TopShell
+
+Top-navigation app shell: a sticky top bar (brand, primary nav, a search slot, actions) over a content column, with no sidebar.
+
+#### `command_trigger/1`
+
+A search field look-alike that opens a `command/1` palette.
+
+- `class` (:any) — Extra classes merged onto the button.
+- `id` (:string) — Optional DOM id.
+- `label` (:string, default "Search") — Visible placeholder text and accessible name.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `shortcut` (:string, default "⌘K") — Hint shown at the end.
+- `target` (:string, required) — Id of the `command/1` palette to open.
+
+#### `top_nav_item/1`
+
+A primary link in `top_shell/1`'s `:nav`.
+
+- `active` (:boolean, default false) — Current section.
+- `class` (:any) — Extra classes merged onto the link.
+- `href` (:any) — Plain href.
+- `icon` (:string) — Optional leading icon.
+- `label` (:string, required) — Visible link text.
+- `navigate` (:string) — LiveView navigate target.
+- `patch` (:string) — LiveView patch target.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+
+#### `top_shell/1`
+
+Top-navigation app shell: a sticky top bar (brand, primary nav, a search slot, actions) over a content column, with no sidebar.
+
+- `class` (:any) — Extra classes merged onto the root.
+- `id` (:string, required) — Stable id; child ids derive from it.
+- `main_class` (:any) — Extra classes merged onto `<main>`.
+- `main_id` (:string) — Id for `<main>` (skip-link target).
+- `menu_label` (:string, default "Menu") — Accessible name of the narrow-screen nav button.
+- `nav_label` (:string, default "Main") — Accessible name of the nav landmark.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through to the root.
+- `width` (:string, values: prose, wide, full, default "wide") — Content column cap: `prose`, `wide` (default) or `full`.
+Slots:
+- `:actions` — Right side: primary action, user menu.
+- `:brand` (required) — Logo and name, top-left.
+- `:inner_block` (required) — Page content.
+- `:nav` — Primary links: `top_nav_item/1`s.
+- `:search` — Centred search, usually `command_trigger/1`.
+- `:subheader` — Optional sticky toolbar row under the bar.
+
 ### LanternUI.Components.Tree
 
 Accessible tree — a WAI-ARIA APG treeview for nested navigation (environments, source choosers, file trees).
