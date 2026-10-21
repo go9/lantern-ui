@@ -6,6 +6,7 @@ defmodule LanternUI.Recipes do
   @names ~w(
     linear_list_row
     grouped_list
+    flat_table
     record_page
     inbox
     project_overview
@@ -64,6 +65,22 @@ defmodule LanternUI.Recipes do
       ],
       scope: "all",
       meta: %{params: %{}, current_page: 1, total_pages: 1, page_size: 20, total_count: 2},
+      entities: [
+        %{
+          id: "API_KEY",
+          name: "API_KEY",
+          href: "/entities/API_KEY",
+          kind: "secret",
+          status: :todo
+        },
+        %{
+          id: "REGION",
+          name: "REGION",
+          href: "/entities/REGION",
+          kind: "config",
+          status: :in_progress
+        }
+      ],
       paths: %{
         all: "/tickets",
         active: "/tickets?scope=active",

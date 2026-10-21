@@ -213,6 +213,55 @@ defmodule LanternUI.DataTableTest do
     refute doc |> Floki.find(".lui-table-wrap") |> Floki.text() =~ "NOTHING"
   end
 
+  test "placeholder row spans checkbox, columns, and row actions" do
+    html =
+      render(
+        fn assigns ->
+          ~H"""
+          <DataTable.data_table id="t" rows={@rows} meta={@meta} path="/orders">
+            <:col :let={r} label="Name">{r.name}</:col>
+            <:col :let={r} label="ID">{r.id}</:col>
+            <:row_action :let={r}>ACT-{r.id}</:row_action>
+            <:placeholder label="Add order" kbd="A" event="add_order" />
+          </DataTable.data_table>
+          """
+        end,
+        %{rows: rows(), meta: @meta}
+      )
+
+    doc = Floki.parse_fragment!(html)
+    [cell] = Floki.find(doc, "tr[data-placeholder] td")
+    assert Floki.attribute(cell, "colspan") == ["4"]
+    [button] = Floki.find(doc, "tr[data-placeholder] button")
+    assert Floki.attribute(button, "phx-click") == ["add_order"]
+    assert Floki.attribute(button, "phx-window-keydown") == ["add_order"]
+    assert Floki.attribute(button, "phx-key") == ["a"]
+    assert Floki.attribute(button, "disabled") == []
+    assert Floki.attribute(button, "aria-disabled") == []
+    assert html =~ "Ada"
+    assert html =~ "Add order"
+  end
+
+  test "placeholder without an empty slot is the empty-add intent" do
+    html =
+      render(
+        fn assigns ->
+          ~H"""
+          <DataTable.data_table id="t" rows={[]} meta={@meta} path="/orders" show_checkboxes={false}>
+            <:col :let={r} label="Name">{r.name}</:col>
+            <:placeholder label="Add order" event="add_order" />
+          </DataTable.data_table>
+          """
+        end,
+        %{meta: @meta}
+      )
+
+    refute html =~ "Nothing here yet"
+    refute html =~ "lui-dt-empty"
+    assert html =~ "lui-tr-placeholder"
+    assert html =~ "Add order"
+  end
+
   test "sort_path toggles and resets direction" do
     assert DataTable.sort_path("/x", @meta, :name) =~ "order_directions[]=desc"
     assert DataTable.sort_path("/x", @meta, :other) =~ "order_directions[]=asc"

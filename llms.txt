@@ -330,6 +330,7 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `table/1` — Presentational table family — the styled substrate `data_table` composes.
 - `table_body/1` — Presentational table family — the styled substrate `data_table` composes.
 - `table_head/1` — Presentational table family — the styled substrate `data_table` composes.
+- `table_placeholder_row/1` — Presentational table family — the styled substrate `data_table` composes.
 - `table_row/1` — Presentational table family — the styled substrate `data_table` composes.
 
 ### LanternUI.Components.Tabs
@@ -495,6 +496,44 @@ From `docs/recipes.md` (Flat ticket list with toolbar):
       <:trailing>{ticket.date}</:trailing>
     </.list_row>
   </:list_item>
+</.data_table>
+```
+
+From `docs/recipes.md` (Flat table with placeholder row):
+
+```heex
+<.data_table
+  id="entities"
+  rows={@entities}
+  meta={@meta}
+  path="/entities"
+  title="Entities"
+  fill
+  row_navigate={& &1.href}
+  search_field={:name}
+  show_checkboxes={false}
+>
+  <:filter
+    field={:kind}
+    label="Kind"
+    options={[{"Secret (1)", "secret"}, {"Config (1)", "config"}]}
+    prompt="All kinds"
+  />
+  <:col :let={entity} label="Name" field={:name} sortable>{entity.name}</:col>
+  <:col :let={entity} label="Kind">{entity.kind}</:col>
+  <:col :let={entity} label="Status">
+    <.status_glyph status={entity.status} />
+    <span>{entity.status |> Atom.to_string() |> String.replace("_", " ")}</span>
+  </:col>
+  <:card :let={entity}>
+    <.list_row identifier={entity.name} title={entity.name} navigate={entity.href}>
+      <:leading><.status_glyph status={entity.status} /></:leading>
+      <:meta>
+        <.badge size="sm">{entity.kind}</.badge>
+      </:meta>
+    </.list_row>
+  </:card>
+  <:placeholder label="Add entity" kbd="A" event="add_entity" />
 </.data_table>
 ```
 

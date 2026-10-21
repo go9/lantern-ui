@@ -24,7 +24,7 @@ Blocks inherit the host's body font and measure: the gallery fixture sets `font-
 
 - **app_shell** — use this when the page needs the full frame: sidebar nav, a page shell (breadcrumb trail, title, actions), and content in one shell.
 - **dashboard** — use this when the page answers "where do we stand": stat cards, one chart, recent activity.
-- **index** — use this when the page is a record list: flat table, filter chips with counts, search, pagination, row click.
+- **index** — use this when the page is a record list: flat table, filter chips with counts, search, pagination, row click. Add-intent rows use the placeholder recipe, not a fake disabled record.
 - **detail** — use this when the page is one record: page shell with its actions, body card, right inspector panel.
 - **settings** — use this when the page edits preferences: stacked section cards, each with its own form and save row.
 - **form** — use this when the page creates or edits one record: single card, inline validation errors, cancel/save footer.
@@ -34,6 +34,8 @@ Blocks inherit the host's body font and measure: the gallery fixture sets `font-
 ## Fill list pages
 
 **When to use:** The page body is a single `data_table`. Pass `fill` (and give the parent a bounded flex height, e.g. flicker's `page_layout fill`) so the rows area scrolls inside the table and pagination stays at the bottom of the viewport. List, cards, and table views all honour this; without `fill` a long list grows and pushes the pager below the fold.
+
+Without `fill`, column headers stick only inside the table wrap's horizontal scrollport (so they stay put while you pan columns), not at the viewport. With `fill`, the wrap is the vertical scroll region and headers pin there. Do not add a second grouped header row; multi-row matrix heads are a later API.
 
 Grouped tables and group headers are banned. A page that listed rows under tinted collapsible group headers becomes one flat list: a status column on each row, rows ordered by status then recency, and quick-filter chips or a tabs-free filter. Whatever the group header said (status name, count) must stay visible per row or in the filter chips with counts.
 
@@ -175,6 +177,46 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
       <:trailing>{ticket.date}</:trailing>
     </.list_row>
   </:list_item>
+</.data_table>
+```
+
+## Flat table with placeholder row
+
+**When to use:** A dense record table: URL sort and filters, a status/kind column on every row, counted filter chips, an optional cards slot for the narrow layout, and a subdued full-width add/intent row. The add row is a real button (Tab / Enter / Space, optional `kbd`); do not fake a disabled record. `fill` vs document scroll as in Fill list pages. No grouped bands. Row navigate opens the record; extra per-row controls go in `:row_action`, not a second click on the row. Multi-row matrix heads are not this recipe.
+
+```heex
+<.data_table
+  id="entities"
+  rows={@entities}
+  meta={@meta}
+  path="/entities"
+  title="Entities"
+  fill
+  row_navigate={& &1.href}
+  search_field={:name}
+  show_checkboxes={false}
+>
+  <:filter
+    field={:kind}
+    label="Kind"
+    options={[{"Secret (1)", "secret"}, {"Config (1)", "config"}]}
+    prompt="All kinds"
+  />
+  <:col :let={entity} label="Name" field={:name} sortable>{entity.name}</:col>
+  <:col :let={entity} label="Kind">{entity.kind}</:col>
+  <:col :let={entity} label="Status">
+    <.status_glyph status={entity.status} />
+    <span>{entity.status |> Atom.to_string() |> String.replace("_", " ")}</span>
+  </:col>
+  <:card :let={entity}>
+    <.list_row identifier={entity.name} title={entity.name} navigate={entity.href}>
+      <:leading><.status_glyph status={entity.status} /></:leading>
+      <:meta>
+        <.badge size="sm">{entity.kind}</.badge>
+      </:meta>
+    </.list_row>
+  </:card>
+  <:placeholder label="Add entity" kbd="A" event="add_entity" />
 </.data_table>
 ```
 

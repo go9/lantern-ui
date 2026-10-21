@@ -12,6 +12,7 @@ defmodule LanternUI.Components.DataTable do
         <:bulk_action label="Delete" icon="trash" event="bulk-delete" />
         <:row_action :let={o}>…</:row_action>
         <:empty>No orders yet.</:empty>
+        <:placeholder label="Add order" kbd="A" event="add_order" />
       </.data_table>
 
   - `meta` is a `Flop.Meta` (duck-typed — any map with `flop`, `params`,
@@ -58,6 +59,7 @@ defmodule LanternUI.Components.DataTable do
   alias LanternUI.Components.Popover
   alias LanternUI.Components.Select
   alias LanternUI.Components.Stat
+  alias LanternUI.Components.Table
   alias LanternUI.Components.Tabs
 
   attr(:id, :string, required: true, doc: "Stable DOM id for the table root and chrome.")
@@ -346,6 +348,18 @@ defmodule LanternUI.Components.DataTable do
   slot(:row_action, doc: "Per-row trailing actions cell; receives the row via :let.")
   slot(:empty, doc: "Empty-state content when there are no rows.")
 
+  slot :placeholder,
+    doc:
+      "Full-width add/intent row after the records. A real control, not a fake disabled record. Table view only." do
+    attr(:label, :string, required: true, doc: "Accessible name and visible add/intent copy.")
+    attr(:kbd, :string, doc: "Optional keycap hint; binds window keydown with event.")
+    attr(:icon, :string, doc: "Leading icon name; defaults to plus.")
+    attr(:navigate, :string, doc: "LiveView navigate target for the control.")
+    attr(:patch, :string, doc: "LiveView patch target for the control.")
+    attr(:href, :string, doc: "External/full-page href for the control.")
+    attr(:event, :string, doc: "phx-click event name fired to target.")
+  end
+
   slot(:overview, doc: "Arbitrary collapsible overview content above the table.")
 
   slot :stat, doc: "Overview metric card above the table." do
@@ -422,6 +436,13 @@ defmodule LanternUI.Components.DataTable do
       )
 
     assigns = resolve_views(assigns)
+
+    assigns =
+      assign(
+        assigns,
+        :placeholder_colspan,
+        placeholder_colspan(assigns)
+      )
 
     assigns =
       assign(
@@ -1135,6 +1156,18 @@ defmodule LanternUI.Components.DataTable do
                 {render_slot(@row_action, row)}
               </td>
             </tr>
+            <Table.table_placeholder_row
+              :for={ph <- @placeholder}
+              colspan={@placeholder_colspan}
+              label={ph.label}
+              kbd={ph[:kbd]}
+              icon={ph[:icon] || "plus"}
+              navigate={ph[:navigate]}
+              patch={ph[:patch]}
+              href={ph[:href]}
+              phx-click={ph[:event]}
+              phx-target={@target}
+            />
           </tbody>
         </table>
       </div>
@@ -1142,7 +1175,8 @@ defmodule LanternUI.Components.DataTable do
             the full width of a table that is wider than the screen. --%>
       <div
         :if={
-          @rows == [] && !(@card != [] && @view == "cards") && !(@list_item != [] && @view == "list")
+          @rows == [] && (@empty != [] || @placeholder == []) &&
+            !(@card != [] && @view == "cards") && !(@list_item != [] && @view == "list")
         }
         class="lui-dt-empty"
       >
@@ -1169,6 +1203,15 @@ defmodule LanternUI.Components.DataTable do
       />
     </div>
     """
+  end
+
+  defp placeholder_colspan(assigns) do
+    n =
+      length(assigns.col) +
+        if(assigns.show_checkboxes, do: 1, else: 0) +
+        if(assigns.row_action != [], do: 1, else: 0)
+
+    max(n, 1)
   end
 
   defp column_key(col, index),

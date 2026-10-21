@@ -52,7 +52,7 @@ For `data_table`, decide every capability explicitly:
 
 Sortable fields must exist in backing query/schema allowlist. Disable checkboxes when no bulk action exists.
 
-Use fill layout only when parent has bounded height and component should own body scrolling. `fill` scrolls the rows area (table body, list, or cards) internally and pins pagination; a long list without it pushes the pager below the fold.
+Use fill layout only when parent has bounded height and component should own body scrolling. `fill` scrolls the rows area (table body, list, or cards) internally and pins pagination; a long list without it pushes the pager below the fold. Without `fill`, headers stick only inside the wrap's horizontal scrollport. Put an add/intent control in `:placeholder` (or `table_placeholder_row`); do not fake a disabled record, and do not add grouped header bands. Multi-row matrix heads are a later API.
 
 ## 5. Records get routes
 
