@@ -189,6 +189,18 @@ function wireMenuHook(key, componentKey, setEvent) {
         if (["Enter", " ", "ArrowDown"].includes(event.key)) prepareOpen(event)
       }, true)
 
+      // Zag returns focus to the role-less trigger wrapper, which cannot take
+      // it, so Escape would leave focus on <body>: hand it to the control.
+      dom.add("keydown", (event) => {
+        if (event.key !== "Escape" || !component.api.open) return
+        const trigger = el.querySelector(part("trigger"))
+        const control = trigger?.hasAttribute("role")
+          ? trigger
+          : trigger?.querySelector("[aria-haspopup], button, a[href], [tabindex]:not([tabindex='-1'])")
+        // Zag still holds focus inside the content while closing: wait it out.
+        setTimeout(() => { if (!component.api.open) control?.focus() }, 50)
+      })
+
       // Controlled machines ignore api.setOpen (the prop is truth).
       const applyOpen = (open) => {
         if (getBoolean(el, "controlled")) {

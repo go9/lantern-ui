@@ -461,5 +461,22 @@ defmodule LanternUI.ZagWidgetsTest do
       assert html =~ ~s(data-part="item")
       assert html =~ ~s(href="/orders?page=4")
     end
+
+    test "disabled prev exposes its name as text, not aria-label on a span" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Pagination.pagination
+            meta={%{current_page: 1, total_pages: 3, page_size: 10, total_count: 30}}
+            patch_fn={fn params -> "/orders?#{URI.encode_query(params)}" end}
+          />
+          """
+        end)
+
+      assert html =~
+               ~r/<span[^>]*lui-pg-disabled[^>]*>.*?<span class="lui-sr-only">Previous page<\/span>/s
+
+      refute html =~ ~r/<span[^>]*lui-pg-disabled[^>]*aria-label/
+    end
   end
 end

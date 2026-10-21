@@ -26,6 +26,9 @@ All notable changes to this project are documented here. The format follows
 - `timeline_item/1` and `log_line/1` native disclosures: after mount the browser owns `open` (`JS.ignore_attributes`), so appending later events does not collapse a detail the reader opened.
 
 ### Fixed
+- Default theme text fallbacks now reach WCAG AA 4.5:1 on their surfaces (light: muted `#71717a`->`#666670`, subtle `#a1a1aa`->`#6f6f78`, accent `oklch(0.637 0.192 38)`->`oklch(0.566 0.192 38)`, danger `#dc2626`->`#d92323`, success `#16a34a`->`#008229`, warning `#d97706`->`#b45500`, info L 0.62->0.548; dark: subtle `#71717a`->`#808089`, accent-fg `#ffffff`->`#09090b`). Host tokens (`--primary`, `--warning`, `--foreground-softest`, …) still win through the chain and stay the host's to keep at 4.5:1. Contract: `test/js/theme_contrast_test.mjs`.
+- Menu/dropdown: Escape returns focus to the trigger control instead of `<body>`.
+- `pagination/1`: a disabled previous/next exposes its name as sr-only text instead of `aria-label` on a span.
 - `dropdown/1` with a custom `:toggle` slot no longer puts `aria-haspopup`/`aria-expanded`/`aria-controls` on its role-less `data-part="trigger"` wrapper (axe `aria-allowed-attr`, critical); the machine now sets them on the first focusable control inside.
 - `command_trigger/1` label and kbd hint derive their colour from `--lantern-fg` instead of a host's soft `--lantern-fg-muted`, which measured about 3:1 (axe `color-contrast`).
 - Active sidebar items (`.lui-nav-item-active`) use `--lantern-fg` for the label, not the brand accent on its 12% tint (that pair was ~3.3:1). The orange stays as a left marker plus the existing tint, so the label meets WCAG AA in light and dark.

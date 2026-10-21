@@ -724,6 +724,18 @@
 }
 @keyframes lui-fade { from { opacity: 0; } }
 @keyframes lui-pop { from { opacity: 0; transform: scale(0.97); } }
+@keyframes lui-popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--lantern-popover-shift, 0)) scale(0.97);
+  }
+}
+@keyframes lui-popover-out {
+  to {
+    opacity: 0;
+    transform: translateY(var(--lantern-popover-shift, 0)) scale(0.97);
+  }
+}
 
 /* ── Floating layer ──
    Panels, positioners, the command palette and the toast stack render
@@ -855,7 +867,16 @@
 .lui-popover-panel { z-index: var(--lantern-z-popover, 70); padding: 0;
   max-height: var(--available-height, none); max-width: var(--available-width, none); overflow-y: auto;
   background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
-  border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md); }
+  border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md);
+  --lantern-popover-shift: calc(var(--lantern-popover-nudge, 0.25rem) * -1);
+  transform-origin: var(--transform-origin, top);
+  animation: lui-popover-in var(--lantern-duration) var(--lantern-ease); }
+.lui-popover[data-placement^="top"] .lui-popover-panel {
+  --lantern-popover-shift: var(--lantern-popover-nudge, 0.25rem);
+  transform-origin: var(--transform-origin, bottom); }
+.lui-popover[data-closing] .lui-popover-panel {
+  animation: lui-popover-out var(--lantern-duration) var(--lantern-ease) forwards; }
+[data-lantern-positioning] > .lui-popover-panel { animation: none; }
 .lui-dropdown { display: inline-block; position: relative; }
 .lui-dropdown-menu { z-index: var(--lantern-z-dropdown, 50); min-width: 11rem; padding: 0.25rem;
   max-height: var(--available-height, none); max-width: var(--available-width, none); overflow-y: auto;
@@ -1019,10 +1040,11 @@
 .lui-top-sub-inner { display: flex; align-items: center; gap: 0.5rem; min-height: 3rem; flex-wrap: wrap; padding-top: 0.5rem; padding-bottom: 0.5rem; }
 .lui-top-main { flex: 1; padding-top: var(--lantern-space-lg, 1.5rem); padding-bottom: 3rem; outline: none; }
 
-.lui-command-trigger { display: flex; align-items: center; gap: 0.5rem; width: 100%; max-width: 28rem;
+/* Hosts map fg-muted to a soft grey that is ~3:1 on the bar; this text must clear 4.5:1, so derive it from fg. */
+.lui-command-trigger { --lui-command-muted: color-mix(in srgb, var(--lantern-fg) 72%, var(--lantern-surface-raised, var(--lantern-surface))); display: flex; align-items: center; gap: 0.5rem; width: 100%; max-width: 28rem;
   height: 2.25rem; padding: 0 0.5rem 0 0.75rem; border: 1px solid var(--lantern-border);
   border-radius: var(--lantern-radius-md, 0.5rem); background: var(--lantern-surface-raised, var(--lantern-surface));
-  color: var(--lantern-fg-muted); font: inherit; font-size: 0.875rem; text-align: left; cursor: pointer;
+  color: var(--lui-command-muted); font: inherit; font-size: 0.875rem; text-align: left; cursor: pointer;
   box-shadow: var(--lantern-shadow, 0 1px 2px rgb(0 0 0 / 0.05));
   transition: border-color var(--lantern-duration, 150ms) var(--lantern-ease, ease); }
 .lui-command-trigger:hover { border-color: var(--lantern-border-strong, var(--lantern-border)); color: var(--lantern-fg); }
@@ -1030,7 +1052,7 @@
 .lui-command-trigger-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lui-command-trigger-kbd { flex-shrink: 0; padding: 0.125rem 0.375rem; border: 1px solid var(--lantern-border);
   border-radius: var(--lantern-radius-sm, 0.25rem); font: inherit; font-size: var(--lantern-text-meta, 0.6875rem);
-  line-height: 1.4; color: var(--lantern-fg-muted); background: var(--lantern-surface); }
+  line-height: 1.4; color: var(--lui-command-muted); background: var(--lantern-surface); }
 
 @media (max-width: 48rem) {
   .lui-top-nav-toggle { display: inline-flex; }
@@ -1042,7 +1064,10 @@
   .lui-top-nav-item { height: 2.75rem; }
   .lui-top-search { justify-content: flex-end; }
   .lui-command-trigger { width: 2.75rem; height: 2.75rem; padding: 0; justify-content: center; }
-  .lui-command-trigger :is(.lui-command-trigger-label, .lui-command-trigger-kbd) { display: none; }
+  .lui-command-trigger-kbd { display: none; }
+  /* Icon-only, but the label stays the accessible name (visually hidden). */
+  .lui-command-trigger-label { position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap; }
   .lui-top-bar-inner, .lui-top-sub-inner, .lui-top-main { padding-left: 1rem; padding-right: 1rem; }
 }
 @media print {
@@ -1561,7 +1586,7 @@
   box-shadow: 0 0 0 3px var(--lantern-ring-soft); color: var(--lantern-fg); }
 .lui-nav-disclosure .lui-nav-sub-chevron { margin-left: 0; }
 .lui-nav-disclosure[data-expanded] .lui-nav-sub-chevron { transform: rotate(90deg); }
-.lui-nav-action[aria-pressed="true"] { color: var(--lantern-accent); }
+.lui-nav-action[aria-pressed="true"] { color: var(--lantern-accent); opacity: 1; }
 .lui-nav-action:disabled { cursor: default; opacity: 0.5; }
 /* Actions appear on hover or focus. Touch has no hover, so they always show
    there, at a finger-sized target. */
@@ -1672,6 +1697,7 @@
 .lui-badge { display: inline-flex; align-items: center; gap: 0.3em; font-weight: 600;
   border-radius: 999px; border: 1px solid transparent; white-space: nowrap;
   font-variant-numeric: tabular-nums; }
+.lui-provenance-badge { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--lantern-space-xs); }
 .lui-badge[data-size="sm"] { font-size: 0.6875rem; padding: 0 0.5rem; height: 1.125rem; }
 .lui-badge[data-size="md"] { font-size: 0.71875rem; padding: 0 0.5625rem; height: 1.25rem; }
 .lui-badge[data-size="lg"] { font-size: 0.8125rem; padding: 0 0.7rem; height: 1.5rem; }
@@ -2074,9 +2100,11 @@
 .lui-dt-chromerow { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
   padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--lantern-border); }
 .lui-dt-chromerow { row-gap: 0.5rem; }
-.lui-dt-chromerow :is(button, input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select, [role="tab"], .lui-dt-chip) {
+.lui-dt-chromerow :is(button, select, [role="tab"], .lui-dt-chip) {
   box-sizing: border-box; min-height: var(--lui-control-md-h); }
-.lui-dt-chromerow :is(input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select) {
+.lui-dt-chromerow input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]) {
+  box-sizing: border-box; min-height: var(--lui-control-md-h); }
+.lui-dt-chromerow input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]) {
   height: var(--lui-control-md-h);
 }
 .lui-dt-chromerow .lui-dt-quickfilters :is(button, [role="tab"]) { height: var(--lui-control-md-h); }
@@ -4830,6 +4858,14 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-side-panel[hidden] {
   display: none;
 }
+.lui-cockpit-dock { width: 24rem; max-width: 100%; overflow: hidden; }
+.lui-cockpit-dock-header {
+  display: flex; align-items: center; gap: var(--lantern-space-sm, var(--lui-gap-4));
+  padding: var(--lantern-space-sm, var(--lui-gap-4)) var(--lantern-space-md, var(--lui-gap-4));
+  border-bottom: 1px solid var(--lantern-border); flex: 0 0 auto;
+}
+.lui-cockpit-dock-body { display: flex; flex-direction: column; flex: 1 1 0; min-block-size: 0; overflow-y: auto; }
+.lui-cockpit-dock-body[hidden] { display: none; }
 
 /* ── data_table row links ──
    `row_navigate` / `row_patch` render one empty anchor stretched over the row
@@ -5391,6 +5427,8 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-dt-chromerow .lui-dt-search input { font-size: var(--lui-control-font-md); }
 .lui-dt-chromerow > .lui-popover .lui-btn { box-sizing: border-box; height: var(--lui-control-h-md); min-height: var(--lui-control-h-md); gap: var(--lui-gap-4); font-size: var(--lui-control-font-md); }
 .lui-dt-chromerow :is(.lui-dt-search, .lui-popover .lui-btn, .lui-dt-expand) .lui-icon { width: var(--lui-control-icon-md); height: var(--lui-control-icon-md); flex: none; }
+.lui-dt-chromerow > .lui-dt-filters .lui-btn { box-sizing: border-box; height: var(--lui-control-h-sm); min-height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); gap: var(--lui-gap-4); font-size: var(--lui-control-font-sm); }
+.lui-dt-chromerow > .lui-dt-filters .lui-btn .lui-icon { width: var(--lui-control-icon-sm); height: var(--lui-control-icon-sm); flex: none; }
 .lui-datatable-expanded .lui-dt-overview, .lui-dt-overview[hidden] { display: none; }
 .lui-chart-card__settings .lui-chart-settings__trigger { height: var(--lui-control-h-md); min-height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); font-size: var(--lui-control-font-md); }
 
@@ -5789,6 +5827,278 @@ a.lui-waterfall-lane-inner:focus-visible {
   .lui-tree-expander-icon { transition: none; }
 }
 
+/* Toggle actions share nav action semantics; reveal never removes tab stops. */
+.lui-btn[aria-pressed="true"], .lui-nav-action[aria-pressed="true"] { color: var(--lantern-accent); opacity: 1; }
+.lui-btn[aria-pressed="true"] .lui-icon,
+.lui-nav-action[aria-pressed="true"] .lui-icon { fill: currentColor; }
+@media (hover: hover) and (pointer: fine) {
+  .lui-reveal:not([aria-pressed="true"]) { opacity: 0; }
+  .lui-reveal:focus-visible, :hover > .lui-reveal, :focus-within > .lui-reveal,
+  :hover > .lui-icon-btn-tip .lui-reveal,
+  :focus-within > .lui-icon-btn-tip .lui-reveal { opacity: 1; }
+}
+.lui-state-glyph[data-kind="sync"]:is([data-value="queued"], [data-value="paused"], [data-value="off"]) { color: var(--lantern-fg-muted); }
+.lui-state-glyph[data-kind="sync"][data-value="stale"] { color: var(--lantern-warning); }
+.lui-state-glyph[data-kind="sync"][data-value="blocked"] { color: var(--lantern-danger); }
+
+/* Each card band spans the grid while its cards retain the same columns. */
+.lui-dt-card-band { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; gap: inherit; }
+.lui-dt-band { color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); font-weight: 500; }
+.lui-dt-card-band > .lui-dt-band { grid-column: 1 / -1; padding-block: var(--lantern-space-sm); }
+.lui-dt-band > th { text-align: start; padding: var(--lantern-space-sm) var(--lantern-space-md); background: var(--lantern-surface-sunken); }
+.lui-dt-sort { display: inline-flex; align-items: center; gap: var(--lantern-space-xs); }
+
+.lui-dt-chromerow select { min-height: var(--lui-control-md-h); height: var(--lui-control-md-h); }
+.lui-dt-chromerow .lui-dt-sort select { height: var(--lui-control-h-sm); min-height: var(--lui-control-h-sm); font-size: var(--lui-control-font-sm); }
+@media (hover: hover) and (pointer: fine) {
+  :is(.lui-tr, .lui-dt-card, .lui-dt-list-row):is(:hover, :focus-within) .lui-reveal { opacity: 1; }
+}
+
+/* Split pane: immediate resizing, with no motion to suppress. */
+.lui-split-pane { display: flex; min-inline-size: 0; min-block-size: 0; }
+.lui-split-pane-primary { flex: 0 0 calc((100% - var(--lantern-space-sm, var(--lui-gap-4))) * var(--lantern-split-size)); }
+.lui-split-pane-secondary { flex: 1 1 0; }
+.lui-split-pane-primary, .lui-split-pane-secondary { min-inline-size: 0; min-block-size: 0; overflow: auto; }
+.lui-split-pane-separator { flex: 0 0 var(--lantern-space-sm, var(--lui-gap-4)); background: var(--lantern-border); cursor: col-resize; touch-action: none; }
+.lui-split-pane-separator:hover { background: var(--lantern-ring); }
+.lui-split-pane-separator:focus-visible { outline: var(--lui-focus-ring-width) solid var(--lui-focus-ring-color); outline-offset: calc(-1 * var(--lui-focus-ring-width)); }
+@media (max-width: 47.999rem) {
+  .lui-split-pane > .lui-split-pane-separator,
+  .lui-split-pane[data-mobile-pane="primary"] > .lui-split-pane-secondary,
+  .lui-split-pane[data-mobile-pane="secondary"] > .lui-split-pane-primary { display: none; }
+  .lui-split-pane > .lui-split-pane-primary, .lui-split-pane > .lui-split-pane-secondary { flex: 1 1 100%; }
+}
+
+/* Compact workflow summary. Static in all motion preferences. */
+.lui-stage-strip {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--lantern-space-xs);
+  vertical-align: middle;
+}
+.lui-stage-strip-pip {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: var(--lantern-space-md);
+  height: calc(var(--lantern-space-xs) * 1.5);
+  border-radius: var(--lantern-radius-sm);
+  background: color-mix(in srgb, var(--lantern-fg) 12%, transparent);
+}
+.lui-stage-strip-pip[data-state="done"] {
+  background: color-mix(in srgb, var(--lantern-fg) 55%, transparent);
+}
+.lui-stage-strip-pip[data-state="active"] {
+  background: color-mix(in srgb, var(--lantern-fg) 20%, transparent);
+  border: calc(var(--lantern-space-xs) / 4) solid color-mix(in srgb, var(--lantern-fg) 60%, transparent);
+}
+.lui-stage-strip-pip[data-state="waiting"] {
+  background: var(--lantern-accent);
+}
+.lui-stage-strip-pip[data-state="skipped"] {
+  background: transparent;
+  border: calc(var(--lantern-space-xs) / 4) dashed color-mix(in srgb, var(--lantern-fg) 30%, transparent);
+}
+.lui-stage-strip-pip[data-state="failed"] {
+  background: transparent;
+  border: calc(var(--lantern-space-xs) / 2) solid var(--lantern-danger);
+}
+
+/* Counted stage filters; native buttons keep keyboard and server state ownership. */
+.lui-funnel-line {
+  display: flex;
+  align-items: center;
+  gap: var(--lantern-space-xs);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: var(--lantern-space-xs);
+  scroll-behavior: auto;
+}
+.lui-funnel-stage {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lantern-space-xs);
+  flex-shrink: 0;
+}
+.lui-funnel-arrow { color: var(--lantern-fg-muted); }
+.lui-funnel-stage[data-overflow="false"] + .lui-funnel-stage[data-overflow="true"]::before {
+  content: "";
+  height: var(--lantern-text);
+  border-inline-start: thin solid var(--lantern-border);
+  margin-inline: var(--lantern-space-sm);
+}
+.lui-funnel-button.lui-btn {
+  color: var(--lantern-fg-muted);
+  font-weight: 400;
+  font-size: var(--lantern-text-footnote, var(--lantern-text));
+  gap: var(--lantern-space-xs);
+  padding-inline: var(--lantern-space-sm);
+  transition: none;
+}
+.lui-funnel-button.lui-btn[aria-pressed="true"] {
+  color: var(--lantern-fg);
+  background: var(--lantern-surface-sunken);
+  font-weight: 500;
+}
+.lui-funnel-count {
+  font-family: var(--lantern-font-mono);
+  font-size: var(--lantern-text-caption);
+  font-variant-numeric: tabular-nums;
+}
+/* Inline evidence references reuse button focus and native keyboard behavior. */
+.lui-btn.lui-cite-chip {
+  height: auto;
+  min-height: 0;
+  padding: 0 var(--lantern-space-xs);
+  gap: var(--lantern-space-xs);
+  vertical-align: baseline;
+  font-family: var(--lantern-font-mono);
+  font-size: var(--lantern-text-caption);
+  line-height: var(--lantern-text-caption-leading);
+  border-radius: var(--lantern-radius-sm);
+  color: var(--lantern-fg-muted);
+  background: var(--lantern-surface);
+  transition: none;
+}
+.lui-btn.lui-cite-chip:hover,
+.lui-btn.lui-cite-chip[aria-pressed="true"] {
+  color: var(--lantern-fg);
+  border-color: var(--lantern-ring);
+  background: var(--lantern-surface-sunken);
+}
+.lui-cite-chip-number { color: var(--lantern-primary); }
+/* Host identity reuses badge sizing and surface; availability is also text. */
+.lui-host-badge[data-coming-soon="true"][data-variant="soft"] { color: var(--lantern-fg-muted); }
+
+
+/* Line diff. Sign + screen-reader text carry meaning; tint is secondary. */
+.lui-diff {
+  position: relative;
+  flex-shrink: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-md);
+  background: var(--lantern-surface);
+  font-family: var(--lantern-font-mono);
+  font-size: var(--lantern-text-mono-meta);
+  line-height: var(--lantern-text-mono-meta-leading);
+}
+.lui-diff:focus-visible {
+  outline: 2px solid var(--lantern-ring);
+  outline-offset: -2px;
+}
+.lui-diff-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.lui-diff-empty {
+  margin: 0;
+  padding: var(--lantern-space-sm) var(--lantern-space-md);
+  color: var(--lantern-fg-muted);
+}
+.lui-diff-no,
+.lui-diff-sign {
+  width: 1%;
+  padding: 0 var(--lantern-space-sm);
+  color: var(--lantern-fg-subtle);
+  text-align: right;
+  white-space: nowrap;
+  user-select: none;
+}
+.lui-diff-sign { text-align: center; }
+.lui-diff-text {
+  padding: 0 var(--lantern-space-md);
+  overflow-wrap: anywhere;
+}
+.lui-diff-line { white-space: pre-wrap; }
+.lui-diff[data-mode="split"] .lui-diff-text { width: 50%; }
+.lui-diff[data-mode="split"] .lui-diff-no + .lui-diff-text + .lui-diff-no { border-left: 1px solid var(--lantern-border); }
+.lui-diff-row[data-kind="add"],
+.lui-diff-text[data-kind="add"],
+.lui-diff-row[data-kind="add"] > :is(.lui-diff-no, .lui-diff-sign) {
+  background: color-mix(in srgb, var(--lantern-success) 14%, transparent);
+}
+.lui-diff-row[data-kind="del"],
+.lui-diff-text[data-kind="del"],
+.lui-diff-row[data-kind="del"] > :is(.lui-diff-no, .lui-diff-sign) {
+  background: color-mix(in srgb, var(--lantern-danger) 14%, transparent);
+}
+.lui-diff-gap td {
+  padding: 0 var(--lantern-space-md);
+  background: var(--lantern-surface-sunken);
+  color: var(--lantern-fg-muted);
+  text-align: center;
+}
+
+/* ── Matrix table: pinned row heads, state dot + words ── */
+.lui-matrix .lui-matrix-corner,
+.lui-matrix .lui-matrix-head { position: sticky; left: 0; z-index: 1; }
+.lui-matrix .lui-matrix-head { background: var(--lantern-surface-raised); text-align: left;
+  font-weight: 500; padding-left: calc(0.7rem + var(--lui-matrix-depth, 0) * 1rem); }
+.lui-matrix .lui-tr:hover .lui-matrix-head { background: var(--lantern-surface-hover); }
+.lui-matrix-kind, .lui-matrix-meta { display: block; font-size: var(--lantern-text-sm);
+  font-weight: 400; color: var(--lantern-fg-muted); }
+.lui-matrix-name { color: var(--lantern-fg); text-decoration: none; }
+a.lui-matrix-name:hover, a.lui-matrix-state:hover { text-decoration: underline; }
+.lui-matrix-state { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--lantern-fg);
+  text-decoration: none; border-radius: var(--lantern-radius-sm, 4px); }
+a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
+  outline: 2px solid var(--lantern-accent); outline-offset: 2px; }
+.lui-matrix-dot { width: 0.4rem; height: 0.4rem; border-radius: 50%; flex: none;
+  background: var(--lantern-success); }
+.lui-matrix-cell[data-state="degraded"] .lui-matrix-dot { background: var(--lantern-warning); }
+.lui-matrix-cell[data-state="failed"] .lui-matrix-dot { background: var(--lantern-danger); }
+.lui-matrix-cell[data-state="failed"] .lui-matrix-state { color: var(--lantern-danger); }
+.lui-matrix-cell[data-state="in_rule"] .lui-matrix-state,
+.lui-matrix-cell[data-state="absent"] .lui-matrix-state { color: var(--lantern-fg-muted); }
+.lui-matrix-cell[data-state="in_rule"] .lui-matrix-dot,
+.lui-matrix-cell[data-state="absent"] .lui-matrix-dot { background: transparent;
+  box-shadow: inset 0 0 0 1px var(--lantern-fg-muted); }
+/* Server-rendered dependency graph. Static in all motion preferences; panned by native scroll. */
+.lui-topology {
+  max-width: 100%;
+  overflow: auto;
+  background: var(--lantern-surface-raised);
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-md);
+}
+.lui-topology:focus-visible {
+  outline: 2px solid var(--lantern-accent);
+  outline-offset: -2px;
+}
+.lui-topology-svg { display: block; max-width: none; }
+.lui-topology-edge path { stroke: var(--lantern-fg-subtle); stroke-width: 1.5; }
+.lui-topology-edge[data-dashed="true"] path { stroke-dasharray: 5 4; stroke-width: 1; }
+.lui-topology-edge text { fill: var(--lantern-fg-muted); font-size: 0.6875rem; }
+.lui-topology-node {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--lantern-space-xs);
+  width: 100%;
+  height: 100%;
+  padding: 0 var(--lantern-space-md);
+  font: inherit;
+  text-align: left;
+  color: var(--lantern-fg);
+  background: var(--lantern-surface);
+  border: 1px solid var(--lantern-border-strong);
+  border-radius: var(--lantern-radius-md);
+  cursor: pointer;
+}
+.lui-topology-node:hover { background: var(--lantern-surface-hover); }
+.lui-topology-node:focus-visible { outline: 2px solid var(--lantern-accent); outline-offset: 1px; }
+.lui-topology-node[aria-pressed="true"] { border-color: var(--lantern-accent); box-shadow: inset 0 0 0 1px var(--lantern-accent); }
+.lui-topology-node[data-state="degraded"] { border-color: var(--lantern-warning); }
+.lui-topology-node[data-state="failed"] { border-color: var(--lantern-danger); }
+.lui-topology-node[data-state="absent"] { border-style: dashed; opacity: 0.6; }
+.lui-topology-node-label { font-family: var(--lantern-font-mono, monospace); font-size: 0.8125rem; }
+.lui-topology-node-detail { font-size: 0.6875rem; color: var(--lantern-fg-muted); }
+
 /*
  * LanternUI design tokens + default theme.
  *
@@ -5798,7 +6108,7 @@ a.lui-waterfall-lane-inner:focus-visible {
  *
  *     --lantern-fg: var(--foreground, #09090b);
  *     --lantern-surface: var(--background-base, #ffffff);
- *     --lantern-accent: var(--primary, oklch(0.637 0.192 38));
+ *     --lantern-accent: var(--primary, oklch(0.566 0.192 38));
  *
  * So a Fluxon/flicker theme — which sets `--primary`, `--foreground`,
  * `--background-base`, `--border-base`, … — flows straight into LanternUI with
@@ -5821,6 +6131,11 @@ a.lui-waterfall-lane-inner:focus-visible {
  * win through the chain. Recolor by overriding any `--lantern-*` OR any Fluxon
  * token on `:root`/`.dark`/a subtree.
  *
+ * CONTRAST: every shipped text fallback is >= 4.5:1 on its surfaces (enforced
+ * by test/js/theme_contrast_test.mjs). Host tokens (`--primary`, `--warning`,
+ * `--foreground-softest`, …) win through the chain and are the host's to keep
+ * at 4.5:1; lantern only fixes its own fallbacks.
+ *
  * THEMING SURFACES: light = `:root`; `.dark` (or system dark unless `.light`)
  * flips. Density: default shadcn-compact; `data-lantern-density="comfortable"`
  * for a roomier scale.
@@ -5829,8 +6144,8 @@ a.lui-waterfall-lane-inner:focus-visible {
 :root {
   /* ── Color · foreground ← fluxon foreground* ── */
   --lantern-fg: var(--foreground, #09090b);
-  --lantern-fg-muted: var(--foreground-soft, #71717a);
-  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #a1a1aa));
+  --lantern-fg-muted: var(--foreground-soft, #666670);
+  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #6f6f78));
 
   /* ── Color · surfaces ← fluxon background-base / surface / background-accent ── */
   --lantern-surface: var(--background-base, #ffffff);
@@ -5853,15 +6168,15 @@ a.lui-waterfall-lane-inner:focus-visible {
   --lantern-secondary-fg: var(--foreground, #18181b);
 
   /* ── Color · accent + status ← fluxon primary / status tokens ── */
-  --lantern-accent: var(--primary, oklch(0.637 0.192 38));
+  --lantern-accent: var(--primary, oklch(0.566 0.192 38));
   --lantern-accent-fg: var(--foreground-primary, #ffffff);
   --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 12%, transparent));
-  --lantern-danger: var(--danger, #dc2626);
+  --lantern-danger: var(--danger, #d92323);
   --lantern-danger-fg: #ffffff;
-  --lantern-success: var(--success, #16a34a);
-  --lantern-warning: var(--warning, #d97706);
+  --lantern-success: var(--success, #008229);
+  --lantern-warning: var(--warning, #b45500);
   /* info is blue, not the brand colour: accent-as-info read as an error next to danger */
-  --lantern-info: var(--info, oklch(0.62 0.17 255));
+  --lantern-info: var(--info, oklch(0.548 0.17 255));
 
   /* Accessible, host-overridable series palette for generic charts. */
   --lantern-chart-1: var(--chart-1, oklch(0.646 0.222 41.116));
@@ -5914,6 +6229,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   --lantern-duration: 150ms;
   --lantern-chat-button-visibility-duration: 0s;
   --lantern-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --lantern-popover-nudge: 0.25rem;
 
   /* ── Layering ladder (low → high) ──
      Floating panels live in the browser top layer (see layer.js); these only
@@ -5970,8 +6286,8 @@ a.lui-waterfall-lane-inner:focus-visible {
    subtree can force light even under system dark. */
 .light {
   --lantern-fg: var(--foreground, #09090b);
-  --lantern-fg-muted: var(--foreground-soft, #71717a);
-  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #a1a1aa));
+  --lantern-fg-muted: var(--foreground-soft, #666670);
+  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #6f6f78));
 
   --lantern-surface: var(--background-base, #ffffff);
   --lantern-surface-raised: var(--surface, #ffffff);
@@ -5988,12 +6304,13 @@ a.lui-waterfall-lane-inner:focus-visible {
   --lantern-secondary: var(--background-accent, #f4f4f5);
   --lantern-secondary-fg: var(--foreground, #18181b);
 
-  --lantern-accent: var(--primary, oklch(0.637 0.192 38));
+  --lantern-accent: var(--primary, oklch(0.566 0.192 38));
   --lantern-accent-fg: var(--foreground-primary, #ffffff);
   --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 12%, transparent));
-  --lantern-danger: var(--danger, #dc2626);
-  --lantern-success: var(--success, #16a34a);
-  --lantern-warning: var(--warning, #d97706);
+  --lantern-danger: var(--danger, #d92323);
+  --lantern-success: var(--success, #008229);
+  --lantern-warning: var(--warning, #b45500);
+  --lantern-info: var(--info, oklch(0.548 0.17 255));
   --lantern-chart-1: var(--chart-1, oklch(0.646 0.222 41.116));
   --lantern-chart-2: var(--chart-2, oklch(0.6 0.118 184.704));
   --lantern-chart-3: var(--chart-3, oklch(0.398 0.07 227.392));
@@ -6022,7 +6339,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 .dark {
   --lantern-fg: var(--foreground, #fafafa);
   --lantern-fg-muted: var(--foreground-soft, #a1a1aa);
-  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #71717a));
+  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #808089));
 
   --lantern-surface: var(--background-base, #09090b);
   --lantern-surface-raised: var(--surface, #0c0c0e);
@@ -6040,11 +6357,12 @@ a.lui-waterfall-lane-inner:focus-visible {
   --lantern-secondary-fg: var(--foreground, #fafafa);
 
   --lantern-accent: var(--primary, oklch(0.685 0.182 39));
-  --lantern-accent-fg: var(--foreground-primary, #ffffff);
+  --lantern-accent-fg: var(--foreground-primary, #09090b);
   --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 22%, transparent));
   --lantern-danger: var(--danger, #ef4444);
   --lantern-success: var(--success, #22c55e);
   --lantern-warning: var(--warning, #f59e0b);
+  --lantern-info: var(--info, oklch(0.62 0.17 255));
   --lantern-chart-1: var(--chart-1, oklch(0.7 0.18 41.116));
   --lantern-chart-2: var(--chart-2, oklch(0.7 0.12 184.704));
   --lantern-chart-3: var(--chart-3, oklch(0.72 0.1 227.392));
@@ -6067,7 +6385,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   :root:not(.light) {
     --lantern-fg: var(--foreground, #fafafa);
     --lantern-fg-muted: var(--foreground-soft, #a1a1aa);
-    --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #71717a));
+    --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #808089));
 
     --lantern-surface: var(--background-base, #09090b);
     --lantern-surface-raised: var(--surface, #0c0c0e);
@@ -6085,11 +6403,12 @@ a.lui-waterfall-lane-inner:focus-visible {
     --lantern-secondary-fg: var(--foreground, #fafafa);
 
     --lantern-accent: var(--primary, oklch(0.685 0.182 39));
-    --lantern-accent-fg: var(--foreground-primary, #ffffff);
+    --lantern-accent-fg: var(--foreground-primary, #09090b);
     --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 22%, transparent));
     --lantern-danger: var(--danger, #ef4444);
     --lantern-success: var(--success, #22c55e);
     --lantern-warning: var(--warning, #f59e0b);
+    --lantern-info: var(--info, oklch(0.62 0.17 255));
     --lantern-chart-1: var(--chart-1, oklch(0.7 0.18 41.116));
     --lantern-chart-2: var(--chart-2, oklch(0.7 0.12 184.704));
     --lantern-chart-3: var(--chart-3, oklch(0.72 0.1 227.392));
@@ -6177,7 +6496,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   /* ── lantern tokens re-pointed at the shadcn vocabulary ── */
   --lantern-fg: var(--foreground);
   --lantern-fg-muted: var(--muted-foreground);
-  --lantern-fg-subtle: oklch(0.708 0 0);
+  --lantern-fg-subtle: oklch(0.54 0 0);
   --lantern-surface: var(--background);
   --lantern-surface-raised: var(--card);
   --lantern-surface-sunken: var(--muted);
@@ -6258,7 +6577,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 
-  --lantern-fg-subtle: oklch(0.556 0 0);
+  --lantern-fg-subtle: oklch(0.65 0 0);
   --lantern-accent-soft: color-mix(in oklab, var(--primary) 18%, transparent);
 }
 
@@ -6635,7 +6954,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-333" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-68" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6652,7 +6971,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-397" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-100" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6669,7 +6988,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-461" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-132" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6686,7 +7005,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-525" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-164" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
