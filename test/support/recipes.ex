@@ -12,6 +12,8 @@ defmodule LanternUI.Recipes do
     project_overview
     icon_toolbar
     capacity_strip
+    conversation
+    trace
   )a
 
   embed_templates("recipes/*")
@@ -141,7 +143,104 @@ defmodule LanternUI.Recipes do
           date: "Aug 28"
         }
       ],
-      capacity: %{slots: 8, busy: 5, waiting: 3, cost: "$12"}
+      capacity: %{slots: 8, busy: 5, waiting: 3, cost: "$12"},
+      threads: [
+        %{
+          identifier: "ask-12",
+          title: "Index the docs bucket",
+          preview: "Approve the plan, then I will embed the selected files.",
+          href: "/inbox/ask-12",
+          initials: "AI",
+          unread: nil,
+          date: "2m",
+          selected: true
+        },
+        %{
+          identifier: "ask-11",
+          title: "Why did deploy fail?",
+          preview: "The build image is missing mix.",
+          href: "/inbox/ask-11",
+          initials: "JO",
+          unread: 2,
+          date: "1h",
+          selected: false
+        }
+      ],
+      thread: %{
+        title: "Index the docs bucket",
+        meta: "Ask · running"
+      },
+      messages: [
+        %{
+          id: "m1",
+          role: :user,
+          author: "You",
+          initials: "JO",
+          content: "Index the docs bucket, skip fixtures.",
+          at: "2m ago"
+        },
+        %{
+          id: "m2",
+          role: :assistant,
+          author: "Assistant",
+          initials: "AI",
+          content: "I will embed selected files and skip the fixture prefix.",
+          at: "1m ago"
+        }
+      ],
+      streaming: false,
+      draft: "Ship the plan as written.",
+      send_error: "The run rejected this message. Edit the draft and send again.",
+      action: %{
+        id: "plan-4",
+        title: "Approve indexing plan",
+        summary: "12 files · skip fixtures/",
+        body: "Embed selected Markdown. No provider tokens in the fixture."
+      },
+      run: %{
+        title: "Index run",
+        summary: "docs bucket · 12 files",
+        state: :live
+      },
+      follow: true,
+      events: [
+        %{
+          id: "e1",
+          title: "queued",
+          label: "Queued",
+          at: "12:04:01",
+          status: :done,
+          open: false,
+          anchor: false,
+          detail: nil,
+          channel: nil,
+          severity: :neutral
+        },
+        %{
+          id: "e2",
+          title: "embed",
+          label: "Running",
+          at: "12:04:08",
+          status: :active,
+          open: true,
+          anchor: false,
+          detail: "embedded 4/12 files",
+          channel: "embed",
+          severity: :info
+        },
+        %{
+          id: "e3",
+          title: "index",
+          label: "Pending",
+          at: "12:04:09",
+          status: :pending,
+          open: false,
+          anchor: true,
+          detail: nil,
+          channel: nil,
+          severity: :neutral
+        }
+      ]
     }
   end
 end

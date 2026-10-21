@@ -116,6 +116,31 @@ The jump-to-latest button is keyboard reachable when the user is away from the
 bottom. Reduced-motion preferences are respected by the hook when returning to
 the latest content.
 
+## Inbox conversation recipe
+
+Copy the **Conversation thread** recipe in `docs/recipes.md` (and
+`skills/lantern-recipes`) instead of inventing a chat framework. It composes
+`list_row` + `avatar` + `message` + `message_scroller` + `card` + `textarea`:
+
+- Appending while the reader is in history does not steal the viewport; Jump
+  to latest resumes follow.
+- The composer is a LiveView form: `phx-change` keeps `@draft`, and a rejected
+  send shows an alert without clearing that assign.
+- Action cards in the stream use stable button ids so a patch cannot drop
+  focus.
+
+Autosize and Enter-versus-Shift+Enter (with an IME guard) are a separate
+change. Until then, Send is an explicit button.
+
+## Run trace recipe
+
+Copy the **Run trace** recipe for a follow-aware event list. Each
+`timeline_item` reuses the scroller item contract (`data-part="item"`,
+`data-message-id`, optional `data-scroll-anchor`). Pausing follow does not
+pause event ingest. Live / paused / done is a text badge; the spinner is
+decorative and already static under `prefers-reduced-motion`. Native
+disclosures keep their open state across patches after mount.
+
 ## Theming and imports
 
 Import both `lantern_ui_theme.css` and `lantern_ui.css` for the default theme:

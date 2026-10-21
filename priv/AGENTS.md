@@ -51,8 +51,8 @@ phoenix-page-design skill.
 Copy the blocks in lantern's docs/recipes.md (same source the recipe tests
 render) wherever a recipe fits — flat ticket list, flat table with
 placeholder row, record page with inspector rail, three-column inbox,
-project overview, icon toolbar, capacity strip. Never hand-roll rows,
-glyphs, rings, or rails.
+project overview, icon toolbar, capacity strip, conversation thread, run
+trace. Never hand-roll rows, glyphs, rings, or rails.
 
 ### Starters
 

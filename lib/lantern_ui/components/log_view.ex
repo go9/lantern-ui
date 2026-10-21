@@ -35,10 +35,16 @@ defmodule LanternUI.Components.LogView do
   lines scroll under it.
 
   `--lui-log-view-gutter-w` tunes the timestamp column.
+
+  When `:detail` is present the line is a native `<details>`/`<summary>`.
+  `open` sets the initial expanded state. After mount the browser owns
+  `open`, so a LiveView patch that appends later lines does not collapse
+  a disclosure the reader opened (same contract as `timeline_item/1`).
   """
   use Phoenix.Component
 
   alias LanternUI.Class
+  alias Phoenix.LiveView.JS
 
   @severities [:neutral, :info, :success, :warning, :error]
 
@@ -129,7 +135,11 @@ defmodule LanternUI.Components.LogView do
       {@rest}
     >
       <%= if @has_detail? do %>
-        <details class="lui-log-line-details" open={@open}>
+        <details
+          class="lui-log-line-details"
+          open={@open}
+          phx-mounted={JS.ignore_attributes(["open"])}
+        >
           <summary class="lui-log-line-row">
             <.log_line_cells
               at={@at}
