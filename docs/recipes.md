@@ -1235,3 +1235,27 @@ See [the API and runnable demo](provenance-badge.md).
 <.provenance_badge state="historical" />
 <.provenance_badge />
 ```
+
+## Compact stage summary
+
+Use `stage_strip` beside a report link in Suggestions. Pass stages in journey
+order: Triaged, Drafted, Decided, In work, Shipped, Told. The app derives states
+from triage, decisions, the ticket and delivery events; a failed delivery must
+remain failed until a successful retry. Do not infer delivery from votes.
+
+```heex
+<.stage_strip stages={[
+  %{label: "Triaged", state: :done},
+  %{label: "Drafted", state: :skipped},
+  %{label: "Decided", state: :waiting},
+  %{label: "In work", state: :pending},
+  %{label: "Shipped", state: :pending},
+  %{label: "Told", state: :pending}
+]} />
+```
+
+The strip announces every label and state as one image. It has no tab stop or
+interaction, and no animation under any motion preference. Put keyboard actions
+on the report link and trace controls. Use `timeline` for the detailed trace;
+`progress` measures an amount and `waterfall` compares durations. See the runnable
+`/stage_strip` QA demo (`test/qa/server.exs`) for a report row and all six states.
