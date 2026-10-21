@@ -4851,6 +4851,14 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-side-panel[hidden] {
   display: none;
 }
+.lui-cockpit-dock { width: 24rem; max-width: 100%; overflow: hidden; }
+.lui-cockpit-dock-header {
+  display: flex; align-items: center; gap: var(--lantern-space-sm, var(--lui-gap-4));
+  padding: var(--lantern-space-sm, var(--lui-gap-4)) var(--lantern-space-md, var(--lui-gap-4));
+  border-bottom: 1px solid var(--lantern-border); flex: 0 0 auto;
+}
+.lui-cockpit-dock-body { display: flex; flex-direction: column; flex: 1 1 0; min-block-size: 0; overflow-y: auto; }
+.lui-cockpit-dock-body[hidden] { display: none; }
 
 /* ── data_table row links ──
    `row_navigate` / `row_patch` render one empty anchor stretched over the row

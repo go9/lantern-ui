@@ -96,6 +96,7 @@ defmodule LanternUI do
     sortable: LanternUI.Components.Sortable,
     progress_ring: LanternUI.Components.ProgressRing,
     side_panel: LanternUI.Components.SidePanel,
+    cockpit_dock: LanternUI.Components.CockpitDock,
     split_pane: LanternUI.Components.SplitPane,
     progress: LanternUI.Components.Progress,
     stage_strip: LanternUI.Components.StageStrip,
