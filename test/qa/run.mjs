@@ -194,8 +194,10 @@ if (CONSISTENCY_ONLY) {
           if (!isVisible(target)) return
           const r = target.getBoundingClientRect(), s = getComputedStyle(target)
           const isMoreTrigger = target.classList.contains("lui-action-bar-more-trigger")
+          // Compact Filters is an intentional sm exception in the otherwise-md chrome row.
+          const compactFilters = !!target.closest(".lui-dt-filters")
           const sharedRowControl = target.closest(".lui-dt-chromerow, .lui-page-strip-actions, .lui-action-bar-inline")
-          const sized = sharedRowControl ? "md" : el.dataset.qaSize || el.closest("[data-qa-size]")?.dataset.qaSize || (isMoreTrigger ? "sm" : null) || el.dataset.size || el.closest("[data-size]")?.dataset.size ||
+          const sized = compactFilters ? "sm" : sharedRowControl ? "md" : el.dataset.qaSize || el.closest("[data-qa-size]")?.dataset.qaSize || (isMoreTrigger ? "sm" : null) || el.dataset.size || el.closest("[data-size]")?.dataset.size ||
             (target.matches(".lui-dt-search, .lui-dt-chip, .lui-dt-expand, .lui-dt-resetfilters, .lui-dt-applyfilters, .lui-dt-filtertext, .lui-chart-settings__trigger") ? "sm" : "md")
           const size = normalized(sized)
           const tokenName = `--lui-control-h-${size}`
@@ -247,7 +249,8 @@ if (CONSISTENCY_ONLY) {
           if (!el) return { selector, heights: [], mixed: false }
           if (el.matches(".lui-consistency-density")) return { selector, heights: [], mixed: false }
           const items = [...el.querySelectorAll(".lui-btn, .lui-tabs-list, .lui-dt-chip, .lui-dt-search, .lui-dt-expand, .lui-dt-resetfilters, .lui-dt-applyfilters, .lui-dt-filtertext, .lui-pg, .lui-select-native, .lui-select-toggle, .lui-autocomplete-control, .lui-input-wrap, .lui-kbd, .lui-chart-settings__trigger")].filter(isVisible)
-          const heights = items.map((item) => Math.round(item.getBoundingClientRect().height * 100) / 100)
+          const comparable = items.filter((item) => !item.closest(".lui-dt-filters"))
+          const heights = comparable.map((item) => Math.round(item.getBoundingClientRect().height * 100) / 100)
           return { selector, heights, mixed: heights.length > 1 && Math.max(...heights) - Math.min(...heights) > 1 }
         })
         const segmentedGeometry = [...document.querySelectorAll("[data-segment-geometry]")].map((group) => {
