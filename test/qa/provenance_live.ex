@@ -10,7 +10,11 @@ defmodule LanternUI.QA.ProvenanceLive do
 
   def render(assigns) do
     ~H"""
-    <.page_shell id="provenance" title="Provenance">
+    <.page_shell
+      id="provenance"
+      title="Provenance"
+      style="background: var(--lantern-surface); min-height: 100vh; padding: var(--lantern-space-lg);"
+    >
       <.table id="origins">
         <.table_head>
           <:col>Entity</:col><:col>Source</:col>
