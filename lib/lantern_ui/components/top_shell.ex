@@ -198,6 +198,7 @@ defmodule LanternUI.Components.TopShell do
       type="button"
       id={@id}
       class={Class.merge(["lui-command-trigger", @class])}
+      aria-label={@label}
       aria-haspopup="dialog"
       aria-controls={@target}
       phx-click={LanternUI.open_dialog(@target)}

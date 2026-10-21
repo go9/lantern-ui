@@ -94,6 +94,8 @@ defmodule LanternUI.TopShellTest do
           """
         end)
 
+      # The visible label is hidden on narrow screens, so the name is an attribute.
+      assert attrs(html, "button#t", "aria-label") == ["Search recipes"]
       assert attrs(html, "button#t", "aria-haspopup") == ["dialog"]
       assert attrs(html, "button#t", "aria-controls") == ["cmd"]
       assert [js] = attrs(html, "button#t", "phx-click")
