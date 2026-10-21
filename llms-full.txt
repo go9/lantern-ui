@@ -375,7 +375,9 @@ Buttons — Fluxon-compatible API, shadcn-caliber styling.
 - `label` (:string) — Accessible name (`aria-label`).
 - `navigate` (:string) — LiveView navigate target; renders as a link.
 - `patch` (:string) — LiveView patch target; renders as a link.
+- `pressed` (:boolean) — Toggle state.
 - `rest` (:global, default %{"data-part" => "button"}) — Arbitrary HTML/`phx-*` attributes passed through.
+- `reveal` (:boolean, default false) — Reveal on parent hover/focus-within; pressed controls and touch controls stay visible.
 - `size` (:string, values: xs, sm, md, lg, xl, icon-xs, icon-sm, icon-md, icon, icon-lg, icon-xl, default "md") — Control height; icon-* sizes are square.
 - `variant` (:string, values: solid, soft, surface, outline, dashed, ghost, default "outline") — Surface style: solid fills, outline borders, ghost is transparent.
 Slots:
@@ -1019,7 +1021,7 @@ A small, curated inline-SVG icon set (Heroicons outline paths, MIT).
 Renders an icon by name.
 
 - `class` (:any) — Extra classes merged onto the root element.
-- `name` (:string, required, values: adjustments-horizontal, arrow-down-tray, arrow-path, arrow-right, arrow-trending-up, arrow-up-tray, arrows-pointing-in, arrows-pointing-out, bars-3, calendar, calendar-days, chart-bar, check, check-circle, chevron-down, chevron-left, chevron-right, chevron-up, chevron-up-down, circle-stack, clock, cloud, cursor-arrow-rays, document, ellipsis-horizontal, ellipsis-vertical, exclamation-circle, folder, folder-open, funnel, globe-alt, inbox, information-circle, magnifying-glass, map-pin, minus, pencil-square, photo, plus, presentation-chart-line, printer, sparkles, squares-2x2, trash, view-columns, window, x-mark) — Icon key from the curated outline set.
+- `name` (:string, required, values: adjustments-horizontal, arrow-down-tray, arrow-path, arrow-right, arrow-trending-up, arrow-up-tray, arrows-pointing-in, arrows-pointing-out, bars-3, bookmark, calendar, calendar-days, chart-bar, check, check-circle, chevron-down, chevron-left, chevron-right, chevron-up, chevron-up-down, circle-stack, clock, cloud, cursor-arrow-rays, document, ellipsis-horizontal, ellipsis-vertical, exclamation-circle, folder, folder-open, funnel, globe-alt, inbox, information-circle, magnifying-glass, map-pin, minus, pencil-square, photo, plus, presentation-chart-line, printer, sparkles, squares-2x2, trash, view-columns, window, x-mark) — Icon key from the curated outline set.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 
 ### LanternUI.Components.IconButton

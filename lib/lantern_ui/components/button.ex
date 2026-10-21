@@ -18,6 +18,16 @@ defmodule LanternUI.Components.Button do
   background/border/text from it, so every color works with every variant
   without a compiled class matrix.
 
+  Toggle buttons accept `pressed={@pinned}` (omit it for ordinary buttons).
+  Inline SVG icons fill when pressed, matching nav action toggle semantics.
+  Use `reveal` for an action shown on its parent's hover/focus, always on touch
+  and while pressed. Keep the button's id stable when moving rows.
+
+      <.button id="pin-acme" size="icon-sm" variant="ghost" label="Pin Acme"
+        pressed={@pinned} reveal phx-click="pin">
+        <.icon name="bookmark" />
+      </.button>
+
   `label` is the accessible name. On `icon-*` sizes it also wraps the control
   in `tooltip/1` (with optional `kbd`), the same chrome `icon_button/1` used.
   """
@@ -72,6 +82,17 @@ defmodule LanternUI.Components.Button do
     """
   )
 
+  attr(:pressed, :boolean,
+    default: nil,
+    doc:
+      "Toggle state. Omit for an ordinary button; true fills inline icons and sets aria-pressed."
+  )
+
+  attr(:reveal, :boolean,
+    default: false,
+    doc: "Reveal on parent hover/focus-within; pressed controls and touch controls stay visible."
+  )
+
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
 
   attr(:navigate, :string, default: nil, doc: "LiveView navigate target; renders as a link.")
@@ -89,7 +110,10 @@ defmodule LanternUI.Components.Button do
   def button(assigns) do
     assigns =
       assigns
-      |> assign(:computed_class, Class.merge(["lui-btn", assigns.class]))
+      |> assign(
+        :computed_class,
+        Class.merge(["lui-btn", assigns.reveal && "lui-reveal", assigns.class])
+      )
       |> assign(:link?, !!(assigns.navigate || assigns.patch || assigns.href))
       |> assign(:tip?, icon_tip?(assigns.label, assigns.size))
 
@@ -123,6 +147,7 @@ defmodule LanternUI.Components.Button do
         data-color={@color}
         data-size={@size}
         disabled={@disabled}
+        aria-pressed={if is_boolean(@pressed), do: to_string(@pressed)}
         aria-label={@label}
         {@rest}
       >
@@ -153,6 +178,7 @@ defmodule LanternUI.Components.Button do
       data-color={@color}
       data-size={@size}
       disabled={@disabled}
+      aria-pressed={if is_boolean(@pressed), do: to_string(@pressed)}
       aria-label={@label}
       {@rest}
     >

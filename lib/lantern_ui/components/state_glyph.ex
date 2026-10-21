@@ -8,7 +8,8 @@ defmodule LanternUI.Components.StateGlyph do
   Priority is Linear's signal bars, tinted by urgency; `:none` is three dashes.
   Run is a CI/pipeline set: queued, claiming an environment, running,
   verifying, passed, failed, blocked.
-  Sync is an index/live set: empty, syncing, live, failed.
+  Sync is an index/live set: empty, syncing, live, failed, queued, paused,
+  stale, blocked (over allowance), off (RAG off). Pair with visible state text.
   Source is a kind set: repo, doc, ticket_memory, upload.
 
       <.state_glyph kind="status" value="in_progress" />
@@ -29,7 +30,7 @@ defmodule LanternUI.Components.StateGlyph do
   @status_values ~w(backlog todo selected_for_dev in_progress done cancelled)
   @priority_values ~w(urgent high medium low none)
   @run_values ~w(queued claiming_env running verifying passed failed blocked)
-  @sync_values ~w(syncing live failed empty)
+  @sync_values ~w(syncing live failed empty queued paused stale blocked off)
   @source_values ~w(repo doc ticket_memory upload)
   @sizes ~w(sm md)
 
@@ -190,7 +191,7 @@ defmodule LanternUI.Components.StateGlyph do
           <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5" />
           <rect x="5" y="4.5" width="1.4" height="5" rx="0.4" fill="currentColor" />
           <rect x="7.6" y="4.5" width="1.4" height="5" rx="0.4" fill="currentColor" />
-        <% {"sync", :empty} -> %>
+        <% {"sync", state} when state in [:empty, :queued] -> %>
           <circle
             cx="7"
             cy="7"
@@ -220,6 +221,18 @@ defmodule LanternUI.Components.StateGlyph do
             stroke-width="1.5"
             stroke-linecap="round"
           />
+        <% {"sync", :paused} -> %>
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5" />
+          <path d="M5.5 4.5v5M8.5 4.5v5" stroke="currentColor" stroke-width="1.5" />
+        <% {"sync", :stale} -> %>
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5" />
+          <path d="M7 3.5V7l2.5 1.5" stroke="currentColor" stroke-width="1.5" />
+        <% {"sync", :blocked} -> %>
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5" />
+          <path d="M3 7h8" stroke="currentColor" stroke-width="1.5" />
+        <% {"sync", :off} -> %>
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5" />
+          <path d="M3 3l8 8" stroke="currentColor" stroke-width="1.5" />
         <% {"source", :repo} -> %>
           <path
             d="M5 3.5L2.5 7L5 10.5"

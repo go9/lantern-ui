@@ -1579,7 +1579,7 @@
   box-shadow: 0 0 0 3px var(--lantern-ring-soft); color: var(--lantern-fg); }
 .lui-nav-disclosure .lui-nav-sub-chevron { margin-left: 0; }
 .lui-nav-disclosure[data-expanded] .lui-nav-sub-chevron { transform: rotate(90deg); }
-.lui-nav-action[aria-pressed="true"] { color: var(--lantern-accent); }
+.lui-nav-action[aria-pressed="true"] { color: var(--lantern-accent); opacity: 1; }
 .lui-nav-action:disabled { cursor: default; opacity: 0.5; }
 /* Actions appear on hover or focus. Touch has no hover, so they always show
    there, at a finger-sized target. */
@@ -5810,3 +5810,17 @@ a.lui-waterfall-lane-inner:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .lui-tree-expander-icon { transition: none; }
 }
+
+/* Toggle actions share nav action semantics; reveal never removes tab stops. */
+.lui-btn[aria-pressed="true"], .lui-nav-action[aria-pressed="true"] { color: var(--lantern-accent); }
+.lui-btn[aria-pressed="true"] .lui-icon,
+.lui-nav-action[aria-pressed="true"] .lui-icon { fill: currentColor; }
+@media (hover: hover) and (pointer: fine) {
+  .lui-reveal:not([aria-pressed="true"]) { opacity: 0; }
+  .lui-reveal:focus-visible, :hover > .lui-reveal, :focus-within > .lui-reveal,
+  :hover > .lui-icon-btn-tip .lui-reveal,
+  :focus-within > .lui-icon-btn-tip .lui-reveal { opacity: 1; }
+}
+.lui-state-glyph[data-kind="sync"]:is([data-value="queued"], [data-value="paused"], [data-value="off"]) { color: var(--lantern-fg-muted); }
+.lui-state-glyph[data-kind="sync"][data-value="stale"] { color: var(--lantern-warning); }
+.lui-state-glyph[data-kind="sync"][data-value="blocked"] { color: var(--lantern-danger); }
