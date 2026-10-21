@@ -599,6 +599,7 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 - `fill` (:boolean, default false) — Stretch to the parent's height (the parent must be a flex column with a definite height).
 - `filters_label` (:string, default "Filters") — Label for the filters popover.
 - `flush` (:boolean, default false) — Drop the panel chrome — border, radius, shadow, raised surface — and pull the header, toolbar, cells and pagination out to the page gutter, so the table reads as the page rather than as a card sitting on it.
+- `group` (:list) — Ordered {label, rows} bands, replacing rows.
 - `hidden_columns` (:list, default []) — Initially hidden table column keys (field names or column-N keys).
 - `id` (:string, required) — Stable DOM id for the table root and chrome.
 - `info_modal_id` (:string) — modal id the title's info button opens (LanternUI.open_dialog)
@@ -614,7 +615,7 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 - `row_id` (:any) — row -> id fn; defaults to & &1.id
 - `row_navigate` (:any) — row -> path fn; makes the whole row a `navigate` link (list and table views).
 - `row_patch` (:any) — row -> path fn; like `row_navigate` but a `patch` link.
-- `rows` (:list, required) — Current page of row structs/maps to render.
+- `rows` (:list, default []) — Current page of row structs/maps to render.
 - `save_view_label` (:string, default "Save current view") — Label for saving the current view.
 - `saved_view_event` (:string) — Optional LiveView event for generic saved-view actions.
 - `saved_views_label` (:string, default "Saved views") — Heading for saved-view event hooks.
@@ -2665,6 +2666,24 @@ From `docs/recipes.md` (Flat ticket list with toolbar):
       <:trailing>{ticket.date}</:trailing>
     </.list_row>
   </:list_item>
+</.data_table>
+```
+
+From `docs/recipes.md` (Pinned project bands with shared table/grid sorting):
+
+```heex
+<.data_table id="projects" group={[{"Pinned", @pinned}, {"All projects", @others}]}
+  meta={@meta} path="/projects" active_view={@view} column_settings={false}>
+  <:col :let={row} field={:name} label="Project" sortable>{row.name}</:col>
+  <:col :let={row} field={:tickets} label="Tickets" sortable>{row.tickets}</:col>
+  <:card :let={row}>{row.name}</:card>
+  <:row_action :let={row}>
+    <.button id={"pin-#{row.id}"} size="icon-sm" variant="ghost" reveal
+      pressed={row.pinned?} label={if row.pinned?, do: "Unpin", else: "Pin"}
+      phx-click="pin" phx-value-id={row.id}>
+      <.icon name="bookmark" />
+    </.button>
+  </:row_action>
 </.data_table>
 ```
 

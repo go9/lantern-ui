@@ -10,28 +10,33 @@ defmodule LanternUI.QA.IndexPrimitivesLive do
 
   def render(assigns) do
     ~H"""
-    <main style="padding: 2rem; max-width: 60rem;">
-      <h1>Index primitives</h1>
-      <div style="display: flex; gap: 1rem; margin-block: 1rem;">
-        <span :for={state <- ~w(queued paused stale blocked off)}>
-          <.sync_glyph state={state} /> {state}
-        </span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <span>Acme</span>
-        <.button
-          id="pin-acme"
-          size="icon-sm"
-          variant="ghost"
-          pressed={@pinned}
-          reveal
-          label={if @pinned, do: "Unpin Acme", else: "Pin Acme"}
-          phx-click="pin"
-        >
-          <.icon name="bookmark" />
-        </.button>
-      </div>
-    </main>
+    <div style="background: var(--lantern-surface); min-height: 100vh;">
+      <main style="padding: 2rem; max-width: 60rem;">
+        <h1>Index primitives</h1>
+        <div style="display: flex; gap: 1rem; margin-block: 1rem;">
+          <span
+            :for={state <- ~w(queued paused stale blocked off)}
+            style="display: inline-flex; align-items: center; gap: var(--lantern-space-xs);"
+          >
+            <.sync_glyph state={state} /> {state}
+          </span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span>Acme</span>
+          <.button
+            id="pin-acme"
+            size="icon-sm"
+            variant="ghost"
+            pressed={@pinned}
+            reveal
+            label={if @pinned, do: "Unpin Acme", else: "Pin Acme"}
+            phx-click="pin"
+          >
+            <.icon name="bookmark" />
+          </.button>
+        </div>
+      </main>
+    </div>
     """
   end
 end

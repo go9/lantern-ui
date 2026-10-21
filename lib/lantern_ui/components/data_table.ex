@@ -32,6 +32,14 @@ defmodule LanternUI.Components.DataTable do
     — all to `target` (defaults to the parent LiveView). Set `all_matching?`
     with `excluded_ids` to represent every result without materializing IDs.
 
+  Ordered row bands are opt-in: `group={[{"Pinned", @pinned}, {"All projects", @others}]}`
+  replaces `rows`. The caller filters and sorts inside each band. Empty bands
+  disappear and a single populated band has no label. Table bands are named
+  rowgroups; card bands are named lists. List view stays flat.
+
+  Non-table layouts get a compact Sort select and direction control from sortable
+  `:col` fields, sharing the header's `order_by` / `order_directions` URLs.
+
   The built-in search box keeps every other active filter (tab presets, filter
   panel values) in the URL it patches.
 
@@ -63,7 +71,14 @@ defmodule LanternUI.Components.DataTable do
   alias LanternUI.Components.Tabs
 
   attr(:id, :string, required: true, doc: "Stable DOM id for the table root and chrome.")
-  attr(:rows, :list, required: true, doc: "Current page of row structs/maps to render.")
+  attr(:rows, :list, default: [], doc: "Current page of row structs/maps to render.")
+
+  attr(:group, :list,
+    default: nil,
+    doc:
+      "Ordered {label, rows} bands, replacing rows. Empty bands are omitted; one populated band hides its label."
+  )
+
   attr(:meta, :map, required: true, doc: "Flop.Meta (or same-shaped map)")
   attr(:path, :string, required: true, doc: "base path for sort/pagination patches")
 
@@ -404,6 +419,21 @@ defmodule LanternUI.Components.DataTable do
   end
 
   def data_table(assigns) do
+    groups =
+      case assigns.group do
+        nil -> [{nil, assigns.rows}]
+        groups -> Enum.reject(groups, fn {_label, rows} -> rows == [] end)
+      end
+
+    groups = if groups == [], do: [{nil, []}], else: groups
+
+    assigns =
+      assign(assigns,
+        rows: Enum.flat_map(groups, &elem(&1, 1)),
+        row_groups: Enum.with_index(groups),
+        show_groups?: length(groups) > 1
+      )
+
     # Phoenix stores the new :view slot in assigns.view. Keep accepting the old
     # string-valued view attr while the slot uses the same public name.
     legacy_view =
@@ -436,6 +466,22 @@ defmodule LanternUI.Components.DataTable do
       )
 
     assigns = resolve_views(assigns)
+    sortable_cols = Enum.filter(assigns.col, &(&1[:sortable] && &1[:field]))
+    {order_by, _directions} = current_order(assigns.meta)
+
+    sort_field =
+      Enum.find_value(sortable_cols, fn col ->
+        if order_by == [to_string(col.field)], do: col.field
+      end)
+
+    assigns = assign(assigns, sortable_cols: sortable_cols, sort_field: sort_field)
+
+    assigns =
+      assign(
+        assigns,
+        :sort_meta,
+        Map.put(assigns.meta, :params, base_params(assigns.meta) |> Map.put("view", assigns.view))
+      )
 
     assigns =
       assign(
@@ -577,6 +623,37 @@ defmodule LanternUI.Components.DataTable do
         <div class="lui-dt-spacer"></div>
 
         {render_slot(@toolbar)}
+
+        <div :if={@view != "table" && @sortable_cols != []} class="lui-dt-sort">
+          <label for={"#{@id}-sort"}>Sort</label>
+          <div class="lui-select-native-wrap">
+            <select id={"#{@id}-sort"} class="lui-select-native" data-part="sort" aria-label="Sort by">
+              <option :if={is_nil(@sort_field)} value="" selected disabled>Choose field</option>
+              <option
+                :for={col <- @sortable_cols}
+                value={col.field}
+                selected={@sort_field == col.field}
+                data-sort-path={sort_path(@path, @sort_meta, col.field)}
+              >
+                {col[:label] || to_string(col.field)}
+              </option>
+            </select>
+            <Icon.icon name="chevron-up-down" class="lui-select-caret" />
+          </div>
+          <Button.button
+            :if={@sort_field}
+            size="icon-sm"
+            variant="ghost"
+            patch={sort_path(@path, @sort_meta, @sort_field)}
+            label={
+              if sort_direction(@meta, @sort_field) == "ascending",
+                do: "Sort descending",
+                else: "Sort ascending"
+            }
+          >
+            {sort_indicator(@meta, @sort_field)}
+          </Button.button>
+        </div>
 
         <div :if={@search_field} class="lui-dt-search">
           <Icon.icon name="magnifying-glass" />
@@ -988,53 +1065,63 @@ defmodule LanternUI.Components.DataTable do
           <% end %>
         <% else %>
           <div
-            :for={row <- @rows}
-            :if={@card_layout == "tile"}
-            class={
-              Class.merge([
-                "lui-dt-card lui-dt-card-tile",
-                selected_id?(@row_id_fn.(row), assigns) && "lui-dt-card-selected",
-                row_linked?(assigns, row) && "lui-row-linked",
-                current_row?(assigns, row) && "lui-row-current"
-              ])
-            }
-            aria-current={current_row?(assigns, row) && "true"}
-            {row_click_attrs(assigns, row)}
+            :for={{{label, rows}, _index} <- @row_groups}
+            class="lui-dt-card-band"
+            role="list"
+            aria-label={@show_groups? && label}
           >
-            <div id={"#{@id}-card-#{@row_id_fn.(row)}-main"} class="lui-dt-card-main">
-              {render_slot(@card, row)}
+            <div :if={@show_groups?} class="lui-dt-band" role="presentation">{label}</div>
+            <div
+              :for={row <- rows}
+              :if={@card_layout == "tile"}
+              class={
+                Class.merge([
+                  "lui-dt-card lui-dt-card-tile",
+                  selected_id?(@row_id_fn.(row), assigns) && "lui-dt-card-selected",
+                  row_linked?(assigns, row) && "lui-row-linked",
+                  current_row?(assigns, row) && "lui-row-current"
+                ])
+              }
+              role="listitem"
+              aria-current={current_row?(assigns, row) && "true"}
+              {row_click_attrs(assigns, row)}
+            >
+              <div id={"#{@id}-card-#{@row_id_fn.(row)}-main"} class="lui-dt-card-main">
+                {render_slot(@card, row)}
+              </div>
+              <.row_anchor
+                :if={row_link(assigns, row)}
+                link={row_link(assigns, row)}
+                labelledby={"#{@id}-card-#{@row_id_fn.(row)}-main"}
+              />
+              <input
+                :if={@show_checkboxes}
+                type="checkbox"
+                class="lui-checkbox lui-dt-card-check"
+                checked={selected_id?(@row_id_fn.(row), assigns)}
+                phx-click="toggle_select"
+                phx-value-id={@row_id_fn.(row)}
+                phx-target={@target}
+                aria-label="Select row"
+              />
+              <div :if={@row_action != []} class="lui-dt-card-actions">
+                {render_slot(@row_action, row)}
+              </div>
             </div>
-            <.row_anchor
-              :if={row_link(assigns, row)}
-              link={row_link(assigns, row)}
-              labelledby={"#{@id}-card-#{@row_id_fn.(row)}-main"}
-            />
-            <input
-              :if={@show_checkboxes}
-              type="checkbox"
-              class="lui-checkbox lui-dt-card-check"
-              checked={selected_id?(@row_id_fn.(row), assigns)}
-              phx-click="toggle_select"
-              phx-value-id={@row_id_fn.(row)}
-              phx-target={@target}
-              aria-label="Select row"
-            />
-            <div :if={@row_action != []} class="lui-dt-card-actions">
-              {render_slot(@row_action, row)}
+            <div
+              :for={row <- rows}
+              :if={@card_layout == "row"}
+              class={Class.merge(["lui-dt-card", current_row?(assigns, row) && "lui-row-current"])}
+              role="listitem"
+              aria-current={current_row?(assigns, row) && "true"}
+            >
+              <%= if @row_action != [] do %>
+                <div class="lui-dt-card-main">{render_slot(@card, row)}</div>
+                <div class="lui-dt-card-actions">{render_slot(@row_action, row)}</div>
+              <% else %>
+                {render_slot(@card, row)}
+              <% end %>
             </div>
-          </div>
-          <div
-            :for={row <- @rows}
-            :if={@card_layout == "row"}
-            class={Class.merge(["lui-dt-card", current_row?(assigns, row) && "lui-row-current"])}
-            aria-current={current_row?(assigns, row) && "true"}
-          >
-            <%= if @row_action != [] do %>
-              <div class="lui-dt-card-main">{render_slot(@card, row)}</div>
-              <div class="lui-dt-card-actions">{render_slot(@row_action, row)}</div>
-            <% else %>
-              {render_slot(@card, row)}
-            <% end %>
           </div>
         <% end %>
       </div>
@@ -1114,9 +1201,17 @@ defmodule LanternUI.Components.DataTable do
               <th :if={@row_action != []} class="lui-th lui-th-actions" scope="col"></th>
             </tr>
           </thead>
-          <tbody class="lui-tbody">
+          <tbody
+            :for={{{label, rows}, index} <- @row_groups}
+            class="lui-tbody"
+            role={@show_groups? && "rowgroup"}
+            aria-label={@show_groups? && label}
+          >
+            <tr :if={@show_groups?} class="lui-dt-band">
+              <th colspan={@placeholder_colspan} scope="rowgroup">{label}</th>
+            </tr>
             <tr
-              :for={row <- @rows}
+              :for={row <- rows}
               class={
                 Class.merge([
                   "lui-tr",
@@ -1158,7 +1253,7 @@ defmodule LanternUI.Components.DataTable do
               </td>
             </tr>
             <Table.table_placeholder_row
-              :for={ph <- @placeholder}
+              :for={ph <- if index == length(@row_groups) - 1, do: @placeholder, else: []}
               colspan={@placeholder_colspan}
               label={ph.label}
               kbd={ph[:kbd]}

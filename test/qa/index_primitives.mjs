@@ -28,5 +28,10 @@ try {
   await page.click('#pin-acme')
   await page.waitForSelector('#pin-acme[aria-pressed="false"]')
   assert.equal(await page.$eval('#pin-acme', e => getComputedStyle(e).opacity), '1')
+  await page.setViewport({width:1000,height:600,isMobile:false,hasTouch:false})
+  await page.goto(`${base}/project_nav`)
+  await page.waitForSelector('.phx-connected')
+  await page.mouse.move(990,590)
+  assert.equal(await page.$eval('.lui-nav-action[aria-pressed="true"]', e => getComputedStyle(e).opacity), '1')
   console.log('Toggle fill, server state, focus reveal, and touch visibility passed')
 } finally { await browser.close() }

@@ -316,3 +316,11 @@ test("density segmented control supports arrow-key selection", () => {
   assert.equal(mount.el.querySelector('[data-density="comfortable"]').getAttribute("aria-checked"), "true")
   mount.unmount()
 })
+
+test("non-table Sort patches the server-generated sort URL and destroys cleanly", () => {
+  const path = '/projects?view=cards&order_by[]=tickets&order_directions[]=asc&filters[0][value]=open'
+  const mount = mountChrome(`<select data-part="sort"><option value="tickets" data-sort-path="${path.replaceAll('&', '&amp;')}">Tickets</option></select>`)
+  change(mount.el.querySelector('select'))
+  assert.equal(mount.last(), path)
+  mount.unmount()
+})

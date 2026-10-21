@@ -2437,6 +2437,11 @@ const LanternTableChrome = {
       }
     }
     this.onChange = (e) => {
+      if (e.target.matches('[data-part="sort"]')) {
+        const path = e.target.selectedOptions[0]?.dataset.sortPath
+        if (path) this.patch(path)
+        return
+      }
       const rich = e.target.closest('[data-part="filter-rich"]')
       if (e.target.matches('[data-part="filter-op"]')) {
         this.el.querySelectorAll(`[data-part="filter"][data-field="${CSS.escape(e.target.dataset.field)}"]`).forEach((input) => {
