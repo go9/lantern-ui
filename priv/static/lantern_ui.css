@@ -5955,3 +5955,64 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-cite-chip-number { color: var(--lantern-primary); }
 /* Host identity reuses badge sizing and surface; availability is also text. */
 .lui-host-badge[data-coming-soon="true"][data-variant="soft"] { color: var(--lantern-fg-muted); }
+
+
+/* Line diff. Sign + screen-reader text carry meaning; tint is secondary. */
+.lui-diff {
+  position: relative;
+  flex-shrink: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-md);
+  background: var(--lantern-surface);
+  font-family: var(--lantern-font-mono);
+  font-size: var(--lantern-text-mono-meta);
+  line-height: var(--lantern-text-mono-meta-leading);
+}
+.lui-diff:focus-visible {
+  outline: 2px solid var(--lantern-ring);
+  outline-offset: -2px;
+}
+.lui-diff-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.lui-diff-empty {
+  margin: 0;
+  padding: var(--lantern-space-sm) var(--lantern-space-md);
+  color: var(--lantern-fg-muted);
+}
+.lui-diff-no,
+.lui-diff-sign {
+  width: 1%;
+  padding: 0 var(--lantern-space-sm);
+  color: var(--lantern-fg-subtle);
+  text-align: right;
+  white-space: nowrap;
+  user-select: none;
+}
+.lui-diff-sign { text-align: center; }
+.lui-diff-text {
+  padding: 0 var(--lantern-space-md);
+  overflow-wrap: anywhere;
+}
+.lui-diff-line { white-space: pre-wrap; }
+.lui-diff[data-mode="split"] .lui-diff-text { width: 50%; }
+.lui-diff[data-mode="split"] .lui-diff-no + .lui-diff-text + .lui-diff-no { border-left: 1px solid var(--lantern-border); }
+.lui-diff-row[data-kind="add"],
+.lui-diff-text[data-kind="add"],
+.lui-diff-row[data-kind="add"] > :is(.lui-diff-no, .lui-diff-sign) {
+  background: color-mix(in srgb, var(--lantern-success) 14%, transparent);
+}
+.lui-diff-row[data-kind="del"],
+.lui-diff-text[data-kind="del"],
+.lui-diff-row[data-kind="del"] > :is(.lui-diff-no, .lui-diff-sign) {
+  background: color-mix(in srgb, var(--lantern-danger) 14%, transparent);
+}
+.lui-diff-gap td {
+  padding: 0 var(--lantern-space-md);
+  background: var(--lantern-surface-sunken);
+  color: var(--lantern-fg-muted);
+  text-align: center;
+}

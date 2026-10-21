@@ -554,6 +554,7 @@ defmodule LanternUI.ComponentsTest do
                :date_range_popover,
                :datetime_field,
                :description_list,
+               :diff_viewer,
                :dropdown,
                :empty_state,
                :form,

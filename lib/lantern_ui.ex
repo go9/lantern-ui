@@ -99,6 +99,7 @@ defmodule LanternUI do
     split_pane: LanternUI.Components.SplitPane,
     progress: LanternUI.Components.Progress,
     stage_strip: LanternUI.Components.StageStrip,
+    diff_viewer: LanternUI.Components.DiffViewer,
     meter: LanternUI.Components.Meter,
     price_cell: LanternUI.Components.PriceGrid,
     price_cell_group: LanternUI.Components.PriceGrid,
