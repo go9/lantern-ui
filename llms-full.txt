@@ -478,6 +478,25 @@ Inline citation button for evidence in prose or attached context.
 Slots:
 - `:inner_block` (required) — Compact source label; no interactive descendants.
 
+### LanternUI.Components.CockpitDock
+
+Right-hand conversation dock: a `side_panel/1` with a header, a conversation list and one open thread.
+
+#### `cockpit_dock/1`
+
+Render a collapsible right dock that switches between a list and a thread.
+
+- `class` (:any) — Extra root classes.
+- `id` (:string, required) — Root id; part ids derive from it.
+- `label` (:string, required) — Accessible name of the complementary landmark.
+- `open` (:boolean, default true) — Whether the dock is shown (host-owned).
+- `rest` (:global) — Global attributes passed to the root.
+- `view` (:string, values: list, thread, default "list") — Visible view; `thread` falls back to the list when no `:thread` slot is given.
+Slots:
+- `:header` — Title and controls, always visible.
+- `:list` (required) — Conversation list.
+- `:thread` — The open conversation, e.g.
+
 ### LanternUI.Components.ColorInput
 
 Native color picker paired with a hex readout.
@@ -3721,6 +3740,21 @@ From `docs/recipes.md` (Reviewing a text change):
 ```heex
 <.diff_viewer id="contract-diff" old={@server} new={@draft} old_label="Server" new_label="Draft" />
 <.button phx-click="adopt">Adopt draft</.button>
+```
+
+From `docs/recipes.md` (Cockpit dock (right conversation panel)):
+
+```heex
+<.cockpit_dock id="cockpit" label="Cockpit" open={@cockpit_open} view={@cockpit_view}>
+  <:header><h2>Cockpit</h2></:header>
+  <:list>
+    <.list_row :for={c <- @conversations} title={c.title} phx-click="open" phx-value-id={c.id} />
+  </:list>
+  <:thread>
+    <.button phx-click="back">Back</.button>
+    <.message_scroller id="cockpit-messages">…</.message_scroller>
+  </:thread>
+</.cockpit_dock>
 ```
 
 From `README.md` (Usage):
