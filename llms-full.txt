@@ -2649,6 +2649,23 @@ Slots:
 - `:search` — Centred search, usually `command_trigger/1`.
 - `:subheader` — Optional sticky toolbar row under the bar.
 
+### LanternUI.Components.TopologySvg
+
+Server-rendered dependency graph: nodes in columns, labelled edges between them.
+
+#### `topology_svg/1`
+
+Server-rendered dependency graph: nodes in columns, labelled edges between them.
+
+- `class` (:any) — Extra classes merged onto the root.
+- `edges` (:list, default []) — `[%{from, to, label?}]`, lower column to higher.
+- `id` (:string, required) — DOM id of the scroll region.
+- `label` (:string, required) — Accessible name for the graph.
+- `nodes` (:list, required) — Nonempty `[%{id, label, detail?, column?, state?}]`.
+- `on_select` (:string, required) — Event pushed with `phx-value-node` on click/Enter/Space.
+- `rest` (:global) — HTML/`phx-*` attrs for the root.
+- `selected` (:string) — Selected node id; sets `aria-pressed`.
+
 ### LanternUI.Components.Tree
 
 Accessible tree — a WAI-ARIA APG treeview for nested navigation (environments, source choosers, file trees).
@@ -3756,6 +3773,19 @@ From `docs/recipes.md` (Compact stage summary):
   %{label: "Shipped", state: :pending},
   %{label: "Told", state: :pending}
 ]} />
+```
+
+From `docs/recipes.md` (Dependency topology):
+
+```heex
+<.topology_svg
+  id="topology"
+  label={"#{@project.name} resources on #{@env.name}"}
+  on_select="pick_node"
+  selected={@picked}
+  nodes={@nodes}
+  edges={@edges}
+/>
 ```
 
 From `docs/recipes.md` (Inline citations):

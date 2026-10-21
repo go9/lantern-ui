@@ -612,6 +612,7 @@ defmodule LanternUI.ComponentsTest do
                :toast,
                :tooltip,
                :top_shell,
+               :topology_svg,
                :tree,
                :waterfall
              ]
