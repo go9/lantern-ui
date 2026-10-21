@@ -65,6 +65,7 @@ All notable changes to this project are documented here. The format follows
 - Let users reopen the sidebar during expanded-table mode, keep that choice through LiveView patches, and restore it when leaving Expand. Collapsed-rail hover and keyboard-focus tooltips cover every nav item and the sidebar header slot.
 
 ### Visual changes
+- Data-table Filters uses the small control scale (28px height, 14px icon) instead of the medium toolbar size; the control-size kitchen sink treats that trigger as sm inside the otherwise-md chrome row. Popovers fade+scale from the trigger over `--lantern-duration` (skipped under `prefers-reduced-motion`). First-frame stability measures the positioner, not the animating panel.
 - The breadcrumb home crumb uses the outline house icon at the sidebar nav icon size (1.15rem) instead of the solid glyph.
 - Segmented tabs now keep the active pill evenly inset inside the control at the 28/32/36px sizes, with quieter active chrome and consistent hover, focus, and disabled states.
 - Data tables now keep table, list, and card views inside a single bordered card by default, with `bordered={false}` and the existing `flush` option for embedding. Added arbitrary collapsible `:overview` content while preserving `:stat`, and moved Expand to a labeled icon-only toolbar control.

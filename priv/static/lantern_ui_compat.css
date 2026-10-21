@@ -138,6 +138,7 @@
   --lantern-font-mono: var(--font-mono, ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, monospace);
   --lantern-duration: 150ms;
   --lantern-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --lantern-popover-nudge: 0.25rem;
   --lantern-control-h: 2rem;
   --lantern-control-px: 0.75rem;
   --lantern-text: 0.8125rem;

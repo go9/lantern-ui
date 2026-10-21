@@ -39,6 +39,11 @@ const SCOPE = "popover"
 const part = (name) => `[data-scope="${SCOPE}"][data-part="${name}"]`
 
 export class LanternPopover extends Component {
+  constructor(el, props) {
+    super(el, props)
+    this._closeTimer = undefined
+  }
+
   initMachine(props) {
     return new VanillaMachine(machine, props)
   }
@@ -51,15 +56,49 @@ export class LanternPopover extends Component {
     const trigger = this.el.querySelector(part("trigger"))
     if (trigger) this.spreadProps(trigger, this.api.getTriggerProps())
 
+    const closing = !this.api.open && this._closeTimer !== undefined
+
     const positioner = this.el.querySelector(part("positioner"))
     if (positioner) {
-      syncLayer(positioner, this.api.open, { positionBeforeReveal: true })
+      syncLayer(positioner, this.api.open || closing, { positionBeforeReveal: true })
       this.spreadProps(positioner, this.api.getPositionerProps())
     }
 
     const content = this.el.querySelector(part("content"))
-    if (content) this.spreadProps(content, this.api.getContentProps())
+    if (content) {
+      // Keep the panel painted through the fade+scale exit (same hidden:false
+      // spread trick as sheet — a direct write would poison spreadProps).
+      if (closing) {
+        this.spreadProps(content, { ...this.api.getContentProps(), hidden: false })
+        this.el.setAttribute("data-closing", "")
+      } else {
+        this.spreadProps(content, this.api.getContentProps())
+        if (!this.api.open) this.el.removeAttribute("data-closing")
+      }
+    }
   }
+
+  destroy = () => {
+    clearTimeout(this._closeTimer)
+    this._closeTimer = undefined
+    this.el.removeAttribute("data-loading")
+    this.el.removeAttribute("data-closing")
+    this.unsubscribe?.()
+    this.unsubscribe = undefined
+    this.clearSpreadPropsCleanups()
+    this.machine.stop()
+  }
+}
+
+function popoverCloseMs(el) {
+  if (!el || typeof getComputedStyle !== "function") return 150
+  const raw = getComputedStyle(el).getPropertyValue("--lantern-duration").trim()
+  if (!raw) return 150
+  const n = Number.parseFloat(raw)
+  if (!Number.isFinite(n)) return 150
+  if (raw.endsWith("ms")) return n
+  if (raw.endsWith("s")) return n * 1000
+  return n
 }
 
 // ---------------------------------------------------------------------------
@@ -112,9 +151,32 @@ export const LanternZagPopover = createZagLiveHook({
     const pushEvent = hook.pushEvent.bind(hook)
     const canPush = () => canPushEvent(hook.liveSocket)
 
+    const notifyOpenChange = createOnOpenChange(() => hook.el, pushEvent, canPush)
     const component = new LanternPopover(el, {
       ...popoverLayoutProps(el),
-      onOpenChange: createOnOpenChange(() => hook.el, pushEvent, canPush),
+      onOpenChange: (details) => {
+        notifyOpenChange(details)
+        if (details.open) {
+          clearTimeout(component._closeTimer)
+          component._closeTimer = undefined
+          el.removeAttribute("data-closing")
+          return
+        }
+        // Controlled patches are the server's truth — hide immediately.
+        if (getBoolean(el, "controlled")) return
+        const reduce =
+          typeof window !== "undefined" &&
+          window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+        const content = el.querySelector(part("content"))
+        const ms = popoverCloseMs(content || el)
+        if (!reduce && ms > 0 && content && !content.hidden) {
+          clearTimeout(component._closeTimer)
+          component._closeTimer = setTimeout(() => {
+            component._closeTimer = undefined
+            component.render()
+          }, ms)
+        }
+      },
       ...readBooleanControlledZagProps(el, "open", "defaultOpen"),
     })
     el.__lanternPopover = component

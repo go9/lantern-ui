@@ -16,7 +16,9 @@ defmodule LanternUI.Components.Popover do
   The panel is Zag-driven (a `@zag-js/popover` state machine, loaded on
   demand): the hook root carries `data-zag` plus `data-scope="popover"` /
   `data-part` anatomy, and Zag owns open state, focus return, and
-  Escape/outside-click dismissal. Styling stays `lui-*` tokens. Two modes:
+  Escape/outside-click dismissal. Open and close fade+scale from the trigger
+  origin over `--lantern-duration` (`prefers-reduced-motion` skips it).
+  Styling stays `lui-*` tokens. Two modes:
 
   * client (default) — Zag owns open state.
   * server-driven (`controlled`) — the server value (`open`) is truth;

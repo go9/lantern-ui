@@ -233,7 +233,9 @@ kept together across page breaks where possible. No consumer setup is required.
 ## Data table filters and saved-view hooks
 
 `data_table/1` renders quick filters, active removable filter chips, search, and
-the `Filters & view` control in one chrome row. Filters configured with
+the Filters and View controls in one chrome row. The Filters trigger stays on
+the small control scale (compact height and icon); its Zag popover fades and
+scales from the trigger over `--lantern-duration`. Filters configured with
 `:filter` render in the Zag popover and are staged until `Apply`; `Reset` clears
 the panel controls, while `Clear filters` clears configured filters. Their
 labels can be supplied with `filters_label`, `apply_label`, `reset_label`, and

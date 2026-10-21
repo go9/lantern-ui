@@ -45,11 +45,17 @@ for (const width of [1440, 1100]) {
         window.__positionSamples = []
         const sample = () => {
           const panel = document.querySelector(panelSelector)
-          if (panel && !panel.hidden && !panel.closest("[hidden]")) {
-            const rect = panel.getBoundingClientRect()
+          if (panel && !panel.hidden && !panel.closest("[hidden]") && !panel.closest("[data-lantern-positioning]")) {
             const style = getComputedStyle(panel)
-            if (rect.width && rect.height && style.visibility === "visible" && style.display !== "none") {
-              window.__positionSamples.push({ time: performance.now(), x: rect.x, y: rect.y, width: rect.width, height: rect.height })
+            if (style.visibility === "visible" && style.display !== "none") {
+              // Measure the positioned layer, not the animating panel: fade+scale
+              // on `.lui-popover-panel` changes the content rect without moving
+              // the floating-ui anchor.
+              const layer = panel.closest("[data-part=positioner]") || panel
+              const rect = layer.getBoundingClientRect()
+              if (rect.width && rect.height) {
+                window.__positionSamples.push({ time: performance.now(), x: rect.x, y: rect.y, width: rect.width, height: rect.height })
+              }
             }
           }
           requestAnimationFrame(sample)

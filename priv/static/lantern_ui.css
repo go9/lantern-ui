@@ -718,6 +718,18 @@
 }
 @keyframes lui-fade { from { opacity: 0; } }
 @keyframes lui-pop { from { opacity: 0; transform: scale(0.97); } }
+@keyframes lui-popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--lantern-popover-shift, 0)) scale(0.97);
+  }
+}
+@keyframes lui-popover-out {
+  to {
+    opacity: 0;
+    transform: translateY(var(--lantern-popover-shift, 0)) scale(0.97);
+  }
+}
 
 /* ── Floating layer ──
    Panels, positioners, the command palette and the toast stack render
@@ -849,7 +861,16 @@
 .lui-popover-panel { z-index: var(--lantern-z-popover, 70); padding: 0;
   max-height: var(--available-height, none); max-width: var(--available-width, none); overflow-y: auto;
   background: var(--lantern-surface-raised); border: 1px solid var(--lantern-border);
-  border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md); }
+  border-radius: var(--lantern-radius-md); box-shadow: var(--lantern-shadow-md);
+  --lantern-popover-shift: calc(var(--lantern-popover-nudge, 0.25rem) * -1);
+  transform-origin: var(--transform-origin, top);
+  animation: lui-popover-in var(--lantern-duration) var(--lantern-ease); }
+.lui-popover[data-placement^="top"] .lui-popover-panel {
+  --lantern-popover-shift: var(--lantern-popover-nudge, 0.25rem);
+  transform-origin: var(--transform-origin, bottom); }
+.lui-popover[data-closing] .lui-popover-panel {
+  animation: lui-popover-out var(--lantern-duration) var(--lantern-ease) forwards; }
+[data-lantern-positioning] > .lui-popover-panel { animation: none; }
 .lui-dropdown { display: inline-block; position: relative; }
 .lui-dropdown-menu { z-index: var(--lantern-z-dropdown, 50); min-width: 11rem; padding: 0.25rem;
   max-height: var(--available-height, none); max-width: var(--available-width, none); overflow-y: auto;
@@ -2071,7 +2092,9 @@
 .lui-dt-chromerow { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
   padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--lantern-border); }
 .lui-dt-chromerow { row-gap: 0.5rem; }
-.lui-dt-chromerow :is(button, input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select, [role="tab"], .lui-dt-chip) {
+.lui-dt-chromerow :is(button, select, [role="tab"], .lui-dt-chip) {
+  box-sizing: border-box; min-height: var(--lui-control-md-h); }
+.lui-dt-chromerow input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]) {
   box-sizing: border-box; min-height: var(--lui-control-md-h); }
 .lui-dt-chromerow :is(input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select) {
   height: var(--lui-control-md-h);
@@ -5388,6 +5411,8 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-dt-chromerow .lui-dt-search input { font-size: var(--lui-control-font-md); }
 .lui-dt-chromerow > .lui-popover .lui-btn { box-sizing: border-box; height: var(--lui-control-h-md); min-height: var(--lui-control-h-md); gap: var(--lui-gap-4); font-size: var(--lui-control-font-md); }
 .lui-dt-chromerow :is(.lui-dt-search, .lui-popover .lui-btn, .lui-dt-expand) .lui-icon { width: var(--lui-control-icon-md); height: var(--lui-control-icon-md); flex: none; }
+.lui-dt-chromerow > .lui-dt-filters .lui-btn { box-sizing: border-box; height: var(--lui-control-h-sm); min-height: var(--lui-control-h-sm); padding-inline: var(--lui-control-px-sm); gap: var(--lui-gap-4); font-size: var(--lui-control-font-sm); }
+.lui-dt-chromerow > .lui-dt-filters .lui-btn .lui-icon { width: var(--lui-control-icon-sm); height: var(--lui-control-icon-sm); flex: none; }
 .lui-datatable-expanded .lui-dt-overview, .lui-dt-overview[hidden] { display: none; }
 .lui-chart-card__settings .lui-chart-settings__trigger { height: var(--lui-control-h-md); min-height: var(--lui-control-h-md); padding-inline: var(--lui-control-px-md); font-size: var(--lui-control-font-md); }
 
