@@ -27,6 +27,7 @@ defmodule LanternUI.ARIAConformanceTest do
   alias LanternUI.Components.Switch
   alias LanternUI.Components.Tabs
   alias LanternUI.Components.Tooltip
+  alias LanternUI.Components.Tree
 
   defp render(fun), do: fun.(%{__changed__: nil}) |> rendered_to_string()
 
@@ -103,6 +104,23 @@ defmodule LanternUI.ARIAConformanceTest do
         """
       end)
       |> assert_conformant()
+    end
+
+    test "tree: named tree with current vs selected and hidden groups still in the DOM" do
+      render(fn assigns ->
+        ~H"""
+        <Tree.tree id="envs" label="Environments" current_id="prod-api" expanded_ids={["prod"]}>
+          <Tree.tree_item id="prod" label="Production">
+            <Tree.tree_item id="prod-api" label="api" />
+            <Tree.tree_item id="prod-web" label="web" />
+          </Tree.tree_item>
+          <Tree.tree_item id="staging" label="Staging">
+            <Tree.tree_item id="staging-api" label="api" />
+          </Tree.tree_item>
+        </Tree.tree>
+        """
+      end)
+      |> assert_conformant(hook_owned: ["tabindex", "aria-selected"])
     end
 
     test "accordion: region panels are labelled and every idref resolves" do

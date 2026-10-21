@@ -5,7 +5,7 @@ import { hooks, mountHook } from "./helpers/dom.mjs"
 // A LiveView redirect destroys every hook, including those whose mounted()
 // returned early (no trigger/panel) before setting up their cleanup list.
 // destroyed() must never throw, or the whole navigation aborts.
-for (const name of ["LanternOverlay", "LanternCommand", "LanternMenubar"]) {
+for (const name of ["LanternOverlay", "LanternCommand", "LanternMenubar", "LanternTree"]) {
   test(`${name}.destroyed does not throw on a root that never fully mounted`, () => {
     const hook = hooks[name]
     if (!hook) return

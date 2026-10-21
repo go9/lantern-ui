@@ -30,6 +30,20 @@ Do not bind `j`/`k` on a typing target (`input`, `textarea`, `select`,
 
 Enter on a focused `data-lantern-list-item` activates that item.
 
+## Tree keyboard
+
+`tree/1` is a composite widget (`phx-hook="LanternTree"`), not a data-attribute
+behaviour. The server owns `current_id` and `expanded_ids` (`aria-current`,
+`aria-expanded`, `hidden` groups). The hook owns roving tabindex,
+`aria-selected` (single-select follows focus), typeahead, and the APG keys:
+ArrowUp/Down, Home/End, Right (expand or first child), Left (collapse or
+parent), Enter/Space (activate). Expand and activate are pushed; the hook
+does not flip `hidden`.
+
+Current is the node the app is showing. Keyboard focus can move independently
+until Enter/Space (or a row click) selects. There is no multi-select and no
+drag-and-drop.
+
 ## Persist open/collapsed
 
 `data-lantern-persist="<key>"` stores `open` / `closed` in `localStorage`

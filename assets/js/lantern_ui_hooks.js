@@ -4111,6 +4111,227 @@ const LanternSortable = {
   },
 }
 
+// APG treeview. Server owns current/expanded (aria-current, aria-expanded,
+// hidden groups). The hook owns roving tabindex, aria-selected, typeahead,
+// and keyboard. Expand/select are pushed; the hook does not flip hidden.
+const LanternTree = {
+  mounted() {
+    this.search = ""
+    this.searchTimer = 0
+    this.onKeyDown = (e) => this.handleKey(e)
+    this.onClick = (e) => this.handleClick(e)
+    this.onFocusIn = (e) => this.handleFocusIn(e)
+    this.el.addEventListener("keydown", this.onKeyDown)
+    this.el.addEventListener("click", this.onClick)
+    this.el.addEventListener("focusin", this.onFocusIn)
+    this.syncTabindex()
+  },
+
+  updated() {
+    this.syncTabindex({ restore: true })
+  },
+
+  destroyed() {
+    clearTimeout(this.searchTimer)
+    if (!this.onKeyDown) return
+    this.el.removeEventListener("keydown", this.onKeyDown)
+    this.el.removeEventListener("click", this.onClick)
+    this.el.removeEventListener("focusin", this.onFocusIn)
+  },
+
+  itemFrom(el) {
+    const item = el?.closest?.("[data-part=\"item\"]")
+    return item && this.el.contains(item) ? item : null
+  },
+
+  allItems() {
+    return [...this.el.querySelectorAll('[data-part="item"]')]
+  },
+
+  visibleItems() {
+    return this.allItems().filter((el) => {
+      if (el.getAttribute("aria-disabled") === "true") return false
+      for (let node = el.parentElement; node && node !== this.el; node = node.parentElement) {
+        if (node.matches?.("[data-part=\"group\"]") && node.hidden) return false
+      }
+      return true
+    })
+  },
+
+  activeItem() {
+    const items = this.visibleItems()
+    const fromFocus = this.itemFrom(this.el.ownerDocument.activeElement)
+    if (fromFocus && items.includes(fromFocus)) return fromFocus
+    return items.find((el) => el.tabIndex === 0) || items[0] || null
+  },
+
+  parentOf(item) {
+    const group = item.parentElement?.closest("[data-part=\"group\"]")
+    if (!group || !this.el.contains(group)) return null
+    return group.closest("[data-part=\"item\"]")
+  },
+
+  childrenOf(item) {
+    const group = item.querySelector("[data-part=\"group\"]")
+    if (!group) return []
+    return [...group.children].filter((el) => el.matches?.("[data-part=\"item\"]"))
+  },
+
+  isExpanded(item) {
+    return item.getAttribute("aria-expanded") === "true"
+  },
+
+  isParent(item) {
+    return item.hasAttribute("aria-expanded")
+  },
+
+  focusItem(item, { silent } = {}) {
+    if (!item) return
+    for (const el of this.allItems()) {
+      el.tabIndex = el === item ? 0 : -1
+      el.setAttribute("aria-selected", el === item ? "true" : "false")
+    }
+    if (!silent) item.focus()
+  },
+
+  syncTabindex({ restore } = {}) {
+    const items = this.visibleItems()
+    if (items.length === 0) return
+    const fromFocus = this.itemFrom(this.el.ownerDocument.activeElement)
+    const focused = restore && items.includes(fromFocus) ? fromFocus : null
+    const current = items.find((el) => el.getAttribute("aria-current") === "true")
+    const existing = items.find((el) => el.tabIndex === 0)
+    this.focusItem(focused || current || existing || items[0], {
+      silent: !focused,
+    })
+    if (focused) focused.focus()
+  },
+
+  push(attr, payload) {
+    const event = this.el.dataset[attr]
+    if (!event) return
+    let result
+    try {
+      result = this.pushEvent(event, payload)
+    } catch (_) {
+      return
+    }
+    if (typeof result?.then === "function") result.then(() => {}, () => {})
+  },
+
+  toggle(item, expanded) {
+    if (!this.isParent(item)) return
+    const next = expanded == null ? !this.isExpanded(item) : expanded
+    this.push("onToggle", { id: item.dataset.id, expanded: next })
+  },
+
+  select(item) {
+    if (!item || item.getAttribute("aria-disabled") === "true") return
+    this.focusItem(item)
+    this.push("onSelect", { id: item.dataset.id })
+  },
+
+  handleFocusIn(e) {
+    const item = this.itemFrom(e.target)
+    if (!item) return
+    this.focusItem(item, { silent: true })
+  },
+
+  handleClick(e) {
+    if (e.target.closest("[data-part=\"expander\"]")) {
+      const item = e.target.closest("[data-part=\"item\"]")
+      if (!item || !this.el.contains(item)) return
+      e.preventDefault()
+      this.focusItem(item)
+      this.toggle(item)
+      return
+    }
+    const row = e.target.closest("[data-part=\"row\"]")
+    if (!row || !this.el.contains(row)) return
+    const item = row.closest("[data-part=\"item\"]")
+    if (!item || !this.el.contains(item)) return
+    this.select(item)
+  },
+
+  handleKey(e) {
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return
+    if (e.isComposing || e.key === "Process") return
+    const tag = e.target?.tagName
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.target?.isContentEditable) return
+    const item = this.activeItem()
+    if (!item) return
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      this.move(1)
+      return
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault()
+      this.move(-1)
+      return
+    }
+    if (e.key === "Home") {
+      e.preventDefault()
+      this.focusItem(this.visibleItems()[0])
+      return
+    }
+    if (e.key === "End") {
+      e.preventDefault()
+      const items = this.visibleItems()
+      this.focusItem(items[items.length - 1])
+      return
+    }
+    if (e.key === "ArrowRight") {
+      e.preventDefault()
+      if (this.isParent(item) && !this.isExpanded(item)) this.toggle(item, true)
+      else this.focusItem(this.childrenOf(item).find((child) => this.visibleItems().includes(child)) || item)
+      return
+    }
+    if (e.key === "ArrowLeft") {
+      e.preventDefault()
+      if (this.isParent(item) && this.isExpanded(item)) this.toggle(item, false)
+      else this.focusItem(this.parentOf(item) || item)
+      return
+    }
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      this.select(item)
+      return
+    }
+    if (e.key.length === 1 && e.key !== " ") this.typeahead(e.key)
+  },
+
+  move(step) {
+    const items = this.visibleItems()
+    const from = this.activeItem()
+    const idx = Math.max(0, items.indexOf(from))
+    const next = items[Math.max(0, Math.min(items.length - 1, idx + step))]
+    this.focusItem(next)
+  },
+
+  typeahead(ch) {
+    clearTimeout(this.searchTimer)
+    this.search = (this.search || "") + ch
+    this.searchTimer = setTimeout(() => {
+      this.search = ""
+    }, 500)
+    const items = this.visibleItems()
+    if (items.length === 0) return
+    const from = this.activeItem()
+    const start = (items.indexOf(from) + 1) % items.length
+    const q = this.search.toLowerCase()
+    const name = (el) => (el.dataset.label || "").trim().toLowerCase()
+    for (let i = 0; i < items.length; i++) {
+      const candidate = items[(start + i) % items.length]
+      if (name(candidate).startsWith(q)) {
+        this.focusItem(candidate)
+        return
+      }
+    }
+  },
+}
+
 export const Hooks = {
   ChartHover,
   LineHover,
@@ -4142,6 +4363,7 @@ export const Hooks = {
   LanternThumbnail,
   LanternTheme,
   LanternSortable,
+  LanternTree,
 }
 export {
   ChartHover,
@@ -4174,6 +4396,7 @@ export {
   LanternThumbnail,
   LanternTheme,
   LanternSortable,
+  LanternTree,
 }
 export default Hooks
 
