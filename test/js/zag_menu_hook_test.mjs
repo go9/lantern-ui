@@ -235,3 +235,19 @@ test("menu: custom toggle slot keeps menu-button ARIA off the role-less wrapper"
   assert.equal(button.getAttribute("aria-expanded"), "true")
   assert.ok(button.getAttribute("aria-controls"))
 })
+
+test("dropdown: Escape returns focus to the trigger control, not <body>", async () => {
+  const { el, component, window } = mountDropdown(dropdownFixture())
+  await sleep()
+
+  const button = el.querySelector('[data-part="trigger"] button')
+  button.focus()
+  openMenu(el)
+  await waitFor(() => component().api.open === true)
+  content(el).querySelector('[role="menuitem"]').focus()
+
+  content(el).dispatchEvent(new window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
+  await waitFor(() => component().api.open === false)
+  await sleep(150)
+  assert.equal(window.document.activeElement, button)
+})

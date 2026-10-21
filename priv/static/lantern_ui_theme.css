@@ -7,7 +7,7 @@
  *
  *     --lantern-fg: var(--foreground, #09090b);
  *     --lantern-surface: var(--background-base, #ffffff);
- *     --lantern-accent: var(--primary, oklch(0.637 0.192 38));
+ *     --lantern-accent: var(--primary, oklch(0.566 0.192 38));
  *
  * So a Fluxon/flicker theme — which sets `--primary`, `--foreground`,
  * `--background-base`, `--border-base`, … — flows straight into LanternUI with
@@ -30,6 +30,11 @@
  * win through the chain. Recolor by overriding any `--lantern-*` OR any Fluxon
  * token on `:root`/`.dark`/a subtree.
  *
+ * CONTRAST: every shipped text fallback is >= 4.5:1 on its surfaces (enforced
+ * by test/js/theme_contrast_test.mjs). Host tokens (`--primary`, `--warning`,
+ * `--foreground-softest`, …) win through the chain and are the host's to keep
+ * at 4.5:1; lantern only fixes its own fallbacks.
+ *
  * THEMING SURFACES: light = `:root`; `.dark` (or system dark unless `.light`)
  * flips. Density: default shadcn-compact; `data-lantern-density="comfortable"`
  * for a roomier scale.
@@ -38,8 +43,8 @@
 :root {
   /* ── Color · foreground ← fluxon foreground* ── */
   --lantern-fg: var(--foreground, #09090b);
-  --lantern-fg-muted: var(--foreground-soft, #71717a);
-  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #a1a1aa));
+  --lantern-fg-muted: var(--foreground-soft, #666670);
+  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #6f6f78));
 
   /* ── Color · surfaces ← fluxon background-base / surface / background-accent ── */
   --lantern-surface: var(--background-base, #ffffff);
@@ -62,15 +67,15 @@
   --lantern-secondary-fg: var(--foreground, #18181b);
 
   /* ── Color · accent + status ← fluxon primary / status tokens ── */
-  --lantern-accent: var(--primary, oklch(0.637 0.192 38));
+  --lantern-accent: var(--primary, oklch(0.566 0.192 38));
   --lantern-accent-fg: var(--foreground-primary, #ffffff);
   --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 12%, transparent));
-  --lantern-danger: var(--danger, #dc2626);
+  --lantern-danger: var(--danger, #d92323);
   --lantern-danger-fg: #ffffff;
-  --lantern-success: var(--success, #16a34a);
-  --lantern-warning: var(--warning, #d97706);
+  --lantern-success: var(--success, #008229);
+  --lantern-warning: var(--warning, #b45500);
   /* info is blue, not the brand colour: accent-as-info read as an error next to danger */
-  --lantern-info: var(--info, oklch(0.62 0.17 255));
+  --lantern-info: var(--info, oklch(0.548 0.17 255));
 
   /* Accessible, host-overridable series palette for generic charts. */
   --lantern-chart-1: var(--chart-1, oklch(0.646 0.222 41.116));
@@ -180,8 +185,8 @@
    subtree can force light even under system dark. */
 .light {
   --lantern-fg: var(--foreground, #09090b);
-  --lantern-fg-muted: var(--foreground-soft, #71717a);
-  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #a1a1aa));
+  --lantern-fg-muted: var(--foreground-soft, #666670);
+  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #6f6f78));
 
   --lantern-surface: var(--background-base, #ffffff);
   --lantern-surface-raised: var(--surface, #ffffff);
@@ -198,12 +203,13 @@
   --lantern-secondary: var(--background-accent, #f4f4f5);
   --lantern-secondary-fg: var(--foreground, #18181b);
 
-  --lantern-accent: var(--primary, oklch(0.637 0.192 38));
+  --lantern-accent: var(--primary, oklch(0.566 0.192 38));
   --lantern-accent-fg: var(--foreground-primary, #ffffff);
   --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 12%, transparent));
-  --lantern-danger: var(--danger, #dc2626);
-  --lantern-success: var(--success, #16a34a);
-  --lantern-warning: var(--warning, #d97706);
+  --lantern-danger: var(--danger, #d92323);
+  --lantern-success: var(--success, #008229);
+  --lantern-warning: var(--warning, #b45500);
+  --lantern-info: var(--info, oklch(0.548 0.17 255));
   --lantern-chart-1: var(--chart-1, oklch(0.646 0.222 41.116));
   --lantern-chart-2: var(--chart-2, oklch(0.6 0.118 184.704));
   --lantern-chart-3: var(--chart-3, oklch(0.398 0.07 227.392));
@@ -232,7 +238,7 @@
 .dark {
   --lantern-fg: var(--foreground, #fafafa);
   --lantern-fg-muted: var(--foreground-soft, #a1a1aa);
-  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #71717a));
+  --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #808089));
 
   --lantern-surface: var(--background-base, #09090b);
   --lantern-surface-raised: var(--surface, #0c0c0e);
@@ -250,11 +256,12 @@
   --lantern-secondary-fg: var(--foreground, #fafafa);
 
   --lantern-accent: var(--primary, oklch(0.685 0.182 39));
-  --lantern-accent-fg: var(--foreground-primary, #ffffff);
+  --lantern-accent-fg: var(--foreground-primary, #09090b);
   --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 22%, transparent));
   --lantern-danger: var(--danger, #ef4444);
   --lantern-success: var(--success, #22c55e);
   --lantern-warning: var(--warning, #f59e0b);
+  --lantern-info: var(--info, oklch(0.62 0.17 255));
   --lantern-chart-1: var(--chart-1, oklch(0.7 0.18 41.116));
   --lantern-chart-2: var(--chart-2, oklch(0.7 0.12 184.704));
   --lantern-chart-3: var(--chart-3, oklch(0.72 0.1 227.392));
@@ -277,7 +284,7 @@
   :root:not(.light) {
     --lantern-fg: var(--foreground, #fafafa);
     --lantern-fg-muted: var(--foreground-soft, #a1a1aa);
-    --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #71717a));
+    --lantern-fg-subtle: var(--foreground-softest, var(--foreground-softer, #808089));
 
     --lantern-surface: var(--background-base, #09090b);
     --lantern-surface-raised: var(--surface, #0c0c0e);
@@ -295,11 +302,12 @@
     --lantern-secondary-fg: var(--foreground, #fafafa);
 
     --lantern-accent: var(--primary, oklch(0.685 0.182 39));
-    --lantern-accent-fg: var(--foreground-primary, #ffffff);
+    --lantern-accent-fg: var(--foreground-primary, #09090b);
     --lantern-accent-soft: var(--primary-soft, color-mix(in oklab, var(--lantern-accent) 22%, transparent));
     --lantern-danger: var(--danger, #ef4444);
     --lantern-success: var(--success, #22c55e);
     --lantern-warning: var(--warning, #f59e0b);
+    --lantern-info: var(--info, oklch(0.62 0.17 255));
     --lantern-chart-1: var(--chart-1, oklch(0.7 0.18 41.116));
     --lantern-chart-2: var(--chart-2, oklch(0.7 0.12 184.704));
     --lantern-chart-3: var(--chart-3, oklch(0.72 0.1 227.392));
@@ -387,7 +395,7 @@
   /* ── lantern tokens re-pointed at the shadcn vocabulary ── */
   --lantern-fg: var(--foreground);
   --lantern-fg-muted: var(--muted-foreground);
-  --lantern-fg-subtle: oklch(0.708 0 0);
+  --lantern-fg-subtle: oklch(0.54 0 0);
   --lantern-surface: var(--background);
   --lantern-surface-raised: var(--card);
   --lantern-surface-sunken: var(--muted);
@@ -468,7 +476,7 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 
-  --lantern-fg-subtle: oklch(0.556 0 0);
+  --lantern-fg-subtle: oklch(0.65 0 0);
   --lantern-accent-soft: color-mix(in oklab, var(--primary) 18%, transparent);
 }
 

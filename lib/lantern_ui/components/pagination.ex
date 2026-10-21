@@ -149,7 +149,11 @@ defmodule LanternUI.Components.Pagination do
     """
   end
 
-  attr(:disabled, :boolean, required: true, doc: "Render as a non-interactive span.")
+  attr(:disabled, :boolean,
+    required: true,
+    doc: "Render as a non-interactive span (name exposed via sr-only text)."
+  )
+
   attr(:patch, :string, required: true, doc: "LiveView patch path for this control.")
   attr(:label, :string, required: true, doc: "Accessible label for the control.")
   attr(:part, :string, default: nil, doc: "Zag part name for the pager control.")
@@ -160,11 +164,10 @@ defmodule LanternUI.Components.Pagination do
     <span
       class="lui-pg lui-pg-disabled"
       aria-disabled="true"
-      aria-label={@label}
       data-scope="pagination"
       data-part={@part}
     >
-      {render_slot(@inner_block)}
+      {render_slot(@inner_block)}<span class="lui-sr-only">{@label}</span>
     </span>
     """
   end
