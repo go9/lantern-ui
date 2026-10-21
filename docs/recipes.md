@@ -180,6 +180,42 @@ Grouped tables and group headers are banned. A page that listed rows under tinte
 </.data_table>
 ```
 
+## Pinned project bands with shared table/grid sorting
+
+Use ordered bands only when a meaningful partition (such as user pins) must
+stay above the other rows. Flat indexes remain the default. Filter and sort
+inside each group on the server, using the same `order_by` and
+`order_directions` params for both layouts. Empty groups are omitted; labels
+appear only when at least two groups contain rows. Pagination and selection
+operate on the combined rows.
+
+```heex
+<.data_table id="projects" group={[{"Pinned", @pinned}, {"All projects", @others}]}
+  meta={@meta} path="/projects" active_view={@view} column_settings={false}>
+  <:col :let={row} field={:name} label="Project" sortable>{row.name}</:col>
+  <:col :let={row} field={:tickets} label="Tickets" sortable>{row.tickets}</:col>
+  <:card :let={row}>{row.name}</:card>
+  <:row_action :let={row}>
+    <.button id={"pin-#{row.id}"} size="icon-sm" variant="ghost" reveal
+      pressed={row.pinned?} label={if row.pinned?, do: "Unpin", else: "Pin"}
+      phx-click="pin" phx-value-id={row.id}>
+      <.icon name="bookmark" />
+    </.button>
+  </:row_action>
+</.data_table>
+```
+
+Sortable column labels supply the non-table Sort select. The direction control
+and table headers share one URL builder; sorting keeps the view and filters
+and resets the page. Table bands are named rowgroups; card bands are named
+lists. `list` layout keeps rows flat. `reveal` works on table/list/card hover
+and focus-within, stays visible while pressed, and is always visible on touch.
+The existing `sync_glyph` set includes `queued`, `paused`, `stale`, `blocked`
+(over allowance), and `off` (RAG off); pair each with visible text.
+
+Live demo: run the QA host and open `/table_bands`. Browser coverage:
+`BASE=http://127.0.0.1:4027 node test/qa/table_bands.mjs`.
+
 ## Flat table with placeholder row
 
 **When to use:** A dense record table: URL sort and filters, a status/kind column on every row, counted filter chips, an optional cards slot for the narrow layout, and a subdued full-width add/intent row. The add row is a real button (Tab / Enter / Space, optional `kbd`); do not fake a disabled record. `fill` vs document scroll as in Fill list pages. No grouped bands. Row navigate opens the record; extra per-row controls go in `:row_action`, not a second click on the row. Multi-row matrix heads are not this recipe.

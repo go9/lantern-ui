@@ -2096,7 +2096,7 @@
   box-sizing: border-box; min-height: var(--lui-control-md-h); }
 .lui-dt-chromerow input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]) {
   box-sizing: border-box; min-height: var(--lui-control-md-h); }
-.lui-dt-chromerow :is(input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]), select) {
+.lui-dt-chromerow input:not([type="checkbox" i]):not([type="radio" i]):not([type="range" i]):not([type="file" i]):not([type="hidden" i]) {
   height: var(--lui-control-md-h);
 }
 .lui-dt-chromerow .lui-dt-quickfilters :is(button, [role="tab"]) { height: var(--lui-control-md-h); }
@@ -5812,7 +5812,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 }
 
 /* Toggle actions share nav action semantics; reveal never removes tab stops. */
-.lui-btn[aria-pressed="true"], .lui-nav-action[aria-pressed="true"] { color: var(--lantern-accent); }
+.lui-btn[aria-pressed="true"], .lui-nav-action[aria-pressed="true"] { color: var(--lantern-accent); opacity: 1; }
 .lui-btn[aria-pressed="true"] .lui-icon,
 .lui-nav-action[aria-pressed="true"] .lui-icon { fill: currentColor; }
 @media (hover: hover) and (pointer: fine) {
@@ -5824,3 +5824,16 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-state-glyph[data-kind="sync"]:is([data-value="queued"], [data-value="paused"], [data-value="off"]) { color: var(--lantern-fg-muted); }
 .lui-state-glyph[data-kind="sync"][data-value="stale"] { color: var(--lantern-warning); }
 .lui-state-glyph[data-kind="sync"][data-value="blocked"] { color: var(--lantern-danger); }
+
+/* Each card band spans the grid while its cards retain the same columns. */
+.lui-dt-card-band { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; gap: inherit; }
+.lui-dt-band { color: var(--lantern-fg-muted); font-size: var(--lantern-text-sm); font-weight: 500; }
+.lui-dt-card-band > .lui-dt-band { grid-column: 1 / -1; padding-block: var(--lantern-space-sm); }
+.lui-dt-band > th { text-align: start; padding: var(--lantern-space-sm) var(--lantern-space-md); background: var(--lantern-surface-sunken); }
+.lui-dt-sort { display: inline-flex; align-items: center; gap: var(--lantern-space-xs); }
+
+.lui-dt-chromerow select { min-height: var(--lui-control-md-h); height: var(--lui-control-md-h); }
+.lui-dt-chromerow .lui-dt-sort select { height: var(--lui-control-h-sm); min-height: var(--lui-control-h-sm); font-size: var(--lui-control-font-sm); }
+@media (hover: hover) and (pointer: fine) {
+  :is(.lui-tr, .lui-dt-card, .lui-dt-list-row):is(:hover, :focus-within) .lui-reveal { opacity: 1; }
+}

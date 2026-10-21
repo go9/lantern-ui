@@ -510,6 +510,24 @@ From `docs/recipes.md` (Flat ticket list with toolbar):
 </.data_table>
 ```
 
+From `docs/recipes.md` (Pinned project bands with shared table/grid sorting):
+
+```heex
+<.data_table id="projects" group={[{"Pinned", @pinned}, {"All projects", @others}]}
+  meta={@meta} path="/projects" active_view={@view} column_settings={false}>
+  <:col :let={row} field={:name} label="Project" sortable>{row.name}</:col>
+  <:col :let={row} field={:tickets} label="Tickets" sortable>{row.tickets}</:col>
+  <:card :let={row}>{row.name}</:card>
+  <:row_action :let={row}>
+    <.button id={"pin-#{row.id}"} size="icon-sm" variant="ghost" reveal
+      pressed={row.pinned?} label={if row.pinned?, do: "Unpin", else: "Pin"}
+      phx-click="pin" phx-value-id={row.id}>
+      <.icon name="bookmark" />
+    </.button>
+  </:row_action>
+</.data_table>
+```
+
 From `docs/recipes.md` (Flat table with placeholder row):
 
 ```heex
