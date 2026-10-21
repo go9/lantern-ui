@@ -5888,3 +5888,46 @@ a.lui-waterfall-lane-inner:focus-visible {
   background: transparent;
   border: calc(var(--lantern-space-xs) / 2) solid var(--lantern-danger);
 }
+
+/* Counted stage filters; native buttons keep keyboard and server state ownership. */
+.lui-funnel-line {
+  display: flex;
+  align-items: center;
+  gap: var(--lantern-space-xs);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: var(--lantern-space-xs);
+  scroll-behavior: auto;
+}
+.lui-funnel-stage {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lantern-space-xs);
+  flex-shrink: 0;
+}
+.lui-funnel-arrow { color: var(--lantern-fg-muted); }
+.lui-funnel-stage[data-overflow="false"] + .lui-funnel-stage[data-overflow="true"]::before {
+  content: "";
+  height: var(--lantern-text);
+  border-inline-start: thin solid var(--lantern-border);
+  margin-inline: var(--lantern-space-sm);
+}
+.lui-funnel-button.lui-btn {
+  color: var(--lantern-fg-muted);
+  font-weight: 400;
+  font-size: var(--lantern-text-footnote, var(--lantern-text));
+  gap: var(--lantern-space-xs);
+  padding-inline: var(--lantern-space-sm);
+  transition: none;
+}
+.lui-funnel-button.lui-btn[aria-pressed="true"] {
+  color: var(--lantern-fg);
+  background: var(--lantern-surface-sunken);
+  font-weight: 500;
+}
+.lui-funnel-count {
+  font-family: var(--lantern-font-mono);
+  font-size: var(--lantern-text-caption);
+  font-variant-numeric: tabular-nums;
+}

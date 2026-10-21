@@ -57,6 +57,7 @@ defmodule LanternUI.MixProject do
         "README.md",
         "CHANGELOG.md",
         "docs/chat-kit.md",
+        "docs/funnel-line.md",
         "docs/support-helpers.md",
         "docs/provenance-badge.md",
         "docs/scale.md",

@@ -152,6 +152,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `input/1` — Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
 - `label/1` — Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
 
+### LanternUI.Components.FunnelLine
+
+- `funnel_line/1` — Renders a named line of counted, server-controlled filter buttons.
+
 ### LanternUI.Components.Icon
 
 - `icon/1` — Renders an icon by name.

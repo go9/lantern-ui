@@ -556,6 +556,7 @@ defmodule LanternUI.ComponentsTest do
                :dropdown,
                :empty_state,
                :form,
+               :funnel_line,
                :icon,
                :icon_button,
                :inspector,
