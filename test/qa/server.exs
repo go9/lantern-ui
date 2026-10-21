@@ -20,6 +20,7 @@ Code.require_file("trace_live.ex", __DIR__)
 Code.require_file("tree_live.ex", __DIR__)
 Code.require_file("index_primitives_live.ex", __DIR__)
 Code.require_file("table_bands_live.ex", __DIR__)
+Code.require_file("stage_strip_live.ex", __DIR__)
 
 defmodule LanternUI.QA.Layouts do
   use Phoenix.Component
@@ -66,6 +67,7 @@ defmodule LanternUI.QA.Router do
 
   scope "/" do
     pipe_through(:browser)
+    live("/stage_strip", LanternUI.QA.StageStripLive)
     live("/qa", LanternUI.QA.MatrixLive)
     live("/charts", LanternUI.QA.ChartsLive)
     live("/tiles", LanternUI.QA.TilesLive)

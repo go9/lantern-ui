@@ -2055,6 +2055,18 @@ Drag-and-drop between lists (board columns, bins, groups) and the landing area a
 Slots:
 - `:inner_block` (required) —
 
+### LanternUI.Components.StageStrip
+
+Compact, ordered stage pips for a workflow summary.
+
+#### `stage_strip/1`
+
+Compact, ordered stage pips for a workflow summary.
+
+- `class` (:any) — Extra classes merged onto the root.
+- `rest` (:global) — HTML/`phx-*` attrs.
+- `stages` (:list, required) — Nonempty ordered list of `%{label: string, state: atom}`.
+
 ### LanternUI.Components.Stat
 
 Compact summary metrics extracted from the data table overview.
@@ -3543,6 +3555,19 @@ From `docs/recipes.md` (Environment tree):
     </span>
   </span>
 </:col>
+```
+
+From `docs/recipes.md` (Compact stage summary):
+
+```heex
+<.stage_strip stages={[
+  %{label: "Triaged", state: :done},
+  %{label: "Drafted", state: :skipped},
+  %{label: "Decided", state: :waiting},
+  %{label: "In work", state: :pending},
+  %{label: "Shipped", state: :pending},
+  %{label: "Told", state: :pending}
+]} />
 ```
 
 From `README.md` (Usage):

@@ -307,6 +307,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `drop_zone/1` — The landing area of a `sortable/1` list: dropping here adds to the end.
 - `sortable/1` — Drag-and-drop between lists (board columns, bins, groups) and the landing area at the top of each list.
 
+### LanternUI.Components.StageStrip
+
+- `stage_strip/1` — Compact, ordered stage pips for a workflow summary.
+
 ### LanternUI.Components.Stat
 
 - `stat_card/1` — Renders one compact summary metric.
@@ -1384,6 +1388,19 @@ From `docs/recipes.md` (Environment tree):
     </span>
   </span>
 </:col>
+```
+
+From `docs/recipes.md` (Compact stage summary):
+
+```heex
+<.stage_strip stages={[
+  %{label: "Triaged", state: :done},
+  %{label: "Drafted", state: :skipped},
+  %{label: "Decided", state: :waiting},
+  %{label: "In work", state: :pending},
+  %{label: "Shipped", state: :pending},
+  %{label: "Told", state: :pending}
+]} />
 ```
 
 From `README.md` (Usage):
