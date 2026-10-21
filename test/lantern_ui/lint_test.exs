@@ -546,6 +546,22 @@ defmodule LanternUI.LintTest do
     assert finding.hint =~ "<.page_shell>"
   end
 
+  test "shipped CSS custom properties are not defined in terms of themselves" do
+    # --lantern-* only: lantern_ui_compat.css has pre-existing Fluxon aliases
+    # such as `--radius-base: var(--radius-base)` that are out of this gate.
+    cycle = ~r/--(lantern-[a-z0-9-]+)\s*:[^;{}]*var\(\s*--\1(?=[\s,)])/i
+
+    for path <- Path.wildcard("priv/static/lantern_ui*.css") do
+      hits =
+        path
+        |> File.read!()
+        |> then(&Regex.scan(cycle, &1))
+        |> Enum.map(fn [full | _] -> full end)
+
+      assert hits == [], "#{path} has self-referencing custom properties: #{inspect(hits)}"
+    end
+  end
+
   test "ships named type utilities and tokens" do
     css = File.read!(Path.expand("../../priv/static/lantern_ui.css", __DIR__))
     theme = File.read!(Path.expand("../../priv/static/lantern_ui_theme.css", __DIR__))

@@ -136,8 +136,16 @@ defmodule LanternUI.LayoutTest do
       assert css =~ ".lui-app[data-inset] { background: var(--lantern-chrome); }"
       assert css =~ ".lui-app[data-inset] .lui-app-main { background: var(--lantern-surface); }"
 
+      # Parent captures inherited muted; chrome children consume the dedicated
+      # token. A same-element `--lantern-fg-muted: … var(--lantern-fg-muted)` mix
+      # is a custom-property cycle and the browser drops it.
       assert css =~
-               "--lantern-fg-muted: color-mix(in srgb, var(--lantern-fg) 10%, var(--lantern-fg-muted));"
+               "--lantern-nav-muted-inset: color-mix(in srgb, var(--lantern-fg) 10%, var(--lantern-fg-muted));"
+
+      assert css =~ "--lantern-fg-muted: var(--lantern-nav-muted-inset);"
+
+      refute css =~
+               ~r/--lantern-fg-muted\s*:[^;{}]*var\(\s*--lantern-fg-muted(?=[\s,)])/
 
       for theme <- ["priv/static/lantern_ui_theme.css", "priv/static/lantern_ui_compat.css"] do
         assert File.read!(theme) =~ "--lantern-chrome: var(--background-chrome,"

@@ -1329,13 +1329,17 @@
    panel on that chrome. Hover inside the chrome steps to the border colour, so it
    stays visible on a chrome that already equals the sunken surface. */
 .lui-app[data-inset] { background: var(--lantern-chrome); }
+/* Capture inherited muted on the parent, where --lantern-fg-muted is not
+   redefined. Mixing it on the chrome elements themselves is a custom-property
+   cycle and the browser drops the token (muted text becomes full foreground). */
+.lui-app[data-inset] {
+  --lantern-nav-muted-inset: color-mix(in srgb, var(--lantern-fg) 10%, var(--lantern-fg-muted));
+}
 .lui-app[data-inset] .lui-appbar,
 .lui-app[data-inset] .lui-app-sidebar {
   background: var(--lantern-chrome); border-color: transparent;
   --lantern-surface-sunken: var(--lantern-border); --lantern-surface-hover: var(--lantern-border);
-  /* Muted-on-chrome is ~4.4:1 in light (just below AA). Mix toward fg; uses the
-     inherited muted so a host override still tracks. Dark already clears 4.5:1. */
-  --lantern-fg-muted: color-mix(in srgb, var(--lantern-fg) 10%, var(--lantern-fg-muted)); }
+  --lantern-fg-muted: var(--lantern-nav-muted-inset); }
 .lui-app[data-inset] .lui-app-sidebar-foot { border-top-color: transparent; }
 .lui-app[data-inset] .lui-app-main { background: var(--lantern-surface); }
 @media (min-width: 769px) {

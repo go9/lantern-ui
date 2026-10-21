@@ -78,6 +78,54 @@ const luminance = (rgb) => {
   const [r, g, b] = rgb.match(/[\d.]+/g).map(Number)
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
+const parseRgb = (css) => {
+  const s = String(css || "")
+  const m = s.match(/[\d.]+/g)
+  if (!m || m.length < 3) return null
+  const nums = m.slice(0, 3).map(Number)
+  // getComputedStyle may return color(srgb 0..1) for color-mix results.
+  if (/color\(\s*srgb/i.test(s)) return nums.map((n) => n * 255)
+  return nums
+}
+const srgbLin = (c) => {
+  c = c / 255
+  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+}
+const relLum = ([r, g, b]) => 0.2126 * srgbLin(r) + 0.7152 * srgbLin(g) + 0.0722 * srgbLin(b)
+const contrastRatio = (a, b) => {
+  const [hi, lo] = [relLum(a), relLum(b)].sort((x, y) => y - x)
+  return (hi + 0.05) / (lo + 0.05)
+}
+// Inset muted nav must be a real muted colour (not the invalid cyclic-token
+// fallback to full foreground) and meet WCAG AA against chrome.
+const insetMutedContrast = async (label) => {
+  const info = await p.$eval("#qa-project-nav-sidebar", (el) => {
+    const group = el.querySelector(".lui-nav-group-label")
+    const active = el.querySelector(".lui-nav-item-active")
+    const s = getComputedStyle(el)
+    return {
+      muted: group ? getComputedStyle(group).color : "",
+      fg: active ? getComputedStyle(active).color : "",
+      bg: s.backgroundColor,
+      token: s.getPropertyValue("--lantern-fg-muted").trim(),
+    }
+  })
+  const muted = parseRgb(info.muted)
+  const fg = parseRgb(info.fg)
+  const bg = parseRgb(info.bg)
+  const ratio = muted && bg ? contrastRatio(muted, bg) : 0
+  check(`${label}: inset muted token is set`, info.token.length > 0, JSON.stringify(info))
+  check(
+    `${label}: inset muted text is not full foreground`,
+    info.muted !== info.fg && JSON.stringify(muted) !== JSON.stringify(fg),
+    `${info.muted} vs ${info.fg}`,
+  )
+  check(
+    `${label}: inset muted text meets AA (>=4.5:1)`,
+    ratio >= 4.5,
+    `${ratio.toFixed(2)}:1 ${info.muted} on ${info.bg}`,
+  )
+}
 // axe (WCAG 2 A/AA): no serious or critical violation in the current state.
 const axe = async (label) => {
   if (!(await p.evaluate(() => !!window.axe))) await p.addScriptTag({ path: AXE })
@@ -305,17 +353,26 @@ for (const width of [375, 768]) {
 
 check("no page/console errors", errors.length === 0, errors.slice(0, 3).join(" | "))
 
-// Inset frame: muted nav on --lantern-chrome must also meet AA.
+// Inset frame: muted nav on --lantern-chrome must also meet AA, and must not
+// collapse to full foreground (cyclic --lantern-fg-muted is invalid CSS).
 await p.setViewport({ width: 1280, height: 800 })
 await load("?inset=1", { clear: true })
 check("inset: data-inset is set", await p.$eval("#qa-project-nav", (el) => el.hasAttribute("data-inset")))
-await axeThemes("desktop-inset")
+await shootThemes("desktop-inset")
+for (const theme of ["light", "dark"]) {
+  await setTheme(theme)
+  await insetMutedContrast(`desktop-inset ${theme}`)
+}
 await p.setViewport({ width: 375, height: 812, hasTouch: true, isMobile: true })
 await load("?inset=1", { clear: true })
 await p.click("[data-part=sidebar-toggle]")
 await sleep(300)
 check("inset 375: drawer opens", await p.$eval("#qa-project-nav", (el) => el.hasAttribute("data-nav-open")))
-await axeThemes("mobile-375-inset-open")
+await shootThemes("mobile-375-inset-open")
+for (const theme of ["light", "dark"]) {
+  await setTheme(theme)
+  await insetMutedContrast(`mobile-375-inset-open ${theme}`)
+}
 
 await browser.close()
 console.log(`\n${failed ? `${failed} FAILED` : "all passed"} — screenshots in ${SHOTS}`)
