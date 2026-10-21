@@ -29,7 +29,7 @@ defmodule LanternUI.RecipesTest do
     docs = File.read!("docs/recipes.md")
     skill = File.read!("skills/lantern-recipes/SKILL.md")
 
-    assert length(Recipes.names()) == 7
+    assert length(Recipes.names()) == 8
 
     for name <- Recipes.names() do
       body = heex_body(name)
@@ -51,6 +51,30 @@ defmodule LanternUI.RecipesTest do
     assert html =~ "lui-badge"
     assert html =~ "lui-progress-ring"
     assert html =~ "Sep 3"
+  end
+
+  test "flat table is sortable, filterable, has cards, and a real add row" do
+    html = render_recipe(:flat_table)
+    assert html =~ "lui-datatable"
+    assert html =~ "lui-datatable-fill"
+    assert html =~ "Entities"
+    assert html =~ ~s(aria-label="Kind")
+    assert html =~ "Secret (1)"
+    assert html =~ "order_by[]=name"
+    assert html =~ "API_KEY"
+    assert html =~ "lui-tr-placeholder"
+    assert html =~ ~s(data-placeholder)
+    assert html =~ ~s(phx-click="add_entity")
+    assert html =~ ~s(phx-window-keydown="add_entity")
+    assert html =~ ~s(phx-key="a")
+    doc = Floki.parse_fragment!(html)
+    [button] = Floki.find(doc, "tr[data-placeholder] button")
+    assert Floki.attribute(button, "disabled") == []
+    assert Floki.attribute(button, "aria-disabled") == []
+    refute html =~ "lui-group-band"
+    refute html =~ "data-lantern-group"
+    assert html =~ ~s(data-view="table")
+    assert html =~ "Grid"
   end
 
   test "ticket list is one flat data_table with a status column and filter" do

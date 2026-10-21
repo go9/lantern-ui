@@ -163,6 +163,7 @@ defmodule LanternUI.ShadcnGallery do
               <:cell>Active</:cell>
               <:cell>$2,040</:cell>
             </Table.table_row>
+            <Table.table_placeholder_row colspan={3} label="Add person" kbd="A" />
           </Table.table_body>
         </Table.table>
       </section>

@@ -43,6 +43,10 @@ defmodule LanternUI.TablePrimitivesTest do
   end
 
   describe "table family" do
+    test "table_placeholder_row is imported with the table family" do
+      assert {:table_placeholder_row, 1} in LanternUI.__component_imports__(Table)
+    end
+
     test "renders head cols, body rows, selected state" do
       html =
         render(fn assigns ->
@@ -68,6 +72,57 @@ defmodule LanternUI.TablePrimitivesTest do
       assert html =~ "lui-tr-selected"
       assert html =~ "lui-td-num"
       assert html =~ "Ada"
+    end
+
+    test "placeholder row is a real add control, not a disabled fake record" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Table.table>
+            <Table.table_head>
+              <:col>Name</:col>
+              <:col>Kind</:col>
+            </Table.table_head>
+            <Table.table_body>
+              <Table.table_placeholder_row colspan={2} label="Add entity" kbd="A" phx-click="add" />
+            </Table.table_body>
+          </Table.table>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      [row] = Floki.find(doc, "tr[data-placeholder]")
+      assert Floki.attribute(row, "class") |> hd() =~ "lui-tr-placeholder"
+      [cell] = Floki.find(row, "td")
+      assert Floki.attribute(cell, "colspan") == ["2"]
+      [button] = Floki.find(row, "button")
+      assert Floki.attribute(button, "phx-click") == ["add"]
+      assert Floki.attribute(button, "phx-window-keydown") == ["add"]
+      assert Floki.attribute(button, "phx-key") == ["a"]
+      assert Floki.attribute(button, "aria-keyshortcuts") == ["A"]
+      assert Floki.attribute(button, "aria-label") == ["Add entity"]
+      assert Floki.attribute(button, "disabled") == []
+      assert Floki.attribute(button, "aria-disabled") == []
+      assert Floki.text(button) =~ "Add entity"
+      assert html =~ "lui-kbd"
+      refute html =~ "lui-tr-selected"
+    end
+
+    test "table_head still renders a single header row" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Table.table_head>
+            <:col>Name</:col>
+            <:col>Kind</:col>
+          </Table.table_head>
+          """
+        end)
+
+      doc = Floki.parse_fragment!(html)
+      assert length(Floki.find(doc, "tr")) == 1
+      refute html =~ "rowspan"
+      refute html =~ "colspan"
     end
   end
 

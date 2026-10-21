@@ -1669,6 +1669,24 @@
 .lui-tr:hover { background: var(--lantern-surface-hover); }
 .lui-tr-selected, .lui-tr-selected:hover { background: var(--lantern-accent-soft); }
 .lui-td-num, .lui-th-num { text-align: right; font-variant-numeric: tabular-nums; }
+.lui-tr-placeholder,
+.lui-tr-placeholder:hover { background: transparent; }
+.lui-td-placeholder {
+  padding: 0;
+  color: var(--lantern-fg-muted);
+  border-bottom: none;
+  border-top: 1px dashed var(--lantern-border);
+}
+.lui-placeholder-action {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  color: var(--lantern-fg-muted);
+  font-weight: 500;
+  border-radius: 0;
+}
+.lui-placeholder-action:hover { color: var(--lantern-fg); background: var(--lantern-surface-hover); }
+.lui-placeholder-action .lui-icon { color: var(--lantern-fg-muted); }
 
 /* ── Tabs ── */
 .lui-tabs-list { display: inline-flex; align-items: center; }
@@ -2069,6 +2087,8 @@
 .lui-datatable .lui-table { border-collapse: separate; border-spacing: 0; }
 .lui-datatable .lui-tr:hover { background: transparent; }
 .lui-datatable .lui-tr:hover .lui-td { background: var(--lantern-surface-hover); }
+.lui-datatable .lui-tr-placeholder .lui-td,
+.lui-datatable .lui-tr-placeholder:hover .lui-td { background: transparent; }
 .lui-datatable .lui-tr-selected .lui-td,
 .lui-datatable .lui-tr-selected:hover .lui-td {
   background: color-mix(in oklab, var(--lantern-accent) 12%, var(--lantern-surface));

@@ -1335,10 +1335,17 @@
    panel on that chrome. Hover inside the chrome steps to the border colour, so it
    stays visible on a chrome that already equals the sunken surface. */
 .lui-app[data-inset] { background: var(--lantern-chrome); }
+/* Capture inherited muted on the parent, where --lantern-fg-muted is not
+   redefined. Mixing it on the chrome elements themselves is a custom-property
+   cycle and the browser drops the token (muted text becomes full foreground). */
+.lui-app[data-inset] {
+  --lantern-nav-muted-inset: color-mix(in srgb, var(--lantern-fg) 10%, var(--lantern-fg-muted));
+}
 .lui-app[data-inset] .lui-appbar,
 .lui-app[data-inset] .lui-app-sidebar {
   background: var(--lantern-chrome); border-color: transparent;
-  --lantern-surface-sunken: var(--lantern-border); --lantern-surface-hover: var(--lantern-border); }
+  --lantern-surface-sunken: var(--lantern-border); --lantern-surface-hover: var(--lantern-border);
+  --lantern-fg-muted: var(--lantern-nav-muted-inset); }
 .lui-app[data-inset] .lui-app-sidebar-foot { border-top-color: transparent; }
 .lui-app[data-inset] .lui-app-main { background: var(--lantern-surface); }
 @media (min-width: 769px) {
@@ -1412,16 +1419,22 @@
 /* Nav */
 .lui-nav-group { margin-bottom: 1rem; }
 .lui-nav-group-label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.05em; color: var(--lantern-fg-subtle); padding: 0 0.5rem; margin-bottom: 0.25rem;
+  letter-spacing: 0.05em; color: var(--lantern-fg-muted); padding: 0 0.5rem; margin-bottom: 0.25rem;
   white-space: nowrap; }
 .lui-nav-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.5rem;
   border-radius: var(--lantern-radius-sm); font-size: 0.8125rem; font-weight: 500; line-height: 1.3;
   color: var(--lantern-fg-muted); text-decoration: none; white-space: nowrap; cursor: pointer;
-  background: none; border: none; width: 100%; text-align: left; box-sizing: border-box; }
+  background: none; border: none; width: 100%; text-align: left; box-sizing: border-box;
+  position: relative; }
 .lui-nav-item:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
-.lui-nav-item-active { color: var(--lantern-accent); font-weight: 600;
+.lui-nav-item-active { color: var(--lantern-fg); font-weight: 600;
   background: var(--lantern-accent-soft); }
-.lui-nav-item-active:hover { color: var(--lantern-accent); background: var(--lantern-accent-soft); }
+.lui-nav-item-active:hover { color: var(--lantern-fg); background: var(--lantern-accent-soft); }
+/* Accent as a marker only: brand orange on the 12% tint fails AA (~3.3:1). */
+.lui-nav-item-active::before {
+  content: ""; position: absolute; left: 0;
+  top: 0.15rem; bottom: 0.15rem; width: 2px; border-radius: 1px;
+  background: var(--lantern-accent); }
 .lui-nav-item-icon { font-size: 1.05rem; flex-shrink: 0; }
 .lui-sidebar-tooltip {
   position: fixed; z-index: var(--lantern-z-tooltip, 80); transform: translateY(-50%);
@@ -1456,9 +1469,42 @@
   color: var(--lantern-fg-subtle);
   transition: transform var(--lantern-duration) var(--lantern-ease); }
 .lui-nav-item[data-expanded] .lui-nav-sub-chevron { transform: rotate(90deg); }
-.lui-nav-sub-panel { display: grid; grid-template-rows: 0fr;
+/* A closed panel is hidden, not just zero-height, so its links leave the tab
+   order and the accessibility tree; visibility flips after the slide. */
+.lui-nav-sub-panel { display: grid; grid-template-rows: 0fr; visibility: hidden;
+  transition: grid-template-rows var(--lantern-duration) var(--lantern-ease),
+    visibility 0s linear var(--lantern-duration); }
+.lui-nav-item[data-expanded] + .lui-nav-sub-panel,
+.lui-nav-row:has(> [data-part="nav-disclosure"][data-expanded]) + .lui-nav-sub-panel {
+  grid-template-rows: 1fr; visibility: visible;
   transition: grid-template-rows var(--lantern-duration) var(--lantern-ease); }
-.lui-nav-item[data-expanded] + .lui-nav-sub-panel { grid-template-rows: 1fr; }
+
+/* Split row: a link, a chevron button for its subnav, and trailing actions
+   (pin) as siblings, never nested. */
+.lui-nav-row { display: flex; align-items: center; gap: 0.125rem; }
+.lui-nav-row > .lui-nav-item { flex: 1; min-width: 0; }
+.lui-nav-disclosure, .lui-nav-action { flex: none; display: inline-flex; align-items: center;
+  justify-content: center; width: 1.75rem; height: 1.75rem; padding: 0; border: none;
+  border-radius: var(--lantern-radius-sm); background: none; color: var(--lantern-fg-subtle);
+  cursor: pointer; }
+.lui-nav-disclosure:hover, .lui-nav-action:hover { color: var(--lantern-fg);
+  background: var(--lantern-surface-sunken); }
+.lui-nav-disclosure:focus-visible, .lui-nav-action:focus-visible { outline: none;
+  box-shadow: 0 0 0 3px var(--lantern-ring-soft); color: var(--lantern-fg); }
+.lui-nav-disclosure .lui-nav-sub-chevron { margin-left: 0; }
+.lui-nav-disclosure[data-expanded] .lui-nav-sub-chevron { transform: rotate(90deg); }
+.lui-nav-action[aria-pressed="true"] { color: var(--lantern-accent); }
+.lui-nav-action:disabled { cursor: default; opacity: 0.5; }
+/* Actions appear on hover or focus. Touch has no hover, so they always show
+   there, at a finger-sized target. */
+.lui-nav-action:not(:focus-visible) { opacity: 0; }
+.lui-nav-row:hover .lui-nav-action, .lui-nav-row:focus-within .lui-nav-action { opacity: 1; }
+@media (hover: none) {
+  .lui-nav-action:not(:focus-visible) { opacity: 1; }
+}
+@media (pointer: coarse) {
+  .lui-nav-disclosure, .lui-nav-action { width: 2.5rem; height: 2.5rem; }
+}
 .lui-nav-sub-inner { overflow: hidden; margin-left: 0.85rem; padding-left: 0.5rem;
   border-left: 1px solid var(--lantern-border); }
 
@@ -1489,8 +1535,12 @@
   .lui-app[data-collapsed] .lui-brand-name,
   .lui-app[data-collapsed] .lui-nav-sub-chevron,
   .lui-app[data-collapsed] .lui-collapse-label { display: none; }
-  /* On the rail, don't expand the subnav panel. */
-  .lui-app[data-collapsed] .lui-nav-sub-panel { grid-template-rows: 0fr; }
+  /* On the rail, don't expand the subnav panel, and drop the row's chevron
+     and actions: the rail shows one icon per row. */
+  .lui-app[data-collapsed] .lui-nav-sub .lui-nav-sub-panel { grid-template-rows: 0fr;
+    visibility: hidden; }
+  .lui-app[data-collapsed] .lui-nav-disclosure,
+  .lui-app[data-collapsed] .lui-nav-action { display: none; }
   .lui-app[data-collapsed] .lui-nav-item { justify-content: center; padding-inline: 0;
     position: relative; }
   /* On the rail a count has nowhere to sit and nothing to sit beside, so it
@@ -1504,6 +1554,14 @@
   .lui-app[data-collapsed] .lui-collapse-icon { transform: rotate(180deg); }
   .lui-app[data-collapsed] .lui-nav-group { margin-bottom: 0.5rem; }
 }
+
+/* Close button of the mobile drawer; hidden on desktop. */
+.lui-app-sidebar-close { display: none; position: absolute; top: 0.5rem; right: 0.5rem; z-index: 1;
+  align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; padding: 0;
+  border: none; border-radius: var(--lantern-radius-sm); background: none;
+  color: var(--lantern-fg-muted); cursor: pointer; }
+.lui-app-sidebar-close:hover { color: var(--lantern-fg); background: var(--lantern-surface-sunken); }
+.lui-app-sidebar-close:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--lantern-ring-soft); }
 
 /* Scrim: only ever painted behind the open mobile drawer. */
 .lui-app-scrim { display: none; position: fixed; inset: var(--lui-appbar-h) 0 0 0; z-index: 19;
@@ -1529,6 +1587,12 @@
     padding-inline: var(--lui-page-gutter);
   }
   .lui-app-sidebar-foot { display: none; }
+  /* The drawer is a modal sheet: its own close button, and no page scroll
+     behind it. The lock is pure CSS, so no script can leak or stomp it. */
+  .lui-app-sidebar-close { display: inline-flex; }
+  .lui-app-sidebar:has(> .lui-app-sidebar-close) > .lui-app-sidebar-header {
+    padding-right: 3rem; }
+  html:has(.lui-app[data-nav-open]), html:has(.lui-app[data-nav-open]) body { overflow: hidden; }
 }
 
 @media (max-width: 768px) and (prefers-reduced-motion: reduce) {
@@ -1611,6 +1675,24 @@
 .lui-tr:hover { background: var(--lantern-surface-hover); }
 .lui-tr-selected, .lui-tr-selected:hover { background: var(--lantern-accent-soft); }
 .lui-td-num, .lui-th-num { text-align: right; font-variant-numeric: tabular-nums; }
+.lui-tr-placeholder,
+.lui-tr-placeholder:hover { background: transparent; }
+.lui-td-placeholder {
+  padding: 0;
+  color: var(--lantern-fg-muted);
+  border-bottom: none;
+  border-top: 1px dashed var(--lantern-border);
+}
+.lui-placeholder-action {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  color: var(--lantern-fg-muted);
+  font-weight: 500;
+  border-radius: 0;
+}
+.lui-placeholder-action:hover { color: var(--lantern-fg); background: var(--lantern-surface-hover); }
+.lui-placeholder-action .lui-icon { color: var(--lantern-fg-muted); }
 
 /* ── Tabs ── */
 .lui-tabs-list { display: inline-flex; align-items: center; }
@@ -2011,6 +2093,8 @@
 .lui-datatable .lui-table { border-collapse: separate; border-spacing: 0; }
 .lui-datatable .lui-tr:hover { background: transparent; }
 .lui-datatable .lui-tr:hover .lui-td { background: var(--lantern-surface-hover); }
+.lui-datatable .lui-tr-placeholder .lui-td,
+.lui-datatable .lui-tr-placeholder:hover .lui-td { background: transparent; }
 .lui-datatable .lui-tr-selected .lui-td,
 .lui-datatable .lui-tr-selected:hover .lui-td {
   background: color-mix(in oklab, var(--lantern-accent) 12%, var(--lantern-surface));
@@ -5716,6 +5800,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   --lantern-surface-raised: var(--surface, #ffffff);
   --lantern-surface-sunken: var(--background-accent, #f4f4f5);
   --lantern-surface-hover: var(--background-accent, #f4f4f5);
+  --lantern-chrome: var(--background-chrome, var(--background-accent, #f4f4f5));
 
   --lantern-border: var(--border-base, #e4e4e7);
   --lantern-border-strong: var(--border-base, #d4d4d8);
@@ -5766,6 +5851,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   --lantern-surface-raised: var(--surface, #0c0c0e);
   --lantern-surface-sunken: var(--background-accent, #18181b);
   --lantern-surface-hover: var(--background-accent, #26262a);
+  --lantern-chrome: var(--background-chrome, var(--background-accent, #18181b));
 
   --lantern-border: var(--border-base, #26262a);
   --lantern-border-strong: var(--border-base, #3f3f46);
@@ -5810,6 +5896,7 @@ a.lui-waterfall-lane-inner:focus-visible {
     --lantern-surface-raised: var(--surface, #0c0c0e);
     --lantern-surface-sunken: var(--background-accent, #18181b);
     --lantern-surface-hover: var(--background-accent, #26262a);
+    --lantern-chrome: var(--background-chrome, var(--background-accent, #18181b));
 
     --lantern-border: var(--border-base, #26262a);
     --lantern-border-strong: var(--border-base, #3f3f46);
@@ -6371,7 +6458,7 @@ a.lui-waterfall-lane-inner:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-60228" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-6146" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6388,7 +6475,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-60260" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-6178" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6405,7 +6492,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-60292" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-6210" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6422,7 +6509,7 @@ a.lui-waterfall-lane-inner:focus-visible {
 
   
 </div>
-      <div id="lui-alert-60324" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-6242" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6494,6 +6581,25 @@ a.lui-waterfall-lane-inner:focus-visible {
   </td>
   
           
+</tr>
+        <tr class="lui-tr lui-tr-placeholder" data-placeholder>
+  <td class="lui-td lui-td-placeholder" colspan="3">
+    
+
+<button class="lui-btn lui-placeholder-action" data-variant="ghost" data-color="primary" data-size="sm" aria-label="Add person" aria-keyshortcuts="A" data-part="button">
+  
+      
+        <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M12 4.5v15m7.5-7.5h-15"></path>
+</svg>
+        <span>Add person</span>
+        <kbd class="lui-kbd" data-size="xs" data-variant="ghost" aria-hidden="true">
+  A
+</kbd>
+      
+    
+</button>
+  </td>
 </tr>
       
 </tbody>

@@ -105,6 +105,46 @@ Whole pages that look finished — copy one block from the recipe index at the t
 </.data_table>
 ```
 
+## Flat table with placeholder row
+
+**When to use:** A dense record table: URL sort and filters, a status/kind column on every row, counted filter chips, an optional cards slot for the narrow layout, and a subdued full-width add/intent row. The add row is a real button (Tab / Enter / Space, optional `kbd`); do not fake a disabled record. Pass `fill` when the parent has a bounded height so rows scroll inside the table; without it the table grows with the document and headers stick only in the wrap's horizontal scrollport. No grouped bands. Row navigate opens the record; extra per-row controls go in `:row_action`, not a second click on the row. Multi-row matrix heads are not this recipe.
+
+```heex
+<.data_table
+  id="entities"
+  rows={@entities}
+  meta={@meta}
+  path="/entities"
+  title="Entities"
+  fill
+  row_navigate={& &1.href}
+  search_field={:name}
+  show_checkboxes={false}
+>
+  <:filter
+    field={:kind}
+    label="Kind"
+    options={[{"Secret (1)", "secret"}, {"Config (1)", "config"}]}
+    prompt="All kinds"
+  />
+  <:col :let={entity} label="Name" field={:name} sortable>{entity.name}</:col>
+  <:col :let={entity} label="Kind">{entity.kind}</:col>
+  <:col :let={entity} label="Status">
+    <.status_glyph status={entity.status} />
+    <span>{entity.status |> Atom.to_string() |> String.replace("_", " ")}</span>
+  </:col>
+  <:card :let={entity}>
+    <.list_row identifier={entity.name} title={entity.name} navigate={entity.href}>
+      <:leading><.status_glyph status={entity.status} /></:leading>
+      <:meta>
+        <.badge size="sm">{entity.kind}</.badge>
+      </:meta>
+    </.list_row>
+  </:card>
+  <:placeholder label="Add entity" kbd="A" event="add_entity" />
+</.data_table>
+```
+
 ## Record page with inspector rail
 
 **When to use:** A record page: a `page_shell` names the record and carries its actions, the body card's header holds the panel toggle, the card body holds the long content (LiveCode in flicker; the description card is the host slot), and a collapsible side panel shows property rows.

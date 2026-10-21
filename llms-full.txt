@@ -656,6 +656,14 @@ Slots:
 - `:header_action` — Actions rendered in the title row (right side).
 - `:list_item` — per-row simple list rendering; enables the list view
 - `:overview` — Arbitrary collapsible overview content above the table.
+- `:placeholder` — Full-width add/intent row after the records.
+  - `label` — Accessible name and visible add/intent copy.
+  - `kbd` — Optional keycap hint; binds window keydown with event.
+  - `icon` — Leading icon name; defaults to plus.
+  - `navigate` — LiveView navigate target for the control.
+  - `patch` — LiveView patch target for the control.
+  - `href` — External/full-page href for the control.
+  - `event` — phx-click event name fired to target.
 - `:row_action` — Per-row trailing actions cell; receives the row via :let.
 - `:stat` — Overview metric card above the table.
   - `label` — Stat caption under or beside the value.
@@ -2210,6 +2218,22 @@ Slots:
   - `class` — Extra classes on this header cell.
 - `:inner_block` — Optional raw thead row content after :col cells.
 
+#### `table_placeholder_row/1`
+
+Presentational table family — the styled substrate `data_table` composes.
+
+- `class` (:any) — Extra classes merged onto the row.
+- `colspan` (:integer, default 1) — Number of columns this intent row spans (match the header).
+- `href` (:any) — External/full-page href; the control renders as a link.
+- `icon` (:string, default "plus") — Leading icon name; pass nil to hide.
+- `kbd` (:string) — Optional keycap hint; binds window keydown with phx-click.
+- `label` (:string, required) — Accessible name and visible add/intent copy.
+- `navigate` (:string) — LiveView navigate target; the control renders as a link.
+- `patch` (:string) — LiveView patch target; the control renders as a link.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through to the control.
+Slots:
+- `:inner_block` — Optional control contents; defaults to icon, label, and keycap.
+
 #### `table_row/1`
 
 Presentational table family — the styled substrate `data_table` composes.
@@ -2556,6 +2580,44 @@ From `docs/recipes.md` (Flat ticket list with toolbar):
       <:trailing>{ticket.date}</:trailing>
     </.list_row>
   </:list_item>
+</.data_table>
+```
+
+From `docs/recipes.md` (Flat table with placeholder row):
+
+```heex
+<.data_table
+  id="entities"
+  rows={@entities}
+  meta={@meta}
+  path="/entities"
+  title="Entities"
+  fill
+  row_navigate={& &1.href}
+  search_field={:name}
+  show_checkboxes={false}
+>
+  <:filter
+    field={:kind}
+    label="Kind"
+    options={[{"Secret (1)", "secret"}, {"Config (1)", "config"}]}
+    prompt="All kinds"
+  />
+  <:col :let={entity} label="Name" field={:name} sortable>{entity.name}</:col>
+  <:col :let={entity} label="Kind">{entity.kind}</:col>
+  <:col :let={entity} label="Status">
+    <.status_glyph status={entity.status} />
+    <span>{entity.status |> Atom.to_string() |> String.replace("_", " ")}</span>
+  </:col>
+  <:card :let={entity}>
+    <.list_row identifier={entity.name} title={entity.name} navigate={entity.href}>
+      <:leading><.status_glyph status={entity.status} /></:leading>
+      <:meta>
+        <.badge size="sm">{entity.kind}</.badge>
+      </:meta>
+    </.list_row>
+  </:card>
+  <:placeholder label="Add entity" kbd="A" event="add_entity" />
 </.data_table>
 ```
 
