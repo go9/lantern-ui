@@ -311,6 +311,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `split_pane/1` — Render a horizontal split with a keyboard and pointer resize separator.
 
+### LanternUI.Components.StageStrip
+
+- `stage_strip/1` — Compact, ordered stage pips for a workflow summary.
+
 ### LanternUI.Components.Stat
 
 - `stat_card/1` — Renders one compact summary metric.
@@ -1399,6 +1403,19 @@ From `docs/recipes.md` (Resizable list/detail or main/cockpit):
   <:primary>{render_slot(@reports)}</:primary>
   <:secondary>{render_slot(@detail)}</:secondary>
 </.split_pane>
+```
+
+From `docs/recipes.md` (Compact stage summary):
+
+```heex
+<.stage_strip stages={[
+  %{label: "Triaged", state: :done},
+  %{label: "Drafted", state: :skipped},
+  %{label: "Decided", state: :waiting},
+  %{label: "In work", state: :pending},
+  %{label: "Shipped", state: :pending},
+  %{label: "Told", state: :pending}
+]} />
 ```
 
 From `README.md` (Usage):
