@@ -1220,3 +1220,18 @@ Per-row menus go in `:row_action` as `row_menu/1` (named "Row actions", 40px
 target). Mark low-value columns `hide_below="sm" | "md" | "lg"` so they drop
 when the table is narrower than that; anything still too wide scrolls with a
 faded edge.
+
+## Provenance beside an existing editor
+
+Use `provenance_badge` in the environment entity Source column or profile
+assignment row, with `source` naming the actual parent. Render a caller-owned
+Revert button only in the override's `:revert` slot; keep editing in the existing
+field. For Suggestions' Triaged evidence use the server's `current`, `historical`
+or `unknown` state, preserving historical hits. Missing state stays Unknown.
+See [the API and runnable demo](provenance-badge.md).
+
+```heex
+<.provenance_badge state="inherited" source="Production" />
+<.provenance_badge state="historical" />
+<.provenance_badge />
+```

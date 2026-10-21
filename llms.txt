@@ -253,6 +253,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `progress_ring/1` — Deprecated alias of `LanternUI.Components.Progress.progress/1` with `shape="ring"`.
 
+### LanternUI.Components.ProvenanceBadge
+
+- `provenance_badge/1` — Provenance labels for inherited configuration and temporal retrieval evidence.
+
 ### LanternUI.Components.Radio
 
 - `radio/1` — Radio group for exclusive single selection.
@@ -1384,6 +1388,14 @@ From `docs/recipes.md` (Environment tree):
     </span>
   </span>
 </:col>
+```
+
+From `docs/recipes.md` (Provenance beside an existing editor):
+
+```heex
+<.provenance_badge state="inherited" source="Production" />
+<.provenance_badge state="historical" />
+<.provenance_badge />
 ```
 
 From `README.md` (Usage):
