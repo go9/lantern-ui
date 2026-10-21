@@ -364,6 +364,11 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `tooltip/1` — Tooltip - mirrors Fluxon's `tooltip/1` API.
 
+### LanternUI.Components.Tree
+
+- `tree/1` — Accessible nested tree for environments and source choosers.
+- `tree_item/1` — One node in a tree.
+
 ### LanternUI.Components.Waterfall
 
 - `waterfall/1` — Waterfall: horizontal spans laid out on ONE shared time axis, with a ruler.
@@ -1324,7 +1329,26 @@ From `docs/recipes.md` (Block 8: confirm-destructive dialog plus empty/loading/e
 </.page_shell>
 ```
 
-From `docs/recipes.md` (Block 8: confirm-destructive dialog plus empty/loading/error states):
+From `docs/recipes.md` (Environment tree):
+
+```heex
+<.tree
+  id="envs"
+  label="Environments"
+  current_id={@current_id}
+  expanded_ids={@expanded_ids}
+  on_select="tree_select"
+  on_toggle="tree_toggle"
+>
+  <.tree_item id="prod" label="production">
+    <.tree_item id="prod-api" label="api" />
+    <.tree_item id="prod-web" label="web" />
+  </.tree_item>
+  <.tree_item id="staging" label="staging" />
+</.tree>
+```
+
+From `docs/recipes.md` (Environment tree):
 
 ```heex
 <:col :let={row} label="Item">

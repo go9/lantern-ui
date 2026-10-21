@@ -103,7 +103,8 @@ defmodule LanternUI do
     message: LanternUI.Components.Message,
     message_scroller: LanternUI.Components.MessageScroller,
     message_scroller_item: LanternUI.Components.MessageScroller,
-    kbd: LanternUI.Components.Kbd
+    kbd: LanternUI.Components.Kbd,
+    tree: LanternUI.Components.Tree
   }
 
   @doc false

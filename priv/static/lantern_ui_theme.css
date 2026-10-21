@@ -99,6 +99,10 @@
   --lantern-space-md: 0.75rem;
   --lantern-space-lg: 1rem;
 
+  /* ── Tree parentage / connectors ── */
+  --lantern-tree-indent: var(--lantern-space-lg);
+  --lantern-tree-connector: var(--lantern-border);
+
   /* ── Chat kit ── */
   --lantern-chat-avatar-xs: 1.5rem;
   --lantern-chat-message-max-width: 85%;

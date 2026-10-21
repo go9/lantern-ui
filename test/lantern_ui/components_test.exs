@@ -589,6 +589,7 @@ defmodule LanternUI.ComponentsTest do
                :timeline,
                :toast,
                :tooltip,
+               :tree,
                :waterfall
              ]
     end

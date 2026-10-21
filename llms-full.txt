@@ -2417,6 +2417,41 @@ Slots:
 - `:content` — Rich tip body; overrides `value` when present.
 - `:inner_block` (required) — Trigger element that shows the tip.
 
+### LanternUI.Components.Tree
+
+Accessible tree — a WAI-ARIA APG treeview for nested navigation (environments, source choosers, file trees).
+
+#### `tree/1`
+
+Accessible nested tree for environments and source choosers.
+
+- `class` (:any) — Extra classes merged onto the tree root.
+- `current_id` (:string) — Id of the node the app is showing (`aria-current`).
+- `expanded_ids` (:list, default []) — Ids of expanded parent nodes.
+- `id` (:string, required) — Stable tree id.
+- `label` (:string, required) — Accessible name for the tree (`aria-label`).
+- `on_select` (:string) — Server event pushed on activate (`%{id}`).
+- `on_toggle` (:string) — Server event pushed on expand/collapse (`%{id, expanded}`).
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:empty` — Empty state.
+- `:inner_block` — One or more `tree_item/1` children.
+
+#### `tree_item/1`
+
+One node in a tree.
+
+- `class` (:any) — Extra classes merged onto the treeitem.
+- `disabled` (:boolean, default false) — Skip this node in keyboard navigation and activation.
+- `id` (:string, required) — Stable node id.
+- `label` (:string, required) — Accessible name; also the typeahead target.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `state` (:string, values: , error) — Optional visual state.
+Slots:
+- `:icon` — Leading glyph before the label.
+- `:inner_block` — Child `tree_item/1` nodes.
+- `:trailing` — Trailing status, count, or error text.
+
 ### LanternUI.Components.Waterfall
 
 Waterfall: horizontal spans laid out on ONE shared time axis, with a ruler.
@@ -3408,7 +3443,26 @@ From `docs/recipes.md` (Block 8: confirm-destructive dialog plus empty/loading/e
 </.page_shell>
 ```
 
-From `docs/recipes.md` (Block 8: confirm-destructive dialog plus empty/loading/error states):
+From `docs/recipes.md` (Environment tree):
+
+```heex
+<.tree
+  id="envs"
+  label="Environments"
+  current_id={@current_id}
+  expanded_ids={@expanded_ids}
+  on_select="tree_select"
+  on_toggle="tree_toggle"
+>
+  <.tree_item id="prod" label="production">
+    <.tree_item id="prod-api" label="api" />
+    <.tree_item id="prod-web" label="web" />
+  </.tree_item>
+  <.tree_item id="staging" label="staging" />
+</.tree>
+```
+
+From `docs/recipes.md` (Environment tree):
 
 ```heex
 <:col :let={row} label="Item">

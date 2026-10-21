@@ -5609,3 +5609,108 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-sortable [data-part="item"][data-dragging] { opacity: 0.45; }
 .lui-sortable [data-part="item"][data-drop="before"] { box-shadow: inset 0 2px 0 var(--lantern-accent); }
 .lui-sortable [data-part="item"][data-drop="after"] { box-shadow: inset 0 -2px 0 var(--lantern-accent); }
+
+/* ── Tree (LanternUI.Components.Tree) ───────────────────────────────────── */
+.lui-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  color: var(--lantern-fg);
+  font-family: var(--lantern-font);
+  font-size: var(--lantern-text);
+  line-height: 1.35;
+}
+.lui-tree-item {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lui-tree-row {
+  display: flex;
+  align-items: center;
+  gap: var(--lantern-space-xs, var(--lui-gap-4));
+  min-height: var(--lui-control-h-sm);
+  padding-block: var(--lantern-space-xs, var(--lui-gap-4));
+  padding-inline: var(--lantern-space-sm, var(--lui-gap-8));
+  border-radius: var(--lantern-radius-sm);
+  cursor: default;
+}
+.lui-tree-item[aria-disabled="true"] > .lui-tree-row {
+  color: var(--lantern-fg-muted);
+  cursor: not-allowed;
+}
+.lui-tree-row:hover {
+  background: var(--lantern-surface-hover);
+}
+.lui-tree-item:focus {
+  outline: none;
+}
+.lui-tree-item:focus-visible > .lui-tree-row {
+  outline: var(--lui-focus-ring-width) solid var(--lui-focus-ring-color);
+  outline-offset: var(--lui-focus-ring-offset);
+}
+.lui-tree-item[aria-current="true"] > .lui-tree-row {
+  background: var(--lantern-accent-soft);
+}
+.lui-tree-item[data-state="error"] > .lui-tree-row {
+  color: var(--lantern-danger);
+}
+.lui-tree-expander,
+.lui-tree-expander-spacer {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--lui-control-icon-sm);
+  height: var(--lui-control-icon-sm);
+  color: var(--lantern-fg-muted);
+}
+.lui-tree-expander { cursor: pointer; }
+.lui-tree-expander-icon {
+  width: var(--lui-control-icon-sm);
+  height: var(--lui-control-icon-sm);
+  transform: rotate(0deg);
+  transition: transform var(--lantern-duration) var(--lantern-ease);
+}
+.lui-tree-item[aria-expanded="true"] > .lui-tree-row .lui-tree-expander-icon {
+  transform: rotate(90deg);
+}
+.lui-tree-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--lantern-fg-muted);
+}
+.lui-tree-item[aria-current="true"] > .lui-tree-row .lui-tree-icon {
+  color: var(--lantern-accent);
+}
+.lui-tree-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lui-tree-trailing {
+  flex: none;
+  color: var(--lantern-fg-muted);
+  font-size: var(--lantern-text-caption);
+}
+.lui-tree-item[data-state="error"] > .lui-tree-row .lui-tree-trailing {
+  color: var(--lantern-danger);
+}
+.lui-tree-group {
+  list-style: none;
+  margin: 0;
+  margin-inline-start: var(--lantern-space-sm, var(--lui-gap-8));
+  padding: 0;
+  padding-inline-start: var(--lantern-tree-indent, var(--lantern-space-lg, 1rem));
+  border-inline-start: 1px solid var(--lantern-tree-connector, var(--lantern-border));
+}
+.lui-tree-group[hidden] { display: none; }
+.lui-tree-empty {
+  list-style: none;
+  padding: var(--lantern-space-md, var(--lui-gap-12));
+}
+@media (prefers-reduced-motion: reduce) {
+  .lui-tree-expander-icon { transition: none; }
+}

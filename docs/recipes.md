@@ -1138,6 +1138,27 @@ the expandable data table remains available for assistive technology and print.
   </.stack>
 </.page_shell>
 ```
+## Environment tree
+
+**When to use:** Nested environments, sources, or column choosers. Controlled `current_id` is the node the app is showing; `expanded_ids` are the open parents. Keyboard focus can move independently until Enter/Space selects. No drag-and-drop, no multi-select, no grouped list bands.
+
+```heex
+<.tree
+  id="envs"
+  label="Environments"
+  current_id={@current_id}
+  expanded_ids={@expanded_ids}
+  on_select="tree_select"
+  on_toggle="tree_toggle"
+>
+  <.tree_item id="prod" label="production">
+    <.tree_item id="prod-api" label="api" />
+    <.tree_item id="prod-web" label="web" />
+  </.tree_item>
+  <.tree_item id="staging" label="staging" />
+</.tree>
+```
+
 # Row thumbnails
 
 Use this one cell for every item column so thumbnails, titles and subtitles line
