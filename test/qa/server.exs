@@ -18,6 +18,7 @@ Code.require_file("project_nav_live.ex", __DIR__)
 Code.require_file("conversation_live.ex", __DIR__)
 Code.require_file("trace_live.ex", __DIR__)
 Code.require_file("tree_live.ex", __DIR__)
+Code.require_file("index_primitives_live.ex", __DIR__)
 
 defmodule LanternUI.QA.Layouts do
   use Phoenix.Component
@@ -77,6 +78,7 @@ defmodule LanternUI.QA.Router do
     live("/conversation", LanternUI.QA.ConversationLive)
     live("/trace", LanternUI.QA.TraceLive)
     live("/tree", LanternUI.QA.TreeLive)
+    live("/index_primitives", LanternUI.QA.IndexPrimitivesLive)
   end
 end
 
