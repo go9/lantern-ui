@@ -356,11 +356,21 @@ defmodule LanternUI.DataTableChromeTest do
 
   defp count(h, n), do: length(String.split(h, n)) - 1
 
+  test "Filters trigger stays on the small control scale" do
+    css = File.read!("priv/static/lantern_ui.css")
+
+    assert css =~ ~r/\.lui-dt-chromerow > \.lui-dt-filters \.lui-btn \{/
+    assert css =~ ~r/--lui-control-h-sm/
+    assert css =~ ~r/--lui-control-icon-sm/
+  end
+
   test "filters use a compact field picker beside one View control" do
     html = render(&table/1, base())
 
     # settings popover wraps the filter controls
     assert html =~ ~s(id="t-filters")
+    assert html =~ "lui-dt-filters"
+    assert html =~ ~s(data-size="sm")
     assert html =~ "Filters"
     assert html =~ ~s(id="t-display")
     refute html =~ ~s(id="t-views")

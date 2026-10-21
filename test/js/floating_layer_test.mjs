@@ -7,7 +7,7 @@ import assert from "node:assert/strict"
 import { afterEach, test } from "node:test"
 
 import { hooks, mountHook } from "./helpers/dom.mjs"
-import { mountZag, sleep } from "./helpers/zag_mount.mjs"
+import { mountZag, sleep, waitFor } from "./helpers/zag_mount.mjs"
 
 const { FLOATING, floating, enterLayer, leaveLayer, markLayerPositioned, prepareLayerPositioning, syncLayer } = await import(
   "../../assets/js/layer.js"
@@ -199,6 +199,6 @@ test("Zag popover: positioner is fixed and joins the top layer only while open",
   assert.ok(log.some(([op]) => op === "show"), "opened into the top layer")
 
   ctx.el.querySelector("button").click()
-  await sleep()
+  await waitFor(() => log.at(-1)?.[0] === "hide")
   assert.equal(log.at(-1)[0], "hide", "closed out of the top layer")
 })

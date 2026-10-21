@@ -123,6 +123,7 @@
   --lantern-duration: 150ms;
   --lantern-chat-button-visibility-duration: 0s;
   --lantern-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --lantern-popover-nudge: 0.25rem;
 
   /* ── Layering ladder (low → high) ──
      Floating panels live in the browser top layer (see layer.js); these only

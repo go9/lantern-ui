@@ -595,6 +595,7 @@ defmodule LanternUI.Components.DataTable do
           :if={@filter != []}
           id={"#{@id}-filters"}
           class="lui-dt-filterpanel lui-dt-filterpanel-filters"
+          container_class="lui-dt-filters"
           placement="bottom-end"
         >
           <Button.button size="sm" variant="outline" type="button" aria-label={@filters_label}>

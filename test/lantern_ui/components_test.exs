@@ -485,6 +485,19 @@ defmodule LanternUI.ComponentsTest do
 
       assert html =~ ~s(id="lui-popover-)
     end
+
+    test "panel fades and scales from the trigger over the duration token" do
+      css = File.read!("priv/static/lantern_ui.css")
+
+      assert css =~ "lui-popover-in"
+      assert css =~ "lui-popover-out"
+
+      assert css =~
+               ~r/\.lui-popover-panel \{[^}]*animation: lui-popover-in var\(--lantern-duration\)/
+
+      assert css =~ ~r/\.lui-popover\[data-closing\] \.lui-popover-panel \{[^}]*lui-popover-out/
+      assert css =~ ~r/@media \(prefers-reduced-motion: reduce\) \{[^}]*\.lui-popover-panel/
+    end
   end
 
   describe "date_range_picker/1" do

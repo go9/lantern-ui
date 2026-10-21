@@ -64,7 +64,7 @@ test("client mode: clicking the trigger toggles the panel", async () => {
   el.querySelector('[data-part="trigger"] button').click()
   await sleep()
   assert.equal(component().api.open, false)
-  assert.equal(content(el).hidden, true)
+  await waitFor(() => content(el).hidden === true)
 })
 
 test("client mode: clicking inside the panel does not close it (surface, not menu)", async () => {  const { el, component } = mount(fixture())
@@ -115,7 +115,7 @@ test("client mode: outside pointerdown dismisses the panel", async () => {
   await waitFor(() => component().api.open === true)
 
   await dismissOutside(document, () => component().api.open)
-  assert.equal(content(el).hidden, true)
+  await waitFor(() => content(el).hidden === true)
 })
 
 test("client mode: open change pushes a server event and dispatches a client event", async () => {
@@ -159,6 +159,22 @@ test("controlled mode: the server value is truth on mount and on patch", async (
   await sleep()
   assert.equal(component().api.open, false)
   assert.equal(content(el).hidden, true)
+})
+
+test("client close plays the fade+scale exit before hiding", async () => {
+  const { el, component } = mount(fixture())
+  await sleep()
+
+  el.querySelector('[data-part="trigger"] button').click()
+  await waitFor(() => component().api.open === true)
+
+  el.querySelector('[data-part="trigger"] button').click()
+  await waitFor(() => component().api.open === false)
+  assert.equal(el.getAttribute("data-closing"), "")
+  assert.equal(content(el).hidden, false)
+
+  await waitFor(() => content(el).hidden === true, { timeout: 2000 })
+  assert.equal(el.hasAttribute("data-closing"), false)
 })
 
 test("server and DOM set-open events drive the machine", async () => {
