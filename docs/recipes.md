@@ -1236,6 +1236,43 @@ See [the API and runnable demo](provenance-badge.md).
 <.provenance_badge />
 ```
 
+## Resizable list/detail or main/cockpit
+
+`split_pane` composes content; it does not fetch records or open a conversation.
+Use it for Suggestions operator list/detail and for the docked main/cockpit on
+project pages (including Work/Factory). The latter hosts `message_scroller`,
+while Project Ask keeps its own Q/A page. Existing `side_panel` remains the
+collapsible, non-resizable inspector.
+
+```heex
+<.split_pane id="suggestions" label="Suggestions list width"
+  storage_key={"#{@user.id}:#{@project.id}:suggestions"}
+  mobile_pane={if @selected, do: "secondary", else: "primary"}>
+  <:primary>{render_slot(@reports)}</:primary>
+  <:secondary>{render_slot(@detail)}</:secondary>
+</.split_pane>
+```
+
+`size` (35), `min` (20), and `max` (80) are primary-column percentages. For a
+main/cockpit split, use e.g. 70/50/85 and put cockpit in `:secondary`. Persisted
+percentages adapt when the viewport changes; exact cockpit pixel limits and
+its drawer/full-screen/collapse policy belong to the consuming dock layout.
+`storage_key` opts into localStorage under `lui-split-pane:`; use trusted user
+and project ids and a different suffix per layout. Missing/malformed/blocked
+storage uses `size`. A new key on a LiveView patch resets to that scope's width.
+
+Below 48rem only `mobile_pane` (`primary` or `secondary`) is visible, including
+to assistive technology. Put selection/Back buttons in your content, update the
+attr server-side, and focus the detail heading or returning row with LiveView
+JS when navigation calls for it. The component adds no navigation controls.
+The separator supports Left/Right, Shift for larger steps, Home/End, RTL and
+pointer drag. It has an accessible `label`, controls the derived primary id,
+and announces the current percentage. Resizing is immediate with no animation.
+The hook owns width and `aria-valuenow`; the server owns mobile selection and
+bounds. `size` is an initial default, not a controlled resize value.
+
+Run the QA host and visit `/split_pane` for the interactive demo.
+
 ## Compact stage summary
 
 Use `stage_strip` beside a report link in Suggestions. Pass stages in journey

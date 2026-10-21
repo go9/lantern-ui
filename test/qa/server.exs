@@ -21,6 +21,7 @@ Code.require_file("tree_live.ex", __DIR__)
 Code.require_file("index_primitives_live.ex", __DIR__)
 Code.require_file("table_bands_live.ex", __DIR__)
 Code.require_file("provenance_live.ex", __DIR__)
+Code.require_file("split_pane_live.ex", __DIR__)
 Code.require_file("stage_strip_live.ex", __DIR__)
 
 defmodule LanternUI.QA.Layouts do
@@ -85,6 +86,7 @@ defmodule LanternUI.QA.Router do
     live("/index_primitives", LanternUI.QA.IndexPrimitivesLive)
     live("/table_bands", LanternUI.QA.TableBandsLive)
     live("/provenance", LanternUI.QA.ProvenanceLive)
+    live("/split_pane", LanternUI.QA.SplitPaneLive)
   end
 end
 
