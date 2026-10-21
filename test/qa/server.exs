@@ -25,6 +25,7 @@ Code.require_file("split_pane_live.ex", __DIR__)
 Code.require_file("stage_strip_live.ex", __DIR__)
 Code.require_file("funnel_live.ex", __DIR__)
 Code.require_file("cite_chip_live.ex", __DIR__)
+Code.require_file("host_badge_live.ex", __DIR__)
 
 defmodule LanternUI.QA.Layouts do
   use Phoenix.Component
@@ -73,6 +74,7 @@ defmodule LanternUI.QA.Router do
     pipe_through(:browser)
     live("/stage_strip", LanternUI.QA.StageStripLive)
     live("/cite_chip", LanternUI.QA.CiteChipLive)
+    live("/host_badge", LanternUI.QA.HostBadgeLive)
     live("/qa", LanternUI.QA.MatrixLive)
     live("/charts", LanternUI.QA.ChartsLive)
     live("/tiles", LanternUI.QA.TilesLive)

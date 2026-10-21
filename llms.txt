@@ -96,10 +96,6 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `checkbox/1` — Checkbox with label, description, and error states.
 
-### LanternUI.Components.CiteChip
-
-- `cite_chip/1` — Inline citation button for evidence in prose or attached context.
-
 ### LanternUI.Components.ColorInput
 
 - `color_input/1` — Native color picker paired with a hex readout.
@@ -156,9 +152,9 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `input/1` — Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
 - `label/1` — Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
 
-### LanternUI.Components.FunnelLine
+### LanternUI.Components.HostBadge
 
-- `funnel_line/1` — Renders a named line of counted, server-controlled filter buttons.
+- `host_badge/1` — Noninteractive host identity, built on `badge/1`.
 
 ### LanternUI.Components.Icon
 
@@ -1438,19 +1434,12 @@ From `docs/recipes.md` (Compact stage summary):
 ]} />
 ```
 
-From `docs/recipes.md` (Inline citations):
+From `docs/recipes.md` (Host identity in resource lists and creation):
 
 ```heex
-<.cite_chip number={1} label="Open citation: lib/search.ex, lines 12–18"
-  phx-click="preview" phx-value-source="search">
-  search.ex:12–18
-</.cite_chip>
-<.cite_chip label="Open citation: ticket 212" phx-click="preview" phx-value-source="212">
-  #212
-</.cite_chip>
-<.cite_chip label="Open citation: memory 167" phx-click="preview" phx-value-source="167">
-  memory
-</.cite_chip>
+<.host_badge host="Flicker" />
+<.host_badge host="Fly" coming_soon />
+<.host_badge host="Neon" coming_soon />
 ```
 
 From `README.md` (Usage):

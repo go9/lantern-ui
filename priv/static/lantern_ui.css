@@ -5953,3 +5953,5 @@ a.lui-waterfall-lane-inner:focus-visible {
   background: var(--lantern-surface-sunken);
 }
 .lui-cite-chip-number { color: var(--lantern-primary); }
+/* Host identity reuses badge sizing and surface; availability is also text. */
+.lui-host-badge[data-coming-soon="true"][data-variant="soft"] { color: var(--lantern-fg-muted); }

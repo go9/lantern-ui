@@ -462,22 +462,6 @@ Checkbox with label, description, and error states.
 - `unchecked_value` (:any, default "false") — Hidden input value submitted when unchecked.
 - `value` (:any) — Current value used to derive checked state.
 
-### LanternUI.Components.CiteChip
-
-Inline citation button for evidence in prose or attached context.
-
-#### `cite_chip/1`
-
-Inline citation button for evidence in prose or attached context.
-
-- `active` (:boolean, default false) — Whether this source is shown in the preview rail.
-- `class` (:any) — Extra classes merged onto the button.
-- `label` (:string, required) — Full accessible name, including the source location.
-- `number` (:integer) — Optional citation number within the answer.
-- `rest` (:global) — HTML/ARIA and phx-* attrs, including id and preview click events.
-Slots:
-- `:inner_block` (required) — Compact source label; no interactive descendants.
-
 ### LanternUI.Components.ColorInput
 
 Native color picker paired with a hex readout.
@@ -1029,27 +1013,18 @@ Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
 Slots:
 - `:inner_block` (required) — Primary label text.
 
-### LanternUI.Components.FunnelLine
+### LanternUI.Components.HostBadge
 
-A compact sequence of counted filters, with optional overflow stages.
+Noninteractive host identity, built on `badge/1`.
 
-#### `funnel_line/1`
+#### `host_badge/1`
 
-Renders a named line of counted, server-controlled filter buttons.
+Noninteractive host identity, built on `badge/1`.
 
-- `class` (:any) — Extra classes merged onto the line.
-- `id` (:string, required) — Stable root id; button ids derive from stage values.
-- `label` (:string, required) — Accessible name for the filter group.
-- `on_change` (:any, required) — Click event or JS command; sends params["value"].
-- `rest` (:global) — HTML attributes passed through to the group.
-- `target` (:any) — Optional LiveComponent target for the click event.
-- `value` (:string, required) — Selected stage value, owned by the server.
-Slots:
-- `:stage` (required) — One counted filter; primary stages precede overflow stages.
-  - `value` — Unique stable filter key.
-  - `label` — Visible stage name.
-  - `count` — Non-negative bucket count, formatted by the component.
-  - `overflow` — Hide an empty stage unless selected; default false.
+- `class` (:any) — Extra classes merged onto the badge.
+- `coming_soon` (:boolean, default false) — Unavailable host; adds Coming soon text.
+- `host` (:string, required) — Host display name.
+- `rest` (:global) — HTML attributes passed through to the noninteractive span.
 
 ### LanternUI.Components.Icon
 
@@ -3663,19 +3638,12 @@ From `docs/recipes.md` (Compact stage summary):
 ]} />
 ```
 
-From `docs/recipes.md` (Inline citations):
+From `docs/recipes.md` (Host identity in resource lists and creation):
 
 ```heex
-<.cite_chip number={1} label="Open citation: lib/search.ex, lines 12–18"
-  phx-click="preview" phx-value-source="search">
-  search.ex:12–18
-</.cite_chip>
-<.cite_chip label="Open citation: ticket 212" phx-click="preview" phx-value-source="212">
-  #212
-</.cite_chip>
-<.cite_chip label="Open citation: memory 167" phx-click="preview" phx-value-source="167">
-  memory
-</.cite_chip>
+<.host_badge host="Flicker" />
+<.host_badge host="Fly" coming_soon />
+<.host_badge host="Neon" coming_soon />
 ```
 
 From `README.md` (Usage):

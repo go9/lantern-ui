@@ -558,6 +558,7 @@ defmodule LanternUI.ComponentsTest do
                :empty_state,
                :form,
                :funnel_line,
+               :host_badge,
                :icon,
                :icon_button,
                :inspector,
