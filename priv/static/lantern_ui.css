@@ -1036,7 +1036,10 @@
   .lui-top-nav-item { height: 2.75rem; }
   .lui-top-search { justify-content: flex-end; }
   .lui-command-trigger { width: 2.75rem; height: 2.75rem; padding: 0; justify-content: center; }
-  .lui-command-trigger :is(.lui-command-trigger-label, .lui-command-trigger-kbd) { display: none; }
+  .lui-command-trigger-kbd { display: none; }
+  /* Icon-only, but the label stays the accessible name (visually hidden). */
+  .lui-command-trigger-label { position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap; }
   .lui-top-bar-inner, .lui-top-sub-inner, .lui-top-main { padding-left: 1rem; padding-right: 1rem; }
 }
 @media print {
