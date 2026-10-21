@@ -100,6 +100,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `cite_chip/1` — Inline citation button for evidence in prose or attached context.
 
+### LanternUI.Components.CockpitDock
+
+- `cockpit_dock/1` — Render a collapsible right dock that switches between a list and a thread.
+
 ### LanternUI.Components.ColorInput
 
 - `color_input/1` — Native color picker paired with a hex readout.
@@ -1474,6 +1478,21 @@ From `docs/recipes.md` (Reviewing a text change):
 ```heex
 <.diff_viewer id="contract-diff" old={@server} new={@draft} old_label="Server" new_label="Draft" />
 <.button phx-click="adopt">Adopt draft</.button>
+```
+
+From `docs/recipes.md` (Cockpit dock (right conversation panel)):
+
+```heex
+<.cockpit_dock id="cockpit" label="Cockpit" open={@cockpit_open} view={@cockpit_view}>
+  <:header><h2>Cockpit</h2></:header>
+  <:list>
+    <.list_row :for={c <- @conversations} title={c.title} phx-click="open" phx-value-id={c.id} />
+  </:list>
+  <:thread>
+    <.button phx-click="back">Back</.button>
+    <.message_scroller id="cockpit-messages">…</.message_scroller>
+  </:thread>
+</.cockpit_dock>
 ```
 
 From `README.md` (Usage):

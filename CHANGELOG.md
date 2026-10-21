@@ -8,6 +8,7 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 - `diff_viewer/1`: server-rendered line diff of two texts, unified or side by side, with collapsed unchanged runs, line numbers, sign + screen-reader words (not colour alone) and a focusable scroll region. No JS, no syntax highlighting; callers own actions and secret masking.
+- `cockpit_dock/1`: collapsible right conversation dock built on `side_panel/1` (header, list, one open thread; host-owned `open`/`view`, both views stay mounted). Static, no new hook.
 - `provenance_badge/1`: shared origin (own/inherited/override) and temporal evidence (current/historical/unknown) labels, composed from `badge/1`, with an optional caller-owned revert slot for overrides. Unknown never falls back to Current.
 - `host_badge/1`: noninteractive host identity with an optional, visibly labelled Coming soon state; reuses the small neutral badge.
 - `split_pane/1`: two resizable columns with pointer/keyboard resizing, opt-in scoped width persistence, and a server-controlled mobile list-or-detail view.

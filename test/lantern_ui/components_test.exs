@@ -547,6 +547,7 @@ defmodule LanternUI.ComponentsTest do
                :charts,
                :checkbox,
                :cite_chip,
+               :cockpit_dock,
                :color_input,
                :command,
                :data_table,

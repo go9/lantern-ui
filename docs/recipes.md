@@ -1368,3 +1368,25 @@ component shows exactly the text it is given, so for a secrets import diff key
 names only and never pass values. Changed lines are marked with `+` / `−` and
 screen-reader text, and the region is keyboard-scrollable. See the `/diff_viewer`
 QA demo (`test/qa/server.exs`).
+
+## Cockpit dock (right conversation panel)
+
+`cockpit_dock` is a `side_panel` with a header, a conversation list and one open
+thread; it fetches nothing. Collapse/restore is `side_panel_toggle` (stored
+choice); `open` and `view` (`list` | `thread`) stay host-owned. Both views stay
+mounted, so a composer draft survives a trip to the list. Put the Back button
+and focus handling in your content. Put it in `split_pane` `:secondary` for a
+resizable main/cockpit, or use it alone at the app shell edge.
+
+```heex
+<.cockpit_dock id="cockpit" label="Cockpit" open={@cockpit_open} view={@cockpit_view}>
+  <:header><h2>Cockpit</h2></:header>
+  <:list>
+    <.list_row :for={c <- @conversations} title={c.title} phx-click="open" phx-value-id={c.id} />
+  </:list>
+  <:thread>
+    <.button phx-click="back">Back</.button>
+    <.message_scroller id="cockpit-messages">…</.message_scroller>
+  </:thread>
+</.cockpit_dock>
+```
