@@ -1034,10 +1034,11 @@
 .lui-top-sub-inner { display: flex; align-items: center; gap: 0.5rem; min-height: 3rem; flex-wrap: wrap; padding-top: 0.5rem; padding-bottom: 0.5rem; }
 .lui-top-main { flex: 1; padding-top: var(--lantern-space-lg, 1.5rem); padding-bottom: 3rem; outline: none; }
 
-.lui-command-trigger { display: flex; align-items: center; gap: 0.5rem; width: 100%; max-width: 28rem;
+/* Hosts map fg-muted to a soft grey that is ~3:1 on the bar; this text must clear 4.5:1, so derive it from fg. */
+.lui-command-trigger { --lui-command-muted: color-mix(in srgb, var(--lantern-fg) 72%, var(--lantern-surface-raised, var(--lantern-surface))); display: flex; align-items: center; gap: 0.5rem; width: 100%; max-width: 28rem;
   height: 2.25rem; padding: 0 0.5rem 0 0.75rem; border: 1px solid var(--lantern-border);
   border-radius: var(--lantern-radius-md, 0.5rem); background: var(--lantern-surface-raised, var(--lantern-surface));
-  color: var(--lantern-fg-muted); font: inherit; font-size: 0.875rem; text-align: left; cursor: pointer;
+  color: var(--lui-command-muted); font: inherit; font-size: 0.875rem; text-align: left; cursor: pointer;
   box-shadow: var(--lantern-shadow, 0 1px 2px rgb(0 0 0 / 0.05));
   transition: border-color var(--lantern-duration, 150ms) var(--lantern-ease, ease); }
 .lui-command-trigger:hover { border-color: var(--lantern-border-strong, var(--lantern-border)); color: var(--lantern-fg); }
@@ -1045,7 +1046,7 @@
 .lui-command-trigger-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lui-command-trigger-kbd { flex-shrink: 0; padding: 0.125rem 0.375rem; border: 1px solid var(--lantern-border);
   border-radius: var(--lantern-radius-sm, 0.25rem); font: inherit; font-size: var(--lantern-text-meta, 0.6875rem);
-  line-height: 1.4; color: var(--lantern-fg-muted); background: var(--lantern-surface); }
+  line-height: 1.4; color: var(--lui-command-muted); background: var(--lantern-surface); }
 
 @media (max-width: 48rem) {
   .lui-top-nav-toggle { display: inline-flex; }

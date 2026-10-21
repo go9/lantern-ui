@@ -285,6 +285,26 @@ defmodule LanternUI.ZagWidgetsTest do
       assert html =~ ~s(role="menuitem")
       assert html =~ "Go"
     end
+
+    test "menu-button ARIA lives on the control, never on the role-less trigger wrapper" do
+      html =
+        render(fn assigns ->
+          ~H"""
+          <Dropdown.dropdown id="dd" label="Actions">
+            <Dropdown.dropdown_button>Go</Dropdown.dropdown_button>
+          </Dropdown.dropdown>
+          """
+        end)
+
+      {:ok, doc} = Floki.parse_fragment(html)
+      [wrapper] = Floki.find(doc, ~s([data-part="trigger"]))
+
+      for attr <- ~w(role aria-haspopup aria-expanded aria-controls) do
+        assert Floki.attribute(wrapper, attr) == [], "#{attr} on the trigger wrapper"
+      end
+
+      assert Floki.attribute(wrapper, "button", "aria-haspopup") == ["menu"]
+    end
   end
 
   describe "menu/1 zag markup" do

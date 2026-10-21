@@ -80,15 +80,23 @@ export class LanternMenuMachine extends Component {
   render() {
     const trigger = this.el.querySelector(part("trigger"))
     if (trigger) {
-      this.spreadProps(trigger, this.api.getTriggerProps())
-      // The default toggle button carries its own stale `aria-expanded`
-      // from the server render; mirror machine truth onto it.
-      const inner = trigger.querySelectorAll("[aria-haspopup]")
-      inner.forEach((button) => button.setAttribute("aria-expanded", String(this.api.open)))
-      // A role-less wrapper around that button must not carry the
-      // menu-button ARIA itself (axe aria-allowed-attr): the button owns it.
-      if (inner.length && !trigger.hasAttribute("role")) {
-        for (const name of ["aria-haspopup", "aria-expanded", "aria-controls"]) trigger.removeAttribute(name)
+      const props = this.api.getTriggerProps()
+      this.spreadProps(trigger, props)
+      // A role-less wrapper must not carry the menu-button ARIA itself (axe
+      // aria-allowed-attr): the interactive control inside owns it. That is
+      // the default toggle button, or the first focusable of a custom
+      // `:toggle` slot, which gets the machine's attributes here.
+      if (!trigger.hasAttribute("role")) {
+        const control =
+          trigger.querySelector("[aria-haspopup]") ||
+          trigger.querySelector('button, a[href], [tabindex]:not([tabindex="-1"])')
+        if (control) {
+          for (const name of ["aria-haspopup", "aria-controls"]) {
+            if (props[name] != null) control.setAttribute(name, props[name])
+          }
+          control.setAttribute("aria-expanded", String(this.api.open))
+          for (const name of ["aria-haspopup", "aria-expanded", "aria-controls"]) trigger.removeAttribute(name)
+        }
       }
     }
 
