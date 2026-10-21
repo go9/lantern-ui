@@ -5837,3 +5837,38 @@ a.lui-waterfall-lane-inner:focus-visible {
 @media (hover: hover) and (pointer: fine) {
   :is(.lui-tr, .lui-dt-card, .lui-dt-list-row):is(:hover, :focus-within) .lui-reveal { opacity: 1; }
 }
+
+/* Compact workflow summary. Static in all motion preferences. */
+.lui-stage-strip {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--lantern-space-xs);
+  vertical-align: middle;
+}
+.lui-stage-strip-pip {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: var(--lantern-space-md);
+  height: calc(var(--lantern-space-xs) * 1.5);
+  border-radius: var(--lantern-radius-sm);
+  background: color-mix(in srgb, var(--lantern-fg) 12%, transparent);
+}
+.lui-stage-strip-pip[data-state="done"] {
+  background: color-mix(in srgb, var(--lantern-fg) 55%, transparent);
+}
+.lui-stage-strip-pip[data-state="active"] {
+  background: color-mix(in srgb, var(--lantern-fg) 20%, transparent);
+  border: calc(var(--lantern-space-xs) / 4) solid color-mix(in srgb, var(--lantern-fg) 60%, transparent);
+}
+.lui-stage-strip-pip[data-state="waiting"] {
+  background: var(--lantern-accent);
+}
+.lui-stage-strip-pip[data-state="skipped"] {
+  background: transparent;
+  border: calc(var(--lantern-space-xs) / 4) dashed color-mix(in srgb, var(--lantern-fg) 30%, transparent);
+}
+.lui-stage-strip-pip[data-state="failed"] {
+  background: transparent;
+  border: calc(var(--lantern-space-xs) / 2) solid var(--lantern-danger);
+}

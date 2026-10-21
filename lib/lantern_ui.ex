@@ -93,6 +93,7 @@ defmodule LanternUI do
     progress_ring: LanternUI.Components.ProgressRing,
     side_panel: LanternUI.Components.SidePanel,
     progress: LanternUI.Components.Progress,
+    stage_strip: LanternUI.Components.StageStrip,
     meter: LanternUI.Components.Meter,
     price_cell: LanternUI.Components.PriceGrid,
     price_cell_group: LanternUI.Components.PriceGrid,

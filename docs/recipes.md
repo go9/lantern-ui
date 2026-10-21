@@ -1220,3 +1220,27 @@ Per-row menus go in `:row_action` as `row_menu/1` (named "Row actions", 40px
 target). Mark low-value columns `hide_below="sm" | "md" | "lg"` so they drop
 when the table is narrower than that; anything still too wide scrolls with a
 faded edge.
+
+## Compact stage summary
+
+Use `stage_strip` beside a report link in Suggestions. Pass stages in journey
+order: Triaged, Drafted, Decided, In work, Shipped, Told. The app derives states
+from triage, decisions, the ticket and delivery events; a failed delivery must
+remain failed until a successful retry. Do not infer delivery from votes.
+
+```heex
+<.stage_strip stages={[
+  %{label: "Triaged", state: :done},
+  %{label: "Drafted", state: :skipped},
+  %{label: "Decided", state: :waiting},
+  %{label: "In work", state: :pending},
+  %{label: "Shipped", state: :pending},
+  %{label: "Told", state: :pending}
+]} />
+```
+
+The strip announces every label and state as one image. It has no tab stop or
+interaction, and no animation under any motion preference. Put keyboard actions
+on the report link and trace controls. Use `timeline` for the detailed trace;
+`progress` measures an amount and `waterfall` compares durations. See the runnable
+`/stage_strip` QA demo (`test/qa/server.exs`) for a report row and all six states.
