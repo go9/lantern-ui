@@ -889,6 +889,23 @@ Slots:
   - `wide` — Span every column — for long free text.
   - `class` — Extra classes merged onto this pair.
 
+### LanternUI.Components.DiffViewer
+
+Line diff of two texts, unified or side by side.
+
+#### `diff_viewer/1`
+
+Line diff of two texts, unified or side by side.
+
+- `class` (:any) — Extra classes merged onto the root.
+- `context` (:integer, default 3) — Unchanged lines kept around each change; longer runs collapse.
+- `mode` (:atom, values: unified, split, default :unified) — `:split` shows old and new side by side; below the `sm` breakpoint it stays readable by scrolling.
+- `new` (:string, required) — Proposed text.
+- `new_label` (:string, default "After") — Name of the new side, used in labels.
+- `old` (:string, required) — Previous text.
+- `old_label` (:string, default "Before") — Name of the old side, used in labels.
+- `rest` (:global) — HTML/`phx-*` attrs, e.g.
+
 ### LanternUI.Components.Dropdown
 
 Dropdown menu on the shared overlay runtime (anchored placement, focus return, Escape/outside dismissal, arrow-key item navigation).
@@ -3697,6 +3714,13 @@ From `docs/recipes.md` (Host identity in resource lists and creation):
 <.host_badge host="Flicker" />
 <.host_badge host="Fly" coming_soon />
 <.host_badge host="Neon" coming_soon />
+```
+
+From `docs/recipes.md` (Reviewing a text change):
+
+```heex
+<.diff_viewer id="contract-diff" old={@server} new={@draft} old_label="Server" new_label="Draft" />
+<.button phx-click="adopt">Adopt draft</.button>
 ```
 
 From `README.md` (Usage):

@@ -137,6 +137,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `description_list/1` — Label/value pairs for a record's detail view — the `<dl>` every show page hand-rolls.
 
+### LanternUI.Components.DiffViewer
+
+- `diff_viewer/1` — Line diff of two texts, unified or side by side.
+
 ### LanternUI.Components.Dropdown
 
 - `dropdown/1` — Dropdown menu on the shared overlay runtime (anchored placement, focus return, Escape/outside dismissal, arrow-key item navigation).
@@ -1463,6 +1467,13 @@ From `docs/recipes.md` (Host identity in resource lists and creation):
 <.host_badge host="Flicker" />
 <.host_badge host="Fly" coming_soon />
 <.host_badge host="Neon" coming_soon />
+```
+
+From `docs/recipes.md` (Reviewing a text change):
+
+```heex
+<.diff_viewer id="contract-diff" old={@server} new={@draft} old_label="Server" new_label="Draft" />
+<.button phx-click="adopt">Adopt draft</.button>
 ```
 
 From `README.md` (Usage):

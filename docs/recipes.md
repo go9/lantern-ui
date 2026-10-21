@@ -1348,3 +1348,23 @@ health, or preview data to this identity label.
 
 See [the host badge demo and contract](host-badge.md) and the runnable QA page at
 `/host_badge` (`MIX_ENV=test mix run --no-halt test/qa/server.exs`).
+
+## Reviewing a text change
+
+Use `diff_viewer` wherever a person approves or adopts a changed text: a
+workflow contract (server vs draft), an AGENTS.md or skill revision, a profile
+revision, or a `.env` import. Pass the two texts; it diffs by line and collapses
+long unchanged runs (`context`, default 3).
+
+```heex
+<.diff_viewer id="contract-diff" old={@server} new={@draft} old_label="Server" new_label="Draft" />
+<.button phx-click="adopt">Adopt draft</.button>
+```
+
+Use `mode={:split}` when the two sides are compared line for line (contract
+reconcile); the default unified view fits narrow columns and sheets. Adopt,
+restore and approve actions belong to the caller, beside the viewer. The
+component shows exactly the text it is given, so for a secrets import diff key
+names only and never pass values. Changed lines are marked with `+` / `−` and
+screen-reader text, and the region is keyboard-scrollable. See the `/diff_viewer`
+QA demo (`test/qa/server.exs`).
