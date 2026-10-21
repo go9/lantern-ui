@@ -1306,6 +1306,31 @@ on the report link and trace controls. Use `timeline` for the detailed trace;
 `progress` measures an amount and `waterfall` compares durations. See the runnable
 `/stage_strip` QA demo (`test/qa/server.exs`) for a report row and all six states.
 
+## Dependency topology
+
+Use `topology_svg` for a project's apps, databases and buckets and the env vars that
+wire them. The app owns the graph: build `nodes` for the chosen environment lens
+(`state: :absent` for a component that is not on it, `:degraded`/`:failed` for health)
+and re-render when the lens select changes. Put the selected node's detail in an
+`inspector` (or `split_pane`) next to it, driven by the same `selected` id and
+`on_select` event; Open/Add actions live in that panel, not in the graph.
+
+```heex
+<.topology_svg
+  id="topology"
+  label={"#{@project.name} resources on #{@env.name}"}
+  on_select="pick_node"
+  selected={@picked}
+  nodes={@nodes}
+  edges={@edges}
+/>
+```
+
+Nodes are buttons, edges are decorative with a screen-reader list, and the graph pans by
+native scroll in a focusable region (no drag hook). Absent nodes stay selectable so the
+panel can offer Add. Use `empty_state` for a project with no components, and
+`matrix_table` for the environment × component grid. See the `/topology_svg` QA demo.
+
 ## Inline citations
 
 **When to use:** Evidence in Ask prose or attached draft context. Use a full source

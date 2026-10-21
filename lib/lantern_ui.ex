@@ -114,6 +114,7 @@ defmodule LanternUI do
     message_scroller: LanternUI.Components.MessageScroller,
     message_scroller_item: LanternUI.Components.MessageScroller,
     kbd: LanternUI.Components.Kbd,
+    topology_svg: LanternUI.Components.TopologySvg,
     tree: LanternUI.Components.Tree
   }
 

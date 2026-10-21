@@ -408,6 +408,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `top_nav_item/1` — A primary link in `top_shell/1`'s `:nav`.
 - `top_shell/1` — Top-navigation app shell: a sticky top bar (brand, primary nav, a search slot, actions) over a content column, with no sidebar.
 
+### LanternUI.Components.TopologySvg
+
+- `topology_svg/1` — Server-rendered dependency graph: nodes in columns, labelled edges between them.
+
 ### LanternUI.Components.Tree
 
 - `tree/1` — Accessible nested tree for environments and source choosers.
@@ -1454,6 +1458,19 @@ From `docs/recipes.md` (Compact stage summary):
   %{label: "Shipped", state: :pending},
   %{label: "Told", state: :pending}
 ]} />
+```
+
+From `docs/recipes.md` (Dependency topology):
+
+```heex
+<.topology_svg
+  id="topology"
+  label={"#{@project.name} resources on #{@env.name}"}
+  on_select="pick_node"
+  selected={@picked}
+  nodes={@nodes}
+  edges={@edges}
+/>
 ```
 
 From `docs/recipes.md` (Inline citations):

@@ -6049,3 +6049,45 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
 .lui-matrix-cell[data-state="in_rule"] .lui-matrix-dot,
 .lui-matrix-cell[data-state="absent"] .lui-matrix-dot { background: transparent;
   box-shadow: inset 0 0 0 1px var(--lantern-fg-muted); }
+/* Server-rendered dependency graph. Static in all motion preferences; panned by native scroll. */
+.lui-topology {
+  max-width: 100%;
+  overflow: auto;
+  background: var(--lantern-surface-raised);
+  border: 1px solid var(--lantern-border);
+  border-radius: var(--lantern-radius-md);
+}
+.lui-topology:focus-visible {
+  outline: 2px solid var(--lantern-accent);
+  outline-offset: -2px;
+}
+.lui-topology-svg { display: block; max-width: none; }
+.lui-topology-edge path { stroke: var(--lantern-fg-subtle); stroke-width: 1.5; }
+.lui-topology-edge[data-dashed="true"] path { stroke-dasharray: 5 4; stroke-width: 1; }
+.lui-topology-edge text { fill: var(--lantern-fg-muted); font-size: 0.6875rem; }
+.lui-topology-node {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--lantern-space-xs);
+  width: 100%;
+  height: 100%;
+  padding: 0 var(--lantern-space-md);
+  font: inherit;
+  text-align: left;
+  color: var(--lantern-fg);
+  background: var(--lantern-surface);
+  border: 1px solid var(--lantern-border-strong);
+  border-radius: var(--lantern-radius-md);
+  cursor: pointer;
+}
+.lui-topology-node:hover { background: var(--lantern-surface-hover); }
+.lui-topology-node:focus-visible { outline: 2px solid var(--lantern-accent); outline-offset: 1px; }
+.lui-topology-node[aria-pressed="true"] { border-color: var(--lantern-accent); box-shadow: inset 0 0 0 1px var(--lantern-accent); }
+.lui-topology-node[data-state="degraded"] { border-color: var(--lantern-warning); }
+.lui-topology-node[data-state="failed"] { border-color: var(--lantern-danger); }
+.lui-topology-node[data-state="absent"] { border-style: dashed; opacity: 0.6; }
+.lui-topology-node-label { font-family: var(--lantern-font-mono, monospace); font-size: 0.8125rem; }
+.lui-topology-node-detail { font-size: 0.6875rem; color: var(--lantern-fg-muted); }
