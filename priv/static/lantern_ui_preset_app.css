@@ -46,18 +46,6 @@
 
   /* Re-point lantern at the vocabulary here too, so the overlay is self-contained
      and wins over a host bridge (`:root { --lantern-fg: ... }`) on specificity. */
-  /* Fluxon-named aliases, so a host written against those names (bg-base,
-     text-foreground-soft, border-base) follows the preset. */
-  --background-base: var(--background);
-  --background-accent: var(--accent);
-  --border-base: var(--border);
-  --surface: var(--card);
-  --foreground-soft: var(--muted-foreground);
-  --foreground-softer: var(--muted-foreground);
-  --foreground-softest: var(--muted-foreground);
-  --foreground-primary: var(--primary-foreground);
-  --primary-soft: color-mix(in oklab, var(--primary) 10%, transparent);
-  --danger: var(--destructive);
   --lantern-fg: var(--foreground);
   --lantern-fg-muted: var(--muted-foreground);
   --lantern-fg-subtle: var(--muted-foreground);
@@ -106,6 +94,22 @@
   --lui-table-cell-py: 0.5rem;
   --lui-table-head-font: var(--lantern-text-sm);
   --lui-table-head-bg: transparent;
+}
+
+/* Fluxon-named aliases, so a host written against those names (bg-base,
+   text-foreground-soft, border-base) follows the preset. `:root` adds the
+   specificity to beat a host `:root.dark { ... }` theme block that comes later. */
+:root[data-lantern-theme="shadcn"][data-lantern-preset="app"] {
+  --background-base: var(--background);
+  --background-accent: var(--accent);
+  --border-base: var(--border);
+  --surface: var(--card);
+  --foreground-soft: var(--muted-foreground);
+  --foreground-softer: var(--muted-foreground);
+  --foreground-softest: var(--muted-foreground);
+  --foreground-primary: var(--primary-foreground);
+  --primary-soft: color-mix(in oklab, var(--primary) 10%, transparent);
+  --danger: var(--destructive);
 }
 
 .dark[data-lantern-theme="shadcn"][data-lantern-preset="app"],
