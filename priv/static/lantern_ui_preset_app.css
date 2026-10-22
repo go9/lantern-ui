@@ -234,3 +234,13 @@
 [data-lantern-preset="app"] .lui-datatable .lui-td {
   white-space: nowrap;
 }
+/* Density: row menu triggers are one 28px control, accordion triggers are one row. */
+[data-lantern-preset="app"] .lui-btn.lui-row-menu-trigger.lui-row-menu-trigger[data-size] {
+  width: 1.75rem;
+  height: 1.75rem;
+  min-width: 1.75rem;
+  margin: 0;
+}
+[data-lantern-preset="app"] .lui-accordion-trigger {
+  padding-block: 0.5rem;
+}
