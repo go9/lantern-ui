@@ -1929,7 +1929,6 @@
 .lui-th-check, .lui-td-check { width: 2rem; text-align: center; }
 .lui-th-actions, .lui-td-actions { width: 2.25rem; text-align: right; }
 .lui-td-actions { white-space: nowrap; }
-.lui-td-actions .lui-btn { vertical-align: middle; }
 /* row_menu trigger: a 40px hit target that only takes 32px of row height.
    Specificity 0,4,0 so the legacy control-scale sizes (0,3,0) cannot shrink it. */
 .lui-btn.lui-row-menu-trigger.lui-row-menu-trigger[data-size] { width: 2.5rem; height: 2.5rem; min-width: 2.5rem;

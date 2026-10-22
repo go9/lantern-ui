@@ -208,3 +208,11 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
+/* Inline action buttons sit on a zero-height strut, so the cell is as tall as
+   the buttons (a 24.5px button no longer makes a 27px line box). */
+[data-lantern-preset="app"] .lui-datatable .lui-td-actions {
+  line-height: 0;
+}
+[data-lantern-preset="app"] .lui-datatable .lui-td-actions > * {
+  vertical-align: middle;
+}
