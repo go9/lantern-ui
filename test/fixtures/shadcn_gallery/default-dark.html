@@ -6645,7 +6645,8 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
  * `<html data-lantern-theme="shadcn" data-lantern-preset="app">` reproduces a
  * dense, warm-accent shadcn app: the Flicker prototype's measured values, set
  * through tokens and component default CSS only (no markup, no forked
- * components). Needs `data-lantern-theme="shadcn"` for the vocabulary; this
+ * components). Calibrated for a 14px root (the preset sets `font-size: 14px` on
+ * the element that carries it, so on `<html>` every rem follows). Needs `data-lantern-theme="shadcn"` for the vocabulary; this
  * block overrides its values, so dark mode follows `.dark` the same way.
  *
  *   fonts     UI = Inter Variable, headings/brand = Space Grotesk Variable
@@ -6656,9 +6657,10 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
  *   radius    table card 7px, small controls 5.6px
  *   table     toolbar above, rows in one bordered card; no resting shadow, transparent
  *             card, cell 14/7 (row ~39.5), uppercase 11.2px column heads
- *   shell     sidebar 14rem (224px), bar 2.625rem (42px)
+ *   shell     sidebar 16rem (224px), bar 3rem (42px)
  */
 [data-lantern-theme="shadcn"][data-lantern-preset="app"] {
+  font-size: 14px;
   --background: oklch(0.985 0.002 286);
   --foreground: oklch(0.21 0.006 286);
   --card: oklch(1 0 0);
@@ -6677,7 +6679,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
   --border: oklch(0.9 0.005 286);
   --input: oklch(0.86 0.006 286);
   --ring: oklch(0.556 0.176 36);
-  --radius: 0.4375rem;
+  --radius: 0.5rem;
   --sidebar: oklch(0.97 0.003 286);
   --sidebar-foreground: oklch(0.21 0.006 286);
   --sidebar-accent: oklch(0.93 0.006 286);
@@ -6698,24 +6700,22 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
   --lantern-font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
 
   --lantern-control-h: 2rem;
-  --lantern-text: 0.84375rem;
-  --lantern-text-sm: 0.8125rem;
-  --lantern-text-xs: 0.7rem;
-  --lantern-text-nav: 0.765625rem;
-  --lantern-text-heading: 0.9375rem;
+  --lantern-text: 0.964286rem;
+  --lantern-text-sm: 0.928571rem;
+  --lantern-text-xs: 0.8rem;
+  --lantern-text-nav: 0.875rem;
+  --lantern-text-heading: 1.071429rem;
 
-  --lui-topline-h: 2.625rem;
+  --lui-topline-h: 3rem;
   --lui-control-radius: var(--lantern-radius-sm);
-  --lui-control-h-xs: 1.5rem;
   --lui-control-font-xs: var(--lantern-text-xs);
-  --lui-control-px-xs: 0.5rem;
   --lui-table-radius: var(--radius);
   --lui-table-bg: transparent;
   --lui-table-shadow: none;
   --lui-table-font: var(--lantern-text);
   --lui-table-leading: 1.5;
-  --lui-table-cell-px: 0.875rem;
-  --lui-table-cell-py: 0.4375rem;
+  --lui-table-cell-px: 1rem;
+  --lui-table-cell-py: 0.5rem;
   --lui-table-head-font: var(--lantern-text-sm);
   --lui-table-head-bg: transparent;
 }
@@ -6777,7 +6777,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
   background: color-mix(in oklab, var(--muted) 60%, transparent);
 }
 [data-lantern-preset="app"] .lui-app {
-  --lui-sidebar-expanded-w: 14rem;
+  --lui-sidebar-expanded-w: 16rem;
 }
 [data-lantern-preset="app"] .lui-app-sidebar {
   background: var(--sidebar);
@@ -6797,7 +6797,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
 }
 [data-lantern-preset="app"] .lui-dt-search {
   box-shadow: none;
-  min-width: 12.25rem;
+  min-width: 14rem;
 }
 [data-lantern-preset="app"] .lui-datatable:not(.lui-datatable-flush) {
   border: 0;
@@ -7142,7 +7142,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-1736" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-1737" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -7159,7 +7159,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1768" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-1769" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -7176,7 +7176,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1800" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-1801" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -7193,7 +7193,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1832" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-1833" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

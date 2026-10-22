@@ -5,6 +5,7 @@
 //   BASE=http://127.0.0.1:4231 CHROME_PATH=/path/to/chrome node test/qa/shadcn_preset.mjs
 //
 // QA_PRESET_SHOTS=dir  also writes default/shadcn/app shots (light + dark).
+// The fixture sets a 14px root, as the preset and Flicker do.
 // Row padding is read from the first cell (the table markup pads cells, the
 // prototype pads rows); that mapping is the only one.
 import { createRequire } from "node:module"

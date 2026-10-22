@@ -36,16 +36,16 @@ defmodule LanternUI.ShadcnAppPresetTest do
     [_, preset] = String.split(@theme, "app preset (opt-in", parts: 2)
 
     for decl <- [
-          "--lantern-text: 0.84375rem",
+          "--lantern-text: 0.964286rem",
           "--lui-table-leading: 1.5",
-          "--lui-table-cell-px: 0.875rem",
-          "--lui-table-cell-py: 0.4375rem",
+          "--lui-table-cell-px: 1rem",
+          "--lui-table-cell-py: 0.5rem",
           "--lui-table-shadow: none",
-          "--radius: 0.4375rem",
+          "--radius: 0.5rem",
           "--primary: oklch(0.556 0.176 36)",
           "--primary: oklch(0.685 0.182 39)",
-          "--lui-sidebar-expanded-w: 14rem",
-          "--lui-topline-h: 2.625rem"
+          "--lui-sidebar-expanded-w: 16rem",
+          "--lui-topline-h: 3rem"
         ] do
       assert preset =~ decl
     end

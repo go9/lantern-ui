@@ -26,6 +26,9 @@ defmodule LanternUI.QA.ShadcnPresetLive do
 
   def render(assigns) do
     ~H"""
+    <style>
+      html { font-size: 14px; }
+    </style>
     <div
       id="preset-scope"
       class={@dark? && "dark"}

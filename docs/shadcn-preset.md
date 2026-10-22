@@ -12,7 +12,10 @@ Makes lantern components reproduce a dense, warm-accent shadcn app (the Flicker 
 The host ships the `@font-face` for `Inter Variable` and `Space Grotesk Variable`; the stack falls back to
 `system-ui`. Dark mode follows the `.dark` class.
 
-## Values (the spec: measured from the prototype at 1440px, 14px root)
+## Values (the spec: measured from the prototype at 1440px)
+
+All sizes are rem on a **14px root** (the preset sets `font-size: 14px` on the element carrying it, so on
+`<html>` the whole app follows; Flicker already runs a 14px root). Px below are the computed results.
 
 | Role | Value | Token |
 |---|---|---|
