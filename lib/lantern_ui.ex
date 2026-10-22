@@ -88,6 +88,7 @@ defmodule LanternUI do
     sheet: LanternUI.Components.Sheet,
     navlist: LanternUI.Components.Navlist,
     settings: LanternUI.Components.Settings,
+    page: LanternUI.Components.Page,
     loading: LanternUI.Components.Loading,
     list_row: LanternUI.Components.ListRow,
     inspector: LanternUI.Components.Inspector,

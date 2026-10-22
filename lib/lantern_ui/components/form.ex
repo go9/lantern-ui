@@ -147,6 +147,39 @@ defmodule LanternUI.Components.Form do
   # Minimal error translation: apply interpolated bindings. Hosts with gettext
   # can pre-translate and pass `errors` explicitly.
   #
+  attr(:legend, :string, default: nil, doc: "Group heading (a `legend`).")
+  attr(:description, :string, default: nil, doc: "One line under the legend.")
+  attr(:columns, :integer, default: 1, values: [1, 2], doc: "Fields per row when wide.")
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, required: true, doc: "The group's `input`s, `select`s, `textarea`s.")
+
+  @doc """
+  A group of related fields: legend, one description line, fields on one gap.
+  Field spacing (label, control, help, error) belongs to `input/1`; the group
+  only owns the gap between fields, so every form on the page breathes alike.
+  """
+  def form_group(assigns) do
+    ~H"""
+    <fieldset class={Class.merge(["lui-form-group", @class])} data-columns={@columns} {@rest}>
+      <legend :if={@legend} class="lui-form-group-legend">{@legend}</legend>
+      <p :if={@description} class="lui-form-group-desc">{@description}</p>
+      <div class="lui-form-group-fields">{render_slot(@inner_block)}</div>
+    </fieldset>
+    """
+  end
+
+  attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
+  attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
+  slot(:inner_block, required: true, doc: "Cancel (ghost) then the ONE primary submit.")
+
+  @doc "The form's action row: right-aligned, cancel then the one primary submit."
+  def form_actions(assigns) do
+    ~H"""
+    <div class={Class.merge(["lui-form-actions", @class])} {@rest}>{render_slot(@inner_block)}</div>
+    """
+  end
+
   # The replacement MUST stay lazy (`fn _ -> ... end`, as Phoenix's own
   # translate_error does). An eager `to_string(value)` is evaluated for every
   # opt even when the message never references it, and changeset opts routinely

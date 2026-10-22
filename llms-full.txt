@@ -1009,7 +1009,8 @@ Quiet empty/zero state for tables, lists, and panels (a lantern-ui extension —
 Quiet empty/zero state for tables, lists, and panels (a lantern-ui extension — Fluxon has no equivalent).
 
 - `class` (:any) — Extra classes merged onto the root element.
-- `icon` (:string) — Optional leading icon name from the icon set.
+- `icon` (:string) — Optional leading icon name (a `kind` supplies a default).
+- `kind` (:string, values: , first_use, no_match, error, restricted) — Which empty state this is; sets the default icon and, for `error`, `role=alert`.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `title` (:string, required) — Primary empty-state heading.
 Slots:
@@ -1028,6 +1029,27 @@ Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 Slots:
 - `:inner_block` (required) — Error message text.
+
+#### `form_actions/1`
+
+The form's action row: right-aligned, cancel then the one primary submit.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Cancel (ghost) then the ONE primary submit.
+
+#### `form_group/1`
+
+A group of related fields: legend, one description line, fields on one gap.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `columns` (:integer, values: 1, 2, default 1) — Fields per row when wide.
+- `description` (:string) — One line under the legend.
+- `legend` (:string) — Group heading (a `legend`).
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — The group's `input`s, `select`s, `textarea`s.
 
 #### `input/1`
 
@@ -1730,6 +1752,66 @@ Vertical nav list — heading + links.
 Slots:
 - `:inner_block` (required) — navlink / navheading children.
 
+### LanternUI.Components.Page
+
+Page-body geometry shared by the index, detail and settings recipes: one container (named width, gutters), one body heading, one section, the index toolbar and the detail layout.
+
+#### `detail_layout/1`
+
+Main column plus an optional right rail; the rail is a sibling, not a second page.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:inner_block` (required) — Main column: `page_section`s.
+- `:rail` — Optional right rail (properties).
+
+#### `index_toolbar/1`
+
+One toolbar row: search, view toggle, filters, then actions pushed right.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+Slots:
+- `:actions` — Secondary actions, right-aligned.
+- `:filters` — Filter controls; keep to one button or chip row.
+- `:search` — The search input (a fixed, compact width).
+- `:views` — A view toggle (`tabs_list variant="segmented"`).
+
+#### `page_container/1`
+
+The page container: left-aligned, named max width, page gutters, one section gap.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `width` (:string, values: narrow, default, wide, full, default "default") — Named max width; `full` removes the cap.
+Slots:
+- `:inner_block` (required) — Page content: heading, toolbar, sections.
+
+#### `page_heading/1`
+
+Body heading with an optional lead and the page's primary action.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `lead` (:string) — One supporting sentence under the title.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `title` (:string, required) — Body heading (an `h2`).
+Slots:
+- `:actions` — The page's primary action(s), right-aligned.
+
+#### `page_section/1`
+
+A titled section for detail pages: small heading, one line of description, content.
+
+- `class` (:any) — Extra classes merged onto the root element.
+- `description` (:string) — One supporting line.
+- `id` (:string) — Element id; also labels the section.
+- `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
+- `title` (:string, required) — Section heading.
+Slots:
+- `:actions` — Quiet actions beside the heading.
+- `:inner_block` (required) — The section's content.
+
 ### LanternUI.Components.Pagination
 
 Pager + page-size control for paginated collections (a lantern-ui extension; Fluxon has no pagination component — this replaces flop_phoenix's pager).
@@ -2051,17 +2133,41 @@ One row of a `danger_zone`: title and consequence on the left, the action on the
 Slots:
 - `:action` (required) — The destructive control (e.g.
 
+#### `settings_form/1`
+
+One independent form as one settings section with ONE Save, disabled until `dirty`.
+
+- `class` (:any) — Extra classes merged onto the section.
+- `description` (:string) — One-line description under the title.
+- `dirty` (:boolean, default false) — Server-owned: true once the fields differ from what is saved.
+- `dirty_label` (:string, default "Unsaved changes") — Shown beside Save while dirty.
+- `for` (:any, required) — The form (`to_form/2`) or params map.
+- `id` (:string) — Element id; also labels the section.
+- `rest` (:global) — Form attributes.
+- `save_label` (:string, default "Save") — The form's one Save button.
+- `title` (:string, required) — Section title.
+Slots:
+- `:actions` — Extra buttons left of Save (e.g.
+- `:inner_block` (required) — The form's fields.
+
 #### `settings_page/1`
 
 Settings page building blocks: a titled page with optional tabs, two-column sections that each save on their own, and a danger zone at the bottom.
 
 - `class` (:any) — Extra classes merged onto the root element.
+- `layout` (:string, values: split, stacked, default "split") — `"split"` (default): label column beside the fields.
+- `nav_label` (:string, default "Settings sections") — Accessible name for `:nav`.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `subtitle` (:string) — One supporting line under the title.
 - `title` (:string, required) — Page heading.
 Slots:
 - `:actions` — Right-side page actions (rarely needed: sections own their Save).
 - `:inner_block` (required) — settings_section / danger_zone children.
+- `:nav` — Section links for genuinely separate, large areas (`layout="stacked"`): a vertical list beside the panel.
+  - `patch` — 
+  - `navigate` — 
+  - `active` — 
+  - `id` — 
 - `:tabs` — A `tabs_list` for related settings groups (patch tabs keep state in the URL).
 
 #### `settings_section/1`

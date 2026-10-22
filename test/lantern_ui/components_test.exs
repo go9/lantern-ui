@@ -578,6 +578,7 @@ defmodule LanternUI.ComponentsTest do
                :meter,
                :modal,
                :navlist,
+               :page,
                :pagination,
                :popover,
                :price_cell,
