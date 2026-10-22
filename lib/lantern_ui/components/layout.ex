@@ -255,10 +255,12 @@ defmodule LanternUI.Components.Layout do
 
   attr(:layout, :string,
     default: "stacked",
-    values: ~w(stacked strip),
+    values: ~w(stacked strip bare),
     doc:
       "`\"stacked\"` (default): a breadcrumb topline above a floating action row. " <>
-        "`\"strip\"`: one solid row with the trail on the left and the actions on the right."
+        "`\"strip\"`: one solid row with the trail on the left and the actions on the right. " <>
+        "`\"bare\"`: no trail row at all, for a single-topbar shell: put the `breadcrumb/1` " <>
+        "in `app_shell`'s `:header` slot (with `compact`); `breadcrumbs` is ignored."
   )
 
   attr(:breadcrumbs, :list,
@@ -318,11 +320,42 @@ defmodule LanternUI.Components.Layout do
         assigns.actions != [] or (not is_nil(assigns.notice) and not assigns.dismissed)
       )
 
-    if assigns.layout == "strip" do
-      page_shell_strip(assigns)
-    else
-      page_shell_stacked(assigns)
+    case assigns.layout do
+      "strip" -> page_shell_strip(assigns)
+      "bare" -> page_shell_bare(assigns)
+      _ -> page_shell_stacked(assigns)
     end
+  end
+
+  defp page_shell_bare(assigns) do
+    ~H"""
+    <section
+      id={@id}
+      class={Class.merge(["lui-page-shell lui-page-shell-bare", @class])}
+      data-page-shell
+      data-page-layout="bare"
+      data-page-has-actions={@has_actions? && "true"}
+      {@rest}
+    >
+      <h1 class="lui-sr-only" data-page-title>{@title}</h1>
+
+      <ActionBar.action_bar
+        :if={@has_actions?}
+        id={"#{@id}-actions"}
+        actions={@actions}
+        notice={@notice}
+        dismissed={@dismissed}
+        on_dismiss={@on_dismiss}
+        more_actions_label={@more_actions_label}
+        dismiss_label={@dismiss_label}
+        data-page-actions
+      />
+
+      <div class={Class.merge(["lui-page-content", @content_class])} data-page-content>
+        {render_slot(@inner_block)}
+      </div>
+    </section>
+    """
   end
 
   defp page_shell_stacked(assigns) do

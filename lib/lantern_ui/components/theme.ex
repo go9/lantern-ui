@@ -26,8 +26,10 @@ defmodule LanternUI.Components.Theme do
   Built-in presets (opt-in, never default): `preset="shadcn"` sets
   `data-lantern-theme="shadcn"` on `<html>`, swapping lantern's tokens onto
   shadcn's neutral vocabulary (light + dark) with shadcn proportions
-  (see `priv/static/lantern_ui_theme.css`). Or set the attribute by hand on
-  `<html>` or any subtree — no hook needed.
+  (see `priv/static/lantern_ui_theme.css`). `preset="shadcn-app"` adds the dense
+  app overlay on top (`data-lantern-preset="app"`, import `lantern_ui_preset_app.css`: Inter/Space Grotesk, warm
+  accent, 13.5px table rows, 224px sidebar, 42px bar; see `docs/shadcn-preset.md`).
+  Or set the attributes by hand on `<html>` or any subtree — no hook needed.
   """
   use Phoenix.Component
 
@@ -40,7 +42,7 @@ defmodule LanternUI.Components.Theme do
 
   attr(:preset, :string,
     default: nil,
-    values: ["shadcn", nil],
+    values: ["shadcn", "shadcn-app", nil],
     doc: "Built-in theme preset. Sets data-lantern-theme on <html> via the hook."
   )
 
