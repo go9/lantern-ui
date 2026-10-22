@@ -220,3 +220,13 @@
 [data-lantern-preset="app"] .lui-datatable .lui-td-actions > * {
   vertical-align: middle;
 }
+/* Density: cards 14px padding, nav rows and list items stay under 44px. */
+[data-lantern-preset="app"] .lui-card-body {
+  padding: 1rem;
+}
+[data-lantern-preset="app"] .lui-card-head {
+  padding: 1rem 1rem 0;
+}
+[data-lantern-preset="app"] .lui-card-foot {
+  padding: 0.5rem 1rem;
+}

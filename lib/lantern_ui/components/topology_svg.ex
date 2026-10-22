@@ -45,9 +45,9 @@ defmodule LanternUI.Components.TopologySvg do
 
   # SVG user units, not CSS lengths.
   @node_w 168
-  @node_h 56
+  @node_h 44
   @gap_x 168
-  @gap_y 28
+  @gap_y 20
   @pad 24
   @bend 60
 

@@ -6101,7 +6101,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: var(--lantern-space-xs);
+  gap: 0.1rem;
   width: 100%;
   height: 100%;
   padding: 0 var(--lantern-space-md);
