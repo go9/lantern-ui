@@ -20,6 +20,10 @@ Every routed page renders exactly one `<.page_shell>`: it owns the breadcrumb ro
 
 Grouped tables and group headers are banned; use a flat list with a status column + filter chips. Whatever a group header said (status name, count) must stay visible per row or in the filter chips with counts.
 
+## Page recipes
+
+Index, detail, settings, form and empty pages for the shadcn app preset: copy from `docs/page-recipes.md` (`page_container`, `page_heading`, `page_section`, `index_toolbar`, `detail_layout`, `settings_page layout="stacked"` + `settings_form`, `form_group`, `form_actions`, `empty_state kind=`). Settings: stacked sections, ONE Save per form disabled until dirty, no tabs for about four small sections.
+
 ## Page blocks
 
 Whole pages that look finished — copy one block from the recipe index at the top of `docs/recipes.md` ("Page blocks", same source as `test/support/blocks/`, screenshots in `test/fixtures/blocks_gallery/`). Never hand-roll a shell, dashboard, index, detail, settings, form, login, or confirm flow.

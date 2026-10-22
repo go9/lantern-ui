@@ -80,6 +80,11 @@
   --lantern-text-xs: 0.8rem;
   --lantern-text-nav: 0.875rem;
   --lantern-text-heading: 1.071429rem;
+  /* page recipes: prototype PageWide 1120px (80rem) / overview 1280px, settings panel 36rem, h1 24px */
+  --lui-page-w-default: 80rem;
+  --lui-page-w-wide: 91.428571rem;
+  --lui-page-w-narrow: 36rem;
+  --lui-page-title: 1.714286rem;
 
   --lui-topline-h: 3rem;
   --lui-control-radius: var(--lantern-radius-sm);

@@ -16,6 +16,10 @@ Swap the fixture assigns (`@ticket`, `@paths`, …) for the host's LiveView assi
 
 Every routed page renders exactly one `<.page_shell>`. It owns the page's breadcrumb row (the last crumb is the current page, and it is the page title), one visually hidden `h1`, and the action row. Pass ancestors as `breadcrumbs`, the title as `title`, and page actions as `actions` descriptors. Do not put a second breadcrumb row or a visible title beside it. `<.page_header>` is deprecated and removed in 1.0; migrate to `<.page_shell>`. The one exception is the sign-in page (Block 7): it is not an app route and has no shell, so it uses a card title.
 
+## Page recipes
+
+For the shadcn app preset, the index, detail, settings, form and empty pages are documented in [page-recipes.md](page-recipes.md).
+
 ## Page blocks
 
 Whole pages that look finished, copied as one block. Each block is one when-to-use line plus one HEEx block built **only** from lantern components (same source as `test/support/blocks/`), and each renders in both the default theme and the shadcn preset — see `test/fixtures/blocks_gallery/` for the screenshots.

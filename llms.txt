@@ -161,6 +161,8 @@ their replacement. Full attribute tables are in llms-full.txt.
 ### LanternUI.Components.Form
 
 - `error/1` — Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
+- `form_actions/1` — The form's action row: right-aligned, cancel then the one primary submit.
+- `form_group/1` — A group of related fields: legend, one description line, fields on one gap.
 - `input/1` — Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
 - `label/1` — Form chrome — `label`, `error`, and a Fluxon-compatible `input`.
 
@@ -257,6 +259,14 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `navlink/1` — A nav list item.
 - `navlist/1` — Vertical nav list — heading + links.
 
+### LanternUI.Components.Page
+
+- `detail_layout/1` — Main column plus an optional right rail; the rail is a sibling, not a second page.
+- `index_toolbar/1` — One toolbar row: search, view toggle, filters, then actions pushed right.
+- `page_container/1` — The page container: left-aligned, named max width, page gutters, one section gap.
+- `page_heading/1` — Body heading with an optional lead and the page's primary action.
+- `page_section/1` — A titled section for detail pages: small heading, one line of description, content.
+
 ### LanternUI.Components.Pagination
 
 - `pagination/1` — Pager + page-size control for paginated collections (a lantern-ui extension; Fluxon has no pagination component — this replaces flop_phoenix's pager).
@@ -312,6 +322,7 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `danger_zone/1` — The last section of a settings page: a `settings_section` whose body is one bordered list of destructive actions.
 - `danger_zone_item/1` — One row of a `danger_zone`: title and consequence on the left, the action on the right.
+- `settings_form/1` — One independent form as one settings section with ONE Save, disabled until `dirty`.
 - `settings_page/1` — Settings page building blocks: a titled page with optional tabs, two-column sections that each save on their own, and a danger zone at the bottom.
 - `settings_section/1` — Settings page building blocks: a titled page with optional tabs, two-column sections that each save on their own, and a danger zone at the bottom.
 

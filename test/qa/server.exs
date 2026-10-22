@@ -31,6 +31,7 @@ Code.require_file("funnel_live.ex", __DIR__)
 Code.require_file("cite_chip_live.ex", __DIR__)
 Code.require_file("host_badge_live.ex", __DIR__)
 Code.require_file("shadcn_preset_live.ex", __DIR__)
+Code.require_file("recipe_pages_live.ex", __DIR__)
 
 defmodule LanternUI.QA.Layouts do
   use Phoenix.Component
@@ -104,6 +105,7 @@ defmodule LanternUI.QA.Router do
     live("/cockpit_dock", LanternUI.QA.CockpitDockLive)
     live("/funnel", LanternUI.QA.FunnelLive)
     live("/shadcn_preset", LanternUI.QA.ShadcnPresetLive)
+    live("/recipe_pages", LanternUI.QA.RecipePagesLive)
   end
 end
 
