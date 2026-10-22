@@ -3,7 +3,7 @@ defmodule LanternUI.MatrixTableTest do
 
   import Phoenix.Component
   import Phoenix.LiveViewTest
-  use LanternUI, only: [:matrix_table, :table]
+  use LanternUI, only: [:matrix_table, :table, :topology_svg]
 
   defp render_matrix(assigns) do
     ~H"""
@@ -144,5 +144,40 @@ defmodule LanternUI.MatrixTableTest do
     assert html =~ ~s(aria-current="true")
     assert html =~ "data-col-selected"
     refute html =~ "<a "
+  end
+
+  test "nested rows draw tree guides: one per ancestor level plus an elbow" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.matrix_table caption="c" corner="Env">
+        <:col>web</:col>
+        <.matrix_row label="dev" depth={2} trail={[true]} last>
+          <.matrix_cell state="absent" />
+        </.matrix_row>
+      </.matrix_table>
+      """)
+
+    assert html =~ "lui-matrix-guide"
+    assert html =~ "data-on"
+    assert html =~ ~r/lui-matrix-elbow"[^>]*data-last/
+  end
+
+  test "topology edge labels sit on an opaque chip" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.topology_svg
+        id="t"
+        label="g"
+        on_select="pick"
+        nodes={[%{id: "a", label: "a"}, %{id: "b", label: "b", column: 1}]}
+        edges={[%{from: "a", to: "b", label: "API_URL"}]}
+      />
+      """)
+
+    assert html =~ "lui-topology-edge-chip"
   end
 end

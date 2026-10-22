@@ -93,7 +93,16 @@ defmodule LanternUI.Components.TopologySvg do
           aria-hidden="true"
         >
           <path d={e.path} fill="none" />
-          <text :if={e.label} x={e.lx} y={e.ly} text-anchor="middle">{e.label}</text>
+          <rect
+            :if={e.label}
+            class="lui-topology-edge-chip"
+            x={e.lx - e.cw / 2}
+            y={e.ly - 10}
+            width={e.cw}
+            height="20"
+            rx="4"
+          />
+          <text :if={e.label} x={e.lx} y={e.ly + 4} text-anchor="middle">{e.label}</text>
         </g>
         <foreignObject :for={n <- @g.nodes} x={n.x} y={n.y} width={@node_w} height={@node_h}>
           <button
@@ -180,13 +189,14 @@ defmodule LanternUI.Components.TopologySvg do
 
     {x1, y1} = {a.x + @node_w, a.y + @node_h / 2}
     {x2, y2} = {b.x, b.y + @node_h / 2}
-    t = if rem(i, 2) == 0, do: 0.3, else: 0.7
+    t = if rem(i, 2) == 0, do: 0.4, else: 0.6
     u = 1 - t
 
     %{
       from: from,
       to: to,
       label: Map.get(e, :label),
+      cw: String.length(Map.get(e, :label) || "") * 7 + 14,
       dashed: a.state == :absent or b.state == :absent,
       path: "M #{x1} #{y1} C #{x1 + @bend} #{y1}, #{x2 - @bend} #{y2}, #{x2} #{y2}",
       lx:
@@ -197,7 +207,7 @@ defmodule LanternUI.Components.TopologySvg do
         ),
       ly:
         Float.round(
-          u * u * u * y1 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y2 - 6,
+          u * u * u * y1 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y2,
           1
         )
     }

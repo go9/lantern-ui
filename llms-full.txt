@@ -1445,12 +1445,14 @@ Environment-by-component grid: rows are things (environments), columns are compo
 - `depth` (:integer, default 0) — Nesting level; indents the row head (fork parent -> child).
 - `href` (:any) — External/full-page href for the row head.
 - `label` (:string, required) — Row name, e.g.
+- `last` (:boolean, default false) — Last child of its parent: the elbow closes there.
 - `navigate` (:string) — LiveView navigate target for the row head.
 - `patch` (:string) — LiveView patch target for the row head.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through to the row.
 - `select_event` (:string) — phx-click event; the row head becomes a select button (instead of a link).
 - `select_values` (:map, default %{}) — phx-value-* pairs sent with `select_event`.
 - `selected` (:boolean, default false) — Marks the row as the current selection.
+- `trail` (:list, default []) — Tree guides for a nested row: one boolean per ancestor level below the root (`depth - 1` of them); true draws that ancestor's vertical line through this row.
 Slots:
 - `:inner_block` (required) — matrix_cell children in column order.
 - `:meta` — Quiet line under the name: production, expiry, flags.

@@ -143,6 +143,15 @@ defmodule LanternUI.Components.MatrixTable do
 
   attr(:select_values, :map, default: %{}, doc: "phx-value-* pairs sent with `select_event`.")
   attr(:selected, :boolean, default: false, doc: "Marks the row as the current selection.")
+
+  attr(:trail, :list,
+    default: [],
+    doc:
+      "Tree guides for a nested row: one boolean per ancestor level below the root " <>
+        "(`depth - 1` of them); true draws that ancestor's vertical line through this row."
+  )
+
+  attr(:last, :boolean, default: false, doc: "Last child of its parent: the elbow closes there.")
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the row.")
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through to the row.")
 
@@ -161,6 +170,10 @@ defmodule LanternUI.Components.MatrixTable do
       {@rest}
     >
       <th class="lui-td lui-matrix-head" scope="row" style={"--lui-matrix-depth: #{@depth}"}>
+        <span :if={@depth > 0} class="lui-matrix-tree" aria-hidden="true">
+          <span :for={on <- @trail} class="lui-matrix-guide" data-on={on || nil}></span>
+          <span class="lui-matrix-elbow" data-last={@last || nil}></span>
+        </span>
         <button
           :if={@select_event}
           type="button"

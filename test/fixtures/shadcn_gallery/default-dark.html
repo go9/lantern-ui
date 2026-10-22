@@ -1550,10 +1550,11 @@
    ellipsises rather than squeezing the number it is competing with. When the
    item also owns a subnav chevron, the badge takes the auto margin and the
    chevron follows it. */
-.lui-nav-item-badge { margin-left: auto; flex-shrink: 0; min-width: 1.3rem;
-  padding: 0 0.35rem; border-radius: 999px; font-size: 0.6875rem; font-weight: 600;
-  line-height: 1.3rem; text-align: center; font-variant-numeric: tabular-nums;
-  background: var(--lantern-accent); color: var(--lantern-accent-fg); }
+.lui-nav-item-badge { margin-left: auto; flex-shrink: 0; min-width: 1.25rem; height: 1.25rem;
+  box-sizing: border-box; padding: 0 0.3rem; border-radius: var(--lantern-radius-sm);
+  font-size: var(--lantern-text-sm); font-weight: 500; line-height: 1.25rem; text-align: center;
+  font-variant-numeric: tabular-nums; align-self: center;
+  background: var(--lantern-accent-soft); color: var(--lantern-fg); }
 
 /* Expandable nav_item (`:subnav` slot): a toggle with a chevron over a
    grid-rows-based slide panel — client-side via JS.toggle_attribute on
@@ -6044,9 +6045,19 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-matrix .lui-matrix-corner,
 .lui-matrix .lui-matrix-head { position: sticky; left: 0; z-index: 1; }
 .lui-matrix .lui-matrix-head { background: var(--lantern-surface-raised); text-align: left;
-  font-weight: 500; padding-left: calc(0.7rem + var(--lui-matrix-depth, 0) * 1rem); }
+  font-weight: 500; white-space: nowrap; }
+/* Environment lineage as a tree: a guide column per ancestor, an elbow into the row. */
+.lui-matrix-tree { display: inline-flex; align-self: stretch; vertical-align: middle; margin-right: 0.35rem; }
+.lui-matrix-guide, .lui-matrix-elbow { position: relative; width: 1rem; align-self: stretch; }
+.lui-matrix-guide[data-on]::before { content: ""; position: absolute; left: 0.5rem; top: -0.6rem; bottom: -0.6rem;
+  border-left: 1px solid var(--lantern-border-strong); }
+.lui-matrix-elbow::before { content: ""; position: absolute; left: 0.5rem; top: -0.6rem; bottom: 50%;
+  width: 0.5rem; border-left: 1px solid var(--lantern-border-strong); border-bottom: 1px solid var(--lantern-border-strong); border-bottom-left-radius: 4px; }
+.lui-matrix-elbow:not([data-last])::after { content: ""; position: absolute; left: 0.5rem; top: 50%; bottom: -0.6rem;
+  border-left: 1px solid var(--lantern-border-strong); }
 .lui-matrix .lui-tr:hover .lui-matrix-head { background: var(--lantern-surface-hover); }
-.lui-matrix-kind, .lui-matrix-meta { display: block; font-size: var(--lantern-text-sm);
+.lui-matrix-meta { display: inline; margin-left: 0.5rem; font-size: var(--lantern-text-sm); font-weight: 400; color: var(--lantern-fg-muted); }
+.lui-matrix-kind { display: block; font-size: var(--lantern-text-sm);
   font-weight: 400; color: var(--lantern-fg-muted); }
 .lui-matrix-name { color: var(--lantern-fg); text-decoration: none; }
 /* Selection (select_event): one row and one column read as the current choice. */
@@ -6088,7 +6099,8 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
 .lui-topology-svg { display: block; max-width: none; }
 .lui-topology-edge path { stroke: var(--lantern-fg-subtle); stroke-width: 1.5; }
 .lui-topology-edge[data-dashed="true"] path { stroke-dasharray: 5 4; stroke-width: 1; }
-.lui-topology-edge text { fill: var(--lantern-fg-muted); font-size: 0.6875rem; }
+.lui-topology-edge-chip { fill: var(--lantern-surface-raised); stroke: var(--lantern-border); stroke-width: 1; }
+.lui-topology-edge text { fill: var(--lantern-fg); font-size: 0.75rem; font-family: var(--lantern-font-mono, monospace); }
 .lui-topology-node {
   box-sizing: border-box;
   display: flex;
@@ -6971,7 +6983,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-2247" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-3235" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6988,7 +7000,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
 
   
 </div>
-      <div id="lui-alert-2279" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-3267" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -7005,7 +7017,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
 
   
 </div>
-      <div id="lui-alert-2311" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-3299" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -7022,7 +7034,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
 
   
 </div>
-      <div id="lui-alert-2343" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-3331" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
