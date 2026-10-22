@@ -6039,9 +6039,19 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-matrix .lui-matrix-corner,
 .lui-matrix .lui-matrix-head { position: sticky; left: 0; z-index: 1; }
 .lui-matrix .lui-matrix-head { background: var(--lantern-surface-raised); text-align: left;
-  font-weight: 500; padding-left: calc(0.7rem + var(--lui-matrix-depth, 0) * 1rem); }
+  font-weight: 500; white-space: nowrap; }
+/* Environment lineage as a tree: a guide column per ancestor, an elbow into the row. */
+.lui-matrix-tree { display: inline-flex; align-self: stretch; vertical-align: middle; margin-right: 0.35rem; }
+.lui-matrix-guide, .lui-matrix-elbow { position: relative; width: 1rem; align-self: stretch; }
+.lui-matrix-guide[data-on]::before { content: ""; position: absolute; left: 0.5rem; top: -0.6rem; bottom: -0.6rem;
+  border-left: 1px solid var(--lantern-border-strong); }
+.lui-matrix-elbow::before { content: ""; position: absolute; left: 0.5rem; top: -0.6rem; bottom: 50%;
+  width: 0.5rem; border-left: 1px solid var(--lantern-border-strong); border-bottom: 1px solid var(--lantern-border-strong); border-bottom-left-radius: 4px; }
+.lui-matrix-elbow:not([data-last])::after { content: ""; position: absolute; left: 0.5rem; top: 50%; bottom: -0.6rem;
+  border-left: 1px solid var(--lantern-border-strong); }
 .lui-matrix .lui-tr:hover .lui-matrix-head { background: var(--lantern-surface-hover); }
-.lui-matrix-kind, .lui-matrix-meta { display: block; font-size: var(--lantern-text-sm);
+.lui-matrix-meta { display: inline; margin-left: 0.5rem; font-size: var(--lantern-text-sm); font-weight: 400; color: var(--lantern-fg-muted); }
+.lui-matrix-kind { display: block; font-size: var(--lantern-text-sm);
   font-weight: 400; color: var(--lantern-fg-muted); }
 .lui-matrix-name { color: var(--lantern-fg); text-decoration: none; }
 /* Selection (select_event): one row and one column read as the current choice. */
