@@ -231,7 +231,7 @@
   padding: 0.5rem 1rem;
 }
 /* Rows stay one line at any width: a narrow table scrolls horizontally instead of wrapping. */
-[data-lantern-preset="app"] .lui-datatable .lui-td {
+[data-lantern-preset="app"] .lui-td {
   white-space: nowrap;
 }
 /* Density: row menu triggers are one 28px control, accordion triggers are one row. */
@@ -242,5 +242,10 @@
   margin: 0;
 }
 [data-lantern-preset="app"] .lui-accordion-trigger {
-  padding-block: 0.5rem;
+  padding-block: 0.35rem;
+}
+[data-lantern-preset="app"] .lui-accordion-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
