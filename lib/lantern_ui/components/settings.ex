@@ -79,6 +79,13 @@ defmodule LanternUI.Components.Settings do
         "`\"stacked\"`: the recipe, heading over fields at the narrow measure, left-aligned."
   )
 
+  attr(:panel, :string,
+    default: "narrow",
+    values: ~w(narrow full),
+    doc:
+      "`\"narrow\"` (default) caps the stacked panel at the form measure; `\"full\"` lets a list or table fill the width beside `:nav`."
+  )
+
   attr(:class, :any, default: nil, doc: "Extra classes merged onto the root element.")
   attr(:rest, :global, doc: "Arbitrary HTML/`phx-*` attributes passed through.")
   slot(:actions, doc: "Right-side page actions (rarely needed: sections own their Save).")
@@ -104,6 +111,7 @@ defmodule LanternUI.Components.Settings do
     <div
       class={Class.merge(["lui-settings-page", @class])}
       data-layout={@layout}
+      data-panel={@panel}
       data-has-nav={@nav != [] && "true"}
       {@rest}
     >
