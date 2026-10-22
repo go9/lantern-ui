@@ -577,9 +577,25 @@
   --sidebar-accent: oklch(0.93 0.006 286);
   --sidebar-border: oklch(0.9 0.005 286);
 
+  /* Re-point lantern at the vocabulary here too, so the overlay is self-contained
+     and wins over a host bridge (`:root { --lantern-fg: ... }`) on specificity. */
+  --lantern-fg: var(--foreground);
+  --lantern-fg-muted: var(--muted-foreground);
   --lantern-fg-subtle: var(--muted-foreground);
-  --lantern-border-strong: var(--input);
+  --lantern-surface: var(--background);
   --lantern-surface-raised: var(--card);
+  --lantern-surface-sunken: var(--muted);
+  --lantern-surface-hover: var(--accent);
+  --lantern-border: var(--border);
+  --lantern-border-strong: var(--input);
+  --lantern-primary: var(--primary);
+  --lantern-primary-fg: var(--primary-foreground);
+  --lantern-secondary: var(--secondary);
+  --lantern-secondary-fg: var(--secondary-foreground);
+  --lantern-accent: var(--primary);
+  --lantern-accent-fg: var(--primary-foreground);
+  --lantern-danger: var(--destructive);
+  --lantern-ring: var(--ring);
   --lantern-accent-soft: color-mix(in oklab, var(--primary) 10%, transparent);
   --lantern-radius-sm: calc(var(--radius) * 0.8);
   --lantern-radius-md: calc(var(--radius) * 0.8);
