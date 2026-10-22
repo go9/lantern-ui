@@ -117,4 +117,32 @@ defmodule LanternUI.MatrixTableTest do
       """)
     end
   end
+
+  test "select_event turns row heads, cells and column heads into select buttons with a shared selection" do
+    assigns = %{}
+
+    html =
+      rendered_to_string(~H"""
+      <.matrix_table caption="c" corner="Env">
+        <:col select_event="pick_col" select_values={%{ref: "app:1"}} selected>web</:col>
+        <.matrix_row label="staging" selected select_event="pick_env" select_values={%{id: "7"}}>
+          <.matrix_cell
+            state="present"
+            selected
+            col_selected
+            select_event="pick_cell"
+            select_values={%{env: "7", ref: "app:1"}}
+          />
+        </.matrix_row>
+      </.matrix_table>
+      """)
+
+    assert html =~ ~s(phx-click="pick_env")
+    assert html =~ ~s(phx-value-id="7")
+    assert html =~ ~s(phx-click="pick_cell")
+    assert html =~ ~s(phx-value-ref="app:1")
+    assert html =~ ~s(aria-current="true")
+    assert html =~ "data-col-selected"
+    refute html =~ "<a "
+  end
 end

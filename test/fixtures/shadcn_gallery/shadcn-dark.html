@@ -6049,6 +6049,15 @@ a.lui-waterfall-lane-inner:focus-visible {
 .lui-matrix-kind, .lui-matrix-meta { display: block; font-size: var(--lantern-text-sm);
   font-weight: 400; color: var(--lantern-fg-muted); }
 .lui-matrix-name { color: var(--lantern-fg); text-decoration: none; }
+/* Selection (select_event): one row and one column read as the current choice. */
+.lui-matrix-select { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: inherit; }
+.lui-matrix-select:hover { text-decoration: underline; }
+.lui-matrix-select:focus-visible { outline: 2px solid var(--lantern-ring); outline-offset: 2px; border-radius: var(--lantern-radius-sm); }
+.lui-matrix .lui-tr[data-selected] > .lui-td { background: var(--lantern-accent-soft); }
+.lui-matrix .lui-tr[data-selected] .lui-matrix-name { font-weight: 600; }
+.lui-matrix .lui-th[data-selected],
+.lui-matrix .lui-matrix-cell[data-col-selected] { background: var(--lantern-accent-soft); }
+.lui-matrix .lui-matrix-cell[data-selected] { box-shadow: inset 0 0 0 2px var(--lantern-accent); }
 a.lui-matrix-name:hover, a.lui-matrix-state:hover { text-decoration: underline; }
 .lui-matrix-state { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--lantern-fg);
   text-decoration: none; border-radius: var(--lantern-radius-sm, 4px); }
@@ -6962,7 +6971,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-3778" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-3141" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6979,7 +6988,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
 
   
 </div>
-      <div id="lui-alert-3810" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-3173" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -6996,7 +7005,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
 
   
 </div>
-      <div id="lui-alert-3842" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-3205" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -7013,7 +7022,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
 
   
 </div>
-      <div id="lui-alert-3874" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-3237" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
