@@ -2157,6 +2157,7 @@ Settings page building blocks: a titled page with optional tabs, two-column sect
 - `class` (:any) — Extra classes merged onto the root element.
 - `layout` (:string, values: split, stacked, default "split") — `"split"` (default): label column beside the fields.
 - `nav_label` (:string, default "Settings sections") — Accessible name for `:nav`.
+- `panel` (:string, values: narrow, full, default "narrow") — `"narrow"` (default) caps the stacked panel at the form measure; `"full"` lets a list or table fill the width beside `:nav`.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `subtitle` (:string) — One supporting line under the title.
 - `title` (:string, required) — Page heading.

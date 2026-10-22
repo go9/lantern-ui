@@ -132,6 +132,19 @@ defmodule LanternUI.PageRecipesTest do
     assert length(Floki.find(doc, "a.lui-settings-nav-item")) == 2
   end
 
+  test "settings_page panel full lifts the form measure" do
+    doc =
+      render(fn assigns ->
+        ~H"""
+        <.settings_page layout="stacked" panel="full" title="S">x</.settings_page>
+        """
+      end)
+      |> parse()
+
+    assert [{_, attrs, _}] = Floki.find(doc, ".lui-settings-page")
+    assert {"data-panel", "full"} in attrs
+  end
+
   test "form_group and form_actions" do
     doc =
       render(fn assigns ->
