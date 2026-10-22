@@ -1326,7 +1326,7 @@ Page shell with breadcrumb-owned page identity, a visually hidden semantic title
 - `home_label` (:string, default "Home") — Accessible name for the home crumb.
 - `home_title` (:string) — Tooltip for the home crumb.
 - `id` (:string, required) — Stable id for the page shell and action hook.
-- `layout` (:string, values: stacked, strip, default "stacked") — `"stacked"` (default): a breadcrumb topline above a floating action row.
+- `layout` (:string, values: stacked, strip, bare, default "stacked") — `"stacked"` (default): a breadcrumb topline above a floating action row.
 - `more_actions_label` (:string, default "More actions") — Accessible label for the overflow action menu.
 - `more_breadcrumbs_label` (:string, default "More breadcrumbs") — Accessible label for the strip's folded breadcrumb menu (`layout="strip"`).
 - `notice` (:map) — Optional dismissible notice descriptor.
@@ -2514,7 +2514,7 @@ Runtime theming — persisted `--lantern-*` token overrides.
 Runtime theming — persisted `--lantern-*` token overrides.
 
 - `id` (:string, default "lantern-theme") — Stable DOM id for the theme hook element.
-- `preset` (:string, values: shadcn, ) — Built-in theme preset.
+- `preset` (:string, values: shadcn, shadcn-app, ) — Built-in theme preset.
 - `storage_key` (:string, default "lui-theme") — localStorage key for persisted token overrides.
 
 ### LanternUI.Components.Thumbnail

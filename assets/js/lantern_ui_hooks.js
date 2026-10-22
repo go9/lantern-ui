@@ -2941,8 +2941,12 @@ const LanternTheme = {
   applyPreset() {
     const html = document.documentElement
     const preset = this.el.dataset.preset
-    if (preset) html.setAttribute("data-lantern-theme", preset)
+    // "shadcn-app" = the shadcn theme plus its dense app overlay.
+    const [theme, overlay] = preset === "shadcn-app" ? ["shadcn", "app"] : [preset, null]
+    if (theme) html.setAttribute("data-lantern-theme", theme)
     else if (html.getAttribute("data-lantern-theme")) html.removeAttribute("data-lantern-theme")
+    if (overlay) html.setAttribute("data-lantern-preset", overlay)
+    else html.removeAttribute("data-lantern-preset")
   },
 
   destroyed() {

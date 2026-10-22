@@ -30,6 +30,7 @@ Code.require_file("topology_svg_live.ex", __DIR__)
 Code.require_file("funnel_live.ex", __DIR__)
 Code.require_file("cite_chip_live.ex", __DIR__)
 Code.require_file("host_badge_live.ex", __DIR__)
+Code.require_file("shadcn_preset_live.ex", __DIR__)
 
 defmodule LanternUI.QA.Layouts do
   use Phoenix.Component
@@ -101,6 +102,7 @@ defmodule LanternUI.QA.Router do
     live("/split_pane", LanternUI.QA.SplitPaneLive)
     live("/cockpit_dock", LanternUI.QA.CockpitDockLive)
     live("/funnel", LanternUI.QA.FunnelLive)
+    live("/shadcn_preset", LanternUI.QA.ShadcnPresetLive)
   end
 end
 

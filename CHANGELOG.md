@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Theme preset `shadcn-app` (`<Theme.theme preset="shadcn-app">`, or `data-lantern-theme="shadcn" data-lantern-preset="app"`): the dense, warm-accent shadcn look (Inter + Space Grotesk, 13.5px table rows, 224px sidebar, 42px bar, 7px/5.6px radii, no resting table shadow) set through tokens only. See `docs/shadcn-preset.md`.
+- New component tokens, defaults unchanged: `--lui-table-radius|bg|shadow|font|leading|cell-px|cell-py|head-h|head-font|head-bg`, `--lui-control-h-xs|font-xs|px-xs`.
+- `page_shell layout="bare"`: no trail row, for a single-topbar shell with the breadcrumb in `app_shell`'s `:header` slot.
+- Contract test: lantern component markup may not size text with literals (`text-[..]`, `font-size:<number>`); chart empty states now use `--lantern-text`.
 - `matrix_table/1`, `matrix_row/1`, `matrix_cell/1`: environment-by-component state grid with a pinned row head, indented fork children, present/degraded/failed/in_rule/absent cells (dot plus words), links or a named `+` add button per cell. Composes the table family; static, no JS.
 - `topology_svg/1`: server-rendered dependency graph (columned nodes, labelled edges, selectable node buttons, dashed/dimmed absent nodes, degraded/failed in words) in a focusable scroll region. No JS or drag-pan; the caller owns the environment lens and the detail panel.
 - `diff_viewer/1`: server-rendered line diff of two texts, unified or side by side, with collapsed unchanged runs, line numbers, sign + screen-reader words (not colour alone) and a focusable scroll region. No JS, no syntax highlighting; callers own actions and secret masking.

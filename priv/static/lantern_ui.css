@@ -1718,8 +1718,9 @@
 .lui-badge[data-variant="solid"] { color: #fff; }
 
 /* ── Table ── */
-.lui-table-wrap { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius);
-  overflow-x: auto; background: var(--lantern-surface-raised); }
+.lui-table-wrap { border: 1px solid var(--lantern-border); border-radius: var(--lui-table-radius, var(--lantern-radius));
+  overflow-x: auto; background: var(--lui-table-bg, var(--lantern-surface-raised));
+  box-shadow: var(--lui-table-shadow, none); }
 /* Scroll cue: when a table is wider than its wrap, the edge that hides more
    columns fades out. Driven by the wrap's own inline scroll position, so a
    table that fits has no timeline and no fade. Dropdown menus render in the
@@ -1747,17 +1748,19 @@
 @container (max-width: 40rem) { .lui-table [data-hide-below="sm"] { display: none; } }
 @container (max-width: 48rem) { .lui-table [data-hide-below="md"] { display: none; } }
 @container (max-width: 64rem) { .lui-table [data-hide-below="lg"] { display: none; } }
-.lui-table { width: 100%; border-collapse: collapse; font-size: var(--lantern-text); }
+.lui-table { width: 100%; border-collapse: collapse; font-size: var(--lui-table-font, var(--lantern-text));
+  line-height: var(--lui-table-leading, normal); }
 /* Row height is set by the tallest thing in a cell, which in a table with row
    actions is the trigger button rather than the text — so the vertical padding
    is what is left to give, and at 0.5rem it was giving too much: a 30px control
    in a 48px row. Trimmed to 0.35rem the row lands near 43px, in the band the
    reference tables sit in, without touching the shared button sizes. The
    horizontal padding is unchanged; the columns were never the crowded part. */
-.lui-th { background: var(--lantern-surface-sunken); color: var(--lantern-fg-muted);
-  font-size: var(--lantern-text-sm); font-weight: 550; text-align: left;
-  padding: 0.35rem 0.7rem; border-bottom: 1px solid var(--lantern-border); white-space: nowrap; }
-.lui-td { padding: 0.35rem 0.7rem; border-bottom: 1px solid var(--lantern-border);
+.lui-th { background: var(--lui-table-head-bg, var(--lantern-surface-sunken)); color: var(--lantern-fg-muted);
+  font-size: var(--lui-table-head-font, var(--lantern-text-sm)); font-weight: 550; text-align: left;
+  height: var(--lui-table-head-h, auto);
+  padding: var(--lui-table-cell-py, 0.35rem) var(--lui-table-cell-px, 0.7rem); border-bottom: 1px solid var(--lantern-border); white-space: nowrap; }
+.lui-td { padding: var(--lui-table-cell-py, 0.35rem) var(--lui-table-cell-px, 0.7rem); border-bottom: 1px solid var(--lantern-border);
   color: var(--lantern-fg); }
 .lui-tr:last-child .lui-td { border-bottom: none; }
 .lui-tr:hover { background: var(--lantern-surface-hover); }
@@ -2081,8 +2084,9 @@
 .lui-dt-subtitle { margin: 0; font-size: var(--lantern-text-sm); color: var(--lantern-fg-muted); }
 
 /* ── Data table card shell ── */
-.lui-datatable { border: 1px solid var(--lantern-border); border-radius: var(--lantern-radius-lg);
-  background: var(--lantern-surface-raised); overflow: hidden; box-shadow: var(--lantern-shadow); }
+.lui-datatable { border: 1px solid var(--lantern-border); border-radius: var(--lui-table-radius, var(--lantern-radius-lg));
+  background: var(--lui-table-bg, var(--lantern-surface-raised)); overflow: hidden;
+  box-shadow: var(--lui-table-shadow, var(--lantern-shadow)); }
 /* A table inside a card is part of that card: no second box (no card-in-card). */
 .lui-card .lui-datatable { border: 0; border-radius: 0; box-shadow: none; }
 .lui-datatable.lui-datatable-borderless { border: 0; border-radius: 0;
@@ -2211,7 +2215,7 @@
    the toolbar, the bulk bar, the pagination — is a hairline and nothing else.
    The surface is stated rather than dropped because in fill mode the header is
    sticky and rows must not show through it. */
-.lui-datatable .lui-th { background: var(--lantern-surface-raised); }
+.lui-datatable .lui-th { background: var(--lui-table-head-bg, var(--lantern-surface-raised)); }
 
 /* Fill mode (`<.data_table fill>`): the datatable stretches to its flex parent's
    height, the rows area becomes the vertical scroll region, and the overview /
@@ -5235,8 +5239,12 @@ a.lui-waterfall-lane-inner:focus-visible {
   line-height: var(--lui-control-line-height);
 }
 .lui-btn[data-size="xs"],
+.lui-btn[data-size="icon-xs"] {
+  height: var(--lui-control-h-xs, var(--lui-control-h-sm));
+  font-size: var(--lui-control-font-xs, var(--lui-control-font-sm));
+  padding-inline: var(--lui-control-px-xs, var(--lui-control-px-sm));
+}
 .lui-btn[data-size="sm"],
-.lui-btn[data-size="icon-xs"],
 .lui-btn[data-size="icon-sm"] {
   height: var(--lui-control-h-sm);
   font-size: var(--lui-control-font-sm);
@@ -5258,9 +5266,8 @@ a.lui-waterfall-lane-inner:focus-visible {
   padding-inline: var(--lui-control-px-lg);
 }
 .lui-btn[data-size^="icon"] { padding-inline: 0; }
-.lui-btn[data-size="icon-xs"], .lui-btn[data-size="icon-sm"] {
-  width: var(--lui-control-h-sm);
-}
+.lui-btn[data-size="icon-xs"] { width: var(--lui-control-h-xs, var(--lui-control-h-sm)); }
+.lui-btn[data-size="icon-sm"] { width: var(--lui-control-h-sm); }
 .lui-btn[data-size="icon-md"], .lui-btn[data-size="icon"] {
   width: var(--lui-control-h-md);
 }

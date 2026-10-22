@@ -119,7 +119,7 @@ defmodule LanternUI.Charts do
       </div>
       <div
         :if={!@has_data}
-        style={"display:flex;min-height:180px;align-items:center;justify-content:center;font-size:14px;color:#{@fg_muted}"}
+        style={"display:flex;min-height:180px;align-items:center;justify-content:center;font-size:var(--lantern-text);color:#{@fg_muted}"}
       >
         {@empty_message}
       </div>
@@ -275,7 +275,7 @@ defmodule LanternUI.Charts do
       </svg>
       <div
         :if={!@has_data}
-        style={"display:flex;min-height:120px;align-items:center;justify-content:center;font-size:14px;color:#{@fg_muted}"}
+        style={"display:flex;min-height:120px;align-items:center;justify-content:center;font-size:var(--lantern-text);color:#{@fg_muted}"}
       >
         {@empty_message}
       </div>
@@ -600,7 +600,7 @@ defmodule LanternUI.Charts do
         >
           <span
             :for={s <- @lines}
-            style={"display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#{@fg_muted}"}
+            style={"display:inline-flex;align-items:center;gap:6px;font-size:var(--lantern-text-sm);color:#{@fg_muted}"}
           >
             <span style={"width:10px;height:3px;border-radius:2px;background:#{s.color}"}></span>{s.label}
           </span>
@@ -608,7 +608,7 @@ defmodule LanternUI.Charts do
       </div>
       <div
         :if={!@has_data}
-        style={"display:flex;min-height:140px;align-items:center;justify-content:center;font-size:14px;color:#{@fg_muted}"}
+        style={"display:flex;min-height:140px;align-items:center;justify-content:center;font-size:var(--lantern-text);color:#{@fg_muted}"}
       >
         {@empty_message}
       </div>
