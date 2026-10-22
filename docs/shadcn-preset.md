@@ -9,6 +9,7 @@ Makes lantern components reproduce a dense, warm-accent shadcn app (the Flicker 
 <html data-lantern-theme="shadcn" data-lantern-preset="app" class="dark?">
 ```
 
+Import `lantern_ui_preset_app.css` (after `lantern_ui.css`; it does not need `lantern_ui_theme.css`).
 The host ships the `@font-face` for `Inter Variable` and `Space Grotesk Variable`; the stack falls back to
 `system-ui`. Dark mode follows the `.dark` class.
 

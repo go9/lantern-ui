@@ -27,7 +27,7 @@ defmodule LanternUI.Components.Theme do
   `data-lantern-theme="shadcn"` on `<html>`, swapping lantern's tokens onto
   shadcn's neutral vocabulary (light + dark) with shadcn proportions
   (see `priv/static/lantern_ui_theme.css`). `preset="shadcn-app"` adds the dense
-  app overlay on top (`data-lantern-preset="app"`: Inter/Space Grotesk, warm
+  app overlay on top (`data-lantern-preset="app"`, import `lantern_ui_preset_app.css`: Inter/Space Grotesk, warm
   accent, 13.5px table rows, 224px sidebar, 42px bar; see `docs/shadcn-preset.md`).
   Or set the attributes by hand on `<html>` or any subtree — no hook needed.
   """

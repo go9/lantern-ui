@@ -6,7 +6,7 @@ defmodule LanternUI.ShadcnAppPresetTest do
 
   alias LanternUI.Components.Layout
 
-  @theme File.read!(Path.expand("../../priv/static/lantern_ui_theme.css", __DIR__))
+  @theme File.read!(Path.expand("../../priv/static/lantern_ui_preset_app.css", __DIR__))
 
   # Contract gate: component markup sizes text through the `--lantern-text*`
   # scale, so a preset (or a host) can retune it. An inline literal bypasses it.
@@ -33,7 +33,7 @@ defmodule LanternUI.ShadcnAppPresetTest do
   end
 
   test "app preset sets the measured values through tokens" do
-    [_, preset] = String.split(@theme, "app preset (opt-in", parts: 2)
+    preset = @theme
 
     for decl <- [
           "--lantern-text: 0.964286rem",

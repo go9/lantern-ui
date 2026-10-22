@@ -6639,203 +6639,6 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
   padding: 0.75rem 1rem;
   border-radius: var(--lantern-radius-lg);
 }
-
-/*
- * ── app preset (opt-in, layered on the shadcn theme) ────────────────────
- * `<html data-lantern-theme="shadcn" data-lantern-preset="app">` reproduces a
- * dense, warm-accent shadcn app: the Flicker prototype's measured values, set
- * through tokens and component default CSS only (no markup, no forked
- * components). Calibrated for a 14px root (the preset sets `font-size: 14px` on
- * the element that carries it, so on `<html>` every rem follows). Needs `data-lantern-theme="shadcn"` for the vocabulary; this
- * block overrides its values, so dark mode follows `.dark` the same way.
- *
- *   fonts     UI = Inter Variable, headings/brand = Space Grotesk Variable
- *             (the host ships the @font-face; the stack falls back to system).
- *   scale     table 13.5/20.25, state/small 13, nav 12.25, heading 15, xs 11.2
- *   surfaces  page < card < raised (neutral, hue 286)
- *   accent    light oklch(0.556 0.176 36) + white, dark oklch(0.685 0.182 39) + ink
- *   radius    table card 7px, small controls 5.6px
- *   table     toolbar above, rows in one bordered card; no resting shadow, transparent
- *             card, cell 14/7 (row ~39.5), uppercase 11.2px column heads
- *   shell     sidebar 16rem (224px), bar 3rem (42px)
- */
-[data-lantern-theme="shadcn"][data-lantern-preset="app"] {
-  font-size: 14px;
-  --background: oklch(0.985 0.002 286);
-  --foreground: oklch(0.21 0.006 286);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.006 286);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0.006 286);
-  --primary: oklch(0.556 0.176 36);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.955 0.004 286);
-  --secondary-foreground: oklch(0.25 0.006 286);
-  --muted: oklch(0.955 0.004 286);
-  --muted-foreground: oklch(0.44 0.015 286);
-  --accent: oklch(0.945 0.006 286);
-  --accent-foreground: oklch(0.21 0.006 286);
-  --destructive: oklch(0.5 0.21 27);
-  --border: oklch(0.9 0.005 286);
-  --input: oklch(0.86 0.006 286);
-  --ring: oklch(0.556 0.176 36);
-  --radius: 0.5rem;
-  --sidebar: oklch(0.97 0.003 286);
-  --sidebar-foreground: oklch(0.21 0.006 286);
-  --sidebar-accent: oklch(0.93 0.006 286);
-  --sidebar-border: oklch(0.9 0.005 286);
-
-  /* Re-point lantern at the vocabulary here too, so the overlay is self-contained
-     and wins over a host bridge (`:root { --lantern-fg: ... }`) on specificity. */
-  --lantern-fg: var(--foreground);
-  --lantern-fg-muted: var(--muted-foreground);
-  --lantern-fg-subtle: var(--muted-foreground);
-  --lantern-surface: var(--background);
-  --lantern-surface-raised: var(--card);
-  --lantern-surface-sunken: var(--muted);
-  --lantern-surface-hover: var(--accent);
-  --lantern-border: var(--border);
-  --lantern-border-strong: var(--input);
-  --lantern-primary: var(--primary);
-  --lantern-primary-fg: var(--primary-foreground);
-  --lantern-secondary: var(--secondary);
-  --lantern-secondary-fg: var(--secondary-foreground);
-  --lantern-accent: var(--primary);
-  --lantern-accent-fg: var(--primary-foreground);
-  --lantern-danger: var(--destructive);
-  --lantern-ring: var(--ring);
-  --lantern-accent-soft: color-mix(in oklab, var(--primary) 10%, transparent);
-  --lantern-radius-sm: calc(var(--radius) * 0.8);
-  --lantern-radius-md: calc(var(--radius) * 0.8);
-  --lantern-radius-lg: var(--radius);
-  --lantern-shadow: none;
-  --lantern-shadow-md: none;
-
-  --lantern-font: "Inter Variable", system-ui, sans-serif;
-  --lantern-font-brand: "Space Grotesk Variable", system-ui, sans-serif;
-  --lantern-font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
-
-  --lantern-control-h: 2rem;
-  --lantern-text: 0.964286rem;
-  --lantern-text-sm: 0.928571rem;
-  --lantern-text-xs: 0.8rem;
-  --lantern-text-nav: 0.875rem;
-  --lantern-text-heading: 1.071429rem;
-
-  --lui-topline-h: 3rem;
-  --lui-control-radius: var(--lantern-radius-sm);
-  --lui-control-font-xs: var(--lantern-text-xs);
-  --lui-table-radius: var(--radius);
-  --lui-table-bg: transparent;
-  --lui-table-shadow: none;
-  --lui-table-font: var(--lantern-text);
-  --lui-table-leading: 1.5;
-  --lui-table-cell-px: 1rem;
-  --lui-table-cell-py: 0.5rem;
-  --lui-table-head-font: var(--lantern-text-sm);
-  --lui-table-head-bg: transparent;
-}
-
-.dark[data-lantern-theme="shadcn"][data-lantern-preset="app"],
-[data-lantern-theme="shadcn"][data-lantern-preset="app"].dark,
-.dark [data-lantern-theme="shadcn"][data-lantern-preset="app"],
-[data-lantern-theme="shadcn"][data-lantern-preset="app"] .dark {
-  --background: oklch(0.2 0.006 286);
-  --foreground: oklch(0.92 0.004 286);
-  --card: oklch(0.225 0.007 286);
-  --card-foreground: oklch(0.92 0.004 286);
-  --popover: oklch(0.255 0.009 286);
-  --primary: oklch(0.685 0.182 39);
-  --primary-foreground: oklch(0.17 0.01 286);
-  --secondary: oklch(0.27 0.008 286);
-  --muted: oklch(0.265 0.008 286);
-  --muted-foreground: oklch(0.72 0.014 286);
-  --accent: oklch(0.3 0.01 286);
-  --destructive: oklch(0.7 0.19 25);
-  --border: oklch(0.32 0.011 286);
-  --input: oklch(0.36 0.012 286);
-  --ring: oklch(0.738 0.152 40);
-  --sidebar: oklch(0.18 0.006 286);
-  --sidebar-accent: oklch(0.27 0.01 286);
-  --sidebar-border: oklch(0.29 0.01 286);
-  --secondary-foreground: oklch(0.92 0.004 286);
-  --accent-foreground: oklch(0.92 0.004 286);
-  --lantern-accent-soft: color-mix(in oklab, var(--primary) 18%, transparent);
-}
-
-/* Components: only what a token cannot reach. */
-[data-lantern-preset="app"] .lui-btn[data-size="sm"],
-[data-lantern-preset="app"] .lui-btn[data-size="icon-sm"] {
-  height: 1.75rem;
-}
-[data-lantern-preset="app"] .lui-btn[data-size="icon-sm"] {
-  width: 1.75rem;
-}
-[data-lantern-preset="app"] .lui-datatable .lui-td:first-child {
-  font-weight: 500;
-}
-[data-lantern-preset="app"] .lui-btn[data-variant="outline"],
-[data-lantern-preset="app"] .lui-btn[data-variant="dashed"],
-[data-lantern-preset="app"] .lui-btn[data-variant="solid"] {
-  box-shadow: none;
-}
-[data-lantern-preset="app"] .lui-btn[data-variant="outline"] {
-  background: var(--lantern-surface);
-}
-[data-lantern-preset="app"].dark .lui-btn[data-variant="outline"],
-.dark[data-lantern-preset="app"] .lui-btn[data-variant="outline"],
-.dark [data-lantern-preset="app"] .lui-btn[data-variant="outline"] {
-  background: color-mix(in oklab, var(--input) 30%, transparent);
-  border-color: var(--input);
-}
-[data-lantern-preset="app"] .lui-datatable .lui-tr:hover .lui-td,
-[data-lantern-preset="app"] .lui-datatable .lui-row-current .lui-td {
-  background: color-mix(in oklab, var(--muted) 60%, transparent);
-}
-[data-lantern-preset="app"] .lui-app {
-  --lui-sidebar-expanded-w: 16rem;
-}
-[data-lantern-preset="app"] .lui-app-sidebar {
-  background: var(--sidebar);
-  color: var(--sidebar-foreground);
-  border-color: var(--sidebar-border);
-}
-[data-lantern-preset="app"] :is(.lui-nav-item, .lui-nav-link) {
-  font-size: var(--lantern-text-nav);
-}
-[data-lantern-preset="app"] .lui-dt-title {
-  font-family: var(--lantern-font-brand);
-  font-size: var(--lantern-text-heading);
-}
-[data-lantern-preset="app"] .lui-breadcrumb-current {
-  font-family: var(--lantern-font-brand);
-  font-size: 0.875rem;
-}
-[data-lantern-preset="app"] .lui-dt-search {
-  box-shadow: none;
-  min-width: 14rem;
-}
-[data-lantern-preset="app"] .lui-datatable:not(.lui-datatable-flush) {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  overflow: visible;
-}
-[data-lantern-preset="app"] .lui-datatable:not(.lui-datatable-flush) :is(.lui-dt-header, .lui-dt-chromerow, .lui-dt-pagination) {
-  padding-inline: 0;
-  border-bottom: 0;
-}
-[data-lantern-preset="app"] .lui-datatable:not(.lui-datatable-flush) .lui-table-wrap {
-  border: 1px solid var(--lantern-border);
-  border-radius: var(--lui-table-radius);
-}
-[data-lantern-preset="app"] .lui-th {
-  font-size: var(--lantern-text-xs);
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
 </style>
   </head>
   <body>
@@ -7158,7 +6961,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
   <section data-gallery="alert">
     <h2>Alert</h2>
     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-      <div id="lui-alert-1060" role="alert" class="lui-alert" data-color="info" data-tone="info">
+      <div id="lui-alert-135" role="alert" class="lui-alert" data-color="info" data-tone="info">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -7175,7 +6978,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1092" role="alert" class="lui-alert" data-color="success" data-tone="success">
+      <div id="lui-alert-167" role="alert" class="lui-alert" data-color="success" data-tone="success">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -7192,7 +6995,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1124" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
+      <div id="lui-alert-199" role="alert" class="lui-alert" data-color="warning" data-tone="warning">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -7209,7 +7012,7 @@ a.lui-matrix-state:focus-visible, a.lui-matrix-name:focus-visible {
 
   
 </div>
-      <div id="lui-alert-1156" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
+      <div id="lui-alert-231" role="alert" class="lui-alert" data-color="danger" data-tone="danger">
   <div class="lui-alert-icon">
     
       <svg class="lui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

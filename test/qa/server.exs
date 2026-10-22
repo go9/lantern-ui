@@ -45,6 +45,7 @@ defmodule LanternUI.QA.Layouts do
         <meta name="csrf-token" content={Plug.CSRFProtection.get_csrf_token()} />
         <title>QA matrix</title>
         <link rel="stylesheet" href="/lantern_ui_theme.css" />
+        <link rel="stylesheet" href="/lantern_ui_preset_app.css" />
         <link rel="stylesheet" href="/lantern_ui.css" />
         <style>
           body { margin: 0; background: var(--lantern-bg); color: var(--lantern-fg); font-family: var(--lantern-font); }
