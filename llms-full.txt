@@ -1426,11 +1426,15 @@ Environment-by-component grid: rows are things (environments), columns are compo
 
 - `add_label` (:string) — Accessible name of the add button, e.g.
 - `class` (:any) — Extra classes merged onto the cell.
+- `col_selected` (:boolean, default false) — This cell sits in the selected column.
 - `href` (:any) — External/full-page href; the cell reads as a link.
 - `label` (:string) — Visible words; defaults to the state name.
 - `navigate` (:string) — LiveView navigate target; the cell reads as a link.
 - `patch` (:string) — LiveView patch target; the cell reads as a link.
 - `rest` (:global) — `phx-*` attrs passed to the add button (absent + add_label).
+- `select_event` (:string) — phx-click event; a non-absent cell becomes a select button (instead of a link).
+- `select_values` (:map, default %{}) — phx-value-* pairs sent with `select_event`.
+- `selected` (:boolean, default false) — This cell is the current selection.
 - `state` (:string, required, values: present, degraded, failed, in_rule, absent) — present, degraded, failed, in_rule or absent.
 
 #### `matrix_row/1`
@@ -1444,6 +1448,9 @@ Environment-by-component grid: rows are things (environments), columns are compo
 - `navigate` (:string) — LiveView navigate target for the row head.
 - `patch` (:string) — LiveView patch target for the row head.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through to the row.
+- `select_event` (:string) — phx-click event; the row head becomes a select button (instead of a link).
+- `select_values` (:map, default %{}) — phx-value-* pairs sent with `select_event`.
+- `selected` (:boolean, default false) — Marks the row as the current selection.
 Slots:
 - `:inner_block` (required) — matrix_cell children in column order.
 - `:meta` — Quiet line under the name: production, expiry, flags.
@@ -1460,6 +1467,9 @@ Slots:
 - `:col` (required) — One component column header, in cell order.
   - `kind` — Quiet second line, e.g.
   - `class` — Extra classes on this header cell.
+  - `selected` — Marks the column as the current selection (header + cells via `col_selected`).
+  - `select_event` — phx-click event; the header becomes a select button.
+  - `select_values` — phx-value-* pairs sent with `select_event`, e.g.
 - `:inner_block` (required) — matrix_row children (and an optional placeholder row).
 
 ### LanternUI.Components.MediaTile
