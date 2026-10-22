@@ -46,6 +46,18 @@
 
   /* Re-point lantern at the vocabulary here too, so the overlay is self-contained
      and wins over a host bridge (`:root { --lantern-fg: ... }`) on specificity. */
+  /* Fluxon-named aliases, so a host written against those names (bg-base,
+     text-foreground-soft, border-base) follows the preset. */
+  --background-base: var(--background);
+  --background-accent: var(--accent);
+  --border-base: var(--border);
+  --surface: var(--card);
+  --foreground-soft: var(--muted-foreground);
+  --foreground-softer: var(--muted-foreground);
+  --foreground-softest: var(--muted-foreground);
+  --foreground-primary: var(--primary-foreground);
+  --primary-soft: color-mix(in oklab, var(--primary) 10%, transparent);
+  --danger: var(--destructive);
   --lantern-fg: var(--foreground);
   --lantern-fg-muted: var(--muted-foreground);
   --lantern-fg-subtle: var(--muted-foreground);
@@ -84,6 +96,7 @@
   --lui-topline-h: 3rem;
   --lui-control-radius: var(--lantern-radius-sm);
   --lui-control-font-xs: var(--lantern-text-xs);
+  --lui-control-font-sm: var(--lantern-text-xs);
   --lui-table-radius: var(--radius);
   --lui-table-bg: transparent;
   --lui-table-shadow: none;
