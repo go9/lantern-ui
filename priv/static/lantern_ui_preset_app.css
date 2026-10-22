@@ -230,3 +230,7 @@
 [data-lantern-preset="app"] .lui-card-foot {
   padding: 0.5rem 1rem;
 }
+/* Rows stay one line at any width: a narrow table scrolls horizontally instead of wrapping. */
+[data-lantern-preset="app"] .lui-datatable .lui-td {
+  white-space: nowrap;
+}
