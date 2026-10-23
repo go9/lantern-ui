@@ -116,7 +116,13 @@ defmodule LanternUI do
     message_scroller_item: LanternUI.Components.MessageScroller,
     kbd: LanternUI.Components.Kbd,
     topology_svg: LanternUI.Components.TopologySvg,
-    tree: LanternUI.Components.Tree
+    tree: LanternUI.Components.Tree,
+    status_trail: LanternUI.Components.StatusTrail,
+    step_glyph: LanternUI.Components.StepGlyph,
+    evidence_badge: LanternUI.Components.EvidenceBadge,
+    decision_row: LanternUI.Components.DecisionRow,
+    passage: LanternUI.Components.Passage,
+    agent_rail: LanternUI.Components.AgentRail
   }
 
   @doc false

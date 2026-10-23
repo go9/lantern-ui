@@ -54,6 +54,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `action_bar/1` — Renders each action inline and in the Zag `More actions` menu.
 
+### LanternUI.Components.AgentRail
+
+- `agent_rail/1` — Slim right rail of agent bubbles.
+
 ### LanternUI.Components.Alert
 
 - `alert/1` — Inline status alert.
@@ -137,6 +141,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `datetime_field/1` — A segmented, directly-editable date/time field — the trigger primitive the date pickers compose (HeroUI-style: `2 / 3 / 2026, 8:45 AM`).
 
+### LanternUI.Components.DecisionRow
+
+- `decision_row/1` — One open decision: the question, what it decides, and an inline answer.
+
 ### LanternUI.Components.DescriptionList
 
 - `description_list/1` — Label/value pairs for a record's detail view — the `<dl>` every show page hand-rolls.
@@ -157,6 +165,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 ### LanternUI.Components.EmptyState
 
 - `empty_state/1` — Quiet empty/zero state for tables, lists, and panels (a lantern-ui extension — Fluxon has no equivalent).
+
+### LanternUI.Components.EvidenceBadge
+
+- `evidence_badge/1` — Who vouches for a statement: CI, the run's own report, or only the agent.
 
 ### LanternUI.Components.Form
 
@@ -271,6 +283,10 @@ their replacement. Full attribute tables are in llms-full.txt.
 
 - `pagination/1` — Pager + page-size control for paginated collections (a lantern-ui extension; Fluxon has no pagination component — this replaces flop_phoenix's pager).
 
+### LanternUI.Components.Passage
+
+- `passage/1` — A commentable passage of prose with a stable id and its comment counts.
+
 ### LanternUI.Components.Popover
 
 - `popover/1` — Click-triggered floating panel holding arbitrary content.
@@ -369,6 +385,14 @@ their replacement. Full attribute tables are in llms-full.txt.
 - `state_glyph/1` — Status circles, priority signal bars, run-pipeline, sync, and source glyphs for dense lists.
 - `status_glyph/1` — Flicker-shaped alias of `state_glyph/1` with `kind="status"`.
 - `sync_glyph/1` — Flicker-shaped alias of `state_glyph/1` with `kind="sync"`.
+
+### LanternUI.Components.StatusTrail
+
+- `status_trail/1` — Lifecycle trail: Backlog > Selected for dev > In development > Done, with the current step and an optional waiting/paused word after the current status.
+
+### LanternUI.Components.StepGlyph
+
+- `step_glyph/1` — One labelled workflow step (Plan, Implement, Test, Review, Release) with a state glyph.
 
 ### LanternUI.Components.Switch
 
