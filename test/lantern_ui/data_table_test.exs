@@ -172,6 +172,24 @@ defmodule LanternUI.DataTableTest do
     assert on =~ "lui-datatable-fill"
   end
 
+  test "the table wrap contains absolutely placed cell content" do
+    css = File.read!("priv/static/lantern_ui.css")
+
+    # An sr-only cell label is position:absolute; an unpositioned scroller does not
+    # clip it, so a sideways-scrolling table widened the whole page on a phone.
+    assert css =~ ~r/\.lui-table-wrap \{ container-type: inline-size; position: relative; \}/
+  end
+
+  test "the compact app bar clips its breadcrumb instead of running under the actions" do
+    css = File.read!("priv/static/lantern_ui.css")
+
+    assert css =~
+             ~r/\.lui-app\[data-compact\] \.lui-appbar-header \.lui-breadcrumb \{ overflow: hidden; \}/
+
+    assert css =~
+             ~r/@media \(max-width: 40rem\) \{\n  \.lui-app\[data-compact\] \.lui-appbar-header \.lui-breadcrumb-item:not\(:last-child\)/
+  end
+
   test "fill CSS scrolls list and cards, not only the table wrap" do
     css = File.read!("priv/static/lantern_ui.css")
 

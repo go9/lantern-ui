@@ -995,6 +995,17 @@
 .lui-appbar-header { display: flex; align-items: center; gap: 0.4rem; min-width: 0;
   color: var(--lantern-fg-muted); font-size: 0.8125rem; }
 .lui-appbar-actions { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
+/* Compact bar: the breadcrumb shares the one row with the actions, so it gives way
+   first. It clips instead of running under them, the current page truncates, and
+   below 40rem only home and the current page stay. */
+.lui-app[data-compact] .lui-appbar-header { flex: 1 1 auto; }
+.lui-app[data-compact] .lui-appbar-header .lui-breadcrumb { overflow: hidden; }
+.lui-app[data-compact] .lui-appbar-header .lui-breadcrumb-item:last-child { min-width: 0; }
+.lui-app[data-compact] .lui-appbar-header .lui-breadcrumb-current {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 40rem) {
+  .lui-app[data-compact] .lui-appbar-header .lui-breadcrumb-item:not(:last-child):not(.lui-breadcrumb-item-home) { display: none; }
+}
 
 /* top_shell: top-navigation shell (no sidebar). Bar → optional sticky
    subheader → centred content column capped by data-width. */
@@ -1807,7 +1818,9 @@
    table that fits has no timeline and no fade. Dropdown menus render in the
    top layer and are unaffected by the mask. Browsers without scroll timelines
    keep the plain scroll. */
-.lui-table-wrap { container-type: inline-size; }
+/* Positioned, so absolutely placed descendants (sr-only cell labels) are clipped by
+   the scroller instead of widening the page when the table scrolls sideways. */
+.lui-table-wrap { container-type: inline-size; position: relative; }
 @property --lui-fade-start { syntax: "<length>"; inherits: false; initial-value: 0px; }
 @property --lui-fade-end { syntax: "<length>"; inherits: false; initial-value: 0px; }
 @keyframes lui-table-scroll-fade {
