@@ -10,6 +10,8 @@ defmodule LanternUI.Components.AgentRail do
   then working, then idle; at most `max` show, the rest collapse into a `+N`
   button (so idle epics fall there). Workers render smaller under their epic.
   `variant="top_bar"` renders only the toggle button with the total, for phones.
+  The toggle's number is the agent count unless `total` is given (an app may
+  pass what needs the person, so the toggle and its badges count one list).
   """
   use Phoenix.Component
 
@@ -22,6 +24,7 @@ defmodule LanternUI.Components.AgentRail do
   attr(:agents, :list, required: true)
   attr(:open, :boolean, default: true)
   attr(:max, :integer, default: 8)
+  attr(:total, :integer, default: nil, doc: "the toggle's number; default the agent count")
   attr(:variant, :string, default: "rail", values: ~w(rail top_bar))
   attr(:on_toggle, :string, default: "toggle_rail")
   attr(:on_select, :string, default: "select_agent")
@@ -45,7 +48,7 @@ defmodule LanternUI.Components.AgentRail do
         shown: shown,
         hidden: length(hidden),
         workers: workers,
-        total: length(assigns.agents),
+        total: assigns.total || length(assigns.agents),
         words: @words
       )
 
