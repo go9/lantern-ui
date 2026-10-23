@@ -223,6 +223,7 @@ Slim right rail of agent bubbles.
 - `open` (:boolean, default true) — 
 - `rest` (:global) — 
 - `target` (:any) — 
+- `total` (:integer) — the toggle's number; default the agent count
 - `variant` (:string, values: rail, top_bar, default "rail") —
 
 ### LanternUI.Components.Alert
