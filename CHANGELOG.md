@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- `agent_rail` `total`: the toggle's number when given (e.g. what needs the person), else the agent count.
 - Epic loop pieces: `status_trail`, `step_glyph`, `evidence_badge`, `decision_row` (form and pointer variants), `passage`, `agent_rail`; `data_table` expandable rows (`row_toggle`, `row_expanded`, `:row_detail`); `message` `:quote` slot.
 - Page recipes (`docs/page-recipes.md`): `page_container`, `page_heading`, `page_section`, `index_toolbar`, `detail_layout`, `settings_page layout="stacked"` with `:nav` and `settings_form` (one dirty-aware Save per form), `form_group`, `form_actions`, and `empty_state kind=` (`first_use`, `no_match`, `error`, `restricted`). Gate: `test/qa/recipe_pages.mjs`.
 - Theme preset `shadcn-app` (`<Theme.theme preset="shadcn-app">`, or `data-lantern-theme="shadcn" data-lantern-preset="app"`): the dense, warm-accent shadcn look (Inter + Space Grotesk, 13.5px table rows, 224px sidebar, 42px bar, 7px/5.6px radii, no resting table shadow) set through tokens only. Import `lantern_ui_preset_app.css`; see `docs/shadcn-preset.md`.

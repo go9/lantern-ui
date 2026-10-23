@@ -148,6 +148,9 @@ defmodule LanternUI.EpicPiecesTest do
       bar = html(~H|<.agent_rail id="rail" agents={@agents} variant="top_bar" />|)
       refute bar =~ "lui-agent-bubble"
       assert bar =~ ~s(data-variant="top_bar")
+
+      given = html(~H|<.agent_rail id="rail" agents={@agents} total={7} />|)
+      assert given =~ ~s(<span class="lui-agent-rail-total">7</span>)
     end
   end
 
