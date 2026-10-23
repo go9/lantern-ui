@@ -33,6 +33,8 @@ All notable changes to this project are documented here. The format follows
 - `timeline_item/1` and `log_line/1` native disclosures: after mount the browser owns `open` (`JS.ignore_attributes`), so appending later events does not collapse a detail the reader opened.
 
 ### Fixed
+- Compact `app_shell` bar: the in-bar breadcrumb clips and truncates the current page instead of running under the actions, and below 40rem keeps only home and the current page.
+- `.lui-table-wrap` is positioned, so absolutely placed cell content (sr-only labels) is clipped by the scroller instead of widening the page when a table scrolls sideways.
 - Default theme text fallbacks now reach WCAG AA 4.5:1 on their surfaces (light: muted `#71717a`->`#666670`, subtle `#a1a1aa`->`#6f6f78`, accent `oklch(0.637 0.192 38)`->`oklch(0.566 0.192 38)`, danger `#dc2626`->`#d92323`, success `#16a34a`->`#008229`, warning `#d97706`->`#b45500`, info L 0.62->0.548; dark: subtle `#71717a`->`#808089`, accent-fg `#ffffff`->`#09090b`). Host tokens (`--primary`, `--warning`, `--foreground-softest`, …) still win through the chain and stay the host's to keep at 4.5:1. Contract: `test/js/theme_contrast_test.mjs`.
 - Menu/dropdown: Escape returns focus to the trigger control instead of `<body>`.
 - `pagination/1`: a disabled previous/next exposes its name as sr-only text instead of `aria-label` on a span.
