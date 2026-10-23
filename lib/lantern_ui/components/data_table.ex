@@ -125,6 +125,18 @@ defmodule LanternUI.Components.DataTable do
       "row -> path fn; like `row_navigate` but a `patch` link. Ignored when `row_navigate` is set."
   )
 
+  attr(:row_toggle, :any,
+    default: nil,
+    doc:
+      "row -> `Phoenix.LiveView.JS` fn; adds a leading toggle button (`aria-expanded`) per row " <>
+        "that reveals the `:row_detail` slot. Table view only."
+  )
+
+  attr(:row_expanded, :any,
+    default: nil,
+    doc: "row -> boolean fn; whether the row's `:row_detail` is shown. Defaults to collapsed."
+  )
+
   attr(:row_click, :any,
     default: nil,
     doc:
@@ -361,6 +373,12 @@ defmodule LanternUI.Components.DataTable do
   end
 
   slot(:row_action, doc: "Per-row trailing actions cell; receives the row via :let.")
+
+  slot(:row_detail,
+    doc:
+      "Full-width detail under an expanded row (needs `row_toggle`); receives the row via :let."
+  )
+
   slot(:empty, doc: "Empty-state content when there are no rows.")
 
   slot :placeholder,
@@ -1169,6 +1187,9 @@ defmodule LanternUI.Components.DataTable do
         <table class="lui-table">
           <thead class="lui-thead">
             <tr>
+              <th :if={@row_toggle} class="lui-th lui-th-toggle" scope="col">
+                <span class="lui-sr-only">Expand</span>
+              </th>
               <th :if={@show_checkboxes} class="lui-th lui-th-check" scope="col">
                 <input
                   type="checkbox"
@@ -1210,48 +1231,72 @@ defmodule LanternUI.Components.DataTable do
             <tr :if={@show_groups?} class="lui-dt-band">
               <th colspan={@placeholder_colspan} scope="rowgroup">{label}</th>
             </tr>
-            <tr
-              :for={row <- rows}
-              class={
-                Class.merge([
-                  "lui-tr",
-                  selected_id?(@row_id_fn.(row), assigns) && "lui-tr-selected",
-                  row_linked?(assigns, row) && "lui-row-linked",
-                  current_row?(assigns, row) && "lui-row-current"
-                ])
-              }
-              aria-current={current_row?(assigns, row) && "true"}
-              {row_click_attrs(assigns, row)}
-            >
-              <td :if={@show_checkboxes} class="lui-td lui-td-check">
-                <input
-                  type="checkbox"
-                  class="lui-checkbox"
-                  checked={selected_id?(@row_id_fn.(row), assigns)}
-                  phx-click="toggle_select"
-                  phx-value-id={@row_id_fn.(row)}
-                  phx-target={@target}
-                  aria-label="Select row"
-                />
-              </td>
-              <td
-                :for={{col, i} <- Enum.with_index(@col)}
-                data-column-key={column_key(col, i)}
-                data-hide-below={col[:hide_below]}
-                id={i == 0 && row_link(assigns, row) && "#{@id}-row-#{@row_id_fn.(row)}-main"}
-                class={Class.merge(["lui-td", col[:td_class]])}
+            <%= for row <- rows do %>
+              <tr
+                class={
+                  Class.merge([
+                    "lui-tr",
+                    selected_id?(@row_id_fn.(row), assigns) && "lui-tr-selected",
+                    row_linked?(assigns, row) && "lui-row-linked",
+                    current_row?(assigns, row) && "lui-row-current"
+                  ])
+                }
+                aria-current={current_row?(assigns, row) && "true"}
+                {row_click_attrs(assigns, row)}
               >
-                {render_slot(col, row)}
-                <.row_anchor
-                  :if={i == 0 && row_link(assigns, row)}
-                  link={row_link(assigns, row)}
-                  labelledby={"#{@id}-row-#{@row_id_fn.(row)}-main"}
-                />
-              </td>
-              <td :if={@row_action != []} class="lui-td lui-td-actions">
-                {render_slot(@row_action, row)}
-              </td>
-            </tr>
+                <td :if={@row_toggle} class="lui-td lui-td-toggle">
+                  <button
+                    type="button"
+                    class="lui-dt-row-toggle"
+                    phx-click={@row_toggle.(row)}
+                    aria-expanded={to_string(row_expanded?(assigns, row))}
+                    aria-controls={"#{@id}-row-#{@row_id_fn.(row)}-detail"}
+                    aria-label="Toggle details"
+                  >
+                    <Icon.icon name={
+                      if row_expanded?(assigns, row), do: "chevron-down", else: "chevron-right"
+                    } />
+                  </button>
+                </td>
+                <td :if={@show_checkboxes} class="lui-td lui-td-check">
+                  <input
+                    type="checkbox"
+                    class="lui-checkbox"
+                    checked={selected_id?(@row_id_fn.(row), assigns)}
+                    phx-click="toggle_select"
+                    phx-value-id={@row_id_fn.(row)}
+                    phx-target={@target}
+                    aria-label="Select row"
+                  />
+                </td>
+                <td
+                  :for={{col, i} <- Enum.with_index(@col)}
+                  data-column-key={column_key(col, i)}
+                  data-hide-below={col[:hide_below]}
+                  id={i == 0 && row_link(assigns, row) && "#{@id}-row-#{@row_id_fn.(row)}-main"}
+                  class={Class.merge(["lui-td", col[:td_class]])}
+                >
+                  {render_slot(col, row)}
+                  <.row_anchor
+                    :if={i == 0 && row_link(assigns, row)}
+                    link={row_link(assigns, row)}
+                    labelledby={"#{@id}-row-#{@row_id_fn.(row)}-main"}
+                  />
+                </td>
+                <td :if={@row_action != []} class="lui-td lui-td-actions">
+                  {render_slot(@row_action, row)}
+                </td>
+              </tr>
+              <tr
+                :if={@row_toggle && @row_detail != [] && row_expanded?(assigns, row)}
+                id={"#{@id}-row-#{@row_id_fn.(row)}-detail"}
+                class="lui-tr lui-tr-detail"
+              >
+                <td colspan={@placeholder_colspan} class="lui-td lui-td-detail">
+                  {render_slot(@row_detail, row)}
+                </td>
+              </tr>
+            <% end %>
             <Table.table_placeholder_row
               :for={ph <- if index == length(@row_groups) - 1, do: @placeholder, else: []}
               colspan={@placeholder_colspan}
@@ -1305,10 +1350,14 @@ defmodule LanternUI.Components.DataTable do
     n =
       length(assigns.col) +
         if(assigns.show_checkboxes, do: 1, else: 0) +
-        if(assigns.row_action != [], do: 1, else: 0)
+        if(assigns.row_action != [], do: 1, else: 0) +
+        if(assigns.row_toggle, do: 1, else: 0)
 
     max(n, 1)
   end
+
+  defp row_expanded?(%{row_expanded: f}, row) when is_function(f, 1), do: !!f.(row)
+  defp row_expanded?(_assigns, _row), do: false
 
   defp column_key(col, index),
     do: if(col[:field], do: to_string(col[:field]), else: "column-#{index}")

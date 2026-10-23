@@ -204,6 +204,27 @@ Renders each action inline and in the Zag `More actions` menu.
 - `on_dismiss` (:string) — LiveView event for notice dismissal; receives the notice id.
 - `rest` (:global) — Arbitrary HTML and LiveView attributes passed through.
 
+### LanternUI.Components.AgentRail
+
+Slim right rail of agent bubbles.
+
+#### `agent_rail/1`
+
+Slim right rail of agent bubbles.
+
+- `agents` (:list, required) — 
+- `class` (:any) — 
+- `id` (:string, required) — 
+- `max` (:integer, default 8) — 
+- `on_ask` (:string, default "ask") — 
+- `on_more` (:string, default "rail_more") — 
+- `on_select` (:string, default "select_agent") — 
+- `on_toggle` (:string, default "toggle_rail") — 
+- `open` (:boolean, default true) — 
+- `rest` (:global) — 
+- `target` (:any) — 
+- `variant` (:string, values: rail, top_bar, default "rail") —
+
 ### LanternUI.Components.Alert
 
 Inline status alert.
@@ -647,9 +668,11 @@ The admin data table — one Flop-driven table to replace the per-app `admin_tab
 - `reset_label` (:string, default "Reset") — Label for resetting filter controls.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `row_click` (:any) — row -> `Phoenix.LiveView.JS` fn; the whole row runs the command on click or Enter (clicks on interactive children are ignored).
+- `row_expanded` (:any) — row -> boolean fn; whether the row's `:row_detail` is shown.
 - `row_id` (:any) — row -> id fn; defaults to & &1.id
 - `row_navigate` (:any) — row -> path fn; makes the whole row a `navigate` link (list and table views).
 - `row_patch` (:any) — row -> path fn; like `row_navigate` but a `patch` link.
+- `row_toggle` (:any) — row -> `Phoenix.LiveView.JS` fn; adds a leading toggle button (`aria-expanded`) per row that reveals the `:row_detail` slot.
 - `rows` (:list, default []) — Current page of row structs/maps to render.
 - `save_view_label` (:string, default "Save current view") — Label for saving the current view.
 - `saved_view_event` (:string) — Optional LiveView event for generic saved-view actions.
@@ -703,6 +726,7 @@ Slots:
   - `href` — External/full-page href for the control.
   - `event` — phx-click event name fired to target.
 - `:row_action` — Per-row trailing actions cell; receives the row via :let.
+- `:row_detail` — Full-width detail under an expanded row (needs `row_toggle`); receives the row via :let.
 - `:stat` — Overview metric card above the table.
   - `label` — Stat caption under or beside the value.
   - `value` — Primary metric value to display.
@@ -890,6 +914,29 @@ A segmented, directly-editable date/time field — the trigger primitive the dat
 Slots:
 - `:suffix` — trailing affix inside the field (e.g.
 
+### LanternUI.Components.DecisionRow
+
+One open decision: the question, what it decides, and an inline answer.
+
+#### `decision_row/1`
+
+One open decision: the question, what it decides, and an inline answer.
+
+- `answered` (:string) — Recorded answer; replaces the form/link.
+- `class` (:any) — 
+- `decides` (:string) — What the answer decides.
+- `href` (:string) — 
+- `id` (:string, required) — 
+- `link_label` (:string, default "Answer") — 
+- `navigate` (:string) — 
+- `on_answer` (:string, default "answer_decision") — phx-submit event (form variant).
+- `options` (:list, default []) — `%{value: string, label: string}` choices.
+- `patch` (:string) — 
+- `question` (:string, required) — 
+- `rest` (:global) — 
+- `target` (:any) — phx-target for the form.
+- `variant` (:string, values: form, pointer, default "form") —
+
 ### LanternUI.Components.DescriptionList
 
 Label/value pairs for a record's detail view — the `<dl>` every show page hand-rolls.
@@ -1016,6 +1063,18 @@ Quiet empty/zero state for tables, lists, and panels (a lantern-ui extension —
 Slots:
 - `:action` — CTA buttons or links below the description.
 - `:inner_block` — Supporting description under the title.
+
+### LanternUI.Components.EvidenceBadge
+
+Who vouches for a statement: CI, the run's own report, or only the agent.
+
+#### `evidence_badge/1`
+
+Who vouches for a statement: CI, the run's own report, or only the agent.
+
+- `class` (:any) — 
+- `kind` (:string, values: ci, run, claim, default "claim") — 
+- `rest` (:global) —
 
 ### LanternUI.Components.Form
 
@@ -1621,7 +1680,8 @@ Slots:
 - `:avatar` — 
 - `:footer` — 
 - `:header` — 
-- `:inner_block` —
+- `:inner_block` — 
+- `:quote` — Quoted passage shown above the message body.
 
 ### LanternUI.Components.MessageScroller
 
@@ -1830,6 +1890,24 @@ Pager + page-size control for paginated collections (a lantern-ui extension; Flu
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `show_page_size` (:boolean, default true) — Show the page-size dropdown control.
 - `sibling_count` (:integer, default 1) — Page numbers shown on each side of current.
+
+### LanternUI.Components.Passage
+
+A commentable passage of prose with a stable id and its comment counts.
+
+#### `passage/1`
+
+A commentable passage of prose with a stable id and its comment counts.
+
+- `class` (:any) — 
+- `id` (:string, required) — Stable passage id; also the `passage` event value.
+- `on_comment` (:string) — 
+- `open` (:integer, default 0) — 
+- `resolved` (:integer, default 0) — 
+- `rest` (:global) — 
+- `target` (:any) — 
+Slots:
+- `:inner_block` (required) —
 
 ### LanternUI.Components.Popover
 
@@ -2459,6 +2537,34 @@ Flicker-shaped alias of `state_glyph/1` with `kind="sync"`.
 - `rest` (:global) — Arbitrary HTML/`phx-*` attributes passed through.
 - `size` (:string, values: sm, md, default "md") — sm is 12px; md is 14px.
 - `state` (:any, required) — Sync state (atom or string).
+
+### LanternUI.Components.StatusTrail
+
+Lifecycle trail: Backlog > Selected for dev > In development > Done, with the current step and an optional waiting/paused word after the current status.
+
+#### `status_trail/1`
+
+Lifecycle trail: Backlog > Selected for dev > In development > Done, with the current step and an optional waiting/paused word after the current status.
+
+- `class` (:any) — 
+- `modifier` (:string, values: , waiting, paused) — 
+- `rest` (:global) — 
+- `status` (:string, required, values: backlog, selected_for_dev, in_progress, done) — 
+- `step` (:string) — Current step label, shown after the current status.
+
+### LanternUI.Components.StepGlyph
+
+One labelled workflow step (Plan, Implement, Test, Review, Release) with a state glyph.
+
+#### `step_glyph/1`
+
+One labelled workflow step (Plan, Implement, Test, Review, Release) with a state glyph.
+
+- `class` (:any) — 
+- `label` (:string) — Override of the visible label.
+- `rest` (:global) — 
+- `state` (:string, values: not_started, running, done, failed, needs_you, skipped, default "not_started") — 
+- `step` (:string, required, values: plan, implement, test, review, release) —
 
 ### LanternUI.Components.Switch
 

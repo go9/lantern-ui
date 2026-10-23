@@ -26,6 +26,7 @@ defmodule LanternUI.Components.Message do
   slot(:avatar)
   slot(:header)
   slot(:footer)
+  slot(:quote, doc: "Quoted passage shown above the message body.")
   slot(:inner_block)
 
   def message(assigns) do
@@ -34,7 +35,10 @@ defmodule LanternUI.Components.Message do
       <div :if={@avatar != []} class="lui-message-avatar">{render_slot(@avatar)}</div>
       <div class="lui-message-body">
         <div :if={@header != []} class="lui-message-header">{render_slot(@header)}</div>
-        <div class="lui-message-bubble" data-tone={@tone}>{render_slot(@inner_block)}</div>
+        <div class="lui-message-bubble" data-tone={@tone}>
+          <blockquote :if={@quote != []} class="lui-message-quote">{render_slot(@quote)}</blockquote>
+          {render_slot(@inner_block)}
+        </div>
         <div :if={@footer != []} class="lui-message-footer">{render_slot(@footer)}</div>
       </div>
     </div>
