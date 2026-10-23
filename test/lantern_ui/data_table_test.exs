@@ -183,8 +183,11 @@ defmodule LanternUI.DataTableTest do
   test "the compact app bar clips its breadcrumb instead of running under the actions" do
     css = File.read!("priv/static/lantern_ui.css")
 
-    assert css =~ ~r/\.lui-app\[data-compact\] \.lui-appbar-header \.lui-breadcrumb \{ overflow: hidden; \}/
-    assert css =~ ~r/@media \(max-width: 40rem\) \{\n  \.lui-app\[data-compact\] \.lui-appbar-header \.lui-breadcrumb-item:not\(:last-child\)/
+    assert css =~
+             ~r/\.lui-app\[data-compact\] \.lui-appbar-header \.lui-breadcrumb \{ overflow: hidden; \}/
+
+    assert css =~
+             ~r/@media \(max-width: 40rem\) \{\n  \.lui-app\[data-compact\] \.lui-appbar-header \.lui-breadcrumb-item:not\(:last-child\)/
   end
 
   test "fill CSS scrolls list and cards, not only the table wrap" do
